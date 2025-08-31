@@ -21,8 +21,16 @@
         .flow-path-animation { stroke: white; stroke-width: 1.5px; stroke-dasharray: 10 15; animation: flow 2s linear infinite; opacity: 0; transition: opacity 0.5s; }
         .flow-path.active + .flow-path-animation { opacity: 0.4; }
         /* Erase any underlay with background color (covers legacy grey ribbons) */
-        .flow-erase { fill: none; stroke: var(--bg); stroke-linecap: round; stroke-linejoin: round; opacity: 1; }
-        .theme-light .flow-erase { stroke: var(--bg) !important; }
+        .flow-erase {
+          fill: none;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          opacity: 1;
+          pointer-events: none;
+          shape-rendering: geometricPrecision;
+        }
+        .theme-light .flow-erase { stroke: #ffffff !important; }
+        .theme-dark  .flow-erase { stroke: #111827 !important; }
         /* Light theme: full blue flows, no grey halo */
         .theme-light .flow-path { stroke: var(--mlp-blue-1) !important; filter: none; }
         .theme-light .flow-path-animation { stroke: #2f6fb2; stroke-dasharray: 8 14; opacity: .9; }
@@ -147,6 +155,16 @@
 
         /* Flow animation color on light */
         .theme-light .flow-path-animation { stroke: var(--mlp-blue-1); opacity: .5; }
+
+        /* Mask strokes (define visible river area) */
+        .flow-mask-stroke {
+          fill: none;
+          stroke: #ffffff;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          pointer-events: none;
+          shape-rendering: geometricPrecision;
+        }
 
         /* Ensure text colors in headings/labels are dark enough */
         .theme-light h1, .theme-light h2, .theme-light h3, .theme-light label, .theme-light p { color: #111827; }
@@ -310,18 +328,28 @@
                           <feMergeNode in="SourceGraphic"/>
                         </feMerge>
                       </filter>
+                      <mask id="flow-mask" maskUnits="userSpaceOnUse">
+                        <rect x="0" y="0" width="100%" height="100%" fill="black"></rect>
+                        <path id="flow-path-1-mask" class="flow-mask-stroke"></path>
+                        <path id="flow-path-2-mask" class="flow-mask-stroke"></path>
+                        <path id="konsum-tagesgeld-flow-mask" class="flow-mask-stroke"></path>
+                        <path id="tagesgeld-depot-flow-mask" class="flow-mask-stroke"></path>
+                        <path id="fixkosten-depot-flow-mask" class="flow-mask-stroke"></path>
+                      </mask>
                     </defs>
-                    <path id="schutzschirm-path" class="schutzschirm"></path>
-                    <path id="flow-path-1-erase" class="flow-erase"></path>
-                    <path id="flow-path-1" class="flow-path"></path><path id="flow-path-1-anim" class="flow-path-animation"></path><g id="flow-path-1-dot"></g>
-                    <path id="flow-path-2-erase" class="flow-erase"></path>
-                    <path id="flow-path-2" class="flow-path"></path><path id="flow-path-2-anim" class="flow-path-animation"></path><g id="flow-path-2-dot"></g>
-                    <path id="konsum-tagesgeld-flow-erase" class="flow-erase"></path>
-                    <path id="konsum-tagesgeld-flow" class="flow-path"></path><path id="konsum-tagesgeld-flow-anim" class="flow-path-animation"></path><g id="konsum-tagesgeld-flow-dot"></g>
-                    <path id="tagesgeld-depot-flow-erase" class="flow-erase"></path>
-                    <path id="tagesgeld-depot-flow" class="flow-path"></path><path id="tagesgeld-depot-flow-anim" class="flow-path-animation"></path><g id="tagesgeld-depot-flow-dot"></g>
-                    <path id="fixkosten-depot-flow-erase" class="flow-erase"></path>
-                    <path id="fixkosten-depot-flow" class="flow-path"></path><path id="fixkosten-depot-flow-anim" class="flow-path-animation"></path><g id="fixkosten-depot-flow-dot"></g>
+                    <g id="flow-visuals" mask="url(#flow-mask)">
+                      <path id="schutzschirm-path" class="schutzschirm"></path>
+                      <path id="flow-path-1-erase" class="flow-erase"></path>
+                      <path id="flow-path-1" class="flow-path"></path><path id="flow-path-1-anim" class="flow-path-animation"></path><g id="flow-path-1-dot"></g>
+                      <path id="flow-path-2-erase" class="flow-erase"></path>
+                      <path id="flow-path-2" class="flow-path"></path><path id="flow-path-2-anim" class="flow-path-animation"></path><g id="flow-path-2-dot"></g>
+                      <path id="konsum-tagesgeld-flow-erase" class="flow-erase"></path>
+                      <path id="konsum-tagesgeld-flow" class="flow-path"></path><path id="konsum-tagesgeld-flow-anim" class="flow-path-animation"></path><g id="konsum-tagesgeld-flow-dot"></g>
+                      <path id="tagesgeld-depot-flow-erase" class="flow-erase"></path>
+                      <path id="tagesgeld-depot-flow" class="flow-path"></path><path id="tagesgeld-depot-flow-anim" class="flow-path-animation"></path><g id="tagesgeld-depot-flow-dot"></g>
+                      <path id="fixkosten-depot-flow-erase" class="flow-erase"></path>
+                      <path id="fixkosten-depot-flow" class="flow-path"></path><path id="fixkosten-depot-flow-anim" class="flow-path-animation"></path><g id="fixkosten-depot-flow-dot"></g>
+                    </g>
                 </svg>
                 <div id="gehalt-basin" class="account-basin"></div>
                 <div id="fixkosten-basin" class="account-basin cursor-pointer hover:border-indigo-500" onclick="openModal('fixkosten-modal')"></div>
@@ -455,11 +483,19 @@
         }
         path.setAttribute('d', pathData); pathAnim.setAttribute('d', pathData);
 
+        // Update mask stroke to define visible river area
+        const pathMask = getEl(`${pathId}-mask`);
+        if (pathMask) {
+            pathMask.setAttribute('d', pathData);
+            const maskWidth = Math.max(0, parseFloat(path.style.strokeWidth || "0") + 2);
+            pathMask.style.strokeWidth = `${maskWidth}px`;
+        }
+
         // Eraser path covers any legacy underlay (stroke slightly wider than main)
         const pathErase = getEl(`${pathId}-erase`);
         if (pathErase) {
             pathErase.setAttribute('d', pathData);
-            const eraseWidth = Math.max(0, parseFloat(path.style.strokeWidth || "0") + 10);
+            const eraseWidth = Math.max(0, parseFloat(path.style.strokeWidth || "0") + 40); // extra wide to fully cover any underlay, even at tight bends
             pathErase.style.strokeWidth = `${eraseWidth}px`;
         }
 
@@ -479,7 +515,7 @@
         valueLabel.style.left = `${midPoint.x}px`; valueLabel.style.top = `${midPoint.y}px`;
         if (textLabel) {
             textLabel.style.left = `${midPoint.x}px`;
-            textLabel.style.top  = `${midPoint.y - 24}px`; // lift label above amount pill for clarity
+            textLabel.style.top  = `${midPoint.y - 36}px`; // clearer separation above the amount pill
         }
         path.classList.toggle('active', value > 0);
         valueLabel.style.display = (value > 0) ? 'block' : 'none';
