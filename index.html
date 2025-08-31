@@ -131,6 +131,72 @@
         /* Ensure text colors in headings/labels are dark enough */
         .theme-light h1, .theme-light h2, .theme-light h3, .theme-light label, .theme-light p { color: #111827; }
         .theme-light .text-blue-400, .theme-light .text-green-400, .theme-light .text-red-400, .theme-light .text-yellow-300 { filter: saturate(.95); }
+
+        /* ===== UI Polish ===== */
+        /* Smooth theme transitions */
+        body, .account-basin, input, select, textarea, .flow-value, .flow-label {
+          transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease;
+        }
+
+        /* Light header text overrides (keeps markup unchanged) */
+        .theme-light h1.text-white { color: var(--fg) !important; }
+        .theme-light p.text-gray-400 { color: var(--muted) !important; }
+
+        /* Inputs focus ring tuned to MLP blue */
+        .theme-light input:focus, .theme-light select:focus, .theme-light textarea:focus {
+          outline: none;
+          border-color: var(--mlp-blue) !important;
+          box-shadow: 0 0 0 3px rgba(0,47,108,.15);
+        }
+
+        /* Primary action hover gentle for light */
+        .theme-light .bg-purple-600:hover { filter: brightness(1.05); }
+
+        /* Print button restyle in light */
+        .print-btn { transition: all .25s ease; }
+        .theme-light .print-btn {
+          background: #ffffff !important;
+          color: #111827 !important;
+          border: 1px solid #cbd5e1 !important;
+        }
+        .theme-light .print-btn:hover {
+          background: #f8fafc !important;
+          border-color: #94a3b8 !important;
+        }
+
+        /* Cards subtle separation in light */
+        .theme-light .bg-gray-800 {
+          box-shadow: 0 10px 24px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04) !important;
+        }
+
+        /* Section dividers lighter in light */
+        .theme-light hr.border-gray-700 { border-color: #e5e7eb !important; }
+
+        /* Flow pill font weight slightly lower in light */
+        .theme-light .flow-value { font-weight: 500; }
+
+        /* --- Ensure body flips to light despite Tailwind classes --- */
+        .theme-light.bg-gray-900 { background-color: var(--bg) !important; }
+        .theme-light.text-white  { color: var(--fg) !important; }
+
+        /* --- Extra MLP accents in Light --- */
+        /* Primary action becomes MLP blue in light */
+        .theme-light .bg-purple-600 { background-color: var(--mlp-blue) !important; }
+        .theme-light .hover\:bg-purple-700:hover { background-color: #003a84 !important; }
+
+        /* Headings and section titles in MLP blue, yellow accents in MLP gold */
+        .theme-light h1, .theme-light h2, .theme-light h3,
+        .theme-light .section-title { color: var(--mlp-blue) !important; }
+        .theme-light .text-yellow-300 { color: var(--mlp-gold) !important; }
+
+        /* Light theme info badges and pills with MLP tint */
+        .theme-light #variant-info { background: #e9eef6 !important; color: #0f2f55 !important; border: 1px solid #d5e0ee !important; }
+        .theme-light .flow-value { border-color: #d5e0ee !important; }
+
+        /* Inputs range track for light in subtle grey with MLP thumb */
+        .theme-light input[type="range"] { background: #e5e7eb !important; }
+        .theme-light input[type="range"]::-webkit-slider-thumb { background: var(--mlp-blue); }
+        .theme-light input[type="range"]::-moz-range-thumb { background: var(--mlp-blue); }
     </style>
 </head>
 <body class="theme-dark bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden" id="theme-root">
@@ -200,7 +266,7 @@
                         </button>
                     </div>
                 </div>
-                 <button onclick="prepareAndPrint()" class="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+                 <button onclick="prepareAndPrint()" class="print-btn mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                     Planung als PDF drucken
                 </button>
@@ -544,9 +610,10 @@
         const initialTheme = loadTheme(); // 'dark' | 'light'
         applyTheme(initialTheme);
         if (themeSwitch) {
-            themeSwitch.checked = (initialTheme === 'light');
+            // checked == Dark (rechts), unchecked == MLP Light (links)
+            themeSwitch.checked = (initialTheme === 'dark');
             themeSwitch.addEventListener('change', (e) => {
-                const t = e.target.checked ? 'light' : 'dark';
+                const t = e.target.checked ? 'dark' : 'light';
                 applyTheme(t);
                 saveTheme(t);
                 // Nach Themewechsel neu zeichnen
