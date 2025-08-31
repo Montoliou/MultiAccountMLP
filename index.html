@@ -20,8 +20,26 @@
         .flow-path.active { opacity: 1; }
         .flow-path-animation { stroke: white; stroke-width: 1.5px; stroke-dasharray: 10 15; animation: flow 2s linear infinite; opacity: 0; transition: opacity 0.5s; }
         .flow-path.active + .flow-path-animation { opacity: 0.4; }
+        /* Erase any underlay with background color (covers legacy grey ribbons) */
+        .flow-erase { fill: none; stroke: var(--bg); stroke-linecap: round; stroke-linejoin: round; opacity: 1; }
+        .theme-light .flow-erase { stroke: var(--bg) !important; }
+        /* Light theme: full blue flows, no grey halo */
+        .theme-light .flow-path { stroke: var(--mlp-blue-1) !important; filter: none; }
+        .theme-light .flow-path-animation { stroke: #2f6fb2; stroke-dasharray: 8 14; opacity: .9; }
+        .flow-dot { fill: #60a5fa; opacity: .95; }
+        .theme-light .flow-dot { fill: var(--mlp-blue-2); }
         @keyframes flow { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -25; } }
         .flow-label { position: absolute; color: #9ca3af; font-size: 0.75rem; font-weight: 500; z-index: 15; transform: translate(-50%, -130%); white-space: nowrap; transition: top 0.3s, left 0.3s; }
+        /* Better readability for labels on blue rivers (light) */
+        .theme-light .flow-label {
+          color: var(--fg);
+          background: rgba(255,255,255,.95);
+          border: 1px solid var(--border);
+          padding: 2px 6px;
+          border-radius: 999px;
+          line-height: 1.1;
+          box-shadow: 0 1px 2px rgba(0,0,0,.06);
+        }
         .flow-value { position: absolute; background-color: #111827; color: #d1d5db; padding: 4px 10px; border-radius: 9999px; font-size: 0.9rem; font-weight: 600; z-index: 15; border: 1px solid #4b5563; white-space: nowrap; transform: translate(-50%, -50%); transition: top 0.3s, left 0.3s; }
         .limit-line { position: absolute; width: 100%; height: 2px; left: 0; z-index: 12; }
         .limit-line span { position: absolute; right: 4px; transform: translateY(-50%); font-size: 10px; background: #1f2937; padding: 0 3px; font-weight: 500;}
@@ -176,6 +194,9 @@
 
         /* Flow pill font weight slightly lower in light */
         .theme-light .flow-value { font-weight: 500; }
+        .theme-light .flow-value {
+          box-shadow: 0 1px 2px rgba(0,0,0,.06);
+        }
 
         /* --- Ensure body flips to light despite Tailwind classes --- */
         .theme-light.bg-gray-900 { background-color: var(--bg) !important; }
@@ -277,13 +298,30 @@
             <!-- Visualization -->
             <div id="flow-container" class="w-full lg:flex-grow relative min-h-[1150px]">
                 <svg id="flow-svg" class="flow-svg">
-                    <defs><linearGradient id="flow-gradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#3b82f6;" /><stop offset="100%" style="stop-color:#6366f1;" /></linearGradient></defs>
+                    <defs>
+                      <linearGradient id="flow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#3b82f6;" />
+                        <stop offset="100%" style="stop-color:#6366f1;" />
+                      </linearGradient>
+                      <filter id="flow-glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="3" result="blur"/>
+                        <feMerge>
+                          <feMergeNode in="blur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
                     <path id="schutzschirm-path" class="schutzschirm"></path>
-                    <path id="flow-path-1" class="flow-path"></path><path id="flow-path-1-anim" class="flow-path-animation"></path>
-                    <path id="flow-path-2" class="flow-path"></path><path id="flow-path-2-anim" class="flow-path-animation"></path>
-                    <path id="konsum-tagesgeld-flow" class="flow-path"></path><path id="konsum-tagesgeld-flow-anim" class="flow-path-animation"></path>
-                    <path id="tagesgeld-depot-flow" class="flow-path"></path><path id="tagesgeld-depot-flow-anim" class="flow-path-animation"></path>
-                    <path id="fixkosten-depot-flow" class="flow-path"></path><path id="fixkosten-depot-flow-anim" class="flow-path-animation"></path>
+                    <path id="flow-path-1-erase" class="flow-erase"></path>
+                    <path id="flow-path-1" class="flow-path"></path><path id="flow-path-1-anim" class="flow-path-animation"></path><g id="flow-path-1-dot"></g>
+                    <path id="flow-path-2-erase" class="flow-erase"></path>
+                    <path id="flow-path-2" class="flow-path"></path><path id="flow-path-2-anim" class="flow-path-animation"></path><g id="flow-path-2-dot"></g>
+                    <path id="konsum-tagesgeld-flow-erase" class="flow-erase"></path>
+                    <path id="konsum-tagesgeld-flow" class="flow-path"></path><path id="konsum-tagesgeld-flow-anim" class="flow-path-animation"></path><g id="konsum-tagesgeld-flow-dot"></g>
+                    <path id="tagesgeld-depot-flow-erase" class="flow-erase"></path>
+                    <path id="tagesgeld-depot-flow" class="flow-path"></path><path id="tagesgeld-depot-flow-anim" class="flow-path-animation"></path><g id="tagesgeld-depot-flow-dot"></g>
+                    <path id="fixkosten-depot-flow-erase" class="flow-erase"></path>
+                    <path id="fixkosten-depot-flow" class="flow-path"></path><path id="fixkosten-depot-flow-anim" class="flow-path-animation"></path><g id="fixkosten-depot-flow-dot"></g>
                 </svg>
                 <div id="gehalt-basin" class="account-basin"></div>
                 <div id="fixkosten-basin" class="account-basin cursor-pointer hover:border-indigo-500" onclick="openModal('fixkosten-modal')"></div>
@@ -369,6 +407,30 @@
         }
     }
 
+    function attachFlowDot(pathId, radius = 4, speedSec = 3) {
+        const dotGroupId = `${pathId}-dot`;
+        let g = document.getElementById(dotGroupId);
+        if (!g) {
+            g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('id', dotGroupId);
+            document.getElementById('flow-svg').appendChild(g);
+        }
+        // Clear existing content
+        g.innerHTML = '';
+        // Create circle + animateMotion referencing the path
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('class', 'flow-dot');
+        circle.setAttribute('r', String(radius));
+        const animateMotion = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+        animateMotion.setAttribute('dur', `${Math.max(1.2, speedSec)}s`);
+        animateMotion.setAttribute('repeatCount', 'indefinite');
+        const mpath = document.createElementNS('http://www.w3.org/2000/svg', 'mpath');
+        mpath.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href', `#${pathId}`);
+        animateMotion.appendChild(mpath);
+        circle.appendChild(animateMotion);
+        g.appendChild(circle);
+    }
+
     function drawFlow(pathId, fromBasin, toBasin, value, maxFlowValue, labelText = '') {
         if (!fromBasin || !toBasin) return;
         const path = getEl(pathId), pathAnim = getEl(`${pathId}-anim`);
@@ -392,6 +454,19 @@
             pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 100} ${toX},${toY - 100} ${toX},${toY}`; 
         }
         path.setAttribute('d', pathData); pathAnim.setAttribute('d', pathData);
+
+        // Eraser path covers any legacy underlay (stroke slightly wider than main)
+        const pathErase = getEl(`${pathId}-erase`);
+        if (pathErase) {
+            pathErase.setAttribute('d', pathData);
+            const eraseWidth = Math.max(0, parseFloat(path.style.strokeWidth || "0") + 10);
+            pathErase.style.strokeWidth = `${eraseWidth}px`;
+        }
+
+        // Add/update moving dot for direction cue
+        const radius = Math.max(3, Math.min(8, parseFloat(path.style.strokeWidth) / 4));
+        const speed = 4 - Math.min(2.5, (parseFloat(path.style.strokeWidth) - 10) / 15); // thicker -> slightly faster
+        attachFlowDot(pathId, radius, speed);
         
         const valueLabelId = `${pathId}-value`, textLabelId = `${pathId}-text`;
         let valueLabel = getEl(valueLabelId), textLabel = getEl(textLabelId);
@@ -402,7 +477,10 @@
         if(textLabel) textLabel.textContent = labelText;
         const midPoint = path.getPointAtLength(path.getTotalLength() / 2);
         valueLabel.style.left = `${midPoint.x}px`; valueLabel.style.top = `${midPoint.y}px`;
-        if(textLabel) { textLabel.style.left = `${midPoint.x}px`; textLabel.style.top = `${midPoint.y}px`; }
+        if (textLabel) {
+            textLabel.style.left = `${midPoint.x}px`;
+            textLabel.style.top  = `${midPoint.y - 24}px`; // lift label above amount pill for clarity
+        }
         path.classList.toggle('active', value > 0);
         valueLabel.style.display = (value > 0) ? 'block' : 'none';
         if(textLabel) textLabel.style.display = (value > 0) ? 'block' : 'none';
