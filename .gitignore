@@ -1,3 +1,6 @@
+# macOS system files
+.DS_Store
+
 # Logs
 logs
 *.log
@@ -138,3 +141,4 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 *.patch
+.DS_Store
