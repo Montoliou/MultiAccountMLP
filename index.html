@@ -45,9 +45,95 @@
         
         #printable-report { display: none; }
         @media print { body > *:not(#printable-report) { display: none !important; } #printable-report { display: block; color: #000; background: #fff; } .print-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; } .print-table th, .print-table td { border: 1px solid #ccc; padding: 8px; text-align: left; } .print-table th { background-color: #f2f2f2; } }
+
+        /* === THEME TOKENS (Dark stays default) === */
+        :root {
+          --mlp-blue: #002F6C;
+          --mlp-gold: #BDA177;
+        }
+        .theme-dark {
+          --bg: #111827;        /* body bg */
+          --fg: #FFFFFF;        /* text color */
+          --card: #1f2937;      /* panels */
+          --border: #374151;    /* borders */
+          --muted: #9ca3af;     /* secondary text */
+          --accent1: #3b82f6;   /* gradient start */
+          --accent2: #6366f1;   /* gradient end */
+        }
+        .theme-light {
+          --bg: #FFFFFF;
+          --fg: #111827;
+          --card: #F9FAFB;
+          --border: #E5E7EB;
+          --muted: #6B7280;
+          --accent1: var(--mlp-blue);  /* MLP Blau */
+          --accent2: var(--mlp-gold);  /* MLP Gold */
+        }
+
+        /* Base background/text via CSS vars (keine Änderung an Tailwind nötig) */
+        body { background: var(--bg); color: var(--fg); }
+
+        /* Panels/Borders auf Theme heben */
+        .theme-light .bg-gray-800 { background-color: var(--card) !important; }
+        .theme-light .bg-gray-900 { background-color: var(--bg) !important; }
+        .theme-light .border-gray-700 { border-color: var(--border) !important; }
+        .theme-light .text-white { color: var(--fg) !important; }
+        .theme-light .text-gray-400 { color: var(--muted) !important; }
+
+        /* Flow labels/pills harmonisieren */
+        .flow-label { color: var(--muted); }
+        .flow-value { background-color: #111827; color: #d1d5db; border-color: #4b5563; }
+        .theme-light .flow-value { background-color: rgba(255,255,255,0.85); border-color: var(--border); color: var(--fg); }
+
+        /* Mini Theme Toggle (Header) */
+        .mini-theme-toggle { display:inline-flex; align-items:center; gap:6px; font-size:12px; color: var(--muted); }
+        .mini-theme-switch { position: relative; width: 34px; height: 18px; display:inline-block; }
+        .mini-theme-switch input { opacity: 0; width: 0; height: 0; }
+        .mini-theme-slider { position:absolute; inset:0; background:#374151; border-radius: 999px; transition:.25s; }
+        .mini-theme-slider:before { content:""; position:absolute; width:14px; height:14px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.25s; }
+        .theme-light .mini-theme-slider { background:#cbd5e1; }
+        .mini-theme-switch input:checked + .mini-theme-slider { background: var(--mlp-blue); }
+        .mini-theme-switch input:checked + .mini-theme-slider:before { transform: translateX(16px); }
+
+        /* -------- Light Theme Polish & Overrides -------- */
+        /* Inputs & selects */
+        .theme-light input[type="number"],
+        .theme-light input[type="text"],
+        .theme-light input[type="range"],
+        .theme-light select,
+        .theme-light textarea {
+          background: #ffffff !important;
+          color: #111827 !important;
+          border-color: var(--border) !important;
+        }
+        .theme-light .bg-gray-700 { background-color: #ffffff !important; }
+        .theme-light .text-gray-300 { color: #374151 !important; }
+        .theme-light .bg-gray-700 .text-gray-400,
+        .theme-light .text-gray-400 { color: var(--muted) !important; }
+
+        /* Panels / cards / modals */
+        .theme-light .account-basin {
+          background-color: var(--card) !important;
+          border-color: var(--border) !important;
+          box-shadow: 0 8px 18px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05) !important;
+        }
+        .theme-light .modal .bg-gray-800 { background-color: #ffffff !important; }
+        .theme-light .modal .bg-gray-900 { background-color: #ffffff !important; }
+        .theme-light .border-gray-600 { border-color: var(--border) !important; }
+
+        /* Badges / helper boxes */
+        .theme-light #variant-info { background: #eef2f7 !important; color: #334155 !important; }
+        .theme-light .limit-line span { background: #ffffff !important; color: #111827 !important; }
+
+        /* Flow animation color on light */
+        .theme-light .flow-path-animation { stroke: #111827; opacity: .25; }
+
+        /* Ensure text colors in headings/labels are dark enough */
+        .theme-light h1, .theme-light h2, .theme-light h3, .theme-light label, .theme-light p { color: #111827; }
+        .theme-light .text-blue-400, .theme-light .text-green-400, .theme-light .text-red-400, .theme-light .text-yellow-300 { filter: saturate(.95); }
     </style>
 </head>
-<body class="bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden">
+<body class="theme-dark bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden" id="theme-root">
 
     <div id="main-content" class="max-w-screen-2xl mx-auto">
         <header class="text-center mb-12">
@@ -63,7 +149,18 @@
                         <div class="flex items-center gap-3">
                              <h2 class="text-2xl font-semibold">Deine Planung</h2>
                         </div>
-                        <div class="flex items-center gap-2 text-sm">
+                        <div class="flex items-center gap-3 text-sm">
+                            <!-- Mini Theme Toggle -->
+                            <div class="mini-theme-toggle" title="Theme umschalten (MLP Hell / Dunkel)">
+                              <span class="hidden md:inline">Hell</span>
+                              <label class="mini-theme-switch">
+                                <input type="checkbox" id="theme-switch" />
+                                <span class="mini-theme-slider"></span>
+                              </label>
+                              <span class="hidden md:inline">Dunkel</span>
+                            </div>
+
+                            <!-- A/B-Variantenschalter -->
                             <span id="variante-a-label" class="font-semibold text-white">A</span>
                             <label class="switch">
                                 <input type="checkbox" id="variant-switch">
@@ -406,11 +503,56 @@
     function checkDepotTotal() { const total = depotItems.reduce((sum, i) => sum + i.allocation, 0); depotModal.total.textContent = `${total} %`; if (total === 100) { depotModal.total.className = "text-2xl font-bold text-green-400"; depotModal.warning.textContent = ""; depotModal.saveButton.disabled = false; depotModal.saveButton.classList.remove('opacity-50', 'cursor-not-allowed'); return true; } else { depotModal.total.className = "text-2xl font-bold text-red-400"; depotModal.warning.textContent = "Die Summe der Verteilung muss 100% ergeben."; depotModal.saveButton.disabled = true; depotModal.saveButton.classList.add('opacity-50', 'cursor-not-allowed'); return false; } }
     function prepareAndPrint() { const report = getEl('printable-report'); let html = `<h1>Zusammenfassung: Das intelligente Vermögensmanagement</h1>`; html += `<h2>Ihre Planung</h2>`; html += `<p><strong>Nettoeinkommen:</strong> ${formatCurrency(inputs.income.value)}</p>`; html += `<p><strong>Konsumkonto Mindestbestand:</strong> ${formatCurrency(inputs.konsumMin.value)}</p>`; html += `<p><strong>Geschätzter monatlicher Überschuss:</strong> ${formatCurrency(inputs.konsumLeftover.value)}</p>`; html += `<p><strong>Tagesgeldkonto Aktueller Stand:</strong> ${formatCurrency(inputs.tagesgeldCurrent.value)}</p>`; html += `<p><strong>Tagesgeldkonto Sparziel:</strong> ${formatCurrency(inputs.tagesgeldLimit.value)}</p>`; html += `<h2>Fixkosten & Sparpläne</h2><table class="print-table"><thead><tr><th>Posten</th><th>Betrag</th><th>Intervall</th><th>Ziel</th></tr></thead><tbody>`; fixkostenItems.forEach(item => { html += `<tr><td>${item.name}</td><td>${formatCurrency(item.amount)}</td><td>${item.interval}</td><td>${item.target}</td></tr>`; }); html += `</tbody></table>`; html += `<h2>Depot-Aufteilung</h2><table class="print-table"><thead><tr><th>Fonds/ETF</th><th>Verteilung</th></tr></thead><tbody>`; depotItems.forEach(item => { html += `<tr><td>${item.name}</td><td>${item.allocation}%</td></tr>`; }); html += `</tbody></table>`; report.innerHTML = html; window.print(); }
     
+    // --- THEME HANDLING (Dark/MLP Light) ---
+    function applyTheme(theme) {
+        const root = document.getElementById('theme-root');
+        if (!root) return;
+        root.classList.remove('theme-dark','theme-light');
+        root.classList.add(theme === 'light' ? 'theme-light' : 'theme-dark');
+
+        // Flow gradient colors adapt to theme
+        const grad = document.querySelector('#flow-gradient');
+        if (grad) {
+            const stops = grad.querySelectorAll('stop');
+            if (stops.length >= 2) {
+                if (theme === 'light') {
+                    stops[0].setAttribute('style', 'stop-color: var(--mlp-blue);');
+                    stops[1].setAttribute('style', 'stop-color: var(--mlp-gold);');
+                } else {
+                    // force classic dark gradient
+                    stops[0].setAttribute('style', 'stop-color: #3b82f6;');
+                    stops[1].setAttribute('style', 'stop-color: #6366f1;');
+                }
+            }
+        }
+    }
+    function loadTheme() {
+        try { return localStorage.getItem('vd_theme') || 'dark'; } catch(_) { return 'dark'; }
+    }
+    function saveTheme(theme) {
+        try { localStorage.setItem('vd_theme', theme); } catch(_) {}
+    }
+
     // INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
         inputs = { income: getEl('income'), konsumMin: getEl('konsumMin'), konsumLeftover: getEl('konsumLeftover'), tagesgeldCurrent: getEl('tagesgeldCurrent'), tagesgeldLimit: getEl('tagesgeldLimit'), depotCurrent: getEl('depotCurrent'), anlagezeitraum: getEl('anlagezeitraum'), rendite: getEl('rendite') };
         basins = { gehalt: getEl('gehalt-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin') };
         flowContainer = getEl('flow-container');
+
+        // THEME init
+        const themeSwitch = getEl('theme-switch');
+        const initialTheme = loadTheme(); // 'dark' | 'light'
+        applyTheme(initialTheme);
+        if (themeSwitch) {
+            themeSwitch.checked = (initialTheme === 'light');
+            themeSwitch.addEventListener('change', (e) => {
+                const t = e.target.checked ? 'light' : 'dark';
+                applyTheme(t);
+                saveTheme(t);
+                // Nach Themewechsel neu zeichnen
+                calculateAndUpdate();
+            });
+        }
 
         const anlagezeitraumLabel = getEl('anlagezeitraum-label');
         const variantSwitch = getEl('variant-switch');
@@ -458,18 +600,12 @@
         }, 100);
     });
     </script>
-HEAD
-  <script src="scripts/a11y.js" defer></script>
-  <script src="scripts/autoRecalc.js" defer></script>
-  <script src="scripts/variantFix.js" defer></script>
-  <script src="scripts/reloadButton.js" defer></script>
-  <script src="scripts/recalcFab.js" defer></script>
-  <script src="scripts/a11y.js" defer></script>
-  <script src="scripts/autoRecalc.js" defer></script>
-  <script src="scripts/variantFix.js" defer></script>
-  <script src="scripts/reloadButton.js" defer></script>
-  <script src="scripts/recalcFab.js" defer></script>
-  <script src="scripts/removeHeaderIcon.js" defer></script>
+    <script src="scripts/a11y.js" defer></script>
+    <script src="scripts/autoRecalc.js" defer></script>
+    <script src="scripts/variantFix.js" defer></script>
+    <script src="scripts/reloadButton.js" defer></script>
+    <script src="scripts/recalcFab.js" defer></script>
+    <script src="scripts/removeHeaderIcon.js" defer></script>
 </body>
 </html>
 
