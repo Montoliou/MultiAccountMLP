@@ -238,6 +238,7 @@
         .theme-light input[type="range"] { background: #e5e7eb !important; }
         .theme-light input[type="range"]::-webkit-slider-thumb { background: var(--mlp-blue); }
         .theme-light input[type="range"]::-moz-range-thumb { background: var(--mlp-blue); }
+        #rendite-info .text-xs { font-size: 0.7rem; }
     </style>
 </head>
 <body class="theme-dark bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden" id="theme-root">
@@ -386,6 +387,45 @@
         1: {min: -40, max: 50}, 5: {min: -12, max: 32}, 10: {min: -1.5, max: 19},
         15: {min: 3, max: 15}, 20: {min: 4, max: 13}, 25: {min: 5, max: 12}, 30: {min: 6, max: 11}
     };
+    // === Load fine-grained min/max returns from TXT (MLP Renditedreieck) ===
+    // File: data/rendite_extreme_generated.txt
+    // Format (tab/whitespace):
+    // Anlagezeitraum (Jahre)    Minimale Rendite (%)   Maximale Rendite (%)
+    // 1   -42.2   51.7
+    let renditeExtremes = null;
+
+    async function loadRenditeExtremes() {
+    try {
+        const res = await fetch('data/rendite_extreme_generated.txt', { cache: 'no-store' });
+        if (!res.ok) throw new Error('not found');
+        const txt = await res.text();
+        renditeExtremes = parseRenditeExtremesTSV(txt);
+        // refresh UI for current slider value
+        const jahre = parseInt(inputs.anlagezeitraum.value, 10);
+        updateRenditeSuggestions(jahre);
+    } catch (e) {
+        console.warn('Rendite-Extremwerte nicht geladen, nutze Fallback.', e);
+        renditeExtremes = null;
+    }
+    }
+
+    function parseRenditeExtremesTSV(tsv) {
+    const map = {};
+    tsv.split(/\r?\n/).forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        if (!/^\d+/.test(trimmed)) return; // skip header
+        const parts = trimmed.split(/\t|\s+/).filter(Boolean);
+        if (parts.length < 3) return;
+        const years = parseInt(parts[0], 10);
+        const min = parseFloat(String(parts[1]).replace(',', '.'));
+        const max = parseFloat(String(parts[2]).replace(',', '.'));
+        if (Number.isFinite(years) && Number.isFinite(min) && Number.isFinite(max)) {
+        map[years] = { min: +min.toFixed(1), max: +max.toFixed(1) };
+        }
+    });
+    return map;
+    }
 
     let inputs, basins, flowContainer; // Declare globally, assign in DOMContentLoaded
     const getEl = (id) => document.getElementById(id);
@@ -404,27 +444,29 @@
     function positionCascade() {
         if (!flowContainer) return;
         const containerWidth = flowContainer.clientWidth;
-        const h_offset_side = 50; 
-        const v_gap = 220;
+        const h_gap_side = 120;
+        const v_gap = 240;
         const depotWidth = 440;
         basins.depot.style.width = `${depotWidth}px`;
 
         let positions;
         if (currentVariant === 'B') {
-             positions = {
-                gehalt: { top: 0, left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
-                konsum: { top: v_gap, left: h_offset_side },
-                fixkosten: { top: v_gap * 2, left: containerWidth - h_offset_side - basins.fixkosten.offsetWidth },
-                tagesgeld: { top: v_gap * 3, left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
-                depot: { top: v_gap * 4.2, left: containerWidth / 2 - depotWidth / 2 },
+            positions = {
+                gehalt:   { top: 0,          left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
+                // Karten näher zur Mitte rücken (symmetrisch)
+                konsum:   { top: v_gap,      left: containerWidth / 2 - basins.konsum.offsetWidth - h_gap_side },
+                fixkosten:{ top: v_gap * 2,  left: containerWidth / 2 + h_gap_side },
+                tagesgeld:{ top: v_gap * 3,  left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
+                depot:    { top: v_gap * 4.0, left: containerWidth / 2 - depotWidth / 2 },
             };
         } else { // Variante A
-             positions = {
-                gehalt: { top: 0, left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
-                fixkosten: { top: v_gap, left: containerWidth - h_offset_side - basins.fixkosten.offsetWidth },
-                konsum: { top: v_gap * 2, left: h_offset_side },
-                tagesgeld: { top: v_gap * 3, left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
-                depot: { top: v_gap * 4.2, left: containerWidth / 2 - depotWidth / 2 },
+            positions = {
+                gehalt:   { top: 0,          left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
+                // Karten näher zur Mitte rücken (symmetrisch)
+                fixkosten:{ top: v_gap,      left: containerWidth / 2 + h_gap_side },
+                konsum:   { top: v_gap * 2,  left: containerWidth / 2 - basins.konsum.offsetWidth - h_gap_side },
+                tagesgeld:{ top: v_gap * 3,  left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
+                depot:    { top: v_gap * 4.0, left: containerWidth / 2 - depotWidth / 2 },
             };
         }
         for (const key in basins) { 
@@ -463,24 +505,73 @@
         if (!fromBasin || !toBasin) return;
         const path = getEl(pathId), pathAnim = getEl(`${pathId}-anim`);
         const fromRect = fromBasin.getBoundingClientRect(), toRect = toBasin.getBoundingClientRect(), containerRect = flowContainer.getBoundingClientRect();
-        let fromX = fromRect.left - containerRect.left + fromRect.width / 2, fromY = fromRect.bottom - containerRect.top;
-        const toX = toRect.left - containerRect.left + toRect.width / 2, toY = toRect.top - containerRect.top;
+        let fromX = fromRect.left - containerRect.left + fromRect.width / 2;
+        let fromY = fromRect.bottom - containerRect.top;
+        const toX = toRect.left - containerRect.left + toRect.width / 2;
+        const toY = toRect.top - containerRect.top;
         const minWidth = 10, maxWidth = 45;
         const normalizedValue = Math.max(0, value) / maxFlowValue;
         const strokeWidth = minWidth + normalizedValue * (maxWidth - minWidth);
         path.style.strokeWidth = `${value > 0 ? Math.max(minWidth, strokeWidth) : 0}px`;
 
         let pathData;
+        // REPLACED BLOCK: custom anchor, curve, and offsets for each flow
+        // --- BEGIN NEW BLOCK ---
+        const EXIT_OFFSET_Y = 8; // slightly deeper anchor, hides seams better
+        const CURVE_MAIN = 70;   // smaller curve radius for tighter, calmer streams
+        const CURVE_SHORT = 55;  // short bends for side-to-side connections
+
         if (pathId === 'fixkosten-depot-flow') {
+            // From right side of fixkosten into right half of depot
             fromX = fromRect.left - containerRect.left + fromRect.width * 0.75;
             const toDepotX = toRect.left - containerRect.left + toRect.width * 0.75;
-            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 120} ${toDepotX},${toY - 120} ${toDepotX},${toY}`;
+            fromY -= EXIT_OFFSET_Y;
+            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 70} ${toDepotX},${toY - 70} ${toDepotX},${toY}`;
         } else if (pathId === 'tagesgeld-depot-flow') {
+            // From center of tagesgeld into left half of depot
             const toDepotX = toRect.left - containerRect.left + (toRect.width * 0.25);
-            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 80} ${toDepotX},${toY - 80} ${toDepotX},${toY}`;
-        } else { 
-            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 100} ${toX},${toY - 100} ${toX},${toY}`; 
+            fromY -= EXIT_OFFSET_Y;
+            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 55} ${toDepotX},${toY - 55} ${toDepotX},${toY}`;
+        } else if (pathId === 'konsum-tagesgeld-flow') {
+            // Überschuss-Stream aus dem Konsumkonto:
+            //  • Variante B: unten links aus dem Konsumkonto starten (verhindert Kreuzungen)
+            //  • Variante A: unten rechts aus dem Konsumkonto starten (spiegelbildlich zur Anordnung)
+            if (typeof currentVariant !== 'undefined' && currentVariant === 'B') {
+                // bottom-left anchor on Konsum → Tagesgeld (zentral) mit kurzer, ruhiger Kurve
+                fromX = fromRect.left - containerRect.left + fromRect.width * 0.20;
+                fromY -= EXIT_OFFSET_Y;
+                const c1x = fromX - 40, c1y = fromY + CURVE_SHORT;
+                const c2x = toX - 20,  c2y = toY - CURVE_SHORT;
+                pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toX},${toY}`;
+            } else {
+                // Variante A: bottom-right anchor (spiegelbildlich), kurze, sanfte Biegung
+                fromX = fromRect.left - containerRect.left + fromRect.width * 0.80;
+                fromY -= EXIT_OFFSET_Y;
+                const c1x = fromX + 40, c1y = fromY + CURVE_SHORT;
+                const c2x = toX + 20,  c2y = toY - CURVE_SHORT;
+                pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toX},${toY}`;
+            }
+        // --- BEGIN NEW BLOCK ---
+        } else if (pathId === 'flow-path-2' && typeof currentVariant !== 'undefined' && currentVariant === 'A') {
+            // Dauerauftrag: from left side of Fixkosten (right column) to right side of Konsum (left column)
+            const R = 65; // curve radius
+            fromX = fromRect.left - containerRect.left + fromRect.width * 0.20; // exit left
+            fromY -= EXIT_OFFSET_Y;
+            const toKonsumX = toRect.left - containerRect.left + toRect.width * 0.80; // enter right
+            pathData = `M ${fromX},${fromY} C ${fromX - R},${fromY + R} ${toKonsumX + R},${toY - R} ${toKonsumX},${toY}`;
+        } else if (pathId === 'flow-path-2' && typeof currentVariant !== 'undefined' && currentVariant === 'B') {
+            // Dauerauftrag: from right side of Konsum (left column) to right-half of Fixkosten (right column)
+            const R = 65; // curve radius
+            fromX = fromRect.left - containerRect.left + fromRect.width * 0.80; // exit right
+            fromY -= EXIT_OFFSET_Y;
+            const toRightX = toRect.left - containerRect.left + toRect.width * 0.75; // enter right half
+            pathData = `M ${fromX},${fromY} C ${fromX + R},${fromY + R} ${toRightX - R},${toY - R} ${toRightX},${toY}`;
+        } else {
+            // Default smooth S-curve between centers
+            fromY -= EXIT_OFFSET_Y;
+            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + CURVE_MAIN} ${toX},${toY - CURVE_MAIN} ${toX},${toY}`;
         }
+        // --- END NEW BLOCK ---
         path.setAttribute('d', pathData); pathAnim.setAttribute('d', pathData);
 
         // Update mask stroke to define visible river area
@@ -680,10 +771,23 @@
     }
 
     function updateRenditeSuggestions(jahre) {
-        const data = getRenditeDataForPeriod(jahre);
-        const infoEl = getEl('rendite-info');
-        inputs.rendite.value = ((data.min + data.max) / 2).toFixed(1);
-        infoEl.innerHTML = `Hist. Spanne p.a.: <span class="font-bold text-red-400">${data.min}%</span> bis <span class="font-bold text-green-400">${data.max}%</span>`;
+      let data = null;
+      if (renditeExtremes && renditeExtremes[jahre]) {
+        data = renditeExtremes[jahre];
+      } else {
+        data = getRenditeDataForPeriod(jahre); // Fallback (grob)
+      }
+      const infoEl = getEl('rendite-info');
+      const mid = ((data.min + data.max) / 2).toFixed(1);
+      inputs.rendite.value = mid;
+
+      // Farb-Logik: <0 rot, 0–3 gelb, >3 grün (pro Zahl separat)
+      const colorClass = (v) => (v < 0 ? 'text-red-400' : (v < 3 ? 'text-yellow-400' : 'text-green-400'));
+      const minSpan = `<span class="font-bold ${colorClass(data.min)}">${data.min}%</span>`;
+      const maxSpan = `<span class="font-bold ${colorClass(data.max)}">${data.max}%</span>`;
+
+      // Kein Quellhinweis mehr anzeigen
+      infoEl.innerHTML = `Historische Spanne p.a.: ${minSpan} bis ${maxSpan}`;
     }
 
     function createGrowthChartSVG() { return `<svg viewBox="0 0 100 60" class="w-20 h-12 mb-1"><rect x="10" y="40" width="15" height="20" fill="#3b82f6" opacity="0.6"></rect><rect x="30" y="30" width="15" height="30" fill="#3b82f6" opacity="0.8"></rect><rect x="50" y="20" width="15" height="40" fill="#3b82f6"></rect><rect x="70" y="10" width="15" height="50" fill="#6366f1"></rect></svg>`; }
@@ -796,11 +900,22 @@
         observer.observe(flowContainer);
         
         setTimeout(() => {
-            renderFixkostenList(); 
-            renderDepotList(); 
+            renderFixkostenList();
+            renderDepotList();
             setVariantUI();
             updateRenditeSuggestions(parseInt(inputs.anlagezeitraum.value, 10));
             calculateAndUpdate();
+
+            // Load fine-grained min/max ranges from TXT (MLP-Dreieck)
+            loadRenditeExtremes();
+
+            // Keep info live while sliding
+            inputs.anlagezeitraum.addEventListener('input', () => {
+                const jahre = parseInt(inputs.anlagezeitraum.value, 10);
+                const label = getEl('anlagezeitraum-label');
+                if (label) label.textContent = `${jahre} Jahre`;
+                updateRenditeSuggestions(jahre);
+            });
         }, 100);
     });
     </script>
