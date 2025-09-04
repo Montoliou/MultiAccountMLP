@@ -305,7 +305,7 @@
                         <div>
                             <label for="rendite" class="block text-sm font-medium text-gray-300 mb-1">Ihre angenommene Rendite p.a.</label>
                             <div class="relative"><input type="number" id="rendite" step="0.1" value="7" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-4 pr-8 py-2 focus:ring-2 focus:ring-indigo-500"><span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">%</span></div>
-                            <div id="rendite-info" class="text-xs text-gray-400 mt-2 text-center p-2 bg-gray-700 rounded-md"></div>
+                            <div id="rendite-info" class="text-xs text-gray-400 mt-2 text-center p-2 bg-gray-700 rounded-md cursor-pointer hover:underline" title="Klicken für das MSCI-Renditedreieck"></div>
                         </div>
                         <button onclick="calculateProjection()" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex justify-center items-center gap-2">
                             Prognose berechnen
@@ -371,19 +371,30 @@
     <div id="prognose-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50"> <div class="bg-gray-800 w-full max-w-3xl rounded-xl shadow-2xl p-6 relative"> <button onclick="closeModal('prognose-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button> <h3 class="text-xl font-bold mb-4">Prognose: Vermögensentwicklung</h3> <div class="bg-gray-900 p-4 rounded-lg"> <canvas id="prognose-chart"></canvas> </div> <div id="prognose-summary" class="mt-4 text-center"></div> </div> </div>
     <div id="fixkosten-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50"> <div class="bg-gray-800 w-full max-w-2xl rounded-xl shadow-2xl p-6 relative"> <button onclick="closeModal('fixkosten-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button> <h3 class="text-xl font-bold mb-4">Fixkosten & Sparpläne</h3><div id="fixkosten-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div> <button onclick="addFixkostenItem()" class="mt-4 text-sm bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-md">+ Posten hinzufügen</button><hr class="border-gray-600 my-4"> <div class="flex justify-between items-center"><p class="text-lg">Monatliche Gesamtkosten:</p><p id="modal-total" class="text-2xl font-bold text-red-400">€ 0</p></div> <button onclick="saveFixkosten()" class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern & Schließen</button> </div> </div>
     <div id="depot-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50"> <div class="bg-gray-800 w-full max-w-2xl rounded-xl shadow-2xl p-6 relative"> <button onclick="closeModal('depot-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button> <h3 class="text-xl font-bold mb-4">Depot-Aufteilung</h3><p class="text-sm text-gray-400 -mt-3 mb-4">Lege fest, wie neue Investments verteilt werden.</p> <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div> <button onclick="addDepotItem()" class="mt-4 text-sm bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-md">+ Fonds hinzufügen</button><hr class="border-gray-600 my-4"> <div class="flex justify-between items-center"><p class="text-lg">Gesamt-Verteilung:</p><p id="depot-total" class="text-2xl font-bold">100 %</p></div> <p id="depot-warning" class="text-center text-yellow-400 mt-2 h-6"></p> <button id="depot-save-button" onclick="saveDepot()" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern & Schließen</button> </div> </div>
+    <div id="rendite-ref-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50">
+      <div class="bg-gray-800 w-full max-w-5xl rounded-xl shadow-2xl p-6 relative">
+        <button onclick="closeModal('rendite-ref-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Schließen">&times;</button>
+        <h3 class="text-xl font-bold mb-4">Historische Renditespannen (MSCI Renditedreieck)</h3>
+        <div class="bg-gray-900 p-4 rounded-lg max-h-[80vh] overflow-auto">
+          <img id="rendite-ref-img" src="assets/msci_renditedreieck.png" alt="MSCI Renditedreieck" class="w-full h-auto rounded-md" onerror="this.style.display='none'; getEl('rendite-ref-placeholder').style.display='block';">
+          <div id="rendite-ref-placeholder" class="hidden text-sm text-gray-400">
+            Lege die Grafik unter <code>assets/msci_renditedreieck.png</code> ab, um sie hier anzuzeigen.
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script>
     let currentVariant = 'A';
-    let fixkostenItems = [ 
-        { name: 'Miete', amount: 850, interval: 'monthly', target: 'fixkosten' }, 
-        { name: 'Strom', amount: 60, interval: 'monthly', target: 'fixkosten' }, 
-        { name: 'Kommunikation (Handy/Netz)', amount: 40, interval: 'monthly', target: 'fixkosten' },
-        { name: 'Mobilität (Auto/Ticket)', amount: 150, interval: 'monthly', target: 'fixkosten' },
-        { name: 'Versicherungen', amount: 180, interval: 'quarterly', target: 'fixkosten' }, 
-        { name: 'Sport/Hobbies', amount: 50, interval: 'monthly', target: 'fixkosten' },
-        { name: 'Vorsorge (z.B. BU)', amount: 70, interval: 'monthly', target: 'fixkosten' },
-        { name: 'Sparplan Depot', amount: 250, interval: 'monthly', target: 'depot' }, 
-    ];
+let fixkostenItems = [ 
+    { name: 'Sparplan Depot', amount: 250, interval: 'monthly', target: 'depot' },
+    { name: 'Miete + NK', amount: 850, interval: 'monthly', target: 'fixkosten' }, 
+    { name: 'Kommunikation (Handy/Netz)', amount: 40, interval: 'monthly', target: 'fixkosten' },
+    { name: 'Mobilität (Auto/Ticket)', amount: 150, interval: 'monthly', target: 'fixkosten' },
+    { name: 'Versicherungen', amount: 180, interval: 'quarterly', target: 'fixkosten' }, 
+    { name: 'Sport/Hobbies', amount: 50, interval: 'monthly', target: 'fixkosten' },
+    { name: 'Vorsorge (z.B. BU)', amount: 70, interval: 'monthly', target: 'fixkosten' }
+];
     let depotItems = [ { name: 'MSCI World ETF', allocation: 70, color: '#3b82f6' }, { name: 'Emerging Markets ETF', allocation: 30, color: '#8b5cf6' } ];
     let prognoseChartInstance = null;
     
@@ -859,7 +870,20 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     const fixkostenModal = { list: getEl('fixkosten-list'), total: getEl('modal-total') };
     function saveFixkosten() { calculateAndUpdate(); closeModal('fixkosten-modal'); }
     function renderFixkostenList() { fixkostenModal.list.innerHTML = ''; let total = 0; fixkostenItems.forEach((item, index) => { const itemEl = document.createElement('div'); itemEl.className = 'grid grid-cols-12 gap-2 items-center'; itemEl.innerHTML = `<input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten" class="col-span-4 bg-gray-700 p-1 rounded"><input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="Betrag" class="col-span-2 bg-gray-700 p-1 rounded"><select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="col-span-2 bg-gray-700 p-1 rounded">${['monthly','quarterly','annually'].map(i => `<option value="${i}" ${item.interval === i ? 'selected' : ''}>${i==='monthly'?'mtl.':i==='quarterly'?'viertelj.':'jährl.'}</option>`).join('')}</select><select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="col-span-3 bg-gray-700 p-1 rounded"><option value="fixkosten" ${item.target==='fixkosten'?'selected':''}>-> Fixkosten</option><option value="depot" ${item.target==='depot'?'selected':''}>-> Sparplan</option></select><button onclick="removeFixkostenItem(${index})" class="col-span-1 text-red-400 hover:text-red-300 text-xl">&times;</button>`; fixkostenModal.list.appendChild(itemEl); total += getMonthlyAmount(item); }); fixkostenModal.total.textContent = formatCurrency(total); }
-    function updateFixkostenItem(index, key, value) { if (key === 'amount') value = parseFloat(value) || 0; renderFixkostenList(); }
+function updateFixkostenItem(index, key, value) {
+  if (!fixkostenItems[index]) return;
+  if (key === 'amount') {
+    const num = parseFloat(value);
+    fixkostenItems[index].amount = Number.isFinite(num) ? num : 0;
+  } else if (key === 'interval') {
+    fixkostenItems[index].interval = String(value);
+  } else if (key === 'target') {
+    fixkostenItems[index].target = String(value);
+  } else if (key === 'name') {
+    fixkostenItems[index].name = String(value);
+  }
+  renderFixkostenList();
+}
     function addFixkostenItem() { fixkostenItems.push({ name: '', amount: 0, interval: 'monthly', target: 'fixkosten' }); renderFixkostenList(); }
     function removeFixkostenItem(index) { fixkostenItems.splice(index, 1); renderFixkostenList(); }
     const depotModal = { list: getEl('depot-list'), total: getEl('depot-total'), warning: getEl('depot-warning'), saveButton: getEl('depot-save-button') };
@@ -1159,6 +1183,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 if (label) label.textContent = `${jahre} Jahre`;
                 updateRenditeSuggestions(jahre);
             });
+
+            // Add click handler for rendite-info to open modal
+            const renditeInfoEl = getEl('rendite-info');
+            if (renditeInfoEl) {
+              renditeInfoEl.addEventListener('click', () => openModal('rendite-ref-modal'));
+            }
         }, 100);
     });
     </script>
