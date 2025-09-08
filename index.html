@@ -280,36 +280,48 @@
                             </label>
                             <span id="variante-b-label" class="text-gray-500">B</span>
                         </div>
+                        <div class="ml-3 flex items-center gap-2 text-xs">
+                          <button id="consult-toggle-btn" class="px-2 py-1 rounded border border-gray-600 hover:border-indigo-500">Beratung starten</button>
+                          <button id="consult-next-btn" class="px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white hidden">Weiter</button>
+                        </div>
                     </div>
                     <div id="variant-info" class="text-xs text-center text-gray-400 bg-gray-700 p-2 rounded-md mb-4"></div>
                     <div class="space-y-4">
                         <!-- Existing planning sections -->
-                        <div><label for="income" class="block text-sm font-medium text-gray-300 mb-1">Nettoeinkommen</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="income" value="3000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                        <div id="sec-income">
+                          <label for="income" class="block text-sm font-medium text-gray-300 mb-1">Nettoeinkommen</label>
+                          <div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="income" value="3000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div>
+                        </div>
                         <hr class="border-gray-700 !my-5">
                         <h3 class="text-lg font-semibold text-yellow-300 -mb-2">Konsumkonto</h3>
-                        <div><label for="konsumMin" class="block text-sm font-medium text-gray-300 mb-1">Mindestbestand (Sockelbetrag)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumMin" value="100" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        <div><label for="konsumLeftover" class="block text-sm font-medium text-gray-300 mb-1">Variabler Überschuss (Schätzung)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumLeftover" value="250" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                        <div id="sec-konsum">
+                          <div><label for="konsumMin" class="block text-sm font-medium text-gray-300 mb-1">Mindestbestand (Sockelbetrag)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumMin" value="100" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                          <div class="mt-3"><label for="konsumLeftover" class="block text-sm font-medium text-gray-300 mb-1">Variabler Überschuss (Schätzung)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumLeftover" value="250" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                        </div>
                         <hr class="border-gray-700 !my-5">
                         <h3 class="text-lg font-semibold text-blue-300 -mb-2">Tagesgeldkonto</h3>
-                        <div><label for="tagesgeldCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Stand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldCurrent" value="4800" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        <div><label for="tagesgeldLimit" class="block text-sm font-medium text-gray-300 mb-1">Sparziel (Überlaufgrenze)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldLimit" value="5000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        
+                        <div id="sec-tagesgeld">
+                          <div><label for="tagesgeldCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Stand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldCurrent" value="4800" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                          <div class="mt-3"><label for="tagesgeldLimit" class="block text-sm font-medium text-gray-300 mb-1">Sparziel (Überlaufgrenze)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldLimit" value="5000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                        </div>
                         <!-- New Projection Section -->
                         <hr class="border-gray-700 !my-5">
-                        <h3 class="text-lg font-semibold text-purple-300 -mb-2">Vermögens-Prognose</h3>
-                         <div><label for="depotCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Depotstand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="depotCurrent" value="25000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        <div>
-                            <label for="anlagezeitraum" class="block text-sm font-medium text-gray-300 mb-1">Anlagezeitraum: <span id="anlagezeitraum-label" class="font-bold">15 Jahre</span></label>
-                            <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                        <div id="sec-prognose">
+                          <h3 class="text-lg font-semibold text-purple-300 -mb-2">Vermögens-Prognose</h3>
+                          <div><label for="depotCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Depotstand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="depotCurrent" value="25000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                          <div class="mt-3">
+                              <label for="anlagezeitraum" class="block text-sm font-medium text-gray-300 mb-1">Anlagezeitraum: <span id="anlagezeitraum-label" class="font-bold">15 Jahre</span></label>
+                              <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                          </div>
+                          <div class="mt-3">
+                              <label for="rendite" class="block text-sm font-medium text-gray-300 mb-1">Ihre angenommene Rendite p.a.</label>
+                              <div class="relative"><input type="number" id="rendite" step="0.1" value="7" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-4 pr-8 py-2 focus:ring-2 focus:ring-indigo-500"><span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">%</span></div>
+                              <div id="rendite-info" class="text-xs text-gray-400 mt-2 text-center p-2 bg-gray-700 rounded-md"></div>
+                          </div>
+                          <button onclick="calculateProjection()" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex justify-center items-center gap-2">
+                              Prognose berechnen
+                          </button>
                         </div>
-                        <div>
-                            <label for="rendite" class="block text-sm font-medium text-gray-300 mb-1">Ihre angenommene Rendite p.a.</label>
-                            <div class="relative"><input type="number" id="rendite" step="0.1" value="7" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-4 pr-8 py-2 focus:ring-2 focus:ring-indigo-500"><span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">%</span></div>
-                            <div id="rendite-info" class="text-xs text-gray-400 mt-2 text-center p-2 bg-gray-700 rounded-md cursor-pointer hover:underline" title="Klicken für das MSCI-Renditedreieck"></div>
-                        </div>
-                        <button onclick="calculateProjection()" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex justify-center items-center gap-2">
-                            Prognose berechnen
-                        </button>
                     </div>
                 </div>
                  <button onclick="prepareAndPrint()" class="print-btn mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
@@ -371,32 +383,95 @@
     <div id="prognose-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50"> <div class="bg-gray-800 w-full max-w-3xl rounded-xl shadow-2xl p-6 relative"> <button onclick="closeModal('prognose-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button> <h3 class="text-xl font-bold mb-4">Prognose: Vermögensentwicklung</h3> <div class="bg-gray-900 p-4 rounded-lg"> <canvas id="prognose-chart"></canvas> </div> <div id="prognose-summary" class="mt-4 text-center"></div> </div> </div>
     <div id="fixkosten-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50"> <div class="bg-gray-800 w-full max-w-2xl rounded-xl shadow-2xl p-6 relative"> <button onclick="closeModal('fixkosten-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button> <h3 class="text-xl font-bold mb-4">Fixkosten & Sparpläne</h3><div id="fixkosten-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div> <button onclick="addFixkostenItem()" class="mt-4 text-sm bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-md">+ Posten hinzufügen</button><hr class="border-gray-600 my-4"> <div class="flex justify-between items-center"><p class="text-lg">Monatliche Gesamtkosten:</p><p id="modal-total" class="text-2xl font-bold text-red-400">€ 0</p></div> <button onclick="saveFixkosten()" class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern & Schließen</button> </div> </div>
     <div id="depot-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50"> <div class="bg-gray-800 w-full max-w-2xl rounded-xl shadow-2xl p-6 relative"> <button onclick="closeModal('depot-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button> <h3 class="text-xl font-bold mb-4">Depot-Aufteilung</h3><p class="text-sm text-gray-400 -mt-3 mb-4">Lege fest, wie neue Investments verteilt werden.</p> <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div> <button onclick="addDepotItem()" class="mt-4 text-sm bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-md">+ Fonds hinzufügen</button><hr class="border-gray-600 my-4"> <div class="flex justify-between items-center"><p class="text-lg">Gesamt-Verteilung:</p><p id="depot-total" class="text-2xl font-bold">100 %</p></div> <p id="depot-warning" class="text-center text-yellow-400 mt-2 h-6"></p> <button id="depot-save-button" onclick="saveDepot()" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern & Schließen</button> </div> </div>
-    <div id="rendite-ref-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50">
-      <div class="bg-gray-800 w-full max-w-5xl rounded-xl shadow-2xl p-6 relative">
-        <button onclick="closeModal('rendite-ref-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Schließen">&times;</button>
-        <h3 class="text-xl font-bold mb-4">Historische Renditespannen (MSCI Renditedreieck)</h3>
-        <div class="bg-gray-900 p-4 rounded-lg max-h-[80vh] overflow-auto">
-          <img id="rendite-ref-img" src="assets/msci_renditedreieck.png" alt="MSCI Renditedreieck" class="w-full h-auto rounded-md" onerror="this.style.display='none'; getEl('rendite-ref-placeholder').style.display='block';">
-          <div id="rendite-ref-placeholder" class="hidden text-sm text-gray-400">
-            Lege die Grafik unter <code>assets/msci_renditedreieck.png</code> ab, um sie hier anzuzeigen.
-          </div>
-        </div>
-      </div>
-    </div>
 
     <script>
     let currentVariant = 'A';
-let fixkostenItems = [ 
-    { name: 'Sparplan Depot', amount: 250, interval: 'monthly', target: 'depot' },
-    { name: 'Miete + NK', amount: 850, interval: 'monthly', target: 'fixkosten' }, 
-    { name: 'Kommunikation (Handy/Netz)', amount: 40, interval: 'monthly', target: 'fixkosten' },
-    { name: 'Mobilität (Auto/Ticket)', amount: 150, interval: 'monthly', target: 'fixkosten' },
-    { name: 'Versicherungen', amount: 180, interval: 'quarterly', target: 'fixkosten' }, 
-    { name: 'Sport/Hobbies', amount: 50, interval: 'monthly', target: 'fixkosten' },
-    { name: 'Vorsorge (z.B. BU)', amount: 70, interval: 'monthly', target: 'fixkosten' }
-];
+    let fixkostenItems = [ 
+        { name: 'Miete', amount: 850, interval: 'monthly', target: 'fixkosten' }, 
+        { name: 'Strom', amount: 60, interval: 'monthly', target: 'fixkosten' }, 
+        { name: 'Kommunikation (Handy/Netz)', amount: 40, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Mobilität (Auto/Ticket)', amount: 150, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Versicherungen', amount: 180, interval: 'quarterly', target: 'fixkosten' }, 
+        { name: 'Sport/Hobbies', amount: 50, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Vorsorge (z.B. BU)', amount: 70, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Sparplan Depot', amount: 250, interval: 'monthly', target: 'depot' }, 
+    ];
     let depotItems = [ { name: 'MSCI World ETF', allocation: 70, color: '#3b82f6' }, { name: 'Emerging Markets ETF', allocation: 30, color: '#8b5cf6' } ];
     let prognoseChartInstance = null;
+    // Beratungsansicht state
+    let consultationMode = false;      // off by default
+    let consultationStep = 0;          // 0..5 per variant
+    let allowDepotStream = true;       // normal mode shows depot stream
+
+    function setConsultationMode(on) {
+      consultationMode = !!on;
+      consultationStep = on ? 1 : 0;
+      allowDepotStream = !on; // only enable depot stream at step 5 in consultation
+      applyConsultationVisibility();
+      calculateAndUpdate();
+      const nextBtn = getEl('consult-next-btn');
+      const toggleBtn = getEl('consult-toggle-btn');
+      if (on) { nextBtn.classList.remove('hidden'); toggleBtn.textContent = 'Beratung beenden'; }
+      else { nextBtn.classList.add('hidden'); toggleBtn.textContent = 'Beratung starten'; }
+    }
+
+    function nextConsultationStep() {
+      if (!consultationMode) return;
+      consultationStep = Math.min(5, consultationStep + 1);
+      if (consultationStep === 5) allowDepotStream = true; // enable depot stream only at final step
+      applyConsultationVisibility();
+      calculateAndUpdate();
+    }
+
+    function isVisible(el) {
+      return el && el.offsetParent !== null; // hidden via CSS class will report null
+    }
+
+    function show(el, on) {
+      if (!el) return;
+      if (on) el.classList.remove('hidden'); else el.classList.add('hidden');
+    }
+
+    function applyConsultationVisibility() {
+      const secIncome = getEl('sec-income');
+      const secKonsum = getEl('sec-konsum');
+      const secTG     = getEl('sec-tagesgeld');
+      const secProg   = getEl('sec-prognose');
+
+      // Default: all visible (normal mode)
+      if (!consultationMode) {
+        [secIncome, secKonsum, secTG, secProg].forEach(el => show(el, true));
+        // all basins visible
+        for (const key in basins) show(basins[key], true);
+        return;
+      }
+
+      const A = (currentVariant === 'A');
+      // Step visibility by variant
+      if (A) {
+        show(secIncome, true);
+        show(secKonsum, consultationStep >= 2);
+        show(secTG,     consultationStep >= 3);
+        show(secProg,   consultationStep >= 4);
+
+        show(basins.gehalt, true);
+        show(basins.fixkosten, true);
+        show(basins.konsum, consultationStep >= 2);
+        show(basins.tagesgeld, consultationStep >= 3);
+        show(basins.depot, consultationStep >= 4);
+      } else {
+        show(secIncome, true);
+        show(secKonsum, true); // B: income + konsum from step 1
+        show(secTG,     consultationStep >= 3);
+        show(secProg,   consultationStep >= 4);
+
+        show(basins.gehalt, true);
+        show(basins.konsum, true);
+        show(basins.fixkosten, consultationStep >= 2);
+        show(basins.tagesgeld, consultationStep >= 3);
+        show(basins.depot, consultationStep >= 4);
+      }
+    }
     
     const renditeData = {
         1: {min: -40, max: 50}, 5: {min: -12, max: 32}, 10: {min: -1.5, max: 19},
@@ -694,19 +769,26 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             renderBasin(basins.tagesgeld, 'Tagesgeldkonto', formatCurrency(finalTagesgeld), '<svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', `Zufluss: ${formatCurrency(tagesgeldInflow)}`, { current: finalTagesgeld, min: 0, limit: tagesgeldLimit });
             renderBasin(basins.depot, 'Vermögensaufbau', `+ ${formatCurrency(totalDepotInflow)}`, '', '(Klick zum Bearbeiten)', {}, createGrowthChartSVG());
             
+            const bothVisible = (a,b) => isVisible(a) && isVisible(b);
             const maxFlow = income || 1;
 
             if (currentVariant === 'A') {
-                drawFlow('flow-path-1', basins.gehalt, basins.fixkosten, income, maxFlow);
-                drawFlow('flow-path-2', basins.fixkosten, basins.konsum, income - totalAbgang, maxFlow, 'Dauerauftrag');
+                if (bothVisible(basins.gehalt, basins.fixkosten))
+                    drawFlow('flow-path-1', basins.gehalt, basins.fixkosten, income, maxFlow);
+                if (bothVisible(basins.fixkosten, basins.konsum))
+                    drawFlow('flow-path-2', basins.fixkosten, basins.konsum, income - totalAbgang, maxFlow, 'Dauerauftrag');
             } else {
-                drawFlow('flow-path-1', basins.gehalt, basins.konsum, income, maxFlow);
-                drawFlow('flow-path-2', basins.konsum, basins.fixkosten, totalAbgang, maxFlow, 'Dauerauftrag');
+                if (bothVisible(basins.gehalt, basins.konsum))
+                    drawFlow('flow-path-1', basins.gehalt, basins.konsum, income, maxFlow);
+                if (bothVisible(basins.konsum, basins.fixkosten))
+                    drawFlow('flow-path-2', basins.konsum, basins.fixkosten, totalAbgang, maxFlow, 'Dauerauftrag');
             }
-            
-            drawFlow('konsum-tagesgeld-flow', basins.konsum, basins.tagesgeld, konsumLeftover, maxFlow);
-            drawFlow('tagesgeld-depot-flow', basins.tagesgeld, basins.depot, depotOverflow, maxFlow);
-            drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+            if (bothVisible(basins.konsum, basins.tagesgeld))
+                drawFlow('konsum-tagesgeld-flow', basins.konsum, basins.tagesgeld, konsumLeftover, maxFlow);
+            if (bothVisible(basins.tagesgeld, basins.depot))
+                drawFlow('tagesgeld-depot-flow', basins.tagesgeld, basins.depot, depotOverflow, maxFlow);
+            if (allowDepotStream && bothVisible(basins.fixkosten, basins.depot))
+                drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
             drawSchutzschirm(basins.tagesgeld, basins.depot);
             // --- Shield visibility based on available liquidity on Tagesgeld, scaled by liquidity level ---
             const shield = getEl('schutzschirm-path');
@@ -796,8 +878,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 return {
                     label: ds.label,
                     data: ds.data,
-                    borderWidth: 2, // slightly stronger
-                    borderColor: 'rgba(239,68,68,0.6)', // rot mit stärkerer Transparenz
+                    borderWidth: 1.5,                // dünner
+                    borderColor: 'rgba(239,68,68,0.3)', // rot mit hoher Transparenz
                     borderDash: [6, 6],              // gestrichelt
                     pointRadius: 0,                  // keine Punkte
                     fill: false,
@@ -807,8 +889,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 return {
                     label: ds.label,
                     data: ds.data,
-                    borderWidth: 2, // slightly stronger
-                    borderColor: 'rgba(34,197,94,0.6)', // grün mit stärkerer Transparenz
+                    borderWidth: 1.5,                // dünner
+                    borderColor: 'rgba(34,197,94,0.3)', // grün mit hoher Transparenz
                     borderDash: [6, 6],              // gestrichelt
                     pointRadius: 0,                  // keine Punkte
                     fill: false,
@@ -870,20 +952,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     const fixkostenModal = { list: getEl('fixkosten-list'), total: getEl('modal-total') };
     function saveFixkosten() { calculateAndUpdate(); closeModal('fixkosten-modal'); }
     function renderFixkostenList() { fixkostenModal.list.innerHTML = ''; let total = 0; fixkostenItems.forEach((item, index) => { const itemEl = document.createElement('div'); itemEl.className = 'grid grid-cols-12 gap-2 items-center'; itemEl.innerHTML = `<input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten" class="col-span-4 bg-gray-700 p-1 rounded"><input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="Betrag" class="col-span-2 bg-gray-700 p-1 rounded"><select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="col-span-2 bg-gray-700 p-1 rounded">${['monthly','quarterly','annually'].map(i => `<option value="${i}" ${item.interval === i ? 'selected' : ''}>${i==='monthly'?'mtl.':i==='quarterly'?'viertelj.':'jährl.'}</option>`).join('')}</select><select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="col-span-3 bg-gray-700 p-1 rounded"><option value="fixkosten" ${item.target==='fixkosten'?'selected':''}>-> Fixkosten</option><option value="depot" ${item.target==='depot'?'selected':''}>-> Sparplan</option></select><button onclick="removeFixkostenItem(${index})" class="col-span-1 text-red-400 hover:text-red-300 text-xl">&times;</button>`; fixkostenModal.list.appendChild(itemEl); total += getMonthlyAmount(item); }); fixkostenModal.total.textContent = formatCurrency(total); }
-function updateFixkostenItem(index, key, value) {
-  if (!fixkostenItems[index]) return;
-  if (key === 'amount') {
-    const num = parseFloat(value);
-    fixkostenItems[index].amount = Number.isFinite(num) ? num : 0;
-  } else if (key === 'interval') {
-    fixkostenItems[index].interval = String(value);
-  } else if (key === 'target') {
-    fixkostenItems[index].target = String(value);
-  } else if (key === 'name') {
-    fixkostenItems[index].name = String(value);
-  }
-  renderFixkostenList();
-}
+    function updateFixkostenItem(index, key, value) { if (key === 'amount') value = parseFloat(value) || 0; renderFixkostenList(); }
     function addFixkostenItem() { fixkostenItems.push({ name: '', amount: 0, interval: 'monthly', target: 'fixkosten' }); renderFixkostenList(); }
     function removeFixkostenItem(index) { fixkostenItems.splice(index, 1); renderFixkostenList(); }
     const depotModal = { list: getEl('depot-list'), total: getEl('depot-total'), warning: getEl('depot-warning'), saveButton: getEl('depot-save-button') };
@@ -1149,6 +1218,8 @@ function updateFixkostenItem(index, key, value) {
                 varianteALabel.classList.remove('text-white', 'font-semibold');
                 variantInfo.textContent = 'Variante B: Gehalt geht auf das Konsumkonto.';
             }
+            // Keep consultation view consistent when variant changes
+            applyConsultationVisibility();
             calculateAndUpdate();
         }
 
@@ -1184,11 +1255,11 @@ function updateFixkostenItem(index, key, value) {
                 updateRenditeSuggestions(jahre);
             });
 
-            // Add click handler for rendite-info to open modal
-            const renditeInfoEl = getEl('rendite-info');
-            if (renditeInfoEl) {
-              renditeInfoEl.addEventListener('click', () => openModal('rendite-ref-modal'));
-            }
+            // Beratungsansicht Buttons
+            const consultToggle = getEl('consult-toggle-btn');
+            const consultNext   = getEl('consult-next-btn');
+            if (consultToggle) consultToggle.addEventListener('click', () => setConsultationMode(!consultationMode));
+            if (consultNext)   consultNext.addEventListener('click', () => nextConsultationStep());
         }, 100);
     });
     </script>
