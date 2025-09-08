@@ -238,6 +238,11 @@
         .theme-light input[type="range"] { background: #e5e7eb !important; }
         .theme-light input[type="range"]::-webkit-slider-thumb { background: var(--mlp-blue); }
         .theme-light input[type="range"]::-moz-range-thumb { background: var(--mlp-blue); }
+        #rendite-info .text-xs { font-size: 0.7rem; }
+    /* --- Print helpers for embedded images --- */
+    #printable-report img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
+    #printable-report h1, #printable-report h2, #printable-report h3 { color: #000 !important; }
+    #printable-report .muted { color: #333 !important; font-size: 12px; }
     </style>
 </head>
 <body class="theme-dark bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden" id="theme-root">
@@ -275,36 +280,48 @@
                             </label>
                             <span id="variante-b-label" class="text-gray-500">B</span>
                         </div>
+                        <div class="ml-3 flex items-center gap-2 text-xs">
+                          <button id="consult-toggle-btn" class="px-2 py-1 rounded border border-gray-600 hover:border-indigo-500">Beratung starten</button>
+                          <button id="consult-next-btn" class="px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white hidden">Weiter</button>
+                        </div>
                     </div>
                     <div id="variant-info" class="text-xs text-center text-gray-400 bg-gray-700 p-2 rounded-md mb-4"></div>
                     <div class="space-y-4">
                         <!-- Existing planning sections -->
-                        <div><label for="income" class="block text-sm font-medium text-gray-300 mb-1">Nettoeinkommen</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="income" value="3000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                        <div id="sec-income">
+                          <label for="income" class="block text-sm font-medium text-gray-300 mb-1">Nettoeinkommen</label>
+                          <div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="income" value="3000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div>
+                        </div>
                         <hr class="border-gray-700 !my-5">
                         <h3 class="text-lg font-semibold text-yellow-300 -mb-2">Konsumkonto</h3>
-                        <div><label for="konsumMin" class="block text-sm font-medium text-gray-300 mb-1">Mindestbestand (Sockelbetrag)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumMin" value="100" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        <div><label for="konsumLeftover" class="block text-sm font-medium text-gray-300 mb-1">Variabler Überschuss (Schätzung)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumLeftover" value="250" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                        <div id="sec-konsum">
+                          <div><label for="konsumMin" class="block text-sm font-medium text-gray-300 mb-1">Mindestbestand (Sockelbetrag)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumMin" value="100" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                          <div class="mt-3"><label for="konsumLeftover" class="block text-sm font-medium text-gray-300 mb-1">Variabler Überschuss (Schätzung)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumLeftover" value="250" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                        </div>
                         <hr class="border-gray-700 !my-5">
                         <h3 class="text-lg font-semibold text-blue-300 -mb-2">Tagesgeldkonto</h3>
-                        <div><label for="tagesgeldCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Stand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldCurrent" value="4800" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        <div><label for="tagesgeldLimit" class="block text-sm font-medium text-gray-300 mb-1">Sparziel (Überlaufgrenze)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldLimit" value="5000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        
+                        <div id="sec-tagesgeld">
+                          <div><label for="tagesgeldCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Stand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldCurrent" value="4800" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                          <div class="mt-3"><label for="tagesgeldLimit" class="block text-sm font-medium text-gray-300 mb-1">Sparziel (Überlaufgrenze)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldLimit" value="5000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                        </div>
                         <!-- New Projection Section -->
                         <hr class="border-gray-700 !my-5">
-                        <h3 class="text-lg font-semibold text-purple-300 -mb-2">Vermögens-Prognose</h3>
-                         <div><label for="depotCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Depotstand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="depotCurrent" value="25000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        <div>
-                            <label for="anlagezeitraum" class="block text-sm font-medium text-gray-300 mb-1">Anlagezeitraum: <span id="anlagezeitraum-label" class="font-bold">15 Jahre</span></label>
-                            <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                        <div id="sec-prognose">
+                          <h3 class="text-lg font-semibold text-purple-300 -mb-2">Vermögens-Prognose</h3>
+                          <div><label for="depotCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Depotstand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="depotCurrent" value="25000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
+                          <div class="mt-3">
+                              <label for="anlagezeitraum" class="block text-sm font-medium text-gray-300 mb-1">Anlagezeitraum: <span id="anlagezeitraum-label" class="font-bold">15 Jahre</span></label>
+                              <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                          </div>
+                          <div class="mt-3">
+                              <label for="rendite" class="block text-sm font-medium text-gray-300 mb-1">Ihre angenommene Rendite p.a.</label>
+                              <div class="relative"><input type="number" id="rendite" step="0.1" value="7" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-4 pr-8 py-2 focus:ring-2 focus:ring-indigo-500"><span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">%</span></div>
+                              <div id="rendite-info" class="text-xs text-gray-400 mt-2 text-center p-2 bg-gray-700 rounded-md"></div>
+                          </div>
+                          <button onclick="calculateProjection()" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex justify-center items-center gap-2">
+                              Prognose berechnen
+                          </button>
                         </div>
-                        <div>
-                            <label for="rendite" class="block text-sm font-medium text-gray-300 mb-1">Ihre angenommene Rendite p.a.</label>
-                            <div class="relative"><input type="number" id="rendite" step="0.1" value="7" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-4 pr-8 py-2 focus:ring-2 focus:ring-indigo-500"><span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">%</span></div>
-                            <div id="rendite-info" class="text-xs text-gray-400 mt-2 text-center p-2 bg-gray-700 rounded-md"></div>
-                        </div>
-                        <button onclick="calculateProjection()" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex justify-center items-center gap-2">
-                            Prognose berechnen
-                        </button>
                     </div>
                 </div>
                  <button onclick="prepareAndPrint()" class="print-btn mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
@@ -381,50 +398,183 @@
     ];
     let depotItems = [ { name: 'MSCI World ETF', allocation: 70, color: '#3b82f6' }, { name: 'Emerging Markets ETF', allocation: 30, color: '#8b5cf6' } ];
     let prognoseChartInstance = null;
+    // Beratungsansicht state
+    let consultationMode = false;      // off by default
+    let consultationStep = 0;          // 0..5 per variant
+    let allowDepotStream = true;       // normal mode shows depot stream
+
+    function setConsultationMode(on) {
+      consultationMode = !!on;
+      consultationStep = on ? 1 : 0;
+      allowDepotStream = !on; // only enable depot stream at step 5 in consultation
+      applyConsultationVisibility();
+      calculateAndUpdate();
+      const nextBtn = getEl('consult-next-btn');
+      const toggleBtn = getEl('consult-toggle-btn');
+      if (on) { nextBtn.classList.remove('hidden'); toggleBtn.textContent = 'Beratung beenden'; }
+      else { nextBtn.classList.add('hidden'); toggleBtn.textContent = 'Beratung starten'; }
+    }
+
+    function nextConsultationStep() {
+      if (!consultationMode) return;
+      consultationStep = Math.min(5, consultationStep + 1);
+      if (consultationStep === 5) allowDepotStream = true; // enable depot stream only at final step
+      applyConsultationVisibility();
+      calculateAndUpdate();
+    }
+
+    function isVisible(el) {
+      return el && el.offsetParent !== null; // hidden via CSS class will report null
+    }
+
+    function show(el, on) {
+      if (!el) return;
+      if (on) el.classList.remove('hidden'); else el.classList.add('hidden');
+    }
+
+    function applyConsultationVisibility() {
+      const secIncome = getEl('sec-income');
+      const secKonsum = getEl('sec-konsum');
+      const secTG     = getEl('sec-tagesgeld');
+      const secProg   = getEl('sec-prognose');
+
+      // Default: all visible (normal mode)
+      if (!consultationMode) {
+        [secIncome, secKonsum, secTG, secProg].forEach(el => show(el, true));
+        // all basins visible
+        for (const key in basins) show(basins[key], true);
+        return;
+      }
+
+      const A = (currentVariant === 'A');
+      // Step visibility by variant
+      if (A) {
+        show(secIncome, true);
+        show(secKonsum, consultationStep >= 2);
+        show(secTG,     consultationStep >= 3);
+        show(secProg,   consultationStep >= 4);
+
+        show(basins.gehalt, true);
+        show(basins.fixkosten, true);
+        show(basins.konsum, consultationStep >= 2);
+        show(basins.tagesgeld, consultationStep >= 3);
+        show(basins.depot, consultationStep >= 4);
+      } else {
+        show(secIncome, true);
+        show(secKonsum, true); // B: income + konsum from step 1
+        show(secTG,     consultationStep >= 3);
+        show(secProg,   consultationStep >= 4);
+
+        show(basins.gehalt, true);
+        show(basins.konsum, true);
+        show(basins.fixkosten, consultationStep >= 2);
+        show(basins.tagesgeld, consultationStep >= 3);
+        show(basins.depot, consultationStep >= 4);
+      }
+    }
     
     const renditeData = {
         1: {min: -40, max: 50}, 5: {min: -12, max: 32}, 10: {min: -1.5, max: 19},
         15: {min: 3, max: 15}, 20: {min: 4, max: 13}, 25: {min: 5, max: 12}, 30: {min: 6, max: 11}
     };
+    // === Load fine-grained min/max returns from TXT (MLP Renditedreieck) ===
+    // File: data/rendite_extreme_generated.txt
+    // Format (tab/whitespace):
+    // Anlagezeitraum (Jahre)    Minimale Rendite (%)   Maximale Rendite (%)
+    // 1   -42.2   51.7
+    let renditeExtremes = null;
+
+    async function loadRenditeExtremes() {
+    try {
+        const res = await fetch('data/rendite_extreme_generated.txt', { cache: 'no-store' });
+        if (!res.ok) throw new Error('not found');
+        const txt = await res.text();
+        renditeExtremes = parseRenditeExtremesTSV(txt);
+        // refresh UI for current slider value
+        const jahre = parseInt(inputs.anlagezeitraum.value, 10);
+        updateRenditeSuggestions(jahre);
+    } catch (e) {
+        console.warn('Rendite-Extremwerte nicht geladen, nutze Fallback.', e);
+        renditeExtremes = null;
+    }
+    }
+
+    function parseRenditeExtremesTSV(tsv) {
+    const map = {};
+    tsv.split(/\r?\n/).forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        if (!/^\d+/.test(trimmed)) return; // skip header
+        const parts = trimmed.split(/\t|\s+/).filter(Boolean);
+        if (parts.length < 3) return;
+        const years = parseInt(parts[0], 10);
+        const min = parseFloat(String(parts[1]).replace(',', '.'));
+        const max = parseFloat(String(parts[2]).replace(',', '.'));
+        if (Number.isFinite(years) && Number.isFinite(min) && Number.isFinite(max)) {
+        map[years] = { min: +min.toFixed(1), max: +max.toFixed(1) };
+        }
+    });
+    return map;
+    }
 
     let inputs, basins, flowContainer; // Declare globally, assign in DOMContentLoaded
     const getEl = (id) => document.getElementById(id);
     const formatCurrency = (val) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
     const getMonthlyAmount = (item) => { const a = item.amount || 0; switch (item.interval) { case 'quarterly': return a / 3; case 'annually': return a / 12; default: return a; } };
 
-    function renderBasin(element, title, value, icon, subtext = '', { current = 0, min = 0, limit = Infinity } = {}, specialContent = '') {
-        const fillPercent = limit > 0 && limit !== Infinity ? Math.min(100, (current / limit) * 100) : 0;
-        const minPercent = limit > 0 && limit !== Infinity ? Math.min(100, (min / limit) * 100) : 0;
-        element.innerHTML = `<div class="absolute inset-0 bg-sky-500/30 rounded-lg transition-all duration-500" style="height: ${fillPercent}%; top: auto; bottom: 0;"></div>
-            ${min > 0 ? `<div class="limit-line bg-yellow-500/70 border-t-2 border-dashed border-yellow-400" style="bottom: ${minPercent}%;"><span class="text-yellow-300">Min</span></div>` : ''}
-            ${limit > 0 && limit !== Infinity ? `<div class="limit-line bg-green-500/70" style="bottom: 100%;"><span class="text-green-300">Max</span></div>` : ''}
-            <div class="relative z-10 flex flex-col items-center justify-center h-full">${specialContent || icon}<p class="font-bold">${title}</p><p class="text-lg font-mono">${value}</p>${subtext ? `<p class="text-xs text-gray-400 mt-1">${subtext}</p>` : ''}</div>`;
+function renderBasin(element, title, value, icon, subtext = '', { current = 0, min = 0, limit = Infinity, minScaleBase = null } = {}, specialContent = '') {
+    // Fill height is only meaningful when a real capacity limit is provided
+    const fillPercent = (limit > 0 && limit !== Infinity)
+      ? Math.min(100, (current / limit) * 100)
+      : 0;
+
+    // The yellow minimum line can be scaled against an explicit base (minScaleBase),
+    // falling back to the same limit if none provided. This allows Konsumkonto to
+    // scale its Min-Linie gegen den monatlichen Überschuss statt gegen das Kartenlimit.
+    const baseForMin = (minScaleBase != null && isFinite(minScaleBase) && minScaleBase > 0)
+      ? minScaleBase
+      : ((limit > 0 && limit !== Infinity) ? limit : null);
+    const minPercent = baseForMin ? Math.min(100, (min / baseForMin) * 100) : 0;
+    element.innerHTML = `
+        <div class="absolute inset-0 bg-sky-500/30 rounded-lg transition-all duration-500" style="height: ${fillPercent}%; top: auto; bottom: 0;"></div>
+        ${min > 0 ? `<div class="limit-line bg-yellow-500/70 border-t-2 border-dashed border-yellow-400" style="bottom: ${minPercent}%;"><span class="text-yellow-300">Min</span></div>` : ''}
+        ${limit > 0 && limit !== Infinity ? `<div class="limit-line bg-green-500/70" style="bottom: 100%;"><span class="text-green-300">Max</span></div>` : ''}
+        ${limit > 0 && limit !== Infinity && /Tagesgeldkonto/i.test(title) ? `<div class="absolute top-1 right-2 text-xs text-gray-400">Sparziel: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(limit)}</div>` : ''}
+        <div class="relative z-10 flex flex-col items-center justify-center h-full">
+          ${specialContent || icon}
+          <p class="font-bold">${title}</p>
+          <p class="text-lg font-mono">${value}</p>
+          ${subtext ? `<p class="text-xs text-gray-400 mt-1">${subtext}</p>` : ''}
+        </div>
+    `;
     }
 
     function positionCascade() {
         if (!flowContainer) return;
         const containerWidth = flowContainer.clientWidth;
-        const h_offset_side = 50; 
-        const v_gap = 220;
+        const h_gap_side = 120;
+        const v_gap = 240;
         const depotWidth = 440;
         basins.depot.style.width = `${depotWidth}px`;
 
         let positions;
         if (currentVariant === 'B') {
-             positions = {
-                gehalt: { top: 0, left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
-                konsum: { top: v_gap, left: h_offset_side },
-                fixkosten: { top: v_gap * 2, left: containerWidth - h_offset_side - basins.fixkosten.offsetWidth },
-                tagesgeld: { top: v_gap * 3, left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
-                depot: { top: v_gap * 4.2, left: containerWidth / 2 - depotWidth / 2 },
+            positions = {
+                gehalt:   { top: 0,          left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
+                // Karten näher zur Mitte rücken (symmetrisch)
+                konsum:   { top: v_gap,      left: containerWidth / 2 - basins.konsum.offsetWidth - h_gap_side },
+                fixkosten:{ top: v_gap * 2,  left: containerWidth / 2 + h_gap_side },
+                tagesgeld:{ top: v_gap * 3,  left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
+                depot:    { top: v_gap * 4.0, left: containerWidth / 2 - depotWidth / 2 },
             };
         } else { // Variante A
-             positions = {
-                gehalt: { top: 0, left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
-                fixkosten: { top: v_gap, left: containerWidth - h_offset_side - basins.fixkosten.offsetWidth },
-                konsum: { top: v_gap * 2, left: h_offset_side },
-                tagesgeld: { top: v_gap * 3, left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
-                depot: { top: v_gap * 4.2, left: containerWidth / 2 - depotWidth / 2 },
+            positions = {
+                gehalt:   { top: 0,          left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
+                // Karten näher zur Mitte rücken (symmetrisch)
+                fixkosten:{ top: v_gap,      left: containerWidth / 2 + h_gap_side },
+                konsum:   { top: v_gap * 2,  left: containerWidth / 2 - basins.konsum.offsetWidth - h_gap_side },
+                tagesgeld:{ top: v_gap * 3,  left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
+                depot:    { top: v_gap * 4.0, left: containerWidth / 2 - depotWidth / 2 },
             };
         }
         for (const key in basins) { 
@@ -463,24 +613,73 @@
         if (!fromBasin || !toBasin) return;
         const path = getEl(pathId), pathAnim = getEl(`${pathId}-anim`);
         const fromRect = fromBasin.getBoundingClientRect(), toRect = toBasin.getBoundingClientRect(), containerRect = flowContainer.getBoundingClientRect();
-        let fromX = fromRect.left - containerRect.left + fromRect.width / 2, fromY = fromRect.bottom - containerRect.top;
-        const toX = toRect.left - containerRect.left + toRect.width / 2, toY = toRect.top - containerRect.top;
+        let fromX = fromRect.left - containerRect.left + fromRect.width / 2;
+        let fromY = fromRect.bottom - containerRect.top;
+        const toX = toRect.left - containerRect.left + toRect.width / 2;
+        const toY = toRect.top - containerRect.top;
         const minWidth = 10, maxWidth = 45;
         const normalizedValue = Math.max(0, value) / maxFlowValue;
         const strokeWidth = minWidth + normalizedValue * (maxWidth - minWidth);
         path.style.strokeWidth = `${value > 0 ? Math.max(minWidth, strokeWidth) : 0}px`;
 
         let pathData;
+        // REPLACED BLOCK: custom anchor, curve, and offsets for each flow
+        // --- BEGIN NEW BLOCK ---
+        const EXIT_OFFSET_Y = 8; // slightly deeper anchor, hides seams better
+        const CURVE_MAIN = 70;   // smaller curve radius for tighter, calmer streams
+        const CURVE_SHORT = 55;  // short bends for side-to-side connections
+
         if (pathId === 'fixkosten-depot-flow') {
+            // From right side of fixkosten into right half of depot
             fromX = fromRect.left - containerRect.left + fromRect.width * 0.75;
             const toDepotX = toRect.left - containerRect.left + toRect.width * 0.75;
-            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 120} ${toDepotX},${toY - 120} ${toDepotX},${toY}`;
+            fromY -= EXIT_OFFSET_Y;
+            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 70} ${toDepotX},${toY - 70} ${toDepotX},${toY}`;
         } else if (pathId === 'tagesgeld-depot-flow') {
+            // From center of tagesgeld into left half of depot
             const toDepotX = toRect.left - containerRect.left + (toRect.width * 0.25);
-            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 80} ${toDepotX},${toY - 80} ${toDepotX},${toY}`;
-        } else { 
-            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 100} ${toX},${toY - 100} ${toX},${toY}`; 
+            fromY -= EXIT_OFFSET_Y;
+            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 55} ${toDepotX},${toY - 55} ${toDepotX},${toY}`;
+        } else if (pathId === 'konsum-tagesgeld-flow') {
+            // Überschuss-Stream aus dem Konsumkonto:
+            //  • Variante B: unten links aus dem Konsumkonto starten (verhindert Kreuzungen)
+            //  • Variante A: unten rechts aus dem Konsumkonto starten (spiegelbildlich zur Anordnung)
+            if (typeof currentVariant !== 'undefined' && currentVariant === 'B') {
+                // bottom-left anchor on Konsum → Tagesgeld (zentral) mit kurzer, ruhiger Kurve
+                fromX = fromRect.left - containerRect.left + fromRect.width * 0.20;
+                fromY -= EXIT_OFFSET_Y;
+                const c1x = fromX - 40, c1y = fromY + CURVE_SHORT;
+                const c2x = toX - 20,  c2y = toY - CURVE_SHORT;
+                pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toX},${toY}`;
+            } else {
+                // Variante A: bottom-right anchor (spiegelbildlich), kurze, sanfte Biegung
+                fromX = fromRect.left - containerRect.left + fromRect.width * 0.80;
+                fromY -= EXIT_OFFSET_Y;
+                const c1x = fromX + 40, c1y = fromY + CURVE_SHORT;
+                const c2x = toX + 20,  c2y = toY - CURVE_SHORT;
+                pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toX},${toY}`;
+            }
+        // --- BEGIN NEW BLOCK ---
+        } else if (pathId === 'flow-path-2' && typeof currentVariant !== 'undefined' && currentVariant === 'A') {
+            // Dauerauftrag: from left side of Fixkosten (right column) to right side of Konsum (left column)
+            const R = 65; // curve radius
+            fromX = fromRect.left - containerRect.left + fromRect.width * 0.20; // exit left
+            fromY -= EXIT_OFFSET_Y;
+            const toKonsumX = toRect.left - containerRect.left + toRect.width * 0.80; // enter right
+            pathData = `M ${fromX},${fromY} C ${fromX - R},${fromY + R} ${toKonsumX + R},${toY - R} ${toKonsumX},${toY}`;
+        } else if (pathId === 'flow-path-2' && typeof currentVariant !== 'undefined' && currentVariant === 'B') {
+            // Dauerauftrag: from right side of Konsum (left column) to right-half of Fixkosten (right column)
+            const R = 65; // curve radius
+            fromX = fromRect.left - containerRect.left + fromRect.width * 0.80; // exit right
+            fromY -= EXIT_OFFSET_Y;
+            const toRightX = toRect.left - containerRect.left + toRect.width * 0.75; // enter right half
+            pathData = `M ${fromX},${fromY} C ${fromX + R},${fromY + R} ${toRightX - R},${toY - R} ${toRightX},${toY}`;
+        } else {
+            // Default smooth S-curve between centers
+            fromY -= EXIT_OFFSET_Y;
+            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + CURVE_MAIN} ${toX},${toY - CURVE_MAIN} ${toX},${toY}`;
         }
+        // --- END NEW BLOCK ---
         path.setAttribute('d', pathData); pathAnim.setAttribute('d', pathData);
 
         // Update mask stroke to define visible river area
@@ -522,6 +721,28 @@
         if(textLabel) textLabel.style.display = (value > 0) ? 'block' : 'none';
     }
 
+    function hideFlow(pathId) {
+        const path      = getEl(pathId);
+        const pathAnim  = getEl(`${pathId}-anim`);
+        const valueLbl  = getEl(`${pathId}-value`);
+        const textLbl   = getEl(`${pathId}-text`);
+        const pathErase = getEl(`${pathId}-erase`);
+        const pathMask  = getEl(`${pathId}-mask`);
+        const dotGroup  = getEl(`${pathId}-dot`);
+        if (path) {
+            path.classList.remove('active');
+            path.style.strokeWidth = '0px';
+        }
+        if (pathAnim) {
+            pathAnim.style.opacity = '0';
+        }
+        if (valueLbl) valueLbl.style.display = 'none';
+        if (textLbl)  textLbl.style.display  = 'none';
+        if (pathErase) pathErase.style.strokeWidth = '0px';
+        if (pathMask)  pathMask.style.strokeWidth  = '0px';
+        if (dotGroup)  dotGroup.innerHTML = '';
+    }
+
     function drawSchutzschirm(fromBasin, toBasin) {
         if (!fromBasin || !toBasin) return;
         const path = getEl('schutzschirm-path');
@@ -541,6 +762,10 @@
             const fixkostenOnlyTotal = fixkostenItems.filter(i => i.target === 'fixkosten').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
             const depotSparplanTotal = fixkostenItems.filter(i => i.target === 'depot').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
             const totalAbgang = fixkostenOnlyTotal + depotSparplanTotal;
+            // Zufluss (Inflow) in das Konsumkonto zur Skalierung der Min-Linie
+            const konsumInflow = (currentVariant === 'A')
+              ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
+              : Math.max(0, income);                // Variante B: Gehalt geht direkt auf Konsum
             const { tagesgeldInflow, depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
             const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow;
             const totalDepotInflow = depotSparplanTotal + depotOverflow;
@@ -554,23 +779,71 @@
             
             renderBasin(basins.gehalt, 'Gehaltseingang', formatCurrency(income), '<svg class="w-7 h-7 mb-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>');
             renderBasin(basins.fixkosten, 'Fixkostenkonto', formatCurrency(totalAbgang), '<svg class="w-7 h-7 mb-1 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>', '(Klick zum Bearbeiten)');
-            renderBasin(basins.konsum, 'Konsumkonto', formatCurrency(konsumValue), '<svg class="w-7 h-7 mb-1 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>', `Überschuss: ${formatCurrency(konsumLeftover)}`, { current: konsumValue, min: konsumMin });
+            // Scale the yellow min line relative to the available monthly surplus (Überschuss).
+            renderBasin(
+              basins.konsum,
+              'Konsumkonto',
+              formatCurrency(konsumValue),
+              '<svg class="w-7 h-7 mb-1 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>',
+              `Überschuss: ${formatCurrency(konsumLeftover)}`,
+              { current: konsumValue, min: konsumMin, limit: Infinity, minScaleBase: konsumInflow }
+            );
             renderBasin(basins.tagesgeld, 'Tagesgeldkonto', formatCurrency(finalTagesgeld), '<svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', `Zufluss: ${formatCurrency(tagesgeldInflow)}`, { current: finalTagesgeld, min: 0, limit: tagesgeldLimit });
             renderBasin(basins.depot, 'Vermögensaufbau', `+ ${formatCurrency(totalDepotInflow)}`, '', '(Klick zum Bearbeiten)', {}, createGrowthChartSVG());
             
+            // === BEGIN: Flow visibility control (consultation-aware) ===
+            const bothVisible = (a, b) => isVisible(a) && isVisible(b);
             const maxFlow = income || 1;
 
+            let show1 = false, show2 = false, showKTG = false, showTGDepot = false, showFixDepot = false;
+
             if (currentVariant === 'A') {
-                drawFlow('flow-path-1', basins.gehalt, basins.fixkosten, income, maxFlow);
-                drawFlow('flow-path-2', basins.fixkosten, basins.konsum, income - totalAbgang, maxFlow, 'Dauerauftrag');
+                // A: Gehalt -> Fixkosten -> Konsum -> Tagesgeld -> Depot; Sparrate erst Step 5
+                show1       = bothVisible(basins.gehalt,   basins.fixkosten);                                      // Step 1+
+                show2       = bothVisible(basins.fixkosten, basins.konsum)   && (!consultationMode || consultationStep >= 2);
+                showKTG     = bothVisible(basins.konsum,    basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
+                showTGDepot = bothVisible(basins.tagesgeld, basins.depot)     && (!consultationMode || consultationStep >= 4);
+                showFixDepot= bothVisible(basins.fixkosten, basins.depot)     && (allowDepotStream === true); // Step 5 in consultation
+
+                if (show1)       drawFlow('flow-path-1', basins.gehalt,    basins.fixkosten, income, maxFlow);
+                else             hideFlow('flow-path-1');
+
+                if (show2)       drawFlow('flow-path-2', basins.fixkosten, basins.konsum, Math.max(0, income - totalAbgang), maxFlow, 'Dauerauftrag');
+                else             hideFlow('flow-path-2');
+
+                if (showKTG)     drawFlow('konsum-tagesgeld-flow', basins.konsum,    basins.tagesgeld, konsumLeftover, maxFlow);
+                else             hideFlow('konsum-tagesgeld-flow');
+
+                if (showTGDepot) drawFlow('tagesgeld-depot-flow', basins.tagesgeld,  basins.depot, depotOverflow, maxFlow);
+                else             hideFlow('tagesgeld-depot-flow');
+
+                if (showFixDepot)drawFlow('fixkosten-depot-flow', basins.fixkosten,  basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+                else             hideFlow('fixkosten-depot-flow');
+
             } else {
-                drawFlow('flow-path-1', basins.gehalt, basins.konsum, income, maxFlow);
-                drawFlow('flow-path-2', basins.konsum, basins.fixkosten, totalAbgang, maxFlow, 'Dauerauftrag');
+                // B: Gehalt -> Konsum -> Fixkosten -> Tagesgeld -> Depot; Sparrate erst Step 5
+                show1       = bothVisible(basins.gehalt,   basins.konsum);                                        // Step 1+
+                show2       = bothVisible(basins.konsum,   basins.fixkosten) && (!consultationMode || consultationStep >= 2);
+                showKTG     = bothVisible(basins.konsum,   basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
+                showTGDepot = bothVisible(basins.tagesgeld,basins.depot)    && (!consultationMode || consultationStep >= 4);
+                showFixDepot= bothVisible(basins.fixkosten,basins.depot)    && (allowDepotStream === true); // Step 5 in consultation
+
+                if (show1)       drawFlow('flow-path-1', basins.gehalt,  basins.konsum, income, maxFlow);
+                else             hideFlow('flow-path-1');
+
+                if (show2)       drawFlow('flow-path-2', basins.konsum,  basins.fixkosten, totalAbgang, maxFlow, 'Dauerauftrag');
+                else             hideFlow('flow-path-2');
+
+                if (showKTG)     drawFlow('konsum-tagesgeld-flow', basins.konsum,   basins.tagesgeld, konsumLeftover, maxFlow);
+                else             hideFlow('konsum-tagesgeld-flow');
+
+                if (showTGDepot) drawFlow('tagesgeld-depot-flow', basins.tagesgeld, basins.depot, depotOverflow, maxFlow);
+                else             hideFlow('tagesgeld-depot-flow');
+
+                if (showFixDepot)drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+                else             hideFlow('fixkosten-depot-flow');
             }
-            
-            drawFlow('konsum-tagesgeld-flow', basins.konsum, basins.tagesgeld, konsumLeftover, maxFlow);
-            drawFlow('tagesgeld-depot-flow', basins.tagesgeld, basins.depot, depotOverflow, maxFlow);
-            drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+            // === END: Flow visibility control ===
             drawSchutzschirm(basins.tagesgeld, basins.depot);
             // --- Shield visibility based on available liquidity on Tagesgeld, scaled by liquidity level ---
             const shield = getEl('schutzschirm-path');
@@ -654,14 +927,42 @@
         const ctx = getEl('prognose-chart').getContext('2d');
         if (prognoseChartInstance) { prognoseChartInstance.destroy(); }
         
-        const chartDatasets = datasets.map(ds => ({
-            label: ds.label,
-            data: ds.data,
-            borderColor: ds.color,
-            borderDash: ds.label.includes('Einzahlungen') ? [5, 5] : [],
-            fill: false,
-            tension: 0.1
-        }));
+        const chartDatasets = datasets.map(ds => {
+            // Custom styling for pessimistic and optimistic
+            if (ds.label === 'Pessimistisch') {
+                return {
+                    label: ds.label,
+                    data: ds.data,
+                    borderWidth: 1.5,                // dünner
+                    borderColor: 'rgba(239,68,68,0.3)', // rot mit hoher Transparenz
+                    borderDash: [6, 6],              // gestrichelt
+                    pointRadius: 0,                  // keine Punkte
+                    fill: false,
+                    tension: 0.1
+                };
+            } else if (ds.label === 'Optimistisch') {
+                return {
+                    label: ds.label,
+                    data: ds.data,
+                    borderWidth: 1.5,                // dünner
+                    borderColor: 'rgba(34,197,94,0.3)', // grün mit hoher Transparenz
+                    borderDash: [6, 6],              // gestrichelt
+                    pointRadius: 0,                  // keine Punkte
+                    fill: false,
+                    tension: 0.1
+                };
+            } else {
+                // Erwartet (blue), Einzahlungen (gray dashed): unchanged
+                return {
+                    label: ds.label,
+                    data: ds.data,
+                    borderColor: ds.color,
+                    borderDash: ds.label.includes('Einzahlungen') ? [5, 5] : [],
+                    fill: false,
+                    tension: 0.1
+                };
+            }
+        });
 
         prognoseChartInstance = new Chart(ctx, {
             type: 'line', data: { labels: labels, datasets: chartDatasets },
@@ -680,10 +981,23 @@
     }
 
     function updateRenditeSuggestions(jahre) {
-        const data = getRenditeDataForPeriod(jahre);
-        const infoEl = getEl('rendite-info');
-        inputs.rendite.value = ((data.min + data.max) / 2).toFixed(1);
-        infoEl.innerHTML = `Hist. Spanne p.a.: <span class="font-bold text-red-400">${data.min}%</span> bis <span class="font-bold text-green-400">${data.max}%</span>`;
+      let data = null;
+      if (renditeExtremes && renditeExtremes[jahre]) {
+        data = renditeExtremes[jahre];
+      } else {
+        data = getRenditeDataForPeriod(jahre); // Fallback (grob)
+      }
+      const infoEl = getEl('rendite-info');
+      const mid = ((data.min + data.max) / 2).toFixed(1);
+      inputs.rendite.value = mid;
+
+      // Farb-Logik: <0 rot, 0–3 gelb, >3 grün (pro Zahl separat)
+      const colorClass = (v) => (v < 0 ? 'text-red-400' : (v < 3 ? 'text-yellow-400' : 'text-green-400'));
+      const minSpan = `<span class="font-bold ${colorClass(data.min)}">${data.min}%</span>`;
+      const maxSpan = `<span class="font-bold ${colorClass(data.max)}">${data.max}%</span>`;
+
+      // Kein Quellhinweis mehr anzeigen
+      infoEl.innerHTML = `Historische Spanne p.a.: ${minSpan} bis ${maxSpan}`;
     }
 
     function createGrowthChartSVG() { return `<svg viewBox="0 0 100 60" class="w-20 h-12 mb-1"><rect x="10" y="40" width="15" height="20" fill="#3b82f6" opacity="0.6"></rect><rect x="30" y="30" width="15" height="30" fill="#3b82f6" opacity="0.8"></rect><rect x="50" y="20" width="15" height="40" fill="#3b82f6"></rect><rect x="70" y="10" width="15" height="50" fill="#6366f1"></rect></svg>`; }
@@ -703,7 +1017,188 @@
     function addDepotItem() { depotItems.push({ name: '', allocation: 0, color: '#'+Math.floor(Math.random()*16777215).toString(16) }); renderDepotList(); }
     function removeDepotItem(index) { depotItems.splice(index, 1); renderDepotList(); }
     function checkDepotTotal() { const total = depotItems.reduce((sum, i) => sum + i.allocation, 0); depotModal.total.textContent = `${total} %`; if (total === 100) { depotModal.total.className = "text-2xl font-bold text-green-400"; depotModal.warning.textContent = ""; depotModal.saveButton.disabled = false; depotModal.saveButton.classList.remove('opacity-50', 'cursor-not-allowed'); return true; } else { depotModal.total.className = "text-2xl font-bold text-red-400"; depotModal.warning.textContent = "Die Summe der Verteilung muss 100% ergeben."; depotModal.saveButton.disabled = true; depotModal.saveButton.classList.add('opacity-50', 'cursor-not-allowed'); return false; } }
-    function prepareAndPrint() { const report = getEl('printable-report'); let html = `<h1>Zusammenfassung: Das intelligente Vermögensmanagement</h1>`; html += `<h2>Ihre Planung</h2>`; html += `<p><strong>Nettoeinkommen:</strong> ${formatCurrency(inputs.income.value)}</p>`; html += `<p><strong>Konsumkonto Mindestbestand:</strong> ${formatCurrency(inputs.konsumMin.value)}</p>`; html += `<p><strong>Geschätzter monatlicher Überschuss:</strong> ${formatCurrency(inputs.konsumLeftover.value)}</p>`; html += `<p><strong>Tagesgeldkonto Aktueller Stand:</strong> ${formatCurrency(inputs.tagesgeldCurrent.value)}</p>`; html += `<p><strong>Tagesgeldkonto Sparziel:</strong> ${formatCurrency(inputs.tagesgeldLimit.value)}</p>`; html += `<h2>Fixkosten & Sparpläne</h2><table class="print-table"><thead><tr><th>Posten</th><th>Betrag</th><th>Intervall</th><th>Ziel</th></tr></thead><tbody>`; fixkostenItems.forEach(item => { html += `<tr><td>${item.name}</td><td>${formatCurrency(item.amount)}</td><td>${item.interval}</td><td>${item.target}</td></tr>`; }); html += `</tbody></table>`; html += `<h2>Depot-Aufteilung</h2><table class="print-table"><thead><tr><th>Fonds/ETF</th><th>Verteilung</th></tr></thead><tbody>`; depotItems.forEach(item => { html += `<tr><td>${item.name}</td><td>${item.allocation}%</td></tr>`; }); html += `</tbody></table>`; report.innerHTML = html; window.print(); }
+
+    // --- Helpers: Export current SVG flow and Chart.js chart as images ---
+    async function svgToPngDataUrl(svgElement, scale = 2, bg = '#ffffff') {
+      const rect = svgElement.getBoundingClientRect();
+
+      // 1) Clone the on-screen SVG so we can preprocess without affecting UI
+      const clone = svgElement.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+      clone.setAttribute('width', rect.width);
+      clone.setAttribute('height', rect.height);
+      clone.removeAttribute('style');
+
+      // 2) Remove mask for export (avoids black rectangle in rasterization)
+      const visuals = clone.querySelector('#flow-visuals');
+      if (visuals) visuals.removeAttribute('mask');
+
+      // 3) Inject background rect (theme-aware)
+      const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bgRect.setAttribute('x', '0');
+      bgRect.setAttribute('y', '0');
+      bgRect.setAttribute('width', '100%');
+      bgRect.setAttribute('height', '100%');
+      bgRect.setAttribute('fill', bg);
+      clone.insertBefore(bgRect, clone.firstChild);
+
+      // 4) Inline stroke colors on cloned paths (in case CSS vars don't carry over)
+      try {
+        const originalPaths = svgElement.querySelectorAll('.flow-path, .flow-path-animation, .flow-erase');
+        const clonedPaths   = clone.querySelectorAll('.flow-path, .flow-path-animation, .flow-erase');
+        clonedPaths.forEach((node, i) => {
+          const src = originalPaths[i];
+          if (!src) return;
+          const cs = getComputedStyle(src);
+          if (cs && cs.stroke && cs.stroke !== 'none') node.setAttribute('stroke', cs.stroke);
+        });
+      } catch (_) {}
+
+      // 5) Serialize the prepared clone and draw it onto a canvas
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(clone);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(800, Math.floor(rect.width * scale));
+      canvas.height = Math.max(600, Math.floor(rect.height * scale));
+
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+
+      return canvas.toDataURL('image/png');
+    }
+    function getFlowSnapshotDataUrl() {
+      const svg = document.getElementById('flow-svg');
+      if (!svg) return null;
+      return svgToPngDataUrl(svg, 2, '#ffffff');
+    }
+    function getChartImageDataUrl() {
+        // Use existing chart instance if available, else null
+        if (prognoseChartInstance && typeof prognoseChartInstance.toBase64Image === 'function') {
+            try { return prognoseChartInstance.toBase64Image('image/png', 1.0); } catch (_) { return null; }
+        }
+        // If modal chart not created yet, try to quickly render a lightweight chart for print with current assumptions
+        try {
+            const tempCanvas = document.createElement('canvas');
+            const ctx = tempCanvas.getContext('2d');
+            const years = parseInt(inputs.anlagezeitraum.value, 10) || 15;
+            const dataRange = renditeExtremes?.[years] || getRenditeDataForPeriod(years);
+            const initialDepot = parseFloat(inputs.depotCurrent.value) || 0;
+            const depotSparplanTotal = fixkostenItems.filter(i => i.target === 'depot').reduce((s, it) => s + getMonthlyAmount(it), 0);
+            const { depotOverflow } = calculateOverflow(parseFloat(inputs.konsumLeftover.value)||0, parseFloat(inputs.tagesgeldCurrent.value)||0, parseFloat(inputs.tagesgeldLimit.value)||0);
+            const monthlyInvestment = depotSparplanTotal + depotOverflow;
+            const toSeries = (rate) => calculateCompoundInterest(initialDepot, monthlyInvestment, years, rate/100);
+            const sMin = toSeries(dataRange.min), sAvg = toSeries(((dataRange.min+dataRange.max)/2)), sMax = toSeries(dataRange.max);
+            new Chart(ctx, {
+              type:'line',
+              data:{ labels: sAvg.labels, datasets:[
+                { label:'Pessimistisch', data:sMin.capitalData, borderColor:'#ef4444', fill:false, tension:0.1 },
+                { label:'Erwartet', data:sAvg.capitalData, borderColor:'#3b82f6', fill:false, tension:0.1 },
+                { label:'Optimistisch', data:sMax.capitalData, borderColor:'#22c55e', fill:false, tension:0.1 }
+              ]},
+              options:{ responsive:false, animation:false, plugins:{ legend:{ display:false } } }
+            });
+            return tempCanvas.toDataURL('image/png');
+        } catch (_) { return null; }
+    }
+
+
+    // Helper: wait for one or more animation frames (lets layout/theme settle)
+    async function waitFrames(n = 1) {
+      for (let i = 0; i < n; i++) {
+        await new Promise(res => requestAnimationFrame(res));
+      }
+    }
+
+    async function prepareAndPrint() {
+        const report = getEl('printable-report');
+
+        // --- Force LIGHT THEME for export/print snapshot ---
+        const prevTheme = loadTheme();           // 'dark' | 'light'
+        applyTheme('light');                     // switch UI tokens
+        saveTheme('light');
+        // Re-render flows so computed styles & erase strokes match light mode
+        calculateAndUpdate();
+        await waitFrames(2);                     // let DOM/layout settle
+
+        const themeNote = 'MLP Hell';
+
+        // 1) Gather current inputs (after potential UI changes)
+        const incomeVal = formatCurrency(inputs.income.value);
+        const konsumMinVal = formatCurrency(inputs.konsumMin.value);
+        const konsumLeftoverVal = formatCurrency(inputs.konsumLeftover.value);
+        const tgCurVal = formatCurrency(inputs.tagesgeldCurrent.value);
+        const tgLimitVal = formatCurrency(inputs.tagesgeldLimit.value);
+        const depotCurVal = formatCurrency(inputs.depotCurrent.value);
+        const jahre = parseInt(inputs.anlagezeitraum.value, 10);
+        const renditeAnn = parseFloat(inputs.rendite.value).toFixed(1) + ' %';
+
+        // 2) Export visualizations (always white background)
+        const flowImg = await svgToPngDataUrl(getEl('flow-svg'), 2, '#ffffff');
+        const chartImg = getChartImageDataUrl();
+
+        // 3) Build Fixkosten & Depot tables
+        const fixRows = fixkostenItems.map(i => `<tr><td>${i.name}</td><td>${formatCurrency(i.amount)}</td><td>${i.interval}</td><td>${i.target}</td></tr>`).join('');
+        const depRows = depotItems.map(i => `<tr><td>${i.name}</td><td>${i.allocation}%</td></tr>`).join('');
+
+        // 4) Compose report HTML (theme-neutral for print)
+        let html = `
+          <h1>Zusammenfassung: Das intelligente Vermögensmanagement</h1>
+          <p class="muted">Variante: <strong>${currentVariant}</strong> • Theme: <strong>${themeNote}</strong> • Datum: ${new Date().toLocaleDateString('de-DE')}</p>
+
+          <h2>Ihre Planung</h2>
+          <table class="print-table">
+            <tbody>
+              <tr><th style="width:40%">Nettoeinkommen</th><td>${incomeVal}</td></tr>
+              <tr><th>Konsumkonto Mindestbestand</th><td>${konsumMinVal}</td></tr>
+              <tr><th>Geschätzter monatlicher Überschuss</th><td>${konsumLeftoverVal}</td></tr>
+              <tr><th>Tagesgeldkonto (aktuell)</th><td>${tgCurVal}</td></tr>
+              <tr><th>Tagesgeldkonto (Sparziel)</th><td>${tgLimitVal}</td></tr>
+              <tr><th>Depotstand (aktuell)</th><td>${depotCurVal}</td></tr>
+              <tr><th>Anlagezeitraum</th><td>${jahre} Jahre</td></tr>
+              <tr><th>Rendite-Annahme</th><td>${renditeAnn}</td></tr>
+            </tbody>
+          </table>
+
+          <h2>Fixkosten &amp; Sparpläne</h2>
+          <table class="print-table"><thead><tr><th>Posten</th><th>Betrag</th><th>Intervall</th><th>Ziel</th></tr></thead><tbody>${fixRows}</tbody></table>
+
+          <h2>Depot-Aufteilung</h2>
+          <table class="print-table"><thead><tr><th>Fonds/ETF</th><th>Verteilung</th></tr></thead><tbody>${depRows}</tbody></table>
+        `;
+        if (flowImg) {
+            html += `<h2>Dein Finanzfluss (aktueller Stand)</h2><img alt="Finanzfluss" src="${flowImg}">`;
+        }
+        if (chartImg) {
+            html += `<h2>Vermögens-Prognose (Bandbreite)</h2><img alt="Prognose-Chart" src="${chartImg}">`;
+        }
+        report.innerHTML = html;
+
+        // 5) Print
+        const restoreTheme = () => {
+          applyTheme(prevTheme || 'dark');
+          saveTheme(prevTheme || 'dark');
+          calculateAndUpdate();
+        };
+        const onAfterPrint = () => { window.removeEventListener('afterprint', onAfterPrint); restoreTheme(); };
+        window.addEventListener('afterprint', onAfterPrint);
+        window.print();
+    }
     
     // --- THEME HANDLING (Dark/MLP Light) ---
     function applyTheme(theme) {
@@ -778,6 +1273,8 @@
                 varianteALabel.classList.remove('text-white', 'font-semibold');
                 variantInfo.textContent = 'Variante B: Gehalt geht auf das Konsumkonto.';
             }
+            // Keep consultation view consistent when variant changes
+            applyConsultationVisibility();
             calculateAndUpdate();
         }
 
@@ -796,11 +1293,28 @@
         observer.observe(flowContainer);
         
         setTimeout(() => {
-            renderFixkostenList(); 
-            renderDepotList(); 
+            renderFixkostenList();
+            renderDepotList();
             setVariantUI();
             updateRenditeSuggestions(parseInt(inputs.anlagezeitraum.value, 10));
             calculateAndUpdate();
+
+            // Load fine-grained min/max ranges from TXT (MLP-Dreieck)
+            loadRenditeExtremes();
+
+            // Keep info live while sliding
+            inputs.anlagezeitraum.addEventListener('input', () => {
+                const jahre = parseInt(inputs.anlagezeitraum.value, 10);
+                const label = getEl('anlagezeitraum-label');
+                if (label) label.textContent = `${jahre} Jahre`;
+                updateRenditeSuggestions(jahre);
+            });
+
+            // Beratungsansicht Buttons
+            const consultToggle = getEl('consult-toggle-btn');
+            const consultNext   = getEl('consult-next-btn');
+            if (consultToggle) consultToggle.addEventListener('click', () => setConsultationMode(!consultationMode));
+            if (consultNext)   consultNext.addEventListener('click', () => nextConsultationStep());
         }, 100);
     });
     </script>
