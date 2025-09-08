@@ -721,6 +721,28 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if(textLabel) textLabel.style.display = (value > 0) ? 'block' : 'none';
     }
 
+    function hideFlow(pathId) {
+        const path      = getEl(pathId);
+        const pathAnim  = getEl(`${pathId}-anim`);
+        const valueLbl  = getEl(`${pathId}-value`);
+        const textLbl   = getEl(`${pathId}-text`);
+        const pathErase = getEl(`${pathId}-erase`);
+        const pathMask  = getEl(`${pathId}-mask`);
+        const dotGroup  = getEl(`${pathId}-dot`);
+        if (path) {
+            path.classList.remove('active');
+            path.style.strokeWidth = '0px';
+        }
+        if (pathAnim) {
+            pathAnim.style.opacity = '0';
+        }
+        if (valueLbl) valueLbl.style.display = 'none';
+        if (textLbl)  textLbl.style.display  = 'none';
+        if (pathErase) pathErase.style.strokeWidth = '0px';
+        if (pathMask)  pathMask.style.strokeWidth  = '0px';
+        if (dotGroup)  dotGroup.innerHTML = '';
+    }
+
     function drawSchutzschirm(fromBasin, toBasin) {
         if (!fromBasin || !toBasin) return;
         const path = getEl('schutzschirm-path');
@@ -769,26 +791,59 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             renderBasin(basins.tagesgeld, 'Tagesgeldkonto', formatCurrency(finalTagesgeld), '<svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', `Zufluss: ${formatCurrency(tagesgeldInflow)}`, { current: finalTagesgeld, min: 0, limit: tagesgeldLimit });
             renderBasin(basins.depot, 'Vermögensaufbau', `+ ${formatCurrency(totalDepotInflow)}`, '', '(Klick zum Bearbeiten)', {}, createGrowthChartSVG());
             
-            const bothVisible = (a,b) => isVisible(a) && isVisible(b);
+            // === BEGIN: Flow visibility control (consultation-aware) ===
+            const bothVisible = (a, b) => isVisible(a) && isVisible(b);
             const maxFlow = income || 1;
 
+            let show1 = false, show2 = false, showKTG = false, showTGDepot = false, showFixDepot = false;
+
             if (currentVariant === 'A') {
-                if (bothVisible(basins.gehalt, basins.fixkosten))
-                    drawFlow('flow-path-1', basins.gehalt, basins.fixkosten, income, maxFlow);
-                if (bothVisible(basins.fixkosten, basins.konsum))
-                    drawFlow('flow-path-2', basins.fixkosten, basins.konsum, income - totalAbgang, maxFlow, 'Dauerauftrag');
+                // A: Gehalt -> Fixkosten -> Konsum -> Tagesgeld -> Depot; Sparrate erst Step 5
+                show1       = bothVisible(basins.gehalt,   basins.fixkosten);                                      // Step 1+
+                show2       = bothVisible(basins.fixkosten, basins.konsum)   && (!consultationMode || consultationStep >= 2);
+                showKTG     = bothVisible(basins.konsum,    basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
+                showTGDepot = bothVisible(basins.tagesgeld, basins.depot)     && (!consultationMode || consultationStep >= 4);
+                showFixDepot= bothVisible(basins.fixkosten, basins.depot)     && (allowDepotStream === true); // Step 5 in consultation
+
+                if (show1)       drawFlow('flow-path-1', basins.gehalt,    basins.fixkosten, income, maxFlow);
+                else             hideFlow('flow-path-1');
+
+                if (show2)       drawFlow('flow-path-2', basins.fixkosten, basins.konsum, Math.max(0, income - totalAbgang), maxFlow, 'Dauerauftrag');
+                else             hideFlow('flow-path-2');
+
+                if (showKTG)     drawFlow('konsum-tagesgeld-flow', basins.konsum,    basins.tagesgeld, konsumLeftover, maxFlow);
+                else             hideFlow('konsum-tagesgeld-flow');
+
+                if (showTGDepot) drawFlow('tagesgeld-depot-flow', basins.tagesgeld,  basins.depot, depotOverflow, maxFlow);
+                else             hideFlow('tagesgeld-depot-flow');
+
+                if (showFixDepot)drawFlow('fixkosten-depot-flow', basins.fixkosten,  basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+                else             hideFlow('fixkosten-depot-flow');
+
             } else {
-                if (bothVisible(basins.gehalt, basins.konsum))
-                    drawFlow('flow-path-1', basins.gehalt, basins.konsum, income, maxFlow);
-                if (bothVisible(basins.konsum, basins.fixkosten))
-                    drawFlow('flow-path-2', basins.konsum, basins.fixkosten, totalAbgang, maxFlow, 'Dauerauftrag');
+                // B: Gehalt -> Konsum -> Fixkosten -> Tagesgeld -> Depot; Sparrate erst Step 5
+                show1       = bothVisible(basins.gehalt,   basins.konsum);                                        // Step 1+
+                show2       = bothVisible(basins.konsum,   basins.fixkosten) && (!consultationMode || consultationStep >= 2);
+                showKTG     = bothVisible(basins.konsum,   basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
+                showTGDepot = bothVisible(basins.tagesgeld,basins.depot)    && (!consultationMode || consultationStep >= 4);
+                showFixDepot= bothVisible(basins.fixkosten,basins.depot)    && (allowDepotStream === true); // Step 5 in consultation
+
+                if (show1)       drawFlow('flow-path-1', basins.gehalt,  basins.konsum, income, maxFlow);
+                else             hideFlow('flow-path-1');
+
+                if (show2)       drawFlow('flow-path-2', basins.konsum,  basins.fixkosten, totalAbgang, maxFlow, 'Dauerauftrag');
+                else             hideFlow('flow-path-2');
+
+                if (showKTG)     drawFlow('konsum-tagesgeld-flow', basins.konsum,   basins.tagesgeld, konsumLeftover, maxFlow);
+                else             hideFlow('konsum-tagesgeld-flow');
+
+                if (showTGDepot) drawFlow('tagesgeld-depot-flow', basins.tagesgeld, basins.depot, depotOverflow, maxFlow);
+                else             hideFlow('tagesgeld-depot-flow');
+
+                if (showFixDepot)drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+                else             hideFlow('fixkosten-depot-flow');
             }
-            if (bothVisible(basins.konsum, basins.tagesgeld))
-                drawFlow('konsum-tagesgeld-flow', basins.konsum, basins.tagesgeld, konsumLeftover, maxFlow);
-            if (bothVisible(basins.tagesgeld, basins.depot))
-                drawFlow('tagesgeld-depot-flow', basins.tagesgeld, basins.depot, depotOverflow, maxFlow);
-            if (allowDepotStream && bothVisible(basins.fixkosten, basins.depot))
-                drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+            // === END: Flow visibility control ===
             drawSchutzschirm(basins.tagesgeld, basins.depot);
             // --- Shield visibility based on available liquidity on Tagesgeld, scaled by liquidity level ---
             const shield = getEl('schutzschirm-path');
