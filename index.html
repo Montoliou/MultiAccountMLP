@@ -1007,7 +1007,20 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     const fixkostenModal = { list: getEl('fixkosten-list'), total: getEl('modal-total') };
     function saveFixkosten() { calculateAndUpdate(); closeModal('fixkosten-modal'); }
     function renderFixkostenList() { fixkostenModal.list.innerHTML = ''; let total = 0; fixkostenItems.forEach((item, index) => { const itemEl = document.createElement('div'); itemEl.className = 'grid grid-cols-12 gap-2 items-center'; itemEl.innerHTML = `<input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten" class="col-span-4 bg-gray-700 p-1 rounded"><input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="Betrag" class="col-span-2 bg-gray-700 p-1 rounded"><select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="col-span-2 bg-gray-700 p-1 rounded">${['monthly','quarterly','annually'].map(i => `<option value="${i}" ${item.interval === i ? 'selected' : ''}>${i==='monthly'?'mtl.':i==='quarterly'?'viertelj.':'jährl.'}</option>`).join('')}</select><select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="col-span-3 bg-gray-700 p-1 rounded"><option value="fixkosten" ${item.target==='fixkosten'?'selected':''}>-> Fixkosten</option><option value="depot" ${item.target==='depot'?'selected':''}>-> Sparplan</option></select><button onclick="removeFixkostenItem(${index})" class="col-span-1 text-red-400 hover:text-red-300 text-xl">&times;</button>`; fixkostenModal.list.appendChild(itemEl); total += getMonthlyAmount(item); }); fixkostenModal.total.textContent = formatCurrency(total); }
-    function updateFixkostenItem(index, key, value) { if (key === 'amount') value = parseFloat(value) || 0; renderFixkostenList(); }
+function updateFixkostenItem(index, key, value) {
+  // Normalize types per field
+  if (key === 'amount') {
+    value = parseFloat(value);
+    if (!Number.isFinite(value)) value = 0;
+    if (value < 0) value = 0; // no negative amounts
+  }
+  // Persist change in model
+  if (fixkostenItems[index]) {
+    fixkostenItems[index][key] = value;
+  }
+  // Re-render modal list & totals immediately
+  renderFixkostenList();
+}
     function addFixkostenItem() { fixkostenItems.push({ name: '', amount: 0, interval: 'monthly', target: 'fixkosten' }); renderFixkostenList(); }
     function removeFixkostenItem(index) { fixkostenItems.splice(index, 1); renderFixkostenList(); }
     const depotModal = { list: getEl('depot-list'), total: getEl('depot-total'), warning: getEl('depot-warning'), saveButton: getEl('depot-save-button') };
