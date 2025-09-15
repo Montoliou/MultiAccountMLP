@@ -71,6 +71,18 @@
         
         #printable-report { display: none; }
         @media print { body > *:not(#printable-report) { display: none !important; } #printable-report { display: block; color: #000; background: #fff; } .print-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; } .print-table th, .print-table td { border: 1px solid #ccc; padding: 8px; text-align: left; } .print-table th { background-color: #f2f2f2; } }
+        @media print {
+          /* Eigene Seite für den Finanzfluss */
+          .print-finanzfluss {
+            break-before: page;        /* modern */
+            page-break-before: always; /* legacy */
+          }
+          /* Verhindert „hängende“ Überschrift am Seitenende */
+          .print-finanzfluss h2 {
+            break-after: avoid;
+            page-break-after: avoid;
+          }
+        }
 
         /* === THEME TOKENS (Dark stays default) === */
         :root {
@@ -1101,41 +1113,77 @@ function updateFixkostenItem(index, key, value) {
       return svgToPngDataUrl(svg, 2, '#ffffff');
     }
     function getChartImageDataUrl() {
-        // Use existing chart instance if available, else null
-        if (prognoseChartInstance && typeof prognoseChartInstance.toBase64Image === 'function') {
-            try { return prognoseChartInstance.toBase64Image('image/png', 1.0); } catch (_) { return null; }
-        }
-        // If modal chart not created yet, try to quickly render a lightweight chart for print with current assumptions
-        try {
-            const tempCanvas = document.createElement('canvas');
-            const ctx = tempCanvas.getContext('2d');
-            const years = parseInt(inputs.anlagezeitraum.value, 10) || 15;
-            const dataRange = renditeExtremes?.[years] || getRenditeDataForPeriod(years);
-            const initialDepot = parseFloat(inputs.depotCurrent.value) || 0;
-            const depotSparplanTotal = fixkostenItems.filter(i => i.target === 'depot').reduce((s, it) => s + getMonthlyAmount(it), 0);
-            const { depotOverflow } = calculateOverflow(parseFloat(inputs.konsumLeftover.value)||0, parseFloat(inputs.tagesgeldCurrent.value)||0, parseFloat(inputs.tagesgeldLimit.value)||0);
-            const monthlyInvestment = depotSparplanTotal + depotOverflow;
-            const toSeries = (rate) => calculateCompoundInterest(initialDepot, monthlyInvestment, years, rate/100);
-            const sMin = toSeries(dataRange.min), sAvg = toSeries(((dataRange.min+dataRange.max)/2)), sMax = toSeries(dataRange.max);
-            new Chart(ctx, {
-              type:'line',
-              data:{ labels: sAvg.labels, datasets:[
-                { label:'Pessimistisch', data:sMin.capitalData, borderColor:'#ef4444', fill:false, tension:0.1 },
-                { label:'Erwartet', data:sAvg.capitalData, borderColor:'#3b82f6', fill:false, tension:0.1 },
-                { label:'Optimistisch', data:sMax.capitalData, borderColor:'#22c55e', fill:false, tension:0.1 }
-              ]},
-              options:{ responsive:false, animation:false, plugins:{ legend:{ display:false } } }
-            });
-            return tempCanvas.toDataURL('image/png');
-        } catch (_) { return null; }
-    }
+      // existierende Instanz nutzen
+      if (prognoseChartInstance && typeof prognoseChartInstance.toBase64Image === 'function') {
+        try { return prognoseChartInstance.toBase64Image('image/png', 1.0); } catch (_) {}
+      }
+      // Fallback: temporären Chart rendern
+      try {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 1000;
+        tempCanvas.height = 420;
+        const ctx = tempCanvas.getContext('2d');
 
+        const years = parseInt(inputs.anlagezeitraum.value, 10) || 15;
+        const dataRange = (renditeExtremes && renditeExtremes[years]) || getRenditeDataForPeriod(years);
+        const initialDepot = parseFloat(inputs.depotCurrent.value) || 0;
+
+        const depotSparplanTotal = fixkostenItems
+          .filter(i => i.target === 'depot')
+          .reduce((s, it) => s + getMonthlyAmount(it), 0);
+
+        const { depotOverflow } = calculateOverflow(
+          parseFloat(inputs.tagesgeldCurrent.value) || 0,
+          parseFloat(inputs.tagesgeldLimit.value) || 0
+        );
+        const monthlyInvestment = depotSparplanTotal + depotOverflow;
+
+        const toSeries = (rate) => calculateCompoundInterest(initialDepot, monthlyInvestment, years, rate / 100);
+        const sMin = toSeries(dataRange.min);
+        const sAvg = toSeries(((dataRange.min + dataRange.max) / 2));
+        const sMax = toSeries(dataRange.max);
+
+        const tmpChart = new Chart(ctx, {
+          type: 'line',
+          data: { labels: sAvg.labels, datasets: [
+            { label: 'Pessimistisch', data: sMin.capitalData, borderColor: '#ef4444', fill: false, tension: 0.1 },
+            { label: 'Erwartet',      data: sAvg.capitalData, borderColor: '#3b82f6', fill: false, tension: 0.1 },
+            { label: 'Optimistisch',  data: sMax.capitalData, borderColor: '#22c55e', fill: false, tension: 0.1 }
+          ]},
+          options: { responsive: false, animation: false, plugins: { legend: { display: false } } }
+        });
+        // Sicherstellen, dass gezeichnet wurde
+        tmpChart.update();
+        const url = tempCanvas.toDataURL('image/png');
+        tmpChart.destroy();
+        return url;
+      } catch (_) {
+        return null;
+      }
+    }
 
     // Helper: wait for one or more animation frames (lets layout/theme settle)
     async function waitFrames(n = 1) {
       for (let i = 0; i < n; i++) {
         await new Promise(res => requestAnimationFrame(res));
       }
+    }
+
+    async function waitForImages(container, timeout = 2500) {
+      const imgs = Array.from(container.querySelectorAll('img'));
+      const pending = imgs.filter(img => !img.complete || img.naturalWidth === 0);
+
+      if (pending.length === 0) return;
+
+      await Promise.race([
+        Promise.all(pending.map(img => new Promise(res => {
+          img.addEventListener('load', res, { once: true });
+          img.addEventListener('error', res, { once: true }); // not blocking on error
+          // Falls das Bild bereits „complete“ ist, sofort auflösen:
+          if (img.complete && img.naturalWidth > 0) res();
+        }))),
+        new Promise(res => setTimeout(res, timeout))
+      ]);
     }
 
     async function prepareAndPrint() {
@@ -1194,13 +1242,45 @@ function updateFixkostenItem(index, key, value) {
           <h2>Depot-Aufteilung</h2>
           <table class="print-table"><thead><tr><th>Fonds/ETF</th><th>Verteilung</th></tr></thead><tbody>${depRows}</tbody></table>
         `;
-        if (flowImg) {
-            html += `<h2>Dein Finanzfluss (aktueller Stand)</h2><img alt="Finanzfluss" src="${flowImg}">`;
-        }
-        if (chartImg) {
-            html += `<h2>Vermögens-Prognose (Bandbreite)</h2><img alt="Prognose-Chart" src="${chartImg}">`;
-        }
+        html += ``; // (Überschrift wird unten im <section> gesetzt)
         report.innerHTML = html;
+
+        // Eigene Seite vorbereiten
+        const section = document.createElement('section');
+        section.className = 'print-finanzfluss';
+        // Fallbacks für Browser, die die CSS-Regel ignorieren
+        section.style.breakBefore = 'page';
+        section.style.pageBreakBefore = 'always';
+        section.innerHTML = `<h2>Dein Finanzfluss (aktueller Stand)</h2>`;
+
+        // Live-DOM klonen: Ströme + Konten + Werte
+        const live = getEl('flow-container');
+        if (live) {
+          const clone = live.cloneNode(true);
+          clone.id = 'flow-container-print';
+
+          // Interaktivität entfernen (keine Modals im Print)
+          clone.querySelectorAll('[onclick]').forEach(n => n.removeAttribute('onclick'));
+
+          // Deterministische Größe wie im Live-UI
+          const cs = getComputedStyle(live);
+          clone.style.position = 'relative';
+          clone.style.minHeight = cs.minHeight || '1150px';
+          clone.style.height    = cs.height || '1150px';
+          clone.style.width     = '100%';
+
+          const holder = document.createElement('div');
+          holder.style.marginTop = '8px';
+          holder.appendChild(clone);
+          section.appendChild(holder);
+        }
+
+        // Abschnitt (eigene Seite) anhängen
+        report.appendChild(section);
+
+        // NEU: sicherstellen, dass die <img>-Tags wirklich fertig sind
+        await waitForImages(report, 2500);
+        await waitFrames(1); // ein Frame für Layout
 
         // 5) Print
         const restoreTheme = () => {
