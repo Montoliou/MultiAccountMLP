@@ -278,7 +278,7 @@
                             <div class="mini-theme-toggle" title="Theme umschalten (MLP Hell / Dunkel)">
                               <span class="hidden md:inline">Hell</span>
                               <label class="mini-theme-switch">
-                                <input type="checkbox" id="theme-switch" />
+                                <input type="checkbox" id="theme-switch" aria-label="Theme umschalten (Hell/Dunkel)" />
                                 <span class="mini-theme-slider"></span>
                               </label>
                               <span class="hidden md:inline">Dunkel</span>
@@ -287,7 +287,7 @@
                             <!-- A/B-Variantenschalter -->
                             <span id="variante-a-label" class="font-semibold text-white">A</span>
                             <label class="switch">
-                                <input type="checkbox" id="variant-switch">
+                                <input type="checkbox" id="variant-switch" aria-label="Variante A/B umschalten">
                                 <span class="slider"></span>
                             </label>
                             <span id="variante-b-label" class="text-gray-500">B</span>
@@ -347,8 +347,8 @@
                 <svg id="flow-svg" class="flow-svg">
                     <defs>
                       <linearGradient id="flow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" style="stop-color:#3b82f6;" />
-                        <stop offset="100%" style="stop-color:#6366f1;" />
+                        <stop offset="0%" stop-color="#3b82f6" />
+                        <stop offset="100%" stop-color="#6366f1" />
                       </linearGradient>
                       <filter id="flow-glow" x="-50%" y="-50%" width="200%" height="200%">
                         <feGaussianBlur stdDeviation="3" result="blur"/>
