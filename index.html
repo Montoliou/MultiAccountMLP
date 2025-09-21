@@ -70,7 +70,7 @@
         input:checked + .slider:before { transform: translateX(26px); }
         
         #printable-report { display: none; }
-        @media print { body > *:not(#printable-report) { display: none !important; } #printable-report { display: block; color: #000; background: #fff; } .print-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; } .print-table th, .print-table td { border: 1px solid #ccc; padding: 8px; text-align: left; } .print-table th { background-color: #f2f2f2; } }
+        @media print { body > *:not(#printable-report) { display: none !important; } #printable-report { display: block; color: #000; background: #fff; } .print-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; } .print-table th, .print-table td { border: 1px solid #ccc; padding: 8px; text-align: left; } .print-table th { background-color: #f2f2f2; } .print-break { page-break-after: always; break-after: page; height: 1px; } }
         @media print {
           /* Eigene Seite für den Finanzfluss */
           .print-finanzfluss {
@@ -90,6 +90,8 @@
           --mlp-blue-1: #002F6C;  /* deep navy */
           --mlp-blue-2: #3C6AA3;  /* lighter MLP blue for shading */
           --mlp-gold: #BDA177;
+          --input-bg: #1f2937;
+          --input-border: #374151;
         }
         .theme-dark {
           --bg: #111827;        /* body bg */
@@ -99,6 +101,8 @@
           --muted: #9ca3af;     /* secondary text */
           --accent1: #3b82f6;   /* gradient start */
           --accent2: #6366f1;   /* gradient end */
+          --input-bg: rgba(17, 24, 39, 0.92);
+          --input-border: #374151;
         }
         .theme-light {
           --bg: #FFFFFF;
@@ -108,11 +112,119 @@
           --muted: #6B7280;
           --accent1: var(--mlp-blue);  /* MLP Blau */
           --accent2: var(--mlp-gold);  /* MLP Gold */
+          --input-bg: #ffffff;
+          --input-border: #d0d7e3;
         }
 
         /* Base background/text via CSS vars (keine Änderung an Tailwind nötig) */
         body { background: var(--bg); color: var(--fg); }
 
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border: 0;
+        }
+
+        /* Planning cockpit */
+        .planning-panel{position:relative;background:var(--card);border-radius:24px;border:1px solid var(--border);padding:clamp(2.4rem,3vw+2rem,3.5rem) clamp(1.6rem,2vw+1.2rem,2.6rem);display:flex;flex-direction:column;gap:1.75rem;box-shadow:0 24px 48px -28px rgba(0,47,108,0.45);}
+        .theme-dark .planning-panel{background:linear-gradient(150deg,#1e293b 0%,#0f172a 100%);border-color:rgba(148,163,184,0.15);box-shadow:0 35px 55px -35px rgba(15,23,42,0.8);}
+        .panel-header{display:flex;flex-direction:column;gap:1.5rem;align-items:flex-start;}
+        @media (min-width:768px){.panel-header{flex-direction:row;justify-content:space-between;align-items:flex-end;gap:2rem;}}
+        .panel-title{max-width:420px;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start;text-align:left;padding-left:1.5rem;}
+        .panel-eyebrow{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;}
+        .panel-title h2{margin:0;font-size:clamp(1.9rem,2vw+1.6rem,2.4rem);font-weight:700;color:var(--fg);}
+        .panel-controls{display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;justify-content:flex-end;}
+        .control-chip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid var(--border);border-radius:14px;background:rgba(0,47,108,0.04);transition:all .25s ease;cursor:pointer;}
+        .panel-controls .control-chip:hover{border-color:var(--accent1);color:var(--accent1);}
+        .control-chip:focus-within{box-shadow:0 0 0 3px rgba(0,47,108,0.18);}
+        .theme-dark .control-chip{background:rgba(148,163,184,0.08);border-color:rgba(148,163,184,0.2);}
+        .control-chip input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+        .chip-icon,.chip-pair{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;background:transparent;gap:.2rem;transition:background .25s ease,color .25s ease;}
+        .control-chip .icon{width:18px;height:18px;color:var(--muted);transition:opacity .2s ease,transform .2s ease;}
+        .control-chip--toggle .icon-moon{opacity:0;transform:scale(.65);}
+        .control-chip--toggle input:checked + .chip-icon{background:rgba(0,47,108,0.08);}
+        .theme-light .control-chip--toggle input:checked + .chip-icon{background:rgba(0,47,108,0.12);}
+        .control-chip--toggle input:checked + .chip-icon .icon-sun{opacity:0;transform:scale(.65);}
+        .control-chip--toggle input:checked + .chip-icon .icon-moon{opacity:1;transform:scale(1);}
+        .control-chip--toggle input:checked + .chip-icon .icon{color:var(--accent1);}
+        .chip-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.2rem;align-items:center;justify-items:center;}
+        .chip-state{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;font-size:.8rem;font-weight:600;color:var(--muted);background:rgba(0,47,108,0.05);transition:all .2s ease;}
+        .theme-dark .chip-state{background:rgba(148,163,184,0.12);color:#cbd5f5;}
+        .chip-state--active{color:#ffffff;background:linear-gradient(135deg,var(--accent1),var(--accent2));box-shadow:0 10px 18px -12px rgba(0,47,108,0.6);}
+        .control-chip--consultation{width:44px;}
+        .control-chip--consultation .chip-button{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:color .2s ease,background .2s ease;}
+        .control-chip--consultation .chip-button:hover{color:var(--accent1);}
+        .control-chip--consultation .chip-button .icon{width:20px;height:20px;}
+        .control-chip--consultation .chip-button.hidden{display:none;}
+        .control-chip--consultation.is-active{background:linear-gradient(135deg,var(--accent1),var(--accent2));border-color:transparent;box-shadow:0 10px 18px -12px rgba(0,47,108,0.6);}
+        .control-chip--consultation.is-active .chip-button .icon{color:#ffffff;}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border-radius:999px;font-weight:600;transition:all .25s ease;cursor:pointer;border:none;}
+        .btn-sm{font-size:.85rem;padding:.45rem .95rem;}
+        .btn-lg{font-size:.95rem;padding:.75rem 1.4rem;}
+        .btn-block{width:100%;}
+        .btn-primary{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;}
+        .btn-primary:hover{filter:brightness(1.05);box-shadow:0 18px 32px -18px rgba(0,47,108,0.65);}
+        .btn-secondary{background:transparent;border:1px solid var(--border);color:var(--fg);}
+        .btn-secondary:hover{border-color:var(--accent1);color:var(--accent1);box-shadow:0 0 0 3px rgba(0,47,108,0.12);}
+        .btn-ghost{background:transparent;color:var(--muted);}
+        .btn-ghost:hover{color:var(--accent1);}
+        .panel-note{display:flex;align-items:flex-start;gap:.75rem;font-size:.85rem;color:var(--muted);background:rgba(0,47,108,0.05);border-radius:14px;padding:.9rem 1.1rem;border:1px solid rgba(0,47,108,0.1);}
+        .panel-note::before{content:'i';display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(0,47,108,0.12);color:var(--accent1);font-weight:700;flex-shrink:0;}
+        .theme-dark .panel-note{background:rgba(148,163,184,0.08);border-color:rgba(148,163,184,0.16);color:#e2e8f0;}
+        .theme-dark .panel-note::before{background:rgba(99,102,241,0.2);color:var(--accent2);}
+        .panel-body{display:flex;flex-direction:column;gap:1.25rem;}
+        .panel-section{display:flex;flex-direction:column;gap:1rem;padding:1.25rem 1.35rem 1.5rem;border-radius:18px;border:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,0.7)0%,rgba(244,247,252,0.85)100%);}
+        .theme-dark .panel-section{background:rgba(15,23,42,0.55);border-color:rgba(148,163,184,0.12);}
+        .panel-section[data-tone="blue"] .section-heading h3{color:var(--accent1);}
+        .panel-section[data-tone="gold"] .section-heading h3{color:var(--mlp-gold);}
+        .panel-section[data-tone="teal"] .section-heading h3{color:#3aa8a2;}
+        .panel-section[data-tone="slate"] .section-heading h3{color:#4c65a8;}
+        .section-heading{display:flex;flex-direction:column;gap:.35rem;}
+        .section-heading h3{margin:0;font-size:1.2rem;font-weight:700;color:var(--fg);}
+        .section-heading .section-subtitle{font-size:.75rem;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+        .section-eyebrow{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;}
+        .section-grid{display:grid;gap:1rem;}
+        .section-grid--two{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
+        .section-stack{display:flex;flex-direction:column;gap:1rem;}
+        .mlp-input{display:flex;flex-direction:column;gap:.55rem;}
+        .mlp-input label{font-size:.85rem;font-weight:600;color:var(--muted);}
+        .mlp-range-group{gap:0.4rem;}
+        .range-meta{display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--muted);margin-bottom:0.25rem;}
+        .range-value{font-weight:600;color:var(--accent1);}
+        .input-frame{display:flex;align-items:center;gap:.6rem;background:var(--input-bg);border:1px solid var(--input-border);border-radius:12px;padding:0 1rem;height:48px;transition:border-color .25s ease,box-shadow .25s ease;}
+        .mlp-input-field{flex:1;border:none;background:transparent;color:var(--fg);font-size:1rem;font-weight:600;outline:none;}
+        .mlp-input-field::-webkit-outer-spin-button,.mlp-input-field::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+        .mlp-input-field[type=number]{-moz-appearance:textfield;}
+        .input-prefix,.input-suffix{font-size:.9rem;font-weight:600;color:var(--muted);}
+        .input-frame:focus-within{border-color:var(--accent1);box-shadow:0 0 0 3px rgba(0,47,108,0.18);}
+        .theme-dark .input-frame{background:rgba(15,23,42,0.9);border-color:rgba(148,163,184,0.18);}
+        .theme-dark .input-frame:focus-within{border-color:var(--accent1);box-shadow:0 0 0 3px rgba(63,103,190,0.35);}
+        .theme-dark .input-prefix,.theme-dark .input-suffix{color:#cbd5f5;}
+        .label-highlight{color:var(--accent1);font-weight:700;}
+        .mlp-range{width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,rgba(0,47,108,0.15),rgba(189,161,119,0.15));outline:none;-webkit-appearance:none;appearance:none;}
+        .mlp-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--accent1),var(--accent2));border:none;box-shadow:0 8px 18px rgba(0,47,108,0.25);cursor:pointer;}
+        .mlp-range::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--accent1),var(--accent2));border:none;box-shadow:0 8px 18px rgba(0,47,108,0.25);cursor:pointer;}
+        .mlp-range::-webkit-slider-runnable-track{height:6px;border-radius:999px;background:linear-gradient(90deg,var(--accent1),var(--accent2));}
+        .mlp-range::-moz-range-track{height:6px;border-radius:999px;background:linear-gradient(90deg,var(--accent1),var(--accent2));}
+        .section-note{font-size:.8rem;color:var(--muted);background:rgba(0,47,108,0.05);padding:.75rem 1rem;border-radius:12px;text-align:center;}
+        .theme-dark .section-note{background:rgba(148,163,184,0.12);color:#e2e8f0;}
+        .booking-type-group{display:flex;flex-wrap:wrap;gap:.55rem;justify-content:center;}
+        .booking-toolbar{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;font-size:.8rem;color:var(--muted);}
+        .booking-toolbar label{font-weight:600;color:var(--muted);}
+        .select-field{width:100%;background:var(--input-bg);border:1px solid var(--input-border);border-radius:12px;padding:.6rem .9rem;color:var(--fg);font-size:.9rem;transition:border-color .25s ease,box-shadow .25s ease;outline:none;}
+        .select-field:focus{border-color:var(--accent1);box-shadow:0 0 0 3px rgba(0,47,108,0.18);}
+        .theme-dark .select-field{background:rgba(15,23,42,0.9);border-color:rgba(148,163,184,0.18);color:#f1f5f9;}
+        .link-danger{color:#ef4444;font-weight:600;}
+        .link-danger:hover{color:#dc2626;}
+        .print-area{margin-top:.5rem;}
+        .print-area .print-btn{display:inline-flex;align-items:center;justify-content:center;gap:.75rem;border-radius:16px;padding:.9rem 1.2rem;}
+        .print-area .print-btn svg{width:20px;height:20px;}
         /* Panels/Borders auf Theme heben */
         .theme-light .bg-gray-800 { background-color: var(--card) !important; }
         .theme-light .bg-gray-900 { background-color: var(--bg) !important; }
@@ -126,15 +238,6 @@
         .theme-light .flow-value { background-color: rgba(255,255,255,0.85); border-color: var(--border); color: var(--fg); }
 
         /* Mini Theme Toggle (Header) */
-        .mini-theme-toggle { display:inline-flex; align-items:center; gap:6px; font-size:12px; color: var(--muted); }
-        .mini-theme-switch { position: relative; width: 34px; height: 18px; display:inline-block; }
-        .mini-theme-switch input { opacity: 0; width: 0; height: 0; }
-        .mini-theme-slider { position:absolute; inset:0; background:#374151; border-radius: 999px; transition:.25s; }
-        .mini-theme-slider:before { content:""; position:absolute; width:14px; height:14px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.25s; }
-        .theme-light .mini-theme-slider { background:#cbd5e1; }
-        .mini-theme-switch input:checked + .mini-theme-slider { background: var(--mlp-blue); }
-        .mini-theme-switch input:checked + .mini-theme-slider:before { transform: translateX(16px); }
-
         /* -------- Light Theme Polish & Overrides -------- */
         /* Inputs & selects */
         .theme-light input[type="number"],
@@ -162,7 +265,6 @@
         .theme-light .border-gray-600 { border-color: var(--border) !important; }
 
         /* Badges / helper boxes */
-        .theme-light #variant-info { background: #eef2f7 !important; color: #334155 !important; }
         .theme-light .limit-line span { background: #ffffff !important; color: #111827 !important; }
 
         /* Flow animation color on light */
@@ -202,16 +304,29 @@
         /* Primary action hover gentle for light */
         .theme-light .bg-purple-600:hover { filter: brightness(1.05); }
 
-        /* Print button restyle in light */
-        .print-btn { transition: all .25s ease; }
+        /* Print button styling */
+        .print-btn {
+          transition: all .25s ease;
+          border: 1px solid var(--border);
+          background: transparent;
+          color: var(--fg);
+        }
+        .print-btn:hover {
+          border-color: var(--accent1);
+          color: var(--accent1);
+        }
+        .theme-dark .print-btn {
+          background: rgba(148, 163, 184, 0.08);
+          border-color: rgba(148, 163, 184, 0.2);
+          color: #f1f5f9;
+        }
         .theme-light .print-btn {
-          background: #ffffff !important;
-          color: #111827 !important;
-          border: 1px solid #cbd5e1 !important;
+          background: linear-gradient(135deg, rgba(0, 47, 108, 0.9), rgba(189, 161, 119, 0.9));
+          border-color: transparent;
+          color: #ffffff;
         }
         .theme-light .print-btn:hover {
-          background: #f8fafc !important;
-          border-color: #94a3b8 !important;
+          filter: brightness(1.05);
         }
 
         /* Cards subtle separation in light */
@@ -243,7 +358,6 @@
         .theme-light .text-yellow-300 { color: var(--mlp-gold) !important; }
 
         /* Light theme info badges and pills with MLP tint */
-        .theme-light #variant-info { background: #e9eef6 !important; color: #0f2f55 !important; border: 1px solid #d5e0ee !important; }
         .theme-light .flow-value { border-color: #d5e0ee !important; }
 
         /* Inputs range track for light in subtle grey with MLP thumb */
@@ -289,8 +403,8 @@
             position: relative;
             border: 1px solid #374151;
             border-radius: 0.5rem;
-            padding: 0.4rem 0.35rem 0.6rem;
-            min-height: 72px;
+            padding: 0.35rem 0.3rem 0.5rem;
+            min-height: 64px;
             background-color: rgba(17, 24, 39, 0.6);
             cursor: pointer;
             transition: border-color 0.2s ease, transform 0.15s ease;
@@ -303,6 +417,7 @@
             border-color: rgba(96, 165, 250, 0.8);
             background-color: rgba(37, 99, 235, 0.12);
         }
+        .booking-day--overflow{background-color:rgba(189,161,119,0.12);border-color:rgba(189,161,119,0.45);} .booking-day--overflow .booking-day-number{color:var(--accent1);}
         .booking-day-number {
             font-size: 0.75rem;
             font-weight: 600;
@@ -318,8 +433,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             border-radius: 9999px;
             border: 1px solid transparent;
             background-color: rgba(255, 255, 255, 0.04);
@@ -327,8 +442,8 @@
             transition: transform 0.15s ease, border-color 0.2s ease, color 0.2s ease;
         }
         .booking-entry-btn svg {
-            width: 1.1rem;
-            height: 1.1rem;
+            width: 0.9rem;
+            height: 0.9rem;
         }
         .booking-entry-btn:hover {
             transform: scale(1.05);
@@ -372,6 +487,7 @@
         .theme-light .booking-day.has-booking {
             background-color: rgba(214, 226, 247, 0.9);
         }
+        .theme-light .booking-day--overflow{background-color:rgba(240,233,222,0.9);border-color:rgba(189,161,119,0.45);} .theme-light .booking-day--overflow .booking-day-number{color:#7b5a30;}
         .theme-light .booking-day-number {
             color: #4b5563;
         }
@@ -414,97 +530,174 @@
 
         <div class="flex flex-col lg:flex-row gap-8">
             <!-- Input Controls -->
-            <div class="w-full lg:w-1/3 lg:max-w-md">
-                <div class="bg-gray-800 p-6 rounded-xl shadow-lg h-fit">
-                    <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
-                        <div class="flex items-center gap-3">
-                             <h2 class="text-2xl font-semibold">Deine Planung</h2>
+            <aside class="w-full lg:w-1/3 xl:max-w-lg">
+                <div class="planning-panel" aria-labelledby="planning-title">
+                    <header class="panel-header">
+                        <div class="panel-title">
+                            <span class="panel-eyebrow">Planungs-Cockpit</span>
+                            <h2 id="planning-title" class="sr-only">Deine Planung</h2>
                         </div>
-                        <div class="flex items-center gap-3 text-sm">
-                            <!-- Mini Theme Toggle -->
-                            <div class="mini-theme-toggle" title="Theme umschalten (MLP Hell / Dunkel)">
-                              <span class="hidden md:inline">Hell</span>
-                              <label class="mini-theme-switch">
+                        <div class="panel-controls" role="group" aria-label="Schnellaktionen">
+                            <label class="control-chip control-chip--toggle" title="Darstellung wechseln">
                                 <input type="checkbox" id="theme-switch" aria-label="Theme umschalten (Hell/Dunkel)" />
-                                <span class="mini-theme-slider"></span>
-                              </label>
-                              <span class="hidden md:inline">Dunkel</span>
-                            </div>
-
-                            <!-- A/B-Variantenschalter -->
-                            <span id="variante-a-label" class="font-semibold text-white">A</span>
-                            <label class="switch">
-                                <input type="checkbox" id="variant-switch" aria-label="Variante A/B umschalten">
-                                <span class="slider"></span>
+                                <span class="chip-icon" aria-hidden="true">
+                                    <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="4" />
+                                        <path d="M12 2v2" />
+                                        <path d="M12 20v2" />
+                                        <path d="M4.93 4.93l1.42 1.42" />
+                                        <path d="M17.65 17.65l1.42 1.42" />
+                                        <path d="M2 12h2" />
+                                        <path d="M20 12h2" />
+                                        <path d="M4.93 19.07l1.42-1.42" />
+                                        <path d="M17.65 6.35l1.42-1.42" />
+                                    </svg>
+                                    <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 12.79A9 9 0 0 1 11.21 3 7 7 0 1 0 21 12.79z" />
+                                    </svg>
+                                </span>
                             </label>
-                            <span id="variante-b-label" class="text-gray-500">B</span>
-                        </div>
-                        <div class="ml-3 flex items-center gap-2 text-xs">
-                          <button id="consult-toggle-btn" class="px-2 py-1 rounded border border-gray-600 hover:border-indigo-500">Beratung starten</button>
-                          <button id="consult-next-btn" class="px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white hidden">Weiter</button>
-                        </div>
-                    </div>
-                    <div id="variant-info" class="text-xs text-center text-gray-400 bg-gray-700 p-2 rounded-md mb-4"></div>
-                    <div class="space-y-4">
-                        <!-- Existing planning sections -->
-                        <div id="sec-income">
-                          <label for="income" class="block text-sm font-medium text-gray-300 mb-1">Nettoeinkommen</label>
-                          <div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="income" value="3000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div>
-                        </div>
-                        <hr class="border-gray-700 !my-5">
-                        <h3 class="text-lg font-semibold text-yellow-300 -mb-2">Konsumkonto</h3>
-                        <div id="sec-konsum">
-                          <div><label for="konsumMin" class="block text-sm font-medium text-gray-300 mb-1">Mindestbestand (Sockelbetrag)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumMin" value="100" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                          <div class="mt-3"><label for="konsumLeftover" class="block text-sm font-medium text-gray-300 mb-1">Variabler Überschuss (Schätzung)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="konsumLeftover" value="250" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        </div>
-                        <hr class="border-gray-700 !my-5">
-                        <h3 class="text-lg font-semibold text-blue-300 -mb-2">Tagesgeldkonto</h3>
-                        <div id="sec-tagesgeld">
-                          <div><label for="tagesgeldCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Stand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldCurrent" value="4800" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                          <div class="mt-3"><label for="tagesgeldLimit" class="block text-sm font-medium text-gray-300 mb-1">Sparziel (Überlaufgrenze)</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="tagesgeldLimit" value="5000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                        </div>
-                        <!-- New Projection Section -->
-                        <hr class="border-gray-700 !my-5">
-                        <div id="sec-prognose">
-                          <h3 class="text-lg font-semibold text-purple-300 -mb-2">Vermögens-Prognose</h3>
-                          <div><label for="depotCurrent" class="block text-sm font-medium text-gray-300 mb-1">Aktueller Depotstand</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">€</span><input type="number" id="depotCurrent" value="25000" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-indigo-500"></div></div>
-                          <div class="mt-3">
-                              <label for="anlagezeitraum" class="block text-sm font-medium text-gray-300 mb-1">Anlagezeitraum: <span id="anlagezeitraum-label" class="font-bold">15 Jahre</span></label>
-                              <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
-                          </div>
-                          <div class="mt-3">
-                              <label for="rendite" class="block text-sm font-medium text-gray-300 mb-1">Ihre angenommene Rendite p.a.</label>
-                              <div class="relative"><input type="number" id="rendite" step="0.1" value="7" class="w-full bg-gray-700 border border-gray-600 rounded-lg pl-4 pr-8 py-2 focus:ring-2 focus:ring-indigo-500"><span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">%</span></div>
-                              <div id="rendite-info" class="text-xs text-gray-400 mt-2 text-center p-2 bg-gray-700 rounded-md"></div>
-                          </div>
-                          <button onclick="calculateProjection()" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex justify-center items-center gap-2">
-                              Prognose berechnen
-                          </button>
-                        </div>
-                        <hr class="border-gray-700 !my-5">
-                        <div id="sec-booking-plan">
-                          <h3 class="text-lg font-semibold text-green-300 -mb-2">Buchungskalender</h3>
-                          <p class="text-xs text-gray-400 mb-3">Waehle einen Buchungstyp und klicke auf den passenden Tag des Monats.</p>
-                          <div class="space-y-3">
-                            <div id="booking-type-buttons" class="flex flex-wrap gap-2"></div>
-                            <div class="flex items-center gap-2 text-xs text-gray-400">
-                              <label for="booking-month" class="font-medium text-gray-300">Monat</label>
-                              <select id="booking-month" class="flex-1 bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500"></select>
-                              <button id="booking-clear-month" type="button" class="text-red-300 hover:text-red-200 transition text-xs">Monat leeren</button>
+                            <label class="control-chip control-chip--variant" title="Variante A/B umschalten">
+                                <input type="checkbox" id="variant-switch" aria-label="Variante A/B umschalten">
+                                <span class="chip-pair" aria-hidden="true">
+                                    <span id="variante-a-label" class="chip-state chip-state--active">A</span>
+                                    <span id="variante-b-label" class="chip-state">B</span>
+                                </span>
+                            </label>
+                            <div class="control-chip control-chip--consultation" title="Beratung">
+                                <button id="consult-toggle-btn" class="chip-button" type="button" aria-label="Beratung starten">
+                                    <svg class="icon icon-mlp" viewBox="0 0 24 24" aria-hidden="true">
+                                        <circle cx="10" cy="12" r="5.5" stroke="currentColor" stroke-width="1.6" fill="none" />
+                                        <path d="M10 8.5v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                                        <path d="M18 7h3v10h-3z" fill="currentColor" />
+                                    </svg>
+                                </button>
+                                <button id="consult-next-btn" class="chip-button hidden" type="button" aria-label="Weiter zur naechsten Beratungsphase" title="Weiter zur naechsten Beratungsphase">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14" />
+                                        <path d="M13 6l6 6-6 6" />
+                                    </svg>
+                                </button>
                             </div>
-                            <div id="booking-calendar" class="booking-calendar" role="grid" aria-label="Buchungskalender"></div>
-                            <p id="booking-hint" class="text-[11px] text-gray-500 italic"></p>
-                          </div>
                         </div>
+</header>
+                    <div class="panel-body">
+                        <section class="panel-section" data-tone="blue">
+                            <header class="section-heading">
+                                <h3>Gehaltseingang</h3>
+                            </header>
+                            <div id="sec-income" class="section-grid">
+                                <div class="mlp-input">
+                                    <label for="income" class="sr-only">Nettoeinkommen</label>
+                                    <div class="input-frame">
+                                        <span class="input-prefix">€</span>
+                                        <input type="number" id="income" value="3000" class="mlp-input-field" inputmode="decimal" placeholder="Nettoeinkommen">
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="panel-section" data-tone="gold">
+                            <header class="section-heading">
+                                <h3>Konsumkonto</h3>
+                                <span class="section-subtitle">Minimum &amp; Überschuss (geschätzt)</span>
+                            </header>
+                            <div id="sec-konsum" class="section-grid section-grid--two">
+                                <div class="mlp-input">
+                                    <label for="konsumMin" class="sr-only">Mindestbestand (Sockelbetrag)</label>
+                                    <div class="input-frame">
+                                        <span class="input-prefix">€</span>
+                                        <input type="number" id="konsumMin" value="100" class="mlp-input-field" inputmode="decimal" placeholder="Mindestbestand">
+                                    </div>
+                                </div>
+                                <div class="mlp-input">
+                                    <label for="konsumLeftover" class="sr-only">Variabler Überschuss (Schätzung)</label>
+                                    <div class="input-frame">
+                                        <span class="input-prefix">€</span>
+                                        <input type="number" id="konsumLeftover" value="250" class="mlp-input-field" inputmode="decimal" placeholder="Variabler Überschuss">
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="panel-section" data-tone="teal">
+                            <header class="section-heading">
+                                <h3>Tagesgeldkonto</h3>
+                                <span class="section-subtitle">Sparziel &amp; Bestand</span>
+                            </header>
+                            <div id="sec-tagesgeld" class="section-grid section-grid--two">
+                                <div class="mlp-input">
+                                    <label for="tagesgeldCurrent" class="sr-only">Aktueller Stand</label>
+                                    <div class="input-frame">
+                                        <span class="input-prefix">€</span>
+                                        <input type="number" id="tagesgeldCurrent" value="4800" class="mlp-input-field" inputmode="decimal" placeholder="Aktueller Stand">
+                                    </div>
+                                </div>
+                                <div class="mlp-input">
+                                    <label for="tagesgeldLimit" class="sr-only">Sparziel (Überlaufgrenze)</label>
+                                    <div class="input-frame">
+                                        <span class="input-prefix">€</span>
+                                        <input type="number" id="tagesgeldLimit" value="5000" class="mlp-input-field" inputmode="decimal" placeholder="Sparziel">
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="panel-section" data-tone="slate">
+                            <header class="section-heading">
+                                <h3>Vermögensdepot</h3>
+                            </header>
+                            <div id="sec-prognose" class="section-stack">
+                                <div class="mlp-input">
+                                    <label for="depotCurrent" class="sr-only">Aktueller Depotstand</label>
+                                    <div class="input-frame">
+                                        <span class="input-prefix">€</span>
+                                        <input type="number" id="depotCurrent" value="25000" class="mlp-input-field" inputmode="decimal" placeholder="Aktueller Depotstand">
+                                    </div>
+                                </div>
+                                <div class="mlp-input mlp-range-group">
+                                    <label for="anlagezeitraum" class="sr-only">Anlagezeitraum</label>
+                                    <div class="range-meta" aria-hidden="true">
+                                        <span class="range-label">Anlagezeitraum</span>
+                                        <span id="anlagezeitraum-label" class="range-value">15 Jahre</span>
+                                    </div>
+                                    <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="mlp-range">
+                                </div>
+                                <div class="mlp-input">
+                                    <label for="rendite" class="sr-only">Ihre angenommene Rendite p.a.</label>
+                                    <div class="input-frame">
+                                        <input type="number" id="rendite" step="0.1" value="7" class="mlp-input-field" inputmode="decimal" placeholder="Rendite p.a.">
+                                        <span class="input-suffix">%</span>
+                                    </div>
+                                    <div id="rendite-info" class="section-note"></div>
+                                </div>
+                                <button onclick="calculateProjection()" class="btn btn-primary btn-lg btn-block">Prognose berechnen</button>
+                            </div>
+                        </section>
+                        <section class="panel-section" data-tone="blue">
+                            <header class="section-heading">
+                                <span class="section-eyebrow">Timing</span>
+                                <h3>Buchungskalender</h3>
+                            </header>
+                            <div id="sec-booking-plan" class="section-stack">
+                                <div id="booking-type-buttons" class="booking-type-group"></div>
+                                <div class="booking-toolbar">
+                                    <button id="booking-clear-month" type="button" class="btn btn-ghost btn-sm link-danger">Plan leeren</button>
+                                </div>
+                                <div id="booking-calendar" class="booking-calendar" role="grid" aria-label="Buchungskalender"></div>
+                                <p id="booking-hint" class="section-note"></p>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="print-area">
+                        <button onclick="prepareAndPrint()" class="btn btn-secondary btn-lg btn-block print-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2"></path>
+                                <path d="M7 21h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2z"></path>
+                                <path d="M7 5V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Planung als PDF drucken
+                        </button>
                     </div>
                 </div>
-                 <button onclick="prepareAndPrint()" class="print-btn mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    Planung als PDF drucken
-                </button>
-            </div>
-
-            <!-- Visualization -->
+            </aside>
             <div id="flow-container" class="w-full lg:flex-grow relative min-h-[1150px]">
                 <svg id="flow-svg" class="flow-svg">
                     <defs>
@@ -561,7 +754,8 @@
     <script>
     let currentVariant = 'A';
     
-    const monthNames = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const BOOKING_DAYS = 31;
+    const BOOKING_KEY = "0";
     const bookingTypes = [
         {
             id: 'salary_to_fix',
@@ -628,15 +822,13 @@
     bookingTypes.forEach((type, index) => {
         bookingTypeLookup[type.id] = Object.assign({ order: index }, type);
     });
-    const weekdayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     const bookingStorageKey = 'mlp_booking_plan_v1';
     let bookingPlan = loadBookingPlan() || createDefaultBookingPlan();
-    let selectedBookingMonth = determineInitialBookingMonth(bookingPlan);
+    let selectedBookingMonth = String(determineInitialBookingMonth(bookingPlan));
     let selectedBookingTypeId = bookingTypes.length ? bookingTypes[0].id : null;
     let bookingTypeButtonsEl = null;
     let bookingCalendarEl = null;
     let bookingHintEl = null;
-    let bookingMonthSelect = null;
     let bookingClearMonthBtn = null;
 
     function loadBookingPlan() {
@@ -670,30 +862,21 @@
     }
 
     function createDefaultBookingPlan() {
-        const sampleMonth = new Date().getMonth();
-        const plan = {};
-        plan[String(sampleMonth)] = {
-            '1': ['salary_to_fix'],
-            '3': ['standing_to_konsum'],
-            '15': ['sparplan'],
-            '27': ['konsum_to_tagesgeld'],
-            '28': ['tagesgeld_to_depot']
+        return {
+            [BOOKING_KEY]: {
+                '1': ['salary_to_fix'],
+                '3': ['standing_to_konsum'],
+                '15': ['sparplan'],
+                '27': ['konsum_to_tagesgeld'],
+                '28': ['tagesgeld_to_depot']
+            }
         };
-        return plan;
     }
 
     function determineInitialBookingMonth(plan) {
-        const now = new Date().getMonth();
-        if (plan && hasEntriesForMonth(now, plan)) return now;
-        if (plan) {
-            const sorted = Object.keys(plan)
-                .filter(key => hasEntriesForMonth(parseInt(key, 10), plan))
-                .map(key => parseInt(key, 10))
-                .filter(num => Number.isInteger(num))
-                .sort((a, b) => a - b);
-            if (sorted.length) return sorted[0];
-        }
-        return now;
+        if (plan && hasEntriesForMonth(BOOKING_KEY, plan)) return BOOKING_KEY;
+        const keys = plan ? Object.keys(plan) : [];
+        return keys.length ? keys[0] : BOOKING_KEY;
     }
 
     function hasEntriesForMonth(month, plan = bookingPlan) {
@@ -736,25 +919,13 @@
     function renderBookingCalendar() {
         if (!bookingCalendarEl) return;
         bookingCalendarEl.innerHTML = '';
-        weekdayLabels.forEach(label => {
-            const header = document.createElement('div');
-            header.className = 'booking-day booking-day-header';
-            header.textContent = label;
-            bookingCalendarEl.appendChild(header);
-        });
-        const offset = getWeekdayOffset(selectedBookingMonth);
-        for (let i = 0; i < offset; i++) {
-            const blank = document.createElement('div');
-            blank.className = 'booking-day booking-day-empty';
-            bookingCalendarEl.appendChild(blank);
-        }
-        const daysInMonth = getDaysInMonth(selectedBookingMonth);
-        const monthPlan = bookingPlan[String(selectedBookingMonth)] || {};
-        for (let day = 1; day <= daysInMonth; day++) {
+        const monthPlan = ensureMonthPlan(selectedBookingMonth);
+        for (let day = 1; day <= BOOKING_DAYS; day++) {
             const dayKey = String(day);
             const entries = Array.isArray(monthPlan[dayKey]) ? monthPlan[dayKey] : [];
             const cell = document.createElement('div');
             cell.className = 'booking-day';
+            if (day >= 29) cell.classList.add('booking-day--overflow');
             cell.dataset.day = dayKey;
             cell.setAttribute('role', 'button');
             cell.setAttribute('tabindex', '0');
@@ -789,7 +960,7 @@
                 iconBtn.className = 'booking-entry-btn';
                 iconBtn.innerHTML = type.icon;
                 iconBtn.title = `${type.label} entfernen`;
-                iconBtn.setAttribute('aria-label', `${type.label} am ${day}. ${monthNames[selectedBookingMonth]} entfernen`);
+                iconBtn.setAttribute('aria-label', `${type.label} am Tag ${day} entfernen`);
                 if (type.badgeBackground) iconBtn.style.backgroundColor = type.badgeBackground;
                 if (type.badgeColor) iconBtn.style.color = type.badgeColor;
                 iconBtn.addEventListener('click', evt => {
@@ -860,26 +1031,13 @@
             return;
         }
         const type = getBookingType(selectedBookingTypeId);
-        const monthName = monthNames[selectedBookingMonth] || '';
-        bookingHintEl.innerHTML = `Aktiver Typ: <span class="booking-hint-strong">${type?.label || ''}</span>. Klicke auf ein Datum im ${monthName}, um ihn hinzufuegen oder zu entfernen.`;
-    }
-
-    function populateBookingMonthSelect() {
-        if (!bookingMonthSelect) return;
-        bookingMonthSelect.innerHTML = '';
-        monthNames.forEach((name, index) => {
-            const opt = document.createElement('option');
-            opt.value = String(index);
-            opt.textContent = name;
-            bookingMonthSelect.appendChild(opt);
-        });
-        bookingMonthSelect.value = String(selectedBookingMonth);
+        bookingHintEl.innerHTML = `Aktiver Typ: <span class="booking-hint-strong">${type?.label || ''}</span>. Klicke auf einen Tag, um ihn hinzufuegen oder zu entfernen.`;
     }
 
     function clearCurrentMonthPlan() {
         const key = String(selectedBookingMonth);
         if (bookingPlan[key]) {
-            delete bookingPlan[key];
+            bookingPlan[key] = {};
             saveBookingPlan();
             renderBookingCalendar();
             updateBookingHint();
@@ -898,36 +1056,15 @@
         return bookingTypeLookup[typeId];
     }
 
-    function getDaysInMonth(month) {
-        const year = new Date().getFullYear();
-        return new Date(year, month + 1, 0).getDate();
-    }
-
-    function getWeekdayOffset(month) {
-        const year = new Date().getFullYear();
-        const first = new Date(year, month, 1).getDay();
-        return (first + 6) % 7;
-    }
-
     function setupBookingPlanner() {
         bookingTypeButtonsEl = getEl('booking-type-buttons');
         bookingCalendarEl = getEl('booking-calendar');
         bookingHintEl = getEl('booking-hint');
-        bookingMonthSelect = getEl('booking-month');
         bookingClearMonthBtn = getEl('booking-clear-month');
-        if (!bookingTypeButtonsEl || !bookingCalendarEl || !bookingMonthSelect) return;
-        populateBookingMonthSelect();
+        if (!bookingTypeButtonsEl || !bookingCalendarEl) return;
         renderBookingTypeButtons();
         renderBookingCalendar();
         updateBookingHint();
-        bookingMonthSelect.addEventListener('change', event => {
-            const value = parseInt(event.target.value, 10);
-            if (Number.isInteger(value)) {
-                selectedBookingMonth = Math.max(0, Math.min(11, value));
-                renderBookingCalendar();
-                updateBookingHint();
-            }
-        });
         if (bookingClearMonthBtn) {
             bookingClearMonthBtn.addEventListener('click', clearCurrentMonthPlan);
         }
@@ -958,8 +1095,16 @@ let fixkostenItems = [
       calculateAndUpdate();
       const nextBtn = getEl('consult-next-btn');
       const toggleBtn = getEl('consult-toggle-btn');
-      if (on) { nextBtn.classList.remove('hidden'); toggleBtn.textContent = 'Beratung beenden'; }
-      else { nextBtn.classList.add('hidden'); toggleBtn.textContent = 'Beratung starten'; }
+      const consultChip = toggleBtn ? toggleBtn.closest('.control-chip--consultation') : null;
+      if (on) {
+        if (nextBtn) nextBtn.classList.remove('hidden');
+        if (toggleBtn) { toggleBtn.setAttribute('aria-label', 'Beratung beenden'); toggleBtn.setAttribute('title', 'Beratung beenden'); }
+        if (consultChip) consultChip.classList.add('is-active');
+      } else {
+        if (nextBtn) nextBtn.classList.add('hidden');
+        if (toggleBtn) { toggleBtn.setAttribute('aria-label', 'Beratung starten'); toggleBtn.setAttribute('title', 'Beratung starten'); }
+        if (consultChip) consultChip.classList.remove('is-active');
+      }
     }
 
     function nextConsultationStep() {
@@ -1724,43 +1869,32 @@ function updateFixkostenItem(index, key, value) {
     
     function buildBookingPlanPrintHtml() {
         const plan = bookingPlan || {};
-        const monthOrder = Object.keys(plan)
-            .filter(key => plan[key] && Object.keys(plan[key]).length)
+        const bucket = plan[String(selectedBookingMonth)] || plan[BOOKING_KEY] || {};
+        const days = Object.keys(bucket)
             .map(key => parseInt(key, 10))
             .filter(num => Number.isInteger(num))
             .sort((a, b) => a - b);
-        if (!monthOrder.length) {
+        if (!days.length) {
             return `
       <h2>Buchungskalender</h2>
       <p class="muted">Aktuell sind keine Buchungstage hinterlegt.</p>
     `;
         }
-        let html = '<h2>Buchungskalender</h2>';
-        monthOrder.forEach(monthIdx => {
-            const monthName = monthNames[monthIdx] || `Monat ${monthIdx + 1}`;
-            const monthPlan = plan[String(monthIdx)] || {};
-            const days = Object.keys(monthPlan)
-                .map(key => parseInt(key, 10))
-                .filter(num => Number.isInteger(num))
-                .sort((a, b) => a - b);
-            if (!days.length) return;
-            const rows = days.map(dayNum => {
-                const key = String(dayNum);
-                const entries = Array.isArray(monthPlan[key]) ? monthPlan[key] : [];
-                const content = entries
-                    .map(typeId => {
-                        const type = getBookingType(typeId);
-                        if (!type) return '';
-                        const color = type.badgeColor || '#111827';
-                        return `<div class="print-booking-entry"><span class="print-booking-icon" style="color:${color};">${type.icon}</span><span>${type.label}</span></div>`;
-                    })
-                    .filter(Boolean)
-                    .join('') || '<div class="print-booking-entry">-</div>';
-                return `<tr><td>${dayNum}. ${monthName}</td><td>${content}</td></tr>`;
-            }).join('');
-            html += `<h3>${monthName}</h3><table class="print-table print-table-bookings"><thead><tr><th>Tag</th><th>Aktion</th></tr></thead><tbody>${rows}</tbody></table>`;
-        });
-        return html;
+        const rows = days.map(dayNum => {
+            const key = String(dayNum);
+            const entries = Array.isArray(bucket[key]) ? bucket[key] : [];
+            const content = entries
+                .map(typeId => {
+                    const type = getBookingType(typeId);
+                    if (!type) return '';
+                    const color = type.badgeColor || '#111827';
+                    return `<div class="print-booking-entry"><span class="print-booking-icon" style="color:${color};">${type.icon}</span><span>${type.label}</span></div>`;
+                })
+                .filter(Boolean)
+                .join('') || '<div class="print-booking-entry">-</div>';
+            return `<tr><td>Tag ${dayNum}</td><td>${content}</td></tr>`;
+        }).join('');
+        return `<h2>Buchungskalender</h2><table class="print-table print-table-bookings"><thead><tr><th>Tag</th><th>Aktion</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
 
     async function prepareAndPrint() {
@@ -1815,6 +1949,7 @@ function updateFixkostenItem(index, key, value) {
 
           <h2>Fixkosten &amp; Sparpläne</h2>
           <table class="print-table"><thead><tr><th>Posten</th><th>Betrag</th><th>Intervall</th><th>Ziel</th></tr></thead><tbody>${fixRows}</tbody></table>
+          <div class="print-break"></div>
 
           <h2>Depot-Aufteilung</h2>
           <table class="print-table"><thead><tr><th>Fonds/ETF</th><th>Verteilung</th></tr></thead><tbody>${depRows}</tbody></table>
@@ -1931,18 +2066,17 @@ function updateFixkostenItem(index, key, value) {
         const variantInfo = getEl('variant-info');
 
         function setVariantUI() {
+            if (variantSwitch) {
+                variantSwitch.checked = (currentVariant === 'B');
+            }
             if (currentVariant === 'A') {
-                varianteALabel.classList.add('text-white', 'font-semibold');
-                varianteALabel.classList.remove('text-gray-500');
-                varianteBLabel.classList.add('text-gray-500');
-                varianteBLabel.classList.remove('text-white', 'font-semibold');
-                variantInfo.textContent = 'Variante A: Gehalt geht auf das Fixkostenkonto.';
+                varianteALabel.classList.add('chip-state--active');
+                varianteBLabel.classList.remove('chip-state--active');
+                if (variantInfo) variantInfo.textContent = 'Variante A: Gehalt geht auf das Fixkostenkonto.';
             } else {
-                varianteBLabel.classList.add('text-white', 'font-semibold');
-                varianteBLabel.classList.remove('text-gray-500');
-                varianteALabel.classList.add('text-gray-500');
-                varianteALabel.classList.remove('text-white', 'font-semibold');
-                variantInfo.textContent = 'Variante B: Gehalt geht auf das Konsumkonto.';
+                varianteBLabel.classList.add('chip-state--active');
+                varianteALabel.classList.remove('chip-state--active');
+                if (variantInfo) variantInfo.textContent = 'Variante B: Gehalt geht auf das Konsumkonto.';
             }
             // Keep consultation view consistent when variant changes
             applyConsultationVisibility();
