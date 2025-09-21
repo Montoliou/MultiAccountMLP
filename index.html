@@ -255,6 +255,153 @@
     #printable-report img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
     #printable-report h1, #printable-report h2, #printable-report h3 { color: #000 !important; }
     #printable-report .muted { color: #333 !important; font-size: 12px; }
+        .booking-type-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.8rem;
+            border-radius: 0.5rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: rgba(59, 130, 246, 0.15);
+            color: #dbeafe;
+            outline: none;
+        }
+        .booking-type-btn svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        .booking-type-btn:focus-visible {
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.6);
+        }
+        .booking-type-btn-active {
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.35);
+            border-color: rgba(96, 165, 250, 0.65) !important;
+        }
+        .booking-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+        .booking-day {
+            position: relative;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            padding: 0.4rem 0.35rem 0.6rem;
+            min-height: 72px;
+            background-color: rgba(17, 24, 39, 0.6);
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.15s ease;
+        }
+        .booking-day:hover {
+            transform: translateY(-1px);
+            border-color: rgba(96, 165, 250, 0.7);
+        }
+        .booking-day.has-booking {
+            border-color: rgba(96, 165, 250, 0.8);
+            background-color: rgba(37, 99, 235, 0.12);
+        }
+        .booking-day-number {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+        }
+        .booking-day-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-top: 0.35rem;
+        }
+        .booking-entry-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 9999px;
+            border: 1px solid transparent;
+            background-color: rgba(255, 255, 255, 0.04);
+            color: #d1d5db;
+            transition: transform 0.15s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+        .booking-entry-btn svg {
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+        .booking-entry-btn:hover {
+            transform: scale(1.05);
+            border-color: rgba(239, 68, 68, 0.6);
+            color: #fca5a5;
+        }
+        .booking-calendar .booking-day-header {
+            cursor: default;
+            background: transparent;
+            border: none;
+            min-height: auto;
+            padding: 0;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #9ca3af;
+        }
+        .booking-day-empty {
+            pointer-events: none;
+            cursor: default;
+            border: none;
+            background: transparent;
+            min-height: 0;
+            padding: 0;
+        }
+        .booking-hint-strong {
+            color: #bfdbfe;
+        }
+        .theme-light .booking-type-btn {
+            background-color: rgba(15, 47, 85, 0.08);
+            color: #0f2f55;
+            border-color: rgba(15, 47, 85, 0.12);
+        }
+        .theme-light .booking-day {
+            background-color: rgba(249, 250, 251, 0.9);
+            border-color: #d1d5db;
+        }
+        .theme-light .booking-day:hover {
+            border-color: rgba(15, 47, 85, 0.55);
+        }
+        .theme-light .booking-day.has-booking {
+            background-color: rgba(214, 226, 247, 0.9);
+        }
+        .theme-light .booking-day-number {
+            color: #4b5563;
+        }
+        .theme-light .booking-entry-btn {
+            background-color: rgba(15, 47, 85, 0.05);
+            color: #0f2f55;
+        }
+        .theme-light .booking-entry-btn:hover {
+            border-color: rgba(193, 50, 74, 0.6);
+            color: #c1324a;
+        }
+        .print-booking-entry {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .print-booking-entry svg {
+            width: 16px;
+            height: 16px;
+        }
+        .print-booking-icon {
+            display: inline-flex;
+            align-items: center;
+        }
+        .print-booking-entry + .print-booking-entry {
+            margin-top: 4px;
+        }
+        #printable-report .print-table-bookings td {
+            vertical-align: top;
+        }
     </style>
 </head>
 <body class="theme-dark bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden" id="theme-root">
@@ -334,6 +481,21 @@
                               Prognose berechnen
                           </button>
                         </div>
+                        <hr class="border-gray-700 !my-5">
+                        <div id="sec-booking-plan">
+                          <h3 class="text-lg font-semibold text-green-300 -mb-2">Buchungskalender</h3>
+                          <p class="text-xs text-gray-400 mb-3">Waehle einen Buchungstyp und klicke auf den passenden Tag des Monats.</p>
+                          <div class="space-y-3">
+                            <div id="booking-type-buttons" class="flex flex-wrap gap-2"></div>
+                            <div class="flex items-center gap-2 text-xs text-gray-400">
+                              <label for="booking-month" class="font-medium text-gray-300">Monat</label>
+                              <select id="booking-month" class="flex-1 bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500"></select>
+                              <button id="booking-clear-month" type="button" class="text-red-300 hover:text-red-200 transition text-xs">Monat leeren</button>
+                            </div>
+                            <div id="booking-calendar" class="booking-calendar" role="grid" aria-label="Buchungskalender"></div>
+                            <p id="booking-hint" class="text-[11px] text-gray-500 italic"></p>
+                          </div>
+                        </div>
                     </div>
                 </div>
                  <button onclick="prepareAndPrint()" class="print-btn mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
@@ -398,7 +560,380 @@
 
     <script>
     let currentVariant = 'A';
-    let fixkostenItems = [ 
+    
+    const monthNames = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    const bookingTypes = [
+        {
+            id: 'salary_to_fix',
+            label: 'Gehalt -> Fixkosten',
+            shortLabel: 'Gehalt',
+            description: 'Gehaltseingang landet auf dem Fixkostenkonto.',
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="17" height="10" rx="2.4"></rect><path d="M3.5 10.5h17"></path><circle cx="12" cy="12" r="2.2"></circle><path d="M12 10v4"></path></svg>`,
+            accent: '#34d399',
+            border: 'rgba(16, 185, 129, 0.65)',
+            dayBackground: 'rgba(16, 185, 129, 0.18)',
+            badgeBackground: 'rgba(16, 185, 129, 0.18)',
+            badgeColor: '#34d399'
+        },
+        {
+            id: 'standing_to_konsum',
+            label: 'Fixkosten -> Konsum',
+            shortLabel: 'Dauerauftrag',
+            description: 'Regelmaessiger Uebertrag vom Fixkostenkonto auf das Konsumkonto.',
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9l-2 3 2 3"></path><path d="M17 9l2 3-2 3"></path><path d="M9 12h6"></path><path d="M12 6v3"></path><path d="M12 15v3"></path></svg>`,
+            accent: '#60a5fa',
+            border: 'rgba(96, 165, 250, 0.6)',
+            dayBackground: 'rgba(59, 130, 246, 0.16)',
+            badgeBackground: 'rgba(59, 130, 246, 0.16)',
+            badgeColor: '#60a5fa'
+        },
+        {
+            id: 'sparplan',
+            label: 'Fixkosten -> Sparplan',
+            shortLabel: 'Sparplan',
+            description: 'Sparrate wird in den Depot-Sparplan investiert.',
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v3"></path><path d="M11 13v6"></path><path d="M16 15v4"></path><path d="M5 11l4-4 2.5 2.5 4.5-4.5"></path><path d="M15.5 5h4v4"></path></svg>`,
+            accent: '#c084fc',
+            border: 'rgba(168, 85, 247, 0.6)',
+            dayBackground: 'rgba(168, 85, 247, 0.16)',
+            badgeBackground: 'rgba(168, 85, 247, 0.18)',
+            badgeColor: '#c084fc'
+        },
+        {
+            id: 'konsum_to_tagesgeld',
+            label: 'Konsum -> Tagesgeld',
+            shortLabel: 'Tagesgeld',
+            description: 'Restbetrag wird auf das Tagesgeld geschoben.',
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c1.8 2 3.2 4 3.2 5.8a3.2 3.2 0 1 1-6.4 0C8.8 10 10.2 8 12 6z"></path><path d="M6 19h12"></path><path d="M10 16.5h4"></path></svg>`,
+            accent: '#facc15',
+            border: 'rgba(250, 204, 21, 0.6)',
+            dayBackground: 'rgba(250, 204, 21, 0.14)',
+            badgeBackground: 'rgba(250, 204, 21, 0.18)',
+            badgeColor: '#facc15'
+        },
+        {
+            id: 'tagesgeld_to_depot',
+            label: 'Tagesgeld -> Depot',
+            shortLabel: 'Depot',
+            description: 'Ueberschuesse vom Tagesgeld fliessen ins Depot.',
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17l6-6 3.2 3.2 5.3-5.3"></path><path d="M16.5 8h3.5v3.5"></path><path d="M5 21h14"></path></svg>`,
+            accent: '#f97316',
+            border: 'rgba(249, 115, 22, 0.6)',
+            dayBackground: 'rgba(249, 115, 22, 0.16)',
+            badgeBackground: 'rgba(249, 115, 22, 0.18)',
+            badgeColor: '#f97316'
+        }
+    ];
+    const bookingTypeLookup = {};
+    bookingTypes.forEach((type, index) => {
+        bookingTypeLookup[type.id] = Object.assign({ order: index }, type);
+    });
+    const weekdayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    const bookingStorageKey = 'mlp_booking_plan_v1';
+    let bookingPlan = loadBookingPlan() || createDefaultBookingPlan();
+    let selectedBookingMonth = determineInitialBookingMonth(bookingPlan);
+    let selectedBookingTypeId = bookingTypes.length ? bookingTypes[0].id : null;
+    let bookingTypeButtonsEl = null;
+    let bookingCalendarEl = null;
+    let bookingHintEl = null;
+    let bookingMonthSelect = null;
+    let bookingClearMonthBtn = null;
+
+    function loadBookingPlan() {
+        try {
+            const raw = localStorage.getItem(bookingStorageKey);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return (parsed && typeof parsed === 'object') ? parsed : null;
+        } catch (err) {
+            console.warn('Buchungsplan konnte nicht geladen werden.', err);
+            return null;
+        }
+    }
+
+    function saveBookingPlan() {
+        pruneEmptyMonths();
+        try {
+            localStorage.setItem(bookingStorageKey, JSON.stringify(bookingPlan));
+        } catch (err) {
+            console.warn('Buchungsplan konnte nicht gespeichert werden.', err);
+        }
+    }
+
+    function pruneEmptyMonths() {
+        Object.keys(bookingPlan).forEach(key => {
+            const monthPlan = bookingPlan[key];
+            if (!monthPlan || !Object.keys(monthPlan).length) {
+                delete bookingPlan[key];
+            }
+        });
+    }
+
+    function createDefaultBookingPlan() {
+        const sampleMonth = new Date().getMonth();
+        const plan = {};
+        plan[String(sampleMonth)] = {
+            '1': ['salary_to_fix'],
+            '3': ['standing_to_konsum'],
+            '15': ['sparplan'],
+            '27': ['konsum_to_tagesgeld'],
+            '28': ['tagesgeld_to_depot']
+        };
+        return plan;
+    }
+
+    function determineInitialBookingMonth(plan) {
+        const now = new Date().getMonth();
+        if (plan && hasEntriesForMonth(now, plan)) return now;
+        if (plan) {
+            const sorted = Object.keys(plan)
+                .filter(key => hasEntriesForMonth(parseInt(key, 10), plan))
+                .map(key => parseInt(key, 10))
+                .filter(num => Number.isInteger(num))
+                .sort((a, b) => a - b);
+            if (sorted.length) return sorted[0];
+        }
+        return now;
+    }
+
+    function hasEntriesForMonth(month, plan = bookingPlan) {
+        const monthPlan = plan[String(month)];
+        return !!(monthPlan && Object.keys(monthPlan).length);
+    }
+
+    function ensureMonthPlan(month) {
+        const key = String(month);
+        if (!bookingPlan[key]) bookingPlan[key] = {};
+        return bookingPlan[key];
+    }
+
+    function renderBookingTypeButtons() {
+        if (!bookingTypeButtonsEl) return;
+        bookingTypeButtonsEl.innerHTML = '';
+        bookingTypes.forEach(type => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'booking-type-btn';
+            if (type.badgeBackground) btn.style.backgroundColor = type.badgeBackground;
+            if (type.border) btn.style.borderColor = type.border;
+            if (type.badgeColor) btn.style.color = type.badgeColor;
+            btn.innerHTML = `${type.icon}<span>${type.label}</span>`;
+            btn.title = type.description;
+            btn.setAttribute('aria-pressed', selectedBookingTypeId === type.id ? 'true' : 'false');
+            if (selectedBookingTypeId === type.id) btn.classList.add('booking-type-btn-active');
+            btn.addEventListener('click', () => handleBookingTypeSelect(type.id));
+            bookingTypeButtonsEl.appendChild(btn);
+        });
+    }
+
+    function handleBookingTypeSelect(typeId) {
+        if (selectedBookingTypeId === typeId) return;
+        selectedBookingTypeId = typeId;
+        renderBookingTypeButtons();
+        updateBookingHint();
+    }
+
+    function renderBookingCalendar() {
+        if (!bookingCalendarEl) return;
+        bookingCalendarEl.innerHTML = '';
+        weekdayLabels.forEach(label => {
+            const header = document.createElement('div');
+            header.className = 'booking-day booking-day-header';
+            header.textContent = label;
+            bookingCalendarEl.appendChild(header);
+        });
+        const offset = getWeekdayOffset(selectedBookingMonth);
+        for (let i = 0; i < offset; i++) {
+            const blank = document.createElement('div');
+            blank.className = 'booking-day booking-day-empty';
+            bookingCalendarEl.appendChild(blank);
+        }
+        const daysInMonth = getDaysInMonth(selectedBookingMonth);
+        const monthPlan = bookingPlan[String(selectedBookingMonth)] || {};
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayKey = String(day);
+            const entries = Array.isArray(monthPlan[dayKey]) ? monthPlan[dayKey] : [];
+            const cell = document.createElement('div');
+            cell.className = 'booking-day';
+            cell.dataset.day = dayKey;
+            cell.setAttribute('role', 'button');
+            cell.setAttribute('tabindex', '0');
+            cell.addEventListener('click', () => toggleDayBooking(day));
+            cell.addEventListener('keydown', evt => {
+                if (evt.key === 'Enter' || evt.key === ' ') {
+                    evt.preventDefault();
+                    toggleDayBooking(day);
+                }
+            });
+            const number = document.createElement('div');
+            number.className = 'booking-day-number';
+            number.textContent = String(day);
+            cell.appendChild(number);
+            const content = document.createElement('div');
+            content.className = 'booking-day-content';
+            cell.appendChild(content);
+            if (entries.length) {
+                cell.classList.add('has-booking');
+                const dominant = getBookingType(entries[0]);
+                if (dominant && dominant.dayBackground) cell.style.backgroundColor = dominant.dayBackground;
+                if (dominant && dominant.border) cell.style.borderColor = dominant.border;
+            } else {
+                cell.style.backgroundColor = '';
+                cell.style.borderColor = '';
+            }
+            entries.slice().sort((a, b) => getTypeOrder(a) - getTypeOrder(b)).forEach(typeId => {
+                const type = getBookingType(typeId);
+                if (!type) return;
+                const iconBtn = document.createElement('button');
+                iconBtn.type = 'button';
+                iconBtn.className = 'booking-entry-btn';
+                iconBtn.innerHTML = type.icon;
+                iconBtn.title = `${type.label} entfernen`;
+                iconBtn.setAttribute('aria-label', `${type.label} am ${day}. ${monthNames[selectedBookingMonth]} entfernen`);
+                if (type.badgeBackground) iconBtn.style.backgroundColor = type.badgeBackground;
+                if (type.badgeColor) iconBtn.style.color = type.badgeColor;
+                iconBtn.addEventListener('click', evt => {
+                    evt.stopPropagation();
+                    removeBookingFromDay(day, typeId);
+                });
+                content.appendChild(iconBtn);
+            });
+            bookingCalendarEl.appendChild(cell);
+        }
+        updateClearButtonState();
+    }
+
+    function getTypeOrder(typeId) {
+        const type = getBookingType(typeId);
+        return typeof type?.order === 'number' ? type.order : Number.MAX_SAFE_INTEGER;
+    }
+
+    function toggleDayBooking(day) {
+        if (!selectedBookingTypeId) {
+            updateBookingHint('Waehle zuerst einen Buchungstyp.');
+            return;
+        }
+        const type = getBookingType(selectedBookingTypeId);
+        if (!type) return;
+        const monthPlan = ensureMonthPlan(selectedBookingMonth);
+        const key = String(day);
+        let items = monthPlan[key];
+        if (!Array.isArray(items)) {
+            items = [];
+            monthPlan[key] = items;
+        }
+        const idx = items.indexOf(selectedBookingTypeId);
+        if (idx >= 0) {
+            items.splice(idx, 1);
+        } else {
+            items.push(selectedBookingTypeId);
+            items.sort((a, b) => getTypeOrder(a) - getTypeOrder(b));
+        }
+        if (!items.length) delete monthPlan[key];
+        saveBookingPlan();
+        renderBookingCalendar();
+        updateBookingHint();
+    }
+
+    function removeBookingFromDay(day, typeId) {
+        const monthPlan = bookingPlan[String(selectedBookingMonth)];
+        if (!monthPlan) return;
+        const key = String(day);
+        const items = monthPlan[key];
+        if (!Array.isArray(items)) return;
+        const idx = items.indexOf(typeId);
+        if (idx >= 0) items.splice(idx, 1);
+        if (!items.length) delete monthPlan[key];
+        saveBookingPlan();
+        renderBookingCalendar();
+        updateBookingHint();
+    }
+
+    function updateBookingHint(message) {
+        if (!bookingHintEl) return;
+        if (message) {
+            bookingHintEl.textContent = message;
+            return;
+        }
+        if (!selectedBookingTypeId) {
+            bookingHintEl.textContent = 'Waehle einen Buchungstyp und klicke auf den passenden Tag.';
+            return;
+        }
+        const type = getBookingType(selectedBookingTypeId);
+        const monthName = monthNames[selectedBookingMonth] || '';
+        bookingHintEl.innerHTML = `Aktiver Typ: <span class="booking-hint-strong">${type?.label || ''}</span>. Klicke auf ein Datum im ${monthName}, um ihn hinzufuegen oder zu entfernen.`;
+    }
+
+    function populateBookingMonthSelect() {
+        if (!bookingMonthSelect) return;
+        bookingMonthSelect.innerHTML = '';
+        monthNames.forEach((name, index) => {
+            const opt = document.createElement('option');
+            opt.value = String(index);
+            opt.textContent = name;
+            bookingMonthSelect.appendChild(opt);
+        });
+        bookingMonthSelect.value = String(selectedBookingMonth);
+    }
+
+    function clearCurrentMonthPlan() {
+        const key = String(selectedBookingMonth);
+        if (bookingPlan[key]) {
+            delete bookingPlan[key];
+            saveBookingPlan();
+            renderBookingCalendar();
+            updateBookingHint();
+        }
+    }
+
+    function updateClearButtonState() {
+        if (!bookingClearMonthBtn) return;
+        const hasEntries = hasEntriesForMonth(selectedBookingMonth);
+        bookingClearMonthBtn.disabled = !hasEntries;
+        bookingClearMonthBtn.classList.toggle('opacity-50', !hasEntries);
+        bookingClearMonthBtn.classList.toggle('cursor-not-allowed', !hasEntries);
+    }
+
+    function getBookingType(typeId) {
+        return bookingTypeLookup[typeId];
+    }
+
+    function getDaysInMonth(month) {
+        const year = new Date().getFullYear();
+        return new Date(year, month + 1, 0).getDate();
+    }
+
+    function getWeekdayOffset(month) {
+        const year = new Date().getFullYear();
+        const first = new Date(year, month, 1).getDay();
+        return (first + 6) % 7;
+    }
+
+    function setupBookingPlanner() {
+        bookingTypeButtonsEl = getEl('booking-type-buttons');
+        bookingCalendarEl = getEl('booking-calendar');
+        bookingHintEl = getEl('booking-hint');
+        bookingMonthSelect = getEl('booking-month');
+        bookingClearMonthBtn = getEl('booking-clear-month');
+        if (!bookingTypeButtonsEl || !bookingCalendarEl || !bookingMonthSelect) return;
+        populateBookingMonthSelect();
+        renderBookingTypeButtons();
+        renderBookingCalendar();
+        updateBookingHint();
+        bookingMonthSelect.addEventListener('change', event => {
+            const value = parseInt(event.target.value, 10);
+            if (Number.isInteger(value)) {
+                selectedBookingMonth = Math.max(0, Math.min(11, value));
+                renderBookingCalendar();
+                updateBookingHint();
+            }
+        });
+        if (bookingClearMonthBtn) {
+            bookingClearMonthBtn.addEventListener('click', clearCurrentMonthPlan);
+        }
+    }
+
+let fixkostenItems = [ 
         { name: 'Miete', amount: 850, interval: 'monthly', target: 'fixkosten' }, 
         { name: 'Strom', amount: 60, interval: 'monthly', target: 'fixkosten' }, 
         { name: 'Kommunikation (Handy/Netz)', amount: 40, interval: 'monthly', target: 'fixkosten' },
@@ -1186,6 +1721,48 @@ function updateFixkostenItem(index, key, value) {
       ]);
     }
 
+    
+    function buildBookingPlanPrintHtml() {
+        const plan = bookingPlan || {};
+        const monthOrder = Object.keys(plan)
+            .filter(key => plan[key] && Object.keys(plan[key]).length)
+            .map(key => parseInt(key, 10))
+            .filter(num => Number.isInteger(num))
+            .sort((a, b) => a - b);
+        if (!monthOrder.length) {
+            return `
+      <h2>Buchungskalender</h2>
+      <p class="muted">Aktuell sind keine Buchungstage hinterlegt.</p>
+    `;
+        }
+        let html = '<h2>Buchungskalender</h2>';
+        monthOrder.forEach(monthIdx => {
+            const monthName = monthNames[monthIdx] || `Monat ${monthIdx + 1}`;
+            const monthPlan = plan[String(monthIdx)] || {};
+            const days = Object.keys(monthPlan)
+                .map(key => parseInt(key, 10))
+                .filter(num => Number.isInteger(num))
+                .sort((a, b) => a - b);
+            if (!days.length) return;
+            const rows = days.map(dayNum => {
+                const key = String(dayNum);
+                const entries = Array.isArray(monthPlan[key]) ? monthPlan[key] : [];
+                const content = entries
+                    .map(typeId => {
+                        const type = getBookingType(typeId);
+                        if (!type) return '';
+                        const color = type.badgeColor || '#111827';
+                        return `<div class="print-booking-entry"><span class="print-booking-icon" style="color:${color};">${type.icon}</span><span>${type.label}</span></div>`;
+                    })
+                    .filter(Boolean)
+                    .join('') || '<div class="print-booking-entry">-</div>';
+                return `<tr><td>${dayNum}. ${monthName}</td><td>${content}</td></tr>`;
+            }).join('');
+            html += `<h3>${monthName}</h3><table class="print-table print-table-bookings"><thead><tr><th>Tag</th><th>Aktion</th></tr></thead><tbody>${rows}</tbody></table>`;
+        });
+        return html;
+    }
+
     async function prepareAndPrint() {
         const report = getEl('printable-report');
 
@@ -1242,7 +1819,7 @@ function updateFixkostenItem(index, key, value) {
           <h2>Depot-Aufteilung</h2>
           <table class="print-table"><thead><tr><th>Fonds/ETF</th><th>Verteilung</th></tr></thead><tbody>${depRows}</tbody></table>
         `;
-        html += ``; // (Überschrift wird unten im <section> gesetzt)
+        html += buildBookingPlanPrintHtml(); // (Überschrift wird unten im <section> gesetzt)
         report.innerHTML = html;
 
         // Eigene Seite vorbereiten
@@ -1329,6 +1906,7 @@ function updateFixkostenItem(index, key, value) {
         inputs = { income: getEl('income'), konsumMin: getEl('konsumMin'), konsumLeftover: getEl('konsumLeftover'), tagesgeldCurrent: getEl('tagesgeldCurrent'), tagesgeldLimit: getEl('tagesgeldLimit'), depotCurrent: getEl('depotCurrent'), anlagezeitraum: getEl('anlagezeitraum'), rendite: getEl('rendite') };
         basins = { gehalt: getEl('gehalt-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin') };
         flowContainer = getEl('flow-container');
+        setupBookingPlanner();
 
         // THEME init
         const themeSwitch = getEl('theme-switch');
