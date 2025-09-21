@@ -372,20 +372,25 @@
         .booking-type-btn {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.45rem 0.75rem;
-            font-size: 0.8rem;
-            border-radius: 0.5rem;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
             border: 1px solid transparent;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
             background-color: rgba(59, 130, 246, 0.15);
             color: #dbeafe;
             outline: none;
         }
+        .booking-type-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 18px -10px rgba(15, 23, 42, 0.35);
+        }
         .booking-type-btn svg {
-            width: 1.25rem;
-            height: 1.25rem;
+            width: 22px;
+            height: 22px;
+            pointer-events: none;
         }
         .booking-type-btn:focus-visible {
             box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.6);
@@ -393,6 +398,7 @@
         .booking-type-btn-active {
             box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.35);
             border-color: rgba(96, 165, 250, 0.65) !important;
+            transform: translateY(-1px);
         }
         .booking-calendar {
             display: grid;
@@ -759,10 +765,9 @@
     const bookingTypes = [
         {
             id: 'salary_to_fix',
-            label: 'Gehalt -> Fixkosten',
-            shortLabel: 'Gehalt',
+            label: 'Gehalt → Fixkosten',
             description: 'Gehaltseingang landet auf dem Fixkostenkonto.',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="17" height="10" rx="2.4"></rect><path d="M3.5 10.5h17"></path><circle cx="12" cy="12" r="2.2"></circle><path d="M12 10v4"></path></svg>`,
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6.5" width="7.5" height="11" rx="2"></rect><path d="M6.5 9.5h2"></path><path d="M6.5 12h1.6"></path><circle cx="16.5" cy="12" r="3"></circle><path d="M11 12h3.5"></path><path d="M14.5 10l2 2-2 2"></path></svg>`,
             accent: '#34d399',
             border: 'rgba(16, 185, 129, 0.65)',
             dayBackground: 'rgba(16, 185, 129, 0.18)',
@@ -771,10 +776,12 @@
         },
         {
             id: 'standing_to_konsum',
-            label: 'Fixkosten -> Konsum',
-            shortLabel: 'Dauerauftrag',
-            description: 'Regelmaessiger Uebertrag vom Fixkostenkonto auf das Konsumkonto.',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9l-2 3 2 3"></path><path d="M17 9l2 3-2 3"></path><path d="M9 12h6"></path><path d="M12 6v3"></path><path d="M12 15v3"></path></svg>`,
+            label: 'Fixkosten → Konsum',
+            labelB: 'Konsum → Fixkosten',
+            description: 'Regelmäßiger Übertrag vom Fixkostenkonto auf das Konsumkonto.',
+            descriptionB: 'Regelmäßiger Übertrag vom Konsumkonto auf das Fixkostenkonto.',
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h8a4 4 0 0 1 4 4v0"></path><path d="M17 10l2 2-2 2"></path><path d="M17 14h-8a4 4 0 0 1-4-4v0"></path><path d="M7 16l-2-2 2-2"></path></svg>`,
+            iconB: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h-8a4 4 0 0 0-4 4v0"></path><path d="M7 10l-2 2 2 2"></path><path d="M7 14h8a4 4 0 0 0 4-4v0"></path><path d="M17 16l2-2-2-2"></path></svg>`,
             accent: '#60a5fa',
             border: 'rgba(96, 165, 250, 0.6)',
             dayBackground: 'rgba(59, 130, 246, 0.16)',
@@ -783,10 +790,9 @@
         },
         {
             id: 'sparplan',
-            label: 'Fixkosten -> Sparplan',
-            shortLabel: 'Sparplan',
+            label: 'Fixkosten → Sparplan',
             description: 'Sparrate wird in den Depot-Sparplan investiert.',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v3"></path><path d="M11 13v6"></path><path d="M16 15v4"></path><path d="M5 11l4-4 2.5 2.5 4.5-4.5"></path><path d="M15.5 5h4v4"></path></svg>`,
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 16l4-5 3 2 5-6"></path><path d="M15.5 6.5h3v3"></path><path d="M6 18v2"></path><path d="M11 15v5"></path><path d="M16 17v3"></path></svg>`,
             accent: '#c084fc',
             border: 'rgba(168, 85, 247, 0.6)',
             dayBackground: 'rgba(168, 85, 247, 0.16)',
@@ -795,10 +801,9 @@
         },
         {
             id: 'konsum_to_tagesgeld',
-            label: 'Konsum -> Tagesgeld',
-            shortLabel: 'Tagesgeld',
+            label: 'Konsum → Tagesgeld',
             description: 'Restbetrag wird auf das Tagesgeld geschoben.',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c1.8 2 3.2 4 3.2 5.8a3.2 3.2 0 1 1-6.4 0C8.8 10 10.2 8 12 6z"></path><path d="M6 19h12"></path><path d="M10 16.5h4"></path></svg>`,
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"></circle><path d="M12 11v7"></path><path d="M9 15l3 3 3-3"></path><path d="M6 20h12"></path></svg>`,
             accent: '#facc15',
             border: 'rgba(250, 204, 21, 0.6)',
             dayBackground: 'rgba(250, 204, 21, 0.14)',
@@ -807,10 +812,9 @@
         },
         {
             id: 'tagesgeld_to_depot',
-            label: 'Tagesgeld -> Depot',
-            shortLabel: 'Depot',
-            description: 'Ueberschuesse vom Tagesgeld fliessen ins Depot.',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17l6-6 3.2 3.2 5.3-5.3"></path><path d="M16.5 8h3.5v3.5"></path><path d="M5 21h14"></path></svg>`,
+            label: 'Tagesgeld → Depot',
+            description: 'Überschüsse vom Tagesgeld fließen ins Depot.',
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14"></path><path d="M8 17v-4"></path><path d="M12 17v-7"></path><path d="M16 17v-2"></path><path d="M12 5l-3 3h2v4h2V8h2z"></path></svg>`,
             accent: '#f97316',
             border: 'rgba(249, 115, 22, 0.6)',
             dayBackground: 'rgba(249, 115, 22, 0.16)',
@@ -818,7 +822,25 @@
             badgeColor: '#f97316'
         }
     ];
-    const bookingTypeLookup = {};
+    function getActiveBookingLabel(type) {
+        if (!type) return '';
+        if (currentVariant === 'B' && type.labelB) return type.labelB;
+        return type.label || '';
+    }
+
+    function getActiveBookingDescription(type) {
+        if (!type) return '';
+        if (currentVariant === 'B' && type.descriptionB) return type.descriptionB;
+        return type.description || getActiveBookingLabel(type);
+    }
+
+    function getActiveBookingIcon(type) {
+        if (!type) return '';
+        if (currentVariant === 'B' && type.iconB) return type.iconB;
+        return type.icon || '';
+    }
+
+const bookingTypeLookup = {};
     bookingTypes.forEach((type, index) => {
         bookingTypeLookup[type.id] = Object.assign({ order: index }, type);
     });
@@ -900,8 +922,13 @@
             if (type.badgeBackground) btn.style.backgroundColor = type.badgeBackground;
             if (type.border) btn.style.borderColor = type.border;
             if (type.badgeColor) btn.style.color = type.badgeColor;
-            btn.innerHTML = `${type.icon}<span>${type.label}</span>`;
-            btn.title = type.description;
+            const iconMarkup = getActiveBookingIcon(type);
+            const activeLabel = getActiveBookingLabel(type);
+            const activeDesc = getActiveBookingDescription(type);
+            btn.innerHTML = `${iconMarkup}<span class="sr-only">${activeLabel || ''}</span>`;
+            const tooltip = activeDesc || activeLabel || type.id;
+            btn.title = tooltip;
+            btn.setAttribute('aria-label', tooltip);
             btn.setAttribute('aria-pressed', selectedBookingTypeId === type.id ? 'true' : 'false');
             if (selectedBookingTypeId === type.id) btn.classList.add('booking-type-btn-active');
             btn.addEventListener('click', () => handleBookingTypeSelect(type.id));
@@ -958,9 +985,12 @@
                 const iconBtn = document.createElement('button');
                 iconBtn.type = 'button';
                 iconBtn.className = 'booking-entry-btn';
-                iconBtn.innerHTML = type.icon;
-                iconBtn.title = `${type.label} entfernen`;
-                iconBtn.setAttribute('aria-label', `${type.label} am Tag ${day} entfernen`);
+                const entryIcon = getActiveBookingIcon(type) || type.icon || '';
+                const entryLabel = getActiveBookingLabel(type) || type.label || '';
+                iconBtn.innerHTML = entryIcon;
+                const removeTooltip = entryLabel ? `${entryLabel} entfernen` : 'Aktion entfernen';
+                iconBtn.title = removeTooltip;
+                iconBtn.setAttribute('aria-label', entryLabel ? `${entryLabel} am Tag ${day} entfernen` : `Aktion am Tag ${day} entfernen`);
                 if (type.badgeBackground) iconBtn.style.backgroundColor = type.badgeBackground;
                 if (type.badgeColor) iconBtn.style.color = type.badgeColor;
                 iconBtn.addEventListener('click', evt => {
@@ -1031,7 +1061,8 @@
             return;
         }
         const type = getBookingType(selectedBookingTypeId);
-        bookingHintEl.innerHTML = `Aktiver Typ: <span class="booking-hint-strong">${type?.label || ''}</span>. Klicke auf einen Tag, um ihn hinzufuegen oder zu entfernen.`;
+        const activeLabel = getActiveBookingLabel(type);
+        bookingHintEl.innerHTML = `Aktiver Typ: <span class="booking-hint-strong">${activeLabel || ''}</span>. Klicke auf einen Tag, um ihn hinzufuegen oder zu entfernen.`;
     }
 
     function clearCurrentMonthPlan() {
