@@ -25,16 +25,6 @@
         .flow-path.active { opacity: 1; }
         .flow-path-animation { stroke: white; stroke-width: 1.5px; stroke-dasharray: 10 15; animation: flow 2s linear infinite; opacity: 0; transition: opacity 0.5s; }
         .flow-path.active + .flow-path-animation { opacity: 0.4; }
-        @media (prefers-reduced-motion: reduce) {
-
-            .flow-path-animation { animation: none; opacity: 0.2; }
-
-            .flow-path { transition: none; }
-
-            .schutzschirm { animation: none; transition: none; }
-
-        }
-
         /* Erase any underlay with background color (covers legacy grey ribbons) */
         .flow-erase {
           fill: none;
@@ -1254,9 +1244,80 @@ let fixkostenItems = [
       }
     }
     
+    // Interpret historische Minimum/Maximum-Renditen als ca. 5. und 90. Perzentil einer Normalverteilung.
+    const GAUSSIAN_LOWER_Q = 0.05;
+    const GAUSSIAN_UPPER_Q = 0.9;
+
+    const roundToDecimal = (value, digits = 1) => {
+        const factor = Math.pow(10, digits);
+        return Math.round((Number(value) || 0) * factor) / factor;
+    };
+
+    const clamp = (value, min, max) => {
+        if (!Number.isFinite(value)) return value;
+        if (Number.isFinite(min) && value < min) return min;
+        if (Number.isFinite(max) && value > max) return max;
+        return value;
+    };
+
+    function inverseStandardNormal(p) {
+        if (p <= 0 || p >= 1) throw new RangeError('p must be in (0,1)');
+        const a = [-39.6968302866538, 220.946098424521, -275.928510446969, 138.357751867269, -30.6647980661472, 2.50662827745924];
+        const b = [-54.4760987982241, 161.585836858041, -155.698979859887, 66.8013118877197, -13.2806815528857];
+        const c = [-0.00778489400243029, -0.322396458041136, -2.40075827716184, -2.54973253934373, 4.37466414146497, 2.93816398269878];
+        const d = [0.00778469570904146, 0.32246712907004, 2.445134137143, 3.75440866190742];
+        const plow = 0.02425;
+        const phigh = 1 - plow;
+        let q, r;
+        if (p < plow) {
+            q = Math.sqrt(-2 * Math.log(p));
+            return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+                   ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+        }
+        if (phigh < p) {
+            q = Math.sqrt(-2 * Math.log(1 - p));
+            return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+                    ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+        }
+        q = p - 0.5;
+        r = q * q;
+        return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+               (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+    }
+
+    function buildRenditeStat(min, max) {
+        const cleanMin = Number(min);
+        const cleanMax = Number(max);
+        if (!Number.isFinite(cleanMin) || !Number.isFinite(cleanMax)) {
+            return { min: roundToDecimal(min), max: roundToDecimal(max), mean: roundToDecimal((Number(min) + Number(max)) / 2) };
+        }
+        const zLow = inverseStandardNormal(GAUSSIAN_LOWER_Q);
+        const zHigh = inverseStandardNormal(GAUSSIAN_UPPER_Q);
+        const range = cleanMax - cleanMin;
+        let mean = (cleanMin + cleanMax) / 2;
+        if (Number.isFinite(range) && range > 0 && Number.isFinite(zHigh - zLow)) {
+            const sigma = range / (zHigh - zLow);
+            const candidate = cleanMin - zLow * sigma;
+            if (Number.isFinite(candidate)) {
+                mean = candidate;
+            }
+        }
+        const clampedMean = clamp(mean, cleanMin, cleanMax);
+        return {
+            min: roundToDecimal(cleanMin),
+            max: roundToDecimal(cleanMax),
+            mean: roundToDecimal(clampedMean)
+        };
+    }
+
     const renditeData = {
-        1: {min: -40, max: 50}, 5: {min: -12, max: 32}, 10: {min: -1.5, max: 19},
-        15: {min: 3, max: 15}, 20: {min: 4, max: 13}, 25: {min: 5, max: 12}, 30: {min: 6, max: 11}
+        1: buildRenditeStat(-40, 50),
+        5: buildRenditeStat(-12, 32),
+        10: buildRenditeStat(-1.5, 19),
+        15: buildRenditeStat(3, 15),
+        20: buildRenditeStat(4, 13),
+        25: buildRenditeStat(5, 12),
+        30: buildRenditeStat(6, 11)
     };
     // === Load fine-grained min/max returns from TXT (MLP Renditedreieck) ===
     // File: data/rendite_extreme_generated.txt
@@ -1292,7 +1353,7 @@ let fixkostenItems = [
         const min = parseFloat(String(parts[1]).replace(',', '.'));
         const max = parseFloat(String(parts[2]).replace(',', '.'));
         if (Number.isFinite(years) && Number.isFinite(min) && Number.isFinite(max)) {
-        map[years] = { min: +min.toFixed(1), max: +max.toFixed(1) };
+        map[years] = buildRenditeStat(min, max);
         }
     });
     return map;
@@ -1653,16 +1714,28 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     function calculateProjection() {
         const initialDepot = parseFloat(inputs.depotCurrent.value) || 0;
         const years = parseInt(inputs.anlagezeitraum.value, 10);
-        const depotSparplanTotal = fixkostenItems.filter(i => i.target === 'depot').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
+        const depotSparplanTotal = fixkostenItems
+            .filter(i => i.target === 'depot')
+            .reduce((sum, i) => sum + getMonthlyAmount(i), 0);
         const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent.value) || 0;
         const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit.value) || 0;
         const konsumLeftover = parseFloat(inputs.konsumLeftover.value) || 0;
         const { depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
         const monthlyInvestment = depotSparplanTotal + depotOverflow;
-        const dataRange = getRenditeDataForPeriod(years);
-        const returnAvg = parseFloat(inputs.rendite.value) / 100;
-        const returnMin = dataRange.min / 100;
-        const returnMax = dataRange.max / 100;
+
+        const dataRangeRaw = (renditeExtremes && renditeExtremes[years]) || getRenditeDataForPeriod(years);
+        const stats = dataRangeRaw ? (dataRangeRaw.mean === undefined ? buildRenditeStat(dataRangeRaw.min, dataRangeRaw.max) : dataRangeRaw) : null;
+
+        const fallbackMin = stats ? stats.min : 0;
+        const fallbackMax = stats ? stats.max : fallbackMin;
+        const fallbackMean = stats ? stats.mean : (fallbackMin + fallbackMax) / 2;
+
+        const selectedRendite = Number(inputs.rendite.value);
+        const normalizedSelected = Number.isFinite(selectedRendite) ? clamp(selectedRendite, fallbackMin, fallbackMax) : fallbackMean;
+        const returnAvg = normalizedSelected / 100;
+        const returnMin = fallbackMin / 100;
+        const returnMax = fallbackMax / 100;
+
         const dataAvg = calculateCompoundInterest(initialDepot, monthlyInvestment, years, returnAvg);
         const dataMin = calculateCompoundInterest(initialDepot, monthlyInvestment, years, returnMin);
         const dataMax = calculateCompoundInterest(initialDepot, monthlyInvestment, years, returnMax);
@@ -1677,13 +1750,15 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             ]
         });
         const summaryEl = getEl('prognose-summary');
-        summaryEl.innerHTML = `
+        if (summaryEl) {
+            summaryEl.innerHTML = `
             <p>Nach <span class="font-bold">${years} Jahren</span> könnte dein Vermögen zwischen <span class="font-bold text-red-400">${formatCurrency(dataMin.totalCapital)}</span> und <span class="font-bold text-green-400">${formatCurrency(dataMax.totalCapital)}</span> liegen.</p>
             <p>Deine erwartete Prognose liegt bei <span class="font-bold text-blue-400 text-lg">${formatCurrency(dataAvg.totalCapital)}</span>, basierend auf ${formatCurrency(dataAvg.totalContributions)} Einzahlungen.</p>
         `;
+        }
         openModal('prognose-modal');
     }
-    
+
     function calculateCompoundInterest(initial, monthly, years, annualRate) {
         const monthlyRate = annualRate / 12;
         let totalCapital = initial;
@@ -1762,23 +1837,26 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     }
 
     function updateRenditeSuggestions(jahre) {
-      let data = null;
-      if (renditeExtremes && renditeExtremes[jahre]) {
-        data = renditeExtremes[jahre];
-      } else {
-        data = getRenditeDataForPeriod(jahre); // Fallback (grob)
-      }
-      const infoEl = getEl('rendite-info');
-      const mid = ((data.min + data.max) / 2).toFixed(1);
-      inputs.rendite.value = mid;
+        let source = null;
+        if (renditeExtremes && renditeExtremes[jahre]) {
+            source = renditeExtremes[jahre];
+        } else {
+            source = getRenditeDataForPeriod(jahre);
+        }
+        if (!source) return;
 
-      // Farb-Logik: <0 rot, 0–3 gelb, >3 grün (pro Zahl separat)
-      const colorClass = (v) => (v < 0 ? 'text-red-400' : (v < 3 ? 'text-yellow-400' : 'text-green-400'));
-      const minSpan = `<span class="font-bold ${colorClass(data.min)}">${data.min}%</span>`;
-      const maxSpan = `<span class="font-bold ${colorClass(data.max)}">${data.max}%</span>`;
+        const stats = source.mean === undefined ? buildRenditeStat(source.min, source.max) : source;
+        const infoEl = getEl('rendite-info');
+        const mostLikely = roundToDecimal(stats.mean);
+        inputs.rendite.value = mostLikely.toFixed(1);
 
-      // Kein Quellhinweis mehr anzeigen
-      infoEl.innerHTML = `Historische Spanne p.a.: ${minSpan} bis ${maxSpan}`;
+        const colorClass = (v) => (v < 0 ? 'text-red-400' : (v < 3 ? 'text-yellow-400' : 'text-green-400'));
+        const minSpan = `<span class="font-bold ${colorClass(stats.min)}">${stats.min}%</span>`;
+        const maxSpan = `<span class="font-bold ${colorClass(stats.max)}">${stats.max}%</span>`;
+
+        if (infoEl) {
+            infoEl.innerHTML = `Historische Spanne p.a.: ${minSpan} bis ${maxSpan}<br><span class="font-bold">Wahrscheinlichste Rendite (Normal): ${mostLikely.toFixed(1)}%</span>`;
+        }
     }
 
     function createGrowthChartSVG() { return `<svg viewBox="0 0 100 60" class="w-20 h-12 mb-1"><rect x="10" y="40" width="15" height="20" fill="#3b82f6" opacity="0.6"></rect><rect x="30" y="30" width="15" height="30" fill="#3b82f6" opacity="0.8"></rect><rect x="50" y="20" width="15" height="40" fill="#3b82f6"></rect><rect x="70" y="10" width="15" height="50" fill="#6366f1"></rect></svg>`; }
@@ -1983,7 +2061,8 @@ function updateFixkostenItem(index, key, value) {
         const ctx = tempCanvas.getContext('2d');
 
         const years = parseInt(inputs.anlagezeitraum.value, 10) || 15;
-        const dataRange = (renditeExtremes && renditeExtremes[years]) || getRenditeDataForPeriod(years);
+        const dataRangeRaw = (renditeExtremes && renditeExtremes[years]) || getRenditeDataForPeriod(years);
+        const dataRange = dataRangeRaw ? (dataRangeRaw.mean === undefined ? buildRenditeStat(dataRangeRaw.min, dataRangeRaw.max) : dataRangeRaw) : null;
         const initialDepot = parseFloat(inputs.depotCurrent.value) || 0;
 
         const depotSparplanTotal = fixkostenItems
@@ -1997,9 +2076,13 @@ function updateFixkostenItem(index, key, value) {
         const monthlyInvestment = depotSparplanTotal + depotOverflow;
 
         const toSeries = (rate) => calculateCompoundInterest(initialDepot, monthlyInvestment, years, rate / 100);
-        const sMin = toSeries(dataRange.min);
-        const sAvg = toSeries(((dataRange.min + dataRange.max) / 2));
-        const sMax = toSeries(dataRange.max);
+        const derivedMin = dataRange ? dataRange.min : (dataRangeRaw ? dataRangeRaw.min : 0);
+        const derivedMax = dataRange ? dataRange.max : (dataRangeRaw ? dataRangeRaw.max : derivedMin);
+        const derivedMean = dataRange ? dataRange.mean : ((Number.isFinite(derivedMin) && Number.isFinite(derivedMax)) ? (derivedMin + derivedMax) / 2 : derivedMin);
+
+        const sMin = toSeries(derivedMin);
+        const sAvg = toSeries(derivedMean);
+        const sMax = toSeries(derivedMax);
 
         const tmpChart = new Chart(ctx, {
           type: 'line',
@@ -2309,4 +2392,5 @@ function updateFixkostenItem(index, key, value) {
     <script src="scripts/removeHeaderIcon.js" defer></script>
 </body>
 </html>
+
 
