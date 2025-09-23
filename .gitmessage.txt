@@ -1,0 +1,5 @@
+<type>(<scope>): <kurze Zusammenfassung>
+
+[Optionaler Body – Was & Warum in Stichpunkten]
+
+[BREAKING CHANGE: <Beschreibung>]
