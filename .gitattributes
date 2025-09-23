@@ -1,0 +1,22 @@
+# Standard: Texte normalisieren
+*           text=auto
+
+# Quelltexte: LF erzwingen (im Repo & Working Tree)
+*.js        text eol=lf
+*.ts        text eol=lf
+*.jsx       text eol=lf
+*.tsx       text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.svg       text eol=lf
+
+# Binärformate niemals anfassen
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
