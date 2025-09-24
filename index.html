@@ -538,7 +538,7 @@
     <main id="main-content" class="max-w-screen-2xl mx-auto" tabindex="-1">
         <header class="text-center mb-12">
             <h1 class="text-3xl md:text-5xl font-bold text-white mb-2">Das strategische Vermögensmanagement</h1>
-            <p class="text-md md:text-lg text-gray-400">Plane deine Finanzen vom Gehalt bis zum Investment.</p>
+            <p class="text-md md:text-lg text-gray-400">vom Einkommen zum Investment.</p>
         </header>
 
         <div class="flex flex-col lg:flex-row gap-8">
@@ -597,7 +597,7 @@
                     <div class="panel-body">
                         <section class="panel-section" data-tone="blue">
                             <header class="section-heading">
-                                <h3>Gehaltseingang</h3>
+                                <h3>Einkommen</h3>
                             </header>
                             <div id="sec-income" class="section-grid">
                                 <div class="mlp-input">
@@ -748,7 +748,7 @@
                     </g>
                     <path id="schutzschirm-path" class="schutzschirm"></path>
                 </svg>
-                <div id="gehalt-basin" class="account-basin"></div>
+                <div id="einkommen-basin" class="account-basin"></div>
                 <button id="fixkosten-basin" class="account-basin cursor-pointer hover:border-indigo-500" type="button" aria-controls="fixkosten-modal" aria-haspopup="dialog" onclick="openModal('fixkosten-modal')"></button>
                 <div id="konsum-basin" class="account-basin"></div>
                 <div id="tagesgeld-basin" class="account-basin"></div>
@@ -813,8 +813,10 @@
     const bookingTypes = [
         {
             id: 'salary_to_fix',
-            label: 'Gehalt → Fixkosten',
-            description: 'Gehaltseingang landet auf dem Fixkostenkonto.',
+            label: 'Einkommen → Fixkosten',
+            labelB: 'Einkommen → Konsum',
+            description: 'Einkommen landet auf dem Fixkostenkonto.',
+            descriptionB: 'Einkommen landet auf dem Konsumkonto.',
             icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6.5" width="7.5" height="11" rx="2"></rect><path d="M6.5 9.5h2"></path><path d="M6.5 12h1.6"></path><circle cx="16.5" cy="12" r="3"></circle><path d="M11 12h3.5"></path><path d="M14.5 10l2 2-2 2"></path></svg>`,
             accent: '#34d399',
             border: 'rgba(16, 185, 129, 0.65)',
@@ -1225,7 +1227,7 @@ let fixkostenItems = [
         show(secTG,     consultationStep >= 3);
         show(secProg,   consultationStep >= 4);
 
-        show(basins.gehalt, true);
+        show(basins.einkommen, true);
         show(basins.fixkosten, true);
         show(basins.konsum, consultationStep >= 2);
         show(basins.tagesgeld, consultationStep >= 3);
@@ -1236,7 +1238,7 @@ let fixkostenItems = [
         show(secTG,     consultationStep >= 3);
         show(secProg,   consultationStep >= 4);
 
-        show(basins.gehalt, true);
+        show(basins.einkommen, true);
         show(basins.konsum, true);
         show(basins.fixkosten, consultationStep >= 2);
         show(basins.tagesgeld, consultationStep >= 3);
@@ -1353,7 +1355,7 @@ let fixkostenItems = [
         const min = parseFloat(String(parts[1]).replace(',', '.'));
         const max = parseFloat(String(parts[2]).replace(',', '.'));
         if (Number.isFinite(years) && Number.isFinite(min) && Number.isFinite(max)) {
-        map[years] = buildRenditeStat(min, max);
+                map[years] = buildRenditeStat(min, max);
         }
     });
     return map;
@@ -1402,7 +1404,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         let positions;
         if (currentVariant === 'B') {
             positions = {
-                gehalt:   { top: 0,          left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
+                einkommen:   { top: 0,          left: containerWidth / 2 - basins.einkommen.offsetWidth / 2 },
                 // Karten näher zur Mitte rücken (symmetrisch)
                 konsum:   { top: v_gap,      left: containerWidth / 2 - basins.konsum.offsetWidth - h_gap_side },
                 fixkosten:{ top: v_gap * 2,  left: containerWidth / 2 + h_gap_side },
@@ -1411,7 +1413,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             };
         } else { // Variante A
             positions = {
-                gehalt:   { top: 0,          left: containerWidth / 2 - basins.gehalt.offsetWidth / 2 },
+                einkommen:   { top: 0,          left: containerWidth / 2 - basins.einkommen.offsetWidth / 2 },
                 // Karten näher zur Mitte rücken (symmetrisch)
                 fixkosten:{ top: v_gap,      left: containerWidth / 2 + h_gap_side },
                 konsum:   { top: v_gap * 2,  left: containerWidth / 2 - basins.konsum.offsetWidth - h_gap_side },
@@ -1607,7 +1609,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             // Zufluss (Inflow) in das Konsumkonto zur Skalierung der Min-Linie
             const konsumInflow = (currentVariant === 'A')
               ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
-              : Math.max(0, income);                // Variante B: Gehalt geht direkt auf Konsum
+              : Math.max(0, income);                // Variante B: Einkommen geht direkt auf Konsum
             const { tagesgeldInflow, depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
             const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow;
             const totalDepotInflow = depotSparplanTotal + depotOverflow;
@@ -1619,7 +1621,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 konsumValue = income - totalAbgang;
             }
             
-            renderBasin(basins.gehalt, 'Gehaltseingang', formatCurrency(income), '<svg class="w-7 h-7 mb-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>');
+            renderBasin(basins.einkommen, 'Einkommen', formatCurrency(income), '<svg class="w-7 h-7 mb-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>');
             renderBasin(basins.fixkosten, 'Fixkostenkonto', formatCurrency(totalAbgang), '<svg class="w-7 h-7 mb-1 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>', '(Klick zum Bearbeiten)');
             // Scale the yellow min line relative to the available monthly surplus (Überschuss).
             renderBasin(
@@ -1640,14 +1642,14 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             let show1 = false, show2 = false, showKTG = false, showTGDepot = false, showFixDepot = false;
 
             if (currentVariant === 'A') {
-                // A: Gehalt -> Fixkosten -> Konsum -> Tagesgeld -> Depot; Sparrate erst Step 5
-                show1       = bothVisible(basins.gehalt,   basins.fixkosten);                                      // Step 1+
+                // A: Einkommen -> Fixkosten -> Konsum -> Tagesgeld -> Depot; Sparrate erst Step 5
+                show1       = bothVisible(basins.einkommen,   basins.fixkosten);                                      // Step 1+
                 show2       = bothVisible(basins.fixkosten, basins.konsum)   && (!consultationMode || consultationStep >= 2);
                 showKTG     = bothVisible(basins.konsum,    basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
                 showTGDepot = bothVisible(basins.tagesgeld, basins.depot)     && (!consultationMode || consultationStep >= 4);
                 showFixDepot= bothVisible(basins.fixkosten, basins.depot)     && (allowDepotStream === true); // Step 5 in consultation
 
-                if (show1)       drawFlow('flow-path-1', basins.gehalt,    basins.fixkosten, income, maxFlow);
+                if (show1)       drawFlow('flow-path-1', basins.einkommen,    basins.fixkosten, income, maxFlow);
                 else             hideFlow('flow-path-1');
 
                 if (show2)       drawFlow('flow-path-2', basins.fixkosten, basins.konsum, Math.max(0, income - totalAbgang), maxFlow, 'Dauerauftrag');
@@ -1663,14 +1665,14 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 else             hideFlow('fixkosten-depot-flow');
 
             } else {
-                // B: Gehalt -> Konsum -> Fixkosten -> Tagesgeld -> Depot; Sparrate erst Step 5
-                show1       = bothVisible(basins.gehalt,   basins.konsum);                                        // Step 1+
+                // B: Einkommen -> Konsum -> Fixkosten -> Tagesgeld -> Depot; Sparrate erst Step 5
+                show1       = bothVisible(basins.einkommen,   basins.konsum);                                        // Step 1+
                 show2       = bothVisible(basins.konsum,   basins.fixkosten) && (!consultationMode || consultationStep >= 2);
                 showKTG     = bothVisible(basins.konsum,   basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
                 showTGDepot = bothVisible(basins.tagesgeld,basins.depot)    && (!consultationMode || consultationStep >= 4);
                 showFixDepot= bothVisible(basins.fixkosten,basins.depot)    && (allowDepotStream === true); // Step 5 in consultation
 
-                if (show1)       drawFlow('flow-path-1', basins.gehalt,  basins.konsum, income, maxFlow);
+                if (show1)       drawFlow('flow-path-1', basins.einkommen,  basins.konsum, income, maxFlow);
                 else             hideFlow('flow-path-1');
 
                 if (show2)       drawFlow('flow-path-2', basins.konsum,  basins.fixkosten, totalAbgang, maxFlow, 'Dauerauftrag');
@@ -2149,7 +2151,9 @@ function updateFixkostenItem(index, key, value) {
                     const type = getBookingType(typeId);
                     if (!type) return '';
                     const color = type.badgeColor || '#111827';
-                    return `<div class="print-booking-entry"><span class="print-booking-icon" style="color:${color};">${type.icon}</span><span>${type.label}</span></div>`;
+                    const iconMarkup = getActiveBookingIcon(type) || type.icon || '';
+                    const label = getActiveBookingLabel(type) || type.label || '';
+                    return `<div class="print-booking-entry"><span class="print-booking-icon" style="color:${color};">${iconMarkup}</span><span>${label}</span></div>`;
                 })
                 .filter(Boolean)
                 .join('') || '<div class="print-booking-entry">-</div>';
@@ -2300,7 +2304,7 @@ function updateFixkostenItem(index, key, value) {
     // INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
         inputs = { income: getEl('income'), konsumMin: getEl('konsumMin'), konsumLeftover: getEl('konsumLeftover'), tagesgeldCurrent: getEl('tagesgeldCurrent'), tagesgeldLimit: getEl('tagesgeldLimit'), depotCurrent: getEl('depotCurrent'), anlagezeitraum: getEl('anlagezeitraum'), rendite: getEl('rendite') };
-        basins = { gehalt: getEl('gehalt-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin') };
+        basins = { einkommen: getEl('einkommen-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin') };
         flowContainer = getEl('flow-container');
         setupBookingPlanner();
 
@@ -2333,12 +2337,15 @@ function updateFixkostenItem(index, key, value) {
             if (currentVariant === 'A') {
                 varianteALabel.classList.add('chip-state--active');
                 varianteBLabel.classList.remove('chip-state--active');
-                if (variantInfo) variantInfo.textContent = 'Variante A: Gehalt geht auf das Fixkostenkonto.';
+                if (variantInfo) variantInfo.textContent = 'Variante A: Einkommen geht auf das Fixkostenkonto.';
             } else {
                 varianteBLabel.classList.add('chip-state--active');
                 varianteALabel.classList.remove('chip-state--active');
-                if (variantInfo) variantInfo.textContent = 'Variante B: Gehalt geht auf das Konsumkonto.';
+                if (variantInfo) variantInfo.textContent = 'Variante B: Einkommen geht auf das Konsumkonto.';
             }
+            renderBookingTypeButtons();
+            renderBookingCalendar();
+            updateBookingHint();
             // Keep consultation view consistent when variant changes
             applyConsultationVisibility();
             calculateAndUpdate();
@@ -2392,5 +2399,3 @@ function updateFixkostenItem(index, key, value) {
     <script src="scripts/removeHeaderIcon.js" defer></script>
 </body>
 </html>
-
-
