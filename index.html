@@ -1504,44 +1504,54 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     function positionCascade() {
         if (!flowContainer) return;
         const containerWidth = flowContainer.clientWidth;
-        const h_gap_side = 120;
+        const h_gap_side = 100;  // Reduziert von 120 auf 100 für kompaktere Flows
         const v_gap = 240;
         const depotWidth = 440;
-        basins.depot.style.width = `${depotWidth}px`;
-
-        // Immobilien-Basin Größe festlegen
         const immoWidth = 220;
-        const gapBetweenDepotImmo = 30; // Abstand zwischen Depot und Immobilien
+        const gapBetweenDepotImmo = 50; // Erhöht von 30 auf 50 für klarere Trennung
+
+        // Größen setzen
+        basins.depot.style.width = `${depotWidth}px`;
         if (basins.immobilien) {
             basins.immobilien.style.width = `${immoWidth}px`;
         }
 
+        // === NEUE ZENTRIERUNG: Immobilien & Depot bilden Außenrahmen ===
+        // Berechne Gesamtbreite des Außenrahmens
+        const outerFrameWidth = immoWidth + gapBetweenDepotImmo + depotWidth; // 220 + 50 + 440 = 710px
+
+        // Linker Rand des Außenrahmens (zentriert im Container)
+        const outerFrameLeft = (containerWidth - outerFrameWidth) / 2;
+
+        // Neuer Mittelpunkt X: Mitte zwischen Immobilien-Links und Depot-Rechts
+        const newCenterX = outerFrameLeft + outerFrameWidth / 2;
+
         let positions;
         if (currentVariant === 'B') {
+            // Variante B: Einkommen -> Konsum -> Fixkosten -> Tagesgeld -> Depot
             positions = {
-                einkommen:   { top: 0,          left: containerWidth / 2 - basins.einkommen.offsetWidth / 2 },
-                // Karten näher zur Mitte rücken (symmetrisch)
-                konsum:   { top: v_gap,      left: containerWidth / 2 - basins.konsum.offsetWidth - h_gap_side },
-                fixkosten:{ top: v_gap * 2,  left: containerWidth / 2 + h_gap_side },
-                tagesgeld:{ top: v_gap * 3,  left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
-                // Depot nach links verschieben
-                depot:    { top: v_gap * 4.0, left: containerWidth / 2 - depotWidth - gapBetweenDepotImmo / 2 },
-                // Immobilien rechts neben Depot
-                immobilien: { top: v_gap * 4.0, left: containerWidth / 2 + gapBetweenDepotImmo / 2 },
+                einkommen:   { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
+                konsum:      { top: v_gap,      left: newCenterX - basins.konsum.offsetWidth - h_gap_side },
+                fixkosten:   { top: v_gap * 2,  left: newCenterX + h_gap_side },
+                tagesgeld:   { top: v_gap * 3,  left: newCenterX - basins.tagesgeld.offsetWidth / 2 },
+                // GETAUSCHT: Immobilien links, Depot rechts
+                immobilien:  { top: v_gap * 4.0, left: outerFrameLeft },
+                depot:       { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
             };
         } else { // Variante A
+            // Variante A: Einkommen -> Fixkosten -> Konsum -> Tagesgeld -> Depot
             positions = {
-                einkommen:   { top: 0,          left: containerWidth / 2 - basins.einkommen.offsetWidth / 2 },
-                // Karten näher zur Mitte rücken (symmetrisch)
-                fixkosten:{ top: v_gap,      left: containerWidth / 2 + h_gap_side },
-                konsum:   { top: v_gap * 2,  left: containerWidth / 2 - basins.konsum.offsetWidth - h_gap_side },
-                tagesgeld:{ top: v_gap * 3,  left: containerWidth / 2 - basins.tagesgeld.offsetWidth / 2 },
-                // Depot nach links verschieben
-                depot:    { top: v_gap * 4.0, left: containerWidth / 2 - depotWidth - gapBetweenDepotImmo / 2 },
-                // Immobilien rechts neben Depot
-                immobilien: { top: v_gap * 4.0, left: containerWidth / 2 + gapBetweenDepotImmo / 2 },
+                einkommen:   { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
+                fixkosten:   { top: v_gap,      left: newCenterX + h_gap_side },
+                konsum:      { top: v_gap * 2,  left: newCenterX - basins.konsum.offsetWidth - h_gap_side },
+                tagesgeld:   { top: v_gap * 3,  left: newCenterX - basins.tagesgeld.offsetWidth / 2 },
+                // GETAUSCHT: Immobilien links, Depot rechts
+                immobilien:  { top: v_gap * 4.0, left: outerFrameLeft },
+                depot:       { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
             };
         }
+
+        // Positionen anwenden
         for (const key in basins) {
             if (basins[key]) {
                 basins[key].style.top = `${positions[key].top}px`;
