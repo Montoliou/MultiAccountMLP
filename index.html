@@ -1273,7 +1273,7 @@ let fixkostenItems = [
     let prognoseChartInstance = null;
     // Beratungsansicht state
     let consultationMode = false;      // off by default
-    let consultationStep = 0;          // 0..5 per variant
+    let consultationStep = 0;          // 0..6 per variant (Step 6: Immobilien)
     let allowDepotStream = true;       // normal mode shows depot stream
 
     function setConsultationMode(on) {
@@ -1298,8 +1298,8 @@ let fixkostenItems = [
 
     function nextConsultationStep() {
       if (!consultationMode) return;
-      consultationStep = Math.min(5, consultationStep + 1);
-      if (consultationStep === 5) allowDepotStream = true; // enable depot stream only at final step
+      consultationStep = Math.min(6, consultationStep + 1);
+      if (consultationStep === 5) allowDepotStream = true; // enable depot stream at step 5
       applyConsultationVisibility();
       calculateAndUpdate();
     }
@@ -1340,6 +1340,7 @@ let fixkostenItems = [
         show(basins.konsum, consultationStep >= 2);
         show(basins.tagesgeld, consultationStep >= 3);
         show(basins.depot, consultationStep >= 4);
+        show(basins.immobilien, consultationStep >= 6); // Step 6: Immobilien
       } else {
         show(secIncome, true);
         show(secKonsum, true); // B: income + konsum from step 1
@@ -1351,6 +1352,7 @@ let fixkostenItems = [
         show(basins.fixkosten, consultationStep >= 2);
         show(basins.tagesgeld, consultationStep >= 3);
         show(basins.depot, consultationStep >= 4);
+        show(basins.immobilien, consultationStep >= 6); // Step 6: Immobilien
       }
     }
     
