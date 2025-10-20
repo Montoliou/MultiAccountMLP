@@ -6,597 +6,711 @@
 
 ---
 
-## 📊 Aktuelle Analyse (Version 1.1.0)
+## 🎯 Produkt-Vision & Positionierung
 
-### ✅ Implementierte Features
+### Primäre Zielgruppe
 
-#### **Kern-Features:**
-- ✅ **Multi-Konto-System**: Einkommen, Fixkosten, Konsum, Tagesgeld, Depot, Immobilien
-- ✅ **Interaktive SVG-Flows**: Animierte Geldflüsse zwischen Basins
-- ✅ **Zwei Varianten**: A (Fixkosten-first) & B (Konsum-first)
-- ✅ **Beratungsmodus**: 6-Schritte-Prozess für Beratungsgespräche
-- ✅ **Immobilien-Management**: Vermögen, Verbindlichkeiten, Einnahmen, Ausgaben
-- ✅ **Depot-Aufteilung**: Multi-Fonds/ETF-Verwaltung mit Prozent-Allocation
-- ✅ **Fixkosten-Verwaltung**: Flexible Posten mit monatlich/jährlich
-- ✅ **Rendite-Prognose**: Chart.js-basierte Visualisierung mit historischen Daten
-- ✅ **Buchungsplaner**: Kalender für tägliche Transaktionen
-- ✅ **Theme-System**: Dark Mode & MLP Light Theme
-- ✅ **Print-Funktion**: Export als PDF-Report
-- ✅ **localStorage**: Persistente Datenspeicherung
+**Professionelle Vermögensberater & Asset-Manager**
 
-#### **Technische Infrastruktur:**
-- ✅ Single-Page-Application (2660 Zeilen)
-- ✅ Tailwind CSS + Custom Styling
-- ✅ Chart.js für Diagramme
-- ✅ Accessibility (ARIA-Labels, Keyboard-Navigation)
-- ✅ Responsive Design
-- ✅ 81+ JavaScript-Funktionen
+Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-Tool für Endkunden.
 
-### 🔴 Aktuelle Limitationen
+### Use Case: Typisches Beratungsgespräch
 
-#### **1. Immobilien-Cashflow nicht integriert**
-- Immobilien-Basin ist isoliert
-- Mieteinnahmen fließen nicht ins System
-- Ausgaben (Darlehen, Instandhaltung) werden nicht berücksichtigt
-- Keine Verbindung zu anderen Basins
+1. **Vorbereitung**: Berater öffnet App, startet neue Session
+2. **Datenerfassung**: Live-Eingabe während des Gesprächs
+   - Einkommen, Fixkosten, Konsumverhalten
+   - Bestehende Konten (Tagesgeld, Depot)
+   - Optional: Immobilien-Portfolio
+3. **Live-Visualisierung**: Kunde sieht sofort:
+   - Wohin fließt sein Geld?
+   - Wie funktioniert das Kaskaden-System?
+   - Welche Optimierungspotenziale gibt es?
+4. **Beratung**: Berater nutzt Varianten A/B und Beratungsmodus
+5. **Export**: PDF-Ausdruck + CSV für CRM-Überführung
+6. **Session-Ende**: Alle Daten werden gelöscht (Datenschutz)
 
-#### **2. Datenmodell-Einschränkungen**
-- Nur eine Immobilie möglich
-- Keine historische Daten-Verfolgung
-- Keine Szenarien-Vergleiche
-- localStorage kann gelöscht werden
+### Kern-Prinzipien
 
-#### **3. UX-Verbesserungspotenzial**
-- Keine Onboarding-Tour
-- Keine Tooltips/Hilfe-Texte
-- Kein Undo/Redo
-- Keine Export-Formate außer Print
-
-#### **4. Fehlende Analyse-Features**
-- Keine Cashflow-Analyse über Zeit
-- Keine Budget-Warnungen
-- Keine Optimierungsvorschläge
-- Keine Vergleichswerte/Benchmarks
+- ✅ **Session-basiert**: Daten nur während der aktiven Beratung
+- ✅ **Crash-Resilienz**: sessionStorage für Auto-Recovery
+- ✅ **Export-fokussiert**: PDF & CSV für interne Systeme
+- ✅ **Datenschutz First**: Keine Cloud, keine Datenbank, kein Tracking
+- ✅ **Live-Visualisierung**: Sofortiges visuelles Feedback
+- ✅ **Presenter-Mode**: Optimiert für Bildschirm-Sharing
 
 ---
 
-## 🎯 Vision für Version 2.0
+## 📊 Aktuelle Analyse (Version 1.1.0)
 
-**Leitmotiv:** "Von isolierten Basins zu einem integrierten Finanz-Ökosystem"
+### Implementierte Features
 
-### **Kernziele:**
-1. **Vollständige Cashflow-Integration** aller Einkommens- und Ausgabenquellen
-2. **Multi-Asset-Management** (mehrere Immobilien, Depots, etc.)
-3. **Zeitbasierte Analyse** mit historischen Daten & Prognosen
-4. **Intelligente Assistenz** mit Optimierungsvorschlägen
-5. **Export & Sharing** für Berater und Kunden
+#### Kern-Features (Beratungs-optimal)
+
+- ✅ **Multi-Konto-Visualisierung**: 6 Basins mit animierten Flows
+- ✅ **Zwei Varianten**: A (Fixkosten-first) & B (Konsum-first)
+- ✅ **Beratungsmodus**: 6-Schritte-Prozess für strukturierte Gespräche
+- ✅ **Immobilien-Management**: Vermögen, Verbindlichkeiten, Cashflow
+- ✅ **Depot-Aufteilung**: Multi-Fonds/ETF mit Prozent-Allocation
+- ✅ **Fixkosten-Verwaltung**: Flexible Posten (monatlich/jährlich)
+- ✅ **Rendite-Prognose**: Chart.js-Visualisierung
+- ✅ **Buchungsplaner**: Monatlicher Transaktions-Kalender
+- ✅ **Theme-System**: Dark Mode & MLP Light Theme
+- ✅ **Print-Funktion**: PDF-Export für Kundendokumentation
+
+#### Datenhaltung (AKTUELL)
+
+- ⚠️ **localStorage**: Persistiert über Sessions hinweg (problematisch!)
+- ✅ Vorteil: Crash-Recovery funktioniert
+- ❌ Nachteil: Daten bleiben dauerhaft gespeichert (Datenschutz!)
+
+### Kritische Limitationen für Beratungs-Kontext
+
+#### 1. Datenschutz-Problem: localStorage
+
+**Problem:**
+
+- Daten bleiben dauerhaft im Browser gespeichert
+- Nächster Kunde könnte Vorherige Daten sehen
+- DSGVO-Konflikt: Keine Einwilligung für dauerhafte Speicherung
+
+**Lösung (v1.2.0):**
+
+- Migration zu **sessionStorage** (nur während Tab/Session)
+- **Auto-Clear** beim Schließen des Tabs
+- **Manueller Reset-Button**: "Session beenden & Daten löschen"
+
+#### 2. Fehlende Session-Verwaltung
+
+**Problem:**
+
+- Kein klarer Start/Ende einer Beratung
+- Keine Session-Metadaten (Kundenkürzel, Datum)
+- Keine Warnung bei verwaisten Daten
+
+**Lösung (v1.2.0):**
+
+- **Session-Start-Dialog**: "Neue Beratung beginnen"
+- **Session-ID**: Automatische Generierung (Datum + Zufalls-ID)
+- **Session-Info-Bar**: Zeigt Dauer und Kundenkürzel
+- **Session-End-Prompt**: Bestätigung beim Schließen
+
+#### 3. Export-Funktionalität zu basic
+
+**Problem:**
+
+- Nur PDF-Print, kein strukturierter CSV-Export
+- Keine Metadaten im Export (Berater, Datum, Session-ID)
+- Kein Export-Protokoll für Compliance
+
+**Lösung (v1.3.0):**
+
+- **CSV-Export**: Strukturierte Daten für CRM-Import
+- **JSON-Export**: Vollständige Session-Daten
+- **Excel-kompatibel**: UTF-8 BOM für deutsche Umlaute
+- **Metadaten**: Automatische Kopfzeilen mit Session-Info
+
+#### 4. Keine Mandanten-Trennung
+
+**Problem:**
+
+- Bei mehreren geöffneten Tabs werden Daten gemischt
+- Kein Schutz vor versehentlichem Überschreiben
+
+**Lösung (v1.4.0):**
+
+- **Tab-Isolation**: Jeder Tab = eigene Session
+- **Multi-Session-Warning**: Warnung bei mehreren aktiven Sessions
+- **Session-Liste**: Übersicht aller offenen Beratungen
 
 ---
 
 ## 📅 Entwicklungs-Roadmap
 
-### **Version 1.2.0: Immobilien-Cashflow-Integration**
-**ETA:** Q4 2025 (4-6 Wochen)
-**Fokus:** Integration der Immobilien-Cashflows ins Gesamtsystem
+### Version 1.2.0: Session-Management & Datenschutz
 
-#### **Features:**
+**ETA:** Q4 2025 (3-4 Wochen)
+**Fokus:** DSGVO-konforme Session-Verwaltung & Crash-Resilienz
 
-**1.2.1: Einnahmen-Integration** (Woche 1-2)
-- [ ] Mieteinnahmen fließen automatisch ins Einkommen-Basin
-- [ ] Neuer Flow: `Immobilien → Einkommen` (monatlich)
-- [ ] Sonstige Einnahmen (Stellplatz) ebenfalls integriert
-- [ ] Toggle: "Immobilien-Einnahmen aktivieren/deaktivieren"
+#### Features
 
-**1.2.2: Ausgaben-Integration** (Woche 2-3)
-- [ ] Darlehensrate wird von Fixkosten abgezogen
-- [ ] Instandhaltung als Fixkosten-Posten
-- [ ] Steuern & Nebenkosten als Fixkosten-Posten
-- [ ] Automatische Synchronisation mit Fixkosten-Modal
+**1.2.1: Session-Lifecycle-Management** (Woche 1)
 
-**1.2.3: Flow-Visualisierung** (Woche 3-4)
-- [ ] Neuer Flow: `Immobilien → Einkommen` (grüner Pfeil)
-- [ ] Gestrichelter Flow: `Fixkosten → Immobilien` (Ausgaben, roter Pfeil)
-- [ ] Nettoberechnung im Immobilien-Basin
-- [ ] Hover-Info: "Netto-Cashflow nach Ausgaben"
+- [ ] **Session-Start-Dialog**
+  - Popup beim App-Start: "Neue Beratung beginnen"
+  - Optionale Felder: Kundenkürzel (z.B. "MX-2025-001"), Notizen
+  - Session-ID automatisch generiert: `YYYYMMDD-HHMM-XXXX`
+  - Button: "Vorherige Session fortsetzen" (falls vorhanden)
 
-**1.2.4: Beratungsmodus-Erweiterung** (Woche 4)
-- [ ] Step 6: Immobilien-Einnahmen werden sichtbar
-- [ ] Erklärung: "Passive Einkommensströme"
-- [ ] Optional: Immobilien-Ausgaben-Overlay
+- [ ] **Session-Info-Bar**
+  - Sticky-Header: Zeigt Session-ID, Kundenkürzel, Dauer
+  - Live-Timer: "Beratung läuft seit 23 Min."
+  - Status-Indikator: "Ungespeichert" / "Exportiert"
 
-#### **Technische Umsetzung:**
+- [ ] **Session-End-Dialog**
+  - Beim Versuch, Tab zu schließen: Warnung
+  - "Beratung beenden? Alle Daten werden gelöscht."
+  - Buttons: "Abbrechen" / "Exportieren & Beenden" / "Ohne Export beenden"
 
-```javascript
-// Neue Datenstruktur
-immobilienData = {
-  wert: 350000,
-  darlehen: 250000,
-  miete: 1200,
-  sonstigeEinnahmen: 50,
-  rate: 1100,
-  instandhaltung: 150,
-  steuern: 80,
-  // NEU:
-  cashflowAktiv: true,  // Toggle für Integration
-  einnahmenZiel: 'einkommen',  // Wohin fließen Einnahmen?
-  ausgabenZiel: 'fixkosten'    // Woher werden Ausgaben gezogen?
-}
+**1.2.2: Datenhaltung-Migration** (Woche 2)
 
-// Berechnung in calculateAndUpdate()
-const immoEinnahmen = immobilienData.cashflowAktiv
-  ? (immobilienData.miete + immobilienData.sonstigeEinnahmen)
-  : 0;
+- [ ] **localStorage → sessionStorage Migration**
+  - Alle bestehenden `localStorage.setItem()` → `sessionStorage.setItem()`
+  - Daten werden automatisch beim Tab-Close gelöscht
+  - Vorteil: Crash-Recovery bleibt erhalten (innerhalb Session)
 
-const immoAusgaben = immobilienData.cashflowAktiv
-  ? (immobilienData.rate + immobilienData.instandhaltung + immobilienData.steuern)
-  : 0;
+- [ ] **Session-Recovery-Mechanismus**
+  - Bei Reload/Crash: "Vorherige Beratung gefunden (vor 5 Min.)"
+  - Button: "Fortsetzen" / "Neue Session starten"
+  - Auto-Cleanup: Sessions älter als 24h werden verworfen
 
-// Zu Einkommen addieren
-const totalIncome = income + immoEinnahmen;
+- [ ] **Manueller Reset-Button**
+  - Prominent im UI: "Session beenden & Daten löschen"
+  - Bestätigungs-Dialog mit Checkbox "Export erstellt?"
+  - Nach Reset: Weiterleitung zu Session-Start-Dialog
 
-// Zu Fixkosten addieren
-const totalAbgang = totalFixkosten + immoAusgaben;
-```
+**1.2.3: Erweiterte Export-Funktionen** (Woche 3)
 
-#### **UX-Verbesserungen:**
-- [ ] Checkbox im Immobilien-Modal: "Cashflows ins System integrieren"
-- [ ] Visuelles Feedback: Grüner/roter Indikator bei aktiver Integration
-- [ ] Tooltip: "Einnahmen fließen automatisch ins Einkommen"
+- [ ] **CSV-Export für CRM-Integration**
+  - Strukturierte Tabelle: Kategorie, Beschreibung, Betrag, Interval
+  - Kopfzeile mit Session-Metadaten (Berater, Datum, Kunde)
+  - UTF-8 BOM für Excel-Kompatibilität
+  - Download-Dateiname: `Beratung_MX-2025-001_2025-10-20.csv`
 
----
+- [ ] **JSON-Export (Vollständig)**
+  - Alle Session-Daten als strukturiertes JSON
+  - Verwendung: Backup, Re-Import, Automatisierung
+  - Pretty-Print für menschliche Lesbarkeit
 
-### **Version 1.3.0: Multi-Asset-Management**
-**ETA:** Q1 2026 (6-8 Wochen)
-**Fokus:** Mehrere Immobilien, Depots, Konten verwalten
+- [ ] **PDF-Export-Verbesserungen**
+  - Session-Metadaten im Header (Berater, Datum, Kunde)
+  - Footer: "Exportiert am [Datum] um [Uhrzeit]"
+  - Optional: Berater-Logo/Signatur
 
-#### **Features:**
+**1.2.4: Datenschutz & Compliance** (Woche 4)
 
-**1.3.1: Multi-Immobilien** (Woche 1-3)
-- [ ] Liste von Immobilien statt einzelnem Objekt
-- [ ] Immobilien-Tabelle mit Add/Edit/Delete
-- [ ] Gesamtansicht: Aggregierte Werte im Basin
-- [ ] Detail-Modal: Einzelne Immobilie bearbeiten
-- [ ] Kategorien: "Eigengenutzt", "Vermietet", "Gewerbe"
+- [ ] **Daten-Löschung-Protokoll**
+  - Console-Log: "Session [ID] gelöscht am [Timestamp]"
+  - Optional: Export-Protokoll (wann wurde exportiert?)
 
-**1.3.2: Multi-Depot** (Woche 3-4)
-- [ ] Mehrere Depots (z.B. "ETF-Depot", "Riester", "Betriebliche AV")
-- [ ] Depot-Auswahl im Modal
-- [ ] Aggregierte Darstellung im Basin
-- [ ] Unterschiedliche Renditen pro Depot
+- [ ] **Datenschutz-Hinweis**
+  - Beim ersten Start: Info-Modal
+  - "Alle Daten werden nur temporär gespeichert und beim Schließen gelöscht."
+  - Checkbox: "Verstanden, nicht erneut anzeigen"
 
-**1.3.3: Zusätzliche Einkommensquellen** (Woche 4-5)
-- [ ] Nebeneinkommen (Freelance, Dividenden, etc.)
-- [ ] Passive Einkommensströme
-- [ ] Getrennte Flows für verschiedene Quellen
+- [ ] **Inaktivitäts-Warnung**
+  - Nach 30 Min. Inaktivität: Toast-Notification
+  - "Beratung noch aktiv? Daten werden bei Inaktivität nach 60 Min. gelöscht."
+  - Button: "Ich bin noch da"
 
-**1.3.4: Ausgaben-Kategorien** (Woche 5-6)
-- [ ] Fixkosten-Kategorien (Wohnen, Mobilität, Versicherungen)
-- [ ] Konsum-Kategorien (Lebensmittel, Freizeit, Shopping)
-- [ ] Pie-Chart-Visualisierung
+#### Technische Umsetzung
 
-#### **Datenmodell:**
+**Session-Datenstruktur:**
 
 ```javascript
-assets = {
-  immobilien: [
-    { id: 1, name: "Wohnung Berlin", wert: 350000, ... },
-    { id: 2, name: "Ferienhaus Ostsee", wert: 180000, ... }
-  ],
-  depots: [
-    { id: 1, name: "ETF-Depot", current: 25000, allocation: [...] },
-    { id: 2, name: "Riester", current: 12000, ... }
-  ],
-  einkommensquellen: [
-    { id: 1, name: "Hauptgehalt", amount: 3000, interval: 'monthly' },
-    { id: 2, name: "Freelance", amount: 800, interval: 'monthly' }
-  ]
+session = {
+  id: "20251020-1430-A7F2",      // Auto-generiert
+  kundenKuerzel: "MX-2025-001",  // Optional
+  berater: "Max Mustermann",      // Optional
+  startzeit: "2025-10-20T14:30:00Z",
+  letzteAktivitaet: "2025-10-20T14:45:00Z",
+  status: "aktiv" | "exportiert" | "beendet",
+
+  // Bestehende Daten
+  income: 3000,
+  fixkostenItems: [...],
+  depotItems: [...],
+  immobilienData: {...},
+  // ... alle anderen Felder
 }
 ```
 
----
-
-### **Version 1.4.0: Zeitbasierte Analyse**
-**ETA:** Q2 2026 (8-10 Wochen)
-**Fokus:** Historische Daten, Trends, Prognosen
-
-#### **Features:**
-
-**1.4.1: Daten-Historie** (Woche 1-3)
-- [ ] Monatliche Snapshots (letztes Jahr)
-- [ ] Zeitstrahl-Visualisierung
-- [ ] Vergleich: "Vormonat", "Vorjahr"
-- [ ] Export: CSV, JSON
-
-**1.4.2: Trend-Analyse** (Woche 3-5)
-- [ ] Sparklines für Konten-Entwicklung
-- [ ] Cashflow-Trends (aufwärts/abwärts)
-- [ ] Automatische Mustererkennung
-
-**1.4.3: Erweiterte Prognosen** (Woche 5-7)
-- [ ] 5-Jahres-Prognose mit Szenarien
-- [ ] Monte-Carlo-Simulation
-- [ ] "Was-wäre-wenn"-Rechner
-- [ ] Inflationsanpassung
-
-**1.4.4: Dashboard** (Woche 7-8)
-- [ ] Übersichtsseite mit KPIs
-- [ ] Sparquote-Tracking
-- [ ] Vermögensaufbau-Verlauf
-- [ ] Ziel-Tracking (z.B. "1 Mio. in 20 Jahren")
-
-#### **Backend-Überlegung:**
-- **Optional:** Firebase/Supabase für Cloud-Sync
-- **Alternative:** IndexedDB für lokale Datenbank
-- **Export:** JSON-Download für Backup
-
----
-
-### **Version 1.5.0: Intelligente Assistenz**
-**ETA:** Q3 2026 (6-8 Wochen)
-**Fokus:** Optimierungsvorschläge, Warnungen, Insights
-
-#### **Features:**
-
-**1.5.1: Budget-Überwachung** (Woche 1-2)
-- [ ] Warnungen bei Überschreitung
-- [ ] Notifications: "Konsumkonto über Minimum"
-- [ ] Farbcodierung: Rot/Gelb/Grün
-
-**1.5.2: Optimierungsvorschläge** (Woche 2-4)
-- [ ] "Sparrate um X€ erhöhen → +Y€ in 10 Jahren"
-- [ ] "Fixkosten-Optimierung: -150€/Monat möglich"
-- [ ] "Tagesgeld-Limit zu niedrig: +500€ empfohlen"
-
-**1.5.3: Benchmarking** (Woche 4-5)
-- [ ] Vergleichswerte: "Durchschnitt in deiner Altersgruppe"
-- [ ] Sparquote-Benchmarks
-- [ ] Depot-Diversifikation-Score
-
-**1.5.4: Szenarien-Planer** (Woche 5-6)
-- [ ] "Jobwechsel: -500€ Einkommen"
-- [ ] "Immobilienkauf: +1000€ Darlehen"
-- [ ] "Renteneintritt: -70% Einkommen"
-
----
-
-### **Version 1.6.0: Export & Sharing**
-**ETA:** Q4 2026 (4-6 Wochen)
-**Fokus:** Berater-Integration, Sharing, Export
-
-#### **Features:**
-
-**1.6.1: PDF-Export 2.0** (Woche 1-2)
-- [ ] Professionelles Layout (Multi-Page)
-- [ ] Alle Diagramme eingebettet
-- [ ] Tabellen mit Detaildaten
-- [ ] Branding-Option (Logo, Farben)
-
-**1.6.2: Excel-Export** (Woche 2-3)
-- [ ] Multi-Sheet: Übersicht, Cashflow, Prognose, Immobilien
-- [ ] Formeln für Berechnungen
-- [ ] Pivot-Tabellen
-
-**1.6.3: Berater-Modus** (Woche 3-4)
-- [ ] QR-Code für Kunden-Link
-- [ ] Read-Only-Ansicht mit Kommentaren
-- [ ] Vergleich: Aktuell vs. Empfehlung
-
-**1.6.4: Cloud-Sync (Optional)** (Woche 4-6)
-- [ ] Multi-Device-Sync
-- [ ] Versionierung
-- [ ] Sharing mit Berater
-
----
-
-### **Version 2.0.0: Enterprise-Reife**
-**ETA:** Q1 2027 (12-16 Wochen)
-**Fokus:** Architektur-Refactoring, Performance, Skalierung
-
-#### **Features:**
-
-**2.0.1: Architektur-Refactoring** (Woche 1-6)
-- [ ] Migration zu **React** oder **Vue.js**
-- [ ] Component-basierte Architektur
-- [ ] State-Management (Zustand/Pinia)
-- [ ] TypeScript für Type-Safety
-- [ ] Unit-Tests (Jest/Vitest)
-
-**2.0.2: Design-System** (Woche 6-8)
-- [ ] Component-Library (Storybook)
-- [ ] Konsistente UI-Patterns
-- [ ] Accessibility-Audit
-- [ ] Mobile-First Responsive
-
-**2.0.3: Performance** (Woche 8-10)
-- [ ] Code-Splitting
-- [ ] Lazy-Loading
-- [ ] WebWorkers für Berechnungen
-- [ ] IndexedDB statt localStorage
-
-**2.0.4: API-Integration** (Woche 10-12)
-- [ ] REST-API für Backend
-- [ ] Echtzeit-Kurse (Depot)
-- [ ] Bank-API-Integration (optional)
-- [ ] Steuer-API (Automatische Berechnung)
-
-**2.0.5: Enterprise-Features** (Woche 12-14)
-- [ ] Multi-User (Familien-Accounts)
-- [ ] Rollen & Berechtigungen
-- [ ] Audit-Log
-- [ ] DSGVO-Compliance
-
-**2.0.6: White-Label** (Woche 14-16)
-- [ ] Vollständige Customization
-- [ ] Eigenes Branding
-- [ ] Plugin-System
-- [ ] API für Drittanbieter
-
----
-
-## 🏗️ Spezial-Fokus: Immobilien-Cashflow-Integration (v1.2.0)
-
-### **Konzept: Bidirektionale Flows**
-
-#### **Szenario 1: Vermietete Immobilie (Positiver Cashflow)**
-
-**Setup:**
-- Immobilienwert: 350.000€
-- Restdarlehen: 250.000€
-- **Einnahmen:** 1.200€ Miete + 50€ Stellplatz = **1.250€/Monat**
-- **Ausgaben:** 1.100€ Rate + 150€ Instandhaltung + 80€ Steuern = **1.330€/Monat**
-- **Netto-Cashflow:** **-80€/Monat** (negativ, aber Vermögensaufbau!)
-
-**Flow-Visualisierung:**
-```
-[Immobilien] --+1.250€--> [Einkommen]  (grüner Flow)
-[Fixkosten] --1.330€--> [Immobilien]   (roter gestrichelter Flow)
-
-Netto im Immobilien-Basin: -80€/Monat
-Aber: +100€ Tilgung = Vermögensaufbau!
-```
-
-**UX-Features:**
-- Tooltip auf Immobilien-Basin: "Cashflow: -80€, aber +100€ Tilgung = Vermögen steigt"
-- Toggle im Modal: "Cashflow-Integration aktivieren"
-- Farbcodierung: Rot (negativ) mit Info-Icon
-
-#### **Szenario 2: Abbezahlte Immobilie (Hoher positiver Cashflow)**
-
-**Setup:**
-- Immobilienwert: 350.000€
-- Restdarlehen: **0€** (abbezahlt!)
-- **Einnahmen:** 1.250€/Monat
-- **Ausgaben:** 150€ Instandhaltung + 80€ Steuern = **230€/Monat**
-- **Netto-Cashflow:** **+1.020€/Monat** 🎉
-
-**Flow-Visualisierung:**
-```
-[Immobilien] --+1.020€--> [Einkommen]  (dicker grüner Flow)
-
-Einkommen steigt von 3.000€ auf 4.020€
-Sparrate kann massiv erhöht werden!
-```
-
-**UX-Features:**
-- Achievement-Badge: "Passives Einkommen freigeschaltet! 🏆"
-- Highlight-Animation beim ersten Mal
-- Automatische Prognose-Anpassung
-
-#### **Szenario 3: Eigengenutzte Immobilie**
-
-**Setup:**
-- Keine Mieteinnahmen
-- Nur Ausgaben (Darlehen, Instandhaltung)
-- **Cashflow-Integration:** Optional (Nutzer entscheidet)
-
-**Flow-Visualisierung:**
-```
-[Fixkosten] --1.330€--> [Immobilien]   (roter Flow)
-
-Fixkosten steigen, aber keine Einnahmen
-Alternative: "Gesparte Miete" als virtuelles Einkommen?
-```
-
-**UX-Features:**
-- Checkbox: "Eigengenutzt (keine Mieteinnahmen)"
-- Optional: "Gesparte Miete" als positiver Cashflow anzeigen
-- Vergleich: "Miete vs. Eigentum"
-
-### **Technische Implementierung (v1.2.0)**
-
-#### **Neue Funktionen:**
+**sessionStorage-Management:**
 
 ```javascript
-// 1. Berechnung Immobilien-Cashflow
-function calculateImmobilienCashflow() {
-  if (!immobilienData.cashflowAktiv) return { einnahmen: 0, ausgaben: 0 };
-
-  const einnahmen = immobilienData.miete + immobilienData.sonstigeEinnahmen;
-  const ausgaben = immobilienData.rate + immobilienData.instandhaltung + immobilienData.steuern;
-
-  return {
-    einnahmen,
-    ausgaben,
-    netto: einnahmen - ausgaben,
-    tilgung: calculateTilgung(immobilienData.rate, immobilienData.zinssatz)
+// Session initialisieren
+function startSession(kundenKuerzel = null) {
+  const sessionId = generateSessionId();
+  const session = {
+    id: sessionId,
+    kundenKuerzel,
+    startzeit: new Date().toISOString(),
+    status: 'aktiv',
+    data: {}
   };
+  sessionStorage.setItem('currentSession', JSON.stringify(session));
+  updateSessionInfoBar();
 }
 
-// 2. Integration in calculateAndUpdate()
-function calculateAndUpdate() {
-  // ... bestehender Code ...
-
-  const immoCF = calculateImmobilienCashflow();
-
-  // Einnahmen zu Einkommen addieren
-  const totalIncome = income + immoCF.einnahmen;
-
-  // Ausgaben zu Fixkosten addieren
-  const totalAbgang = calculateTotalAbgang() + immoCF.ausgaben;
-
-  // Flows zeichnen
-  if (immoCF.einnahmen > 0) {
-    drawFlow('immobilien-einkommen-flow', basins.immobilien, basins.einkommen,
-             immoCF.einnahmen, maxFlow, 'Mieteinnahmen');
+// Session beenden
+function endSession(exportFirst = false) {
+  if (exportFirst) {
+    exportAllData();
   }
-
-  if (immoCF.ausgaben > 0) {
-    drawFlow('fixkosten-immobilien-flow', basins.fixkosten, basins.immobilien,
-             immoCF.ausgaben, maxFlow, 'Darlehen & Kosten');
-  }
-
-  // ... Rest der Berechnung ...
+  sessionStorage.clear();
+  // Redirect zu Session-Start
+  window.location.reload();
 }
 
-// 3. Immobilien-Basin Update
-renderBasin(
-  basins.immobilien,
-  'Immobilien',
-  formatCurrency(immoNettovermoegen),
-  '',
-  `Cashflow: ${formatCurrency(immoCF.netto)} / Monat ${
-    immoCF.tilgung > 0 ? `(+${formatCurrency(immoCF.tilgung)} Tilgung)` : ''
-  }`,
-  {},
-  createHouseSVG()
-);
+// Auto-Recovery
+window.addEventListener('load', () => {
+  const savedSession = sessionStorage.getItem('currentSession');
+  if (savedSession) {
+    showRecoveryDialog(JSON.parse(savedSession));
+  } else {
+    showSessionStartDialog();
+  }
+});
+
+// beforeunload-Warnung
+window.addEventListener('beforeunload', (e) => {
+  const session = JSON.parse(sessionStorage.getItem('currentSession'));
+  if (session && session.status !== 'exportiert') {
+    e.preventDefault();
+    e.returnValue = 'Beratung beenden? Daten gehen verloren!';
+  }
+});
 ```
 
-#### **UI-Erweiterungen im Modal:**
+**CSV-Export-Funktion:**
 
-```html
-<!-- Im Immobilien-Modal nach der Zusammenfassung: -->
-<div class="mt-6 bg-gray-900 p-4 rounded-lg border-2 border-blue-500">
-  <div class="flex items-center gap-3 mb-3">
-    <input
-      type="checkbox"
-      id="immo-cashflow-aktiv"
-      class="w-5 h-5"
-      onchange="toggleImmobilienCashflow(this.checked)">
-    <label for="immo-cashflow-aktiv" class="font-bold text-white">
-      Cashflows ins Gesamtsystem integrieren
-    </label>
-  </div>
+```javascript
+function exportToCSV() {
+  const session = getCurrentSession();
 
-  <p class="text-sm text-gray-400">
-    Aktiviere diese Option, um Mieteinnahmen automatisch ins Einkommen
-    fließen zu lassen und Ausgaben von den Fixkosten abzuziehen.
-  </p>
+  // Header mit Metadaten
+  const header = [
+    `# Beratungsprotokoll`,
+    `# Session-ID: ${session.id}`,
+    `# Kunde: ${session.kundenKuerzel || 'N/A'}`,
+    `# Datum: ${new Date(session.startzeit).toLocaleDateString('de-DE')}`,
+    `# Berater: ${session.berater || 'N/A'}`,
+    ``,
+    `Kategorie,Beschreibung,Betrag (€),Intervall,Ziel`
+  ].join('\n');
 
-  <div id="cashflow-preview" class="mt-3 p-3 bg-gray-800 rounded hidden">
-    <p class="text-xs text-gray-400 mb-2">Vorschau:</p>
-    <div class="grid grid-cols-2 gap-2 text-sm">
-      <div>
-        <span class="text-green-400">↑ Einkommen:</span>
-        <span class="font-bold">+1.250€</span>
-      </div>
-      <div>
-        <span class="text-red-400">↑ Fixkosten:</span>
-        <span class="font-bold">+1.330€</span>
-      </div>
-    </div>
-  </div>
-</div>
+  // Daten
+  const rows = [];
+
+  // Einkommen
+  rows.push(`Einkommen,Haupteinkommen,${session.data.income},monatlich,einkommen`);
+
+  // Fixkosten
+  fixkostenItems.forEach(item => {
+    rows.push(`Fixkosten,${item.name},${item.amount},${item.interval},${item.target}`);
+  });
+
+  // ... weitere Kategorien
+
+  const csv = header + '\n' + rows.join('\n');
+
+  // Download mit UTF-8 BOM
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
+  const filename = `Beratung_${session.kundenKuerzel || session.id}_${formatDate(new Date())}.csv`;
+  downloadFile(blob, filename);
+
+  // Session als "exportiert" markieren
+  session.status = 'exportiert';
+  sessionStorage.setItem('currentSession', JSON.stringify(session));
+}
 ```
 
 ---
 
-## 🎨 Design-Prinzipien für v2.0
+### Version 1.3.0: Immobilien-Cashflow-Integration
 
-### **1. Progressive Disclosure**
-- Einfacher Einstieg, komplexe Features optional
-- Tooltips & Onboarding-Tour
-- "Experten-Modus" für Power-User
+**ETA:** Q1 2026 (4-6 Wochen)
+**Fokus:** Live-Visualisierung von Immobilien-Cashflows im Beratungsgespräch
 
-### **2. Visual Hierarchy**
-- Primäre Flows (Einkommen → Depot) dick und prominent
-- Sekundäre Flows (Immobilien) dünner, gestrichelt
-- Farbcodierung: Grün (Einnahmen), Rot (Ausgaben), Blau (Transfers)
+#### Features
 
-### **3. Data-Driven Insights**
-- Automatische Erkennung von Optimierungspotenzial
-- Proaktive Vorschläge statt nur Anzeige
-- Gamification: Achievements, Meilensteine
+**1.3.1: Cashflow-Toggle im Beratungsgespräch** (Woche 1-2)
 
-### **4. Accessibility First**
-- WCAG 2.1 AAA-Standard
-- Screen-Reader-optimiert
-- Keyboard-Navigation für alle Features
+- [ ] **Immobilien-Modal: Toggle "Flows aktivieren"**
+  - Checkbox: "Cashflows ins Gesamtsystem integrieren"
+  - Live-Preview: Zeigt Auswirkung auf Einkommen/Fixkosten
+  - Tooltip: "Aktivieren, um dem Kunden die Auswirkungen zu zeigen"
 
----
+- [ ] **Live-Update der Basins**
+  - Einkommen-Basin: +X€ durch Mieteinnahmen
+  - Fixkosten-Basin: +Y€ durch Darlehen/Kosten
+  - Sparrate: Automatische Neuberechnung
 
-## 📈 Metriken & KPIs für v2.0
+**1.3.2: Flow-Visualisierung** (Woche 2-3)
 
-### **Performance-Ziele:**
-- [ ] Initiales Laden: < 2s
-- [ ] Interaktionszeit: < 100ms
-- [ ] Lighthouse-Score: > 95
+- [ ] **Grüner Flow: Immobilien → Einkommen**
+  - Mieteinnahmen als dicker grüner Pfeil
+  - Label: "Mieteinnahmen +1.250€"
+  - Animation: Fließt elegant nach oben
 
-### **UX-Metriken:**
-- [ ] Onboarding-Completion: > 80%
-- [ ] Feature-Adoption (Immobilien): > 40%
-- [ ] User-Retention (30 Tage): > 60%
+- [ ] **Roter Flow: Fixkosten → Immobilien**
+  - Ausgaben als gestrichelter roter Pfeil
+  - Label: "Darlehen & Kosten -1.330€"
+  - Tooltip: "Davon 100€ Tilgung = Vermögensaufbau"
 
-### **Code-Qualität:**
-- [ ] Test-Coverage: > 80%
-- [ ] TypeScript-Migration: 100%
-- [ ] Bundle-Size: < 500KB (gzip)
+**1.3.3: Beratungs-Szenarien** (Woche 3-4)
 
----
+- [ ] **Szenario-Vergleich**
+  - Button: "Was wäre wenn... Immobilie abbezahlt?"
+  - Side-by-Side: Aktuell vs. Szenario
+  - Highlight: Unterschiede in Cashflow/Sparrate
 
-## 🚀 Quick Wins (Nächste 2 Wochen)
+- [ ] **Quick-Szenarien**
+  - "Immobilie verkaufen" (Einmalzahlung ins Depot)
+  - "Immobilie vermieten statt selbst nutzen"
+  - "Zweite Immobilie kaufen"
 
-**Prio 1: Immobilien-Cashflow (v1.2.0-alpha)**
-1. Checkbox "Cashflow aktivieren" im Modal
-2. Einfache Addition zu Einkommen/Fixkosten
-3. Grüner/roter Flow ohne Animation (MVP)
+**1.3.4: Export-Erweiterung** (Woche 4)
 
-**Prio 2: UX-Polishing**
-1. Tooltips für alle Basins
-2. Hilfe-Icon mit Erklärungen
-3. Keyboard-Shortcuts (ESC für Modal-Close)
-
-**Prio 3: Bugfixes & Stabilität**
-1. localStorage-Fallback bei Quota-Exceeded
-2. Mobile-Responsive-Tests
-3. Browser-Compatibility (Firefox, Safari)
+- [ ] **Immobilien-Sektion im PDF**
+  - Übersicht: Vermögen, Verbindlichkeiten, Cashflow
+  - Tabelle: Einnahmen & Ausgaben detailliert
+  - Berechnung: Nettovermögen, ROI, Tilgungsplan
 
 ---
 
-## 🤝 Mitwirkende & Feedback
+### Version 1.4.0: Multi-Client-Session-Management
 
-**Entwicklung:** Claude Code (AI-Assistant)
-**Konzept:** MLP-Strategie & Beratungsansatz
-**Feedback:** Issues auf GitHub willkommen!
+**ETA:** Q2 2026 (4-5 Wochen)
+**Fokus:** Mehrere parallele Beratungen, Session-Isolation
 
-**Kontakt für Roadmap-Diskussion:**
-[GitHub Issues](https://github.com/your-repo/issues) | [Discussions](https://github.com/your-repo/discussions)
+#### Features
+
+**1.4.1: Multi-Tab-Support** (Woche 1-2)
+
+- [ ] **Tab-Isolation**
+  - Jeder Tab = eigene Session mit eigenem sessionStorage-Namespace
+  - Eindeutige Tab-ID in URL-Parameter: `?session=ABC123`
+  - Keine Daten-Überschneidungen zwischen Tabs
+
+- [ ] **Session-Übersicht**
+  - Landing-Page: Liste aller offenen Sessions
+  - Karten: Session-ID, Kundenkürzel, Dauer, Status
+  - Actions: "Fortsetzen" / "Export" / "Löschen"
+
+**1.4.2: Quick-Session-Switch** (Woche 2-3)
+
+- [ ] **Session-Switcher im UI**
+  - Dropdown in Session-Info-Bar
+  - Schnelles Wechseln zwischen parallelen Beratungen
+  - Warnung: "Ungespeicherte Änderungen in Session XYZ"
+
+**1.4.3: Template-System** (Woche 3-4)
+
+- [ ] **Beratungs-Templates**
+  - Vordefinierte Szenarien: "Gutverdiener", "Familie", "Rentner"
+  - Schnellstart mit typischen Werten
+  - Anpassbar im Gespräch
+
+- [ ] **Template-Export**
+  - Erfolgreiche Beratung als Template speichern
+  - Wiederverwendbar für ähnliche Kunden
+  - Anonymisiert (nur Struktur, keine echten Daten)
 
 ---
 
-## 📝 Changelog (Historie)
+### Version 1.5.0: Erweiterte Export-Formate & Berater-Tools
+
+**ETA:** Q3 2026 (5-6 Wochen)
+**Fokus:** CRM-Integration, Automatisierung, Berater-Produktivität
+
+#### Features
+
+**1.5.1: Excel-Export mit Formeln** (Woche 1-2)
+
+- [ ] **Multi-Sheet-Workbook**
+  - Sheet 1: Übersicht (Dashboard)
+  - Sheet 2: Einnahmen & Ausgaben (Detailliert)
+  - Sheet 3: Immobilien-Analyse
+  - Sheet 4: Depot-Aufteilung
+  - Sheet 5: Prognose (10 Jahre)
+
+- [ ] **Live-Formeln**
+  - Excel-Formeln statt statische Werte
+  - Kunde kann später selbst anpassen
+  - Conditional Formatting für Warnungen
+
+**1.5.2: CRM-Integration (API-Vorbereitung)** (Woche 2-3)
+
+- [ ] **Standardisierte JSON-Struktur**
+  - Schema-Definition für externe Systeme
+  - Mapping-Dokumentation
+  - Validierung vor Export
+
+- [ ] **Webhook-Support (optional)**
+  - POST-Request nach Export
+  - Direkt ins CRM-System
+  - Authentifizierung (API-Key)
+
+**1.5.3: Berater-Notizen & Annotations** (Woche 3-4)
+
+- [ ] **Notizen-Feld**
+  - Pro Basin: Freitext-Notizen
+  - Erscheint im PDF-Export
+  - Nicht sichtbar in Live-Ansicht (nur Berater)
+
+- [ ] **Screenshots & Markierungen**
+  - Tool: Flows markieren & annotieren
+  - Erscheint im PDF als "Empfehlung"
+  - Icons: ⚠️ Warnung, ✅ Optimierung, 💡 Idee
+
+**1.5.4: Berater-Dashboard** (Woche 4-5)
+
+- [ ] **Session-Statistiken**
+  - Anzahl Beratungen heute/Woche/Monat
+  - Durchschnittliche Dauer
+  - Häufigste Export-Formate
+
+- [ ] **Quick-Actions**
+  - "Letzte Session fortsetzen"
+  - "Template laden"
+  - "Neue Beratung mit Standardwerten"
+
+---
+
+### Version 1.6.0: Präsentations-Modus & UX-Polish
+
+**ETA:** Q4 2026 (4-5 Wochen)
+**Fokus:** Optimierung für Bildschirm-Sharing & Kundenpräsentation
+
+#### Features
+
+**1.6.1: Presenter-Mode** (Woche 1-2)
+
+- [ ] **Vollbild-Modus**
+  - F11-ähnlich, aber mit Controls
+  - Versteckt Berater-Tools (Notizen, Export)
+  - Fokus auf Visualisierung
+
+- [ ] **Highlight-Modus**
+  - Click auf Basin: Spot-Light-Effekt
+  - Temporäres Dimmen anderer Elemente
+  - Gut für Bildschirm-Sharing
+
+**1.6.2: Animierte Transitionen** (Woche 2-3)
+
+- [ ] **Smooth Beratungsmodus-Steps**
+  - Fade-In/Out statt hartes Show/Hide
+  - Highlight: "Hier erscheint jetzt..."
+  - Flow-Animation beim Aktivieren
+
+**1.6.3: Kunden-Verständnis-Features** (Woche 3-4)
+
+- [ ] **Tooltip-System**
+  - Hover auf Basin: Erklärung
+  - "Was ist ein Tagesgeldkonto?"
+  - "Warum Sparrate wichtig ist"
+
+- [ ] **Info-Overlays**
+  - Click auf "?" neben Titel
+  - Modal: Ausführliche Erklärung
+  - Schließbar, non-modal
+
+**1.6.4: Dark/Light-Theme für Präsentationen** (Woche 4)
+
+- [ ] **Auto-Theme basierend auf Umgebung**
+  - Hell: Für Räume mit viel Licht
+  - Dunkel: Für gedämpfte Beratungsräume
+
+---
+
+### Version 2.0.0: Enterprise-Berater-Platform
+
+**ETA:** Q1 2027 (12-14 Wochen)
+**Fokus:** Skalierung, White-Label, Multi-Mandanten
+
+#### Features
+
+**2.0.1: Mandanten-System** (Woche 1-4)
+
+- [ ] **Multi-Berater-Support**
+  - Jeder Berater: eigenes Login
+  - Eigene Session-Historie
+  - Keine Daten-Vermischung
+
+- [ ] **Berater-Profile**
+  - Name, Logo, Signatur
+  - Erscheint in PDFs
+  - Customization pro Berater
+
+**2.0.2: White-Label für MLP-Partner** (Woche 4-6)
+
+- [ ] **Branding-Anpassung**
+  - Eigenes Logo, Farben
+  - Custom Domain (z.B. finanzplanung.berater-mueller.de)
+  - Eigene Texte/Disclaimer
+
+**2.0.3: Offline-Modus** (Woche 6-8)
+
+- [ ] **PWA (Progressive Web App)**
+  - Installierbar auf Desktop
+  - Funktioniert ohne Internet
+  - Service-Worker für Caching
+
+- [ ] **Offline-Export-Queue**
+  - Exports werden gespeichert
+  - Bei Internet-Rückkehr: Auto-Upload
+
+**2.0.4: Analytics für Berater-Leitung** (Woche 8-10)
+
+- [ ] **Aggregierte Statistiken (Anonymisiert)**
+  - Durchschnittliche Beratungsdauer
+  - Häufigste Optimierungen
+  - Depot-Allocation-Trends
+
+**2.0.5: React/TypeScript-Migration** (Woche 10-14)
+
+- [ ] **Moderne Architektur**
+  - Component-basiert
+  - Type-Safety
+  - Unit-Tests (80% Coverage)
+
+---
+
+## 🔐 Datenschutz & Compliance-Strategie
+
+### Aktuelle Situation (v1.1.0)
+
+- ⚠️ **localStorage**: Daten persistieren dauerhaft
+- ⚠️ **Keine Lösch-Mechanik**: Manuelle Browser-Löschung nötig
+- ⚠️ **Keine Session-Trennung**: Alle Beratungen im selben Speicher
+
+### Ziel-Architektur (v1.2.0+)
+
+#### Daten-Speicherung
+
+```
+┌─────────────────────────────────────────┐
+│  sessionStorage (nur während Tab offen) │
+│  ├─ Session-ID: Auto-generiert          │
+│  ├─ Kundendaten: Temporär               │
+│  ├─ Crash-Recovery: Ja (bis Tab-Close)  │
+│  └─ Auto-Delete: Bei Tab-Close          │
+└─────────────────────────────────────────┘
+
+Optional (v1.4.0+):
+┌─────────────────────────────────────────┐
+│  IndexedDB (nur für Templates)          │
+│  ├─ Berater-Templates (anonymisiert)    │
+│  ├─ Keine Kundendaten                   │
+│  └─ Manuell löschbar                    │
+└─────────────────────────────────────────┘
+```
+
+#### Daten-Lifecycle
+
+```
+Start → Session-Start-Dialog
+  ↓
+Erfassung → sessionStorage (live)
+  ↓
+Crash/Reload → Recovery-Dialog
+  ↓
+Export → PDF/CSV Download
+  ↓
+Tab-Close → sessionStorage.clear()
+```
+
+#### Compliance-Checkliste
+
+- ✅ **DSGVO Art. 25 (Privacy by Design)**
+  - Daten nur temporär (sessionStorage)
+  - Auto-Delete bei Tab-Close
+  - Keine Cloud-Übertragung
+
+- ✅ **Datensparsamkeit**
+  - Nur notwendige Daten
+  - Optional: Kundenkürzel (kein Name!)
+  - Keine PII (Personally Identifiable Information)
+
+- ✅ **Transparenz**
+  - Datenschutz-Hinweis beim Start
+  - Sichtbare Session-Info
+  - Export-Protokoll
+
+---
+
+## 🚀 Quick Wins (Nächste 2-4 Wochen)
+
+### Prio 1: Session-Management-MVP
+
+- [ ] localStorage → sessionStorage Migration (2h)
+- [ ] Session-Start-Dialog (4h)
+- [ ] Manueller "Session beenden"-Button (2h)
+- [ ] beforeunload-Warnung (1h)
+
+### Prio 2: CSV-Export
+
+- [ ] CSV-Export-Funktion (6h)
+- [ ] UTF-8 BOM für Excel (1h)
+- [ ] Session-Metadaten im Header (2h)
+
+### Prio 3: UX-Verbesserungen
+
+- [ ] Session-Info-Bar (Sticky Header) (4h)
+- [ ] Timer "Beratung läuft seit..." (2h)
+- [ ] Export-Status-Indikator (2h)
+
+**Gesamtaufwand:** ~26 Stunden (ca. 1 Woche)
+
+---
+
+## 📈 Erfolgs-Metriken
+
+### Version 1.2.0 (Session-Management)
+
+- [ ] **Datenschutz**: 0 dauerhafte Speicherungen
+- [ ] **Crash-Recovery**: 100% innerhalb Session
+- [ ] **Export-Rate**: > 90% der Sessions werden exportiert
+- [ ] **Session-Dauer**: Durchschnittlich 20-40 Min.
+
+### Version 2.0.0 (Enterprise)
+
+- [ ] **Berater-Adoption**: > 80% nutzen regelmäßig
+- [ ] **Export-Formate**: PDF + CSV Standard
+- [ ] **Offline-Fähigkeit**: PWA installiert
+- [ ] **Performance**: < 2s Ladezeit
+
+---
+
+## 🤝 Feedback & Weiterentwicklung
+
+**Zielgruppe für Feedback:**
+
+- Vermögensberater (Hauptnutzer)
+- Compliance-Team (Datenschutz)
+- IT-Abteilung (Integration)
+
+**Feedback-Kanäle:**
+
+- Issues auf GitHub
+- Berater-Umfragen nach v1.2.0
+- Usability-Tests im Beratungs-Kontext
+
+---
+
+## 📝 Changelog
 
 ### v1.1.0 (Oktober 2025)
-- ✅ Immobilien-Basin mit Vermögensverwaltung
-- ✅ Optimierte Basin-Positionierung (Depot/Immobilien-Tausch)
+
+- ✅ Immobilien-Basin mit Cashflow-Verwaltung
+- ✅ Optimierte Basin-Positionierung
 - ✅ Beratungsmodus Step 6 (Immobilien)
-- ✅ Häuschen-SVG-Design
 
 ### v1.0.0 (September 2025)
+
 - ✅ Basis-System mit 5 Basins
-- ✅ SVG-Flow-Animation
+- ✅ SVG-Flow-Visualisierung
 - ✅ Varianten A & B
 - ✅ Beratungsmodus (5 Steps)
-- ✅ Rendite-Prognose
-- ✅ Theme-System
 - ✅ Print-Funktion
 
 ---
 
 **🎯 Ziel: Version 2.0.0 bis Q1 2027**
-**📅 Nächster Meilenstein: v1.2.0 (Immobilien-Cashflow) - Q4 2025**
+**📅 Nächster Meilenstein: v1.2.0 (Session-Management) - Q4 2025**
 
 ---
 
 *Letzte Aktualisierung: Oktober 2025*
-*Version: 1.0 (Roadmap)*
+*Version: 2.0 (Roadmap - Beratungs-Fokus)*
