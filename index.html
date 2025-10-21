@@ -732,6 +732,8 @@
                         <path id="konsum-tagesgeld-flow-mask" class="flow-mask-stroke"></path>
                         <path id="tagesgeld-depot-flow-mask" class="flow-mask-stroke"></path>
                         <path id="fixkosten-depot-flow-mask" class="flow-mask-stroke"></path>
+                        <path id="vermieterkonto-tagesgeld-flow-mask" class="flow-mask-stroke"></path>
+                        <path id="tagesgeld-vermieterkonto-flow-mask" class="flow-mask-stroke"></path>
                       </mask>
                     </defs>
                     <g id="flow-visuals" mask="url(#flow-mask)">
@@ -745,6 +747,11 @@
                       <path id="tagesgeld-depot-flow" class="flow-path"></path><path id="tagesgeld-depot-flow-anim" class="flow-path-animation"></path><g id="tagesgeld-depot-flow-dot"></g>
                       <path id="fixkosten-depot-flow-erase" class="flow-erase"></path>
                       <path id="fixkosten-depot-flow" class="flow-path"></path><path id="fixkosten-depot-flow-anim" class="flow-path-animation"></path><g id="fixkosten-depot-flow-dot"></g>
+                      <!-- Vermieterkonto Flows -->
+                      <path id="vermieterkonto-tagesgeld-flow-erase" class="flow-erase"></path>
+                      <path id="vermieterkonto-tagesgeld-flow" class="flow-path"></path><path id="vermieterkonto-tagesgeld-flow-anim" class="flow-path-animation"></path><g id="vermieterkonto-tagesgeld-flow-dot"></g>
+                      <path id="tagesgeld-vermieterkonto-flow-erase" class="flow-erase"></path>
+                      <path id="tagesgeld-vermieterkonto-flow" class="flow-path"></path><path id="tagesgeld-vermieterkonto-flow-anim" class="flow-path-animation"></path><g id="tagesgeld-vermieterkonto-flow-dot"></g>
                     </g>
                     <path id="schutzschirm-path" class="schutzschirm"></path>
                 </svg>
@@ -1506,7 +1513,7 @@ let fixkostenItems = [
     return map;
     }
 
-    let inputs, basins, flowContainer; // Declare globally, assign in DOMContentLoaded
+    let inputs, basins, flowContainer, flowSvg; // Declare globally, assign in DOMContentLoaded
     const getEl = (id) => document.getElementById(id);
     const formatCurrency = (val) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
     const getMonthlyAmount = (item) => { const a = item.amount || 0; switch (item.interval) { case 'quarterly': return a / 3; case 'annually': return a / 12; default: return a; } };
@@ -1696,13 +1703,45 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const toRightX = toRect.left - containerRect.left + toRect.width * 0.75; // enter right half
             pathData = `M ${fromX},${fromY} C ${fromX + R},${fromY + R} ${toRightX - R},${toY - R} ${toRightX},${toY}`;
         } else if (pathId === 'vermieterkonto-tagesgeld-flow') {
-            // Flow von Vermieterkonto (links) zu Tagesgeld (rechts-oben)
-            // Sanfter Bogen nach rechts-oben
-            fromY += EXIT_OFFSET_Y; // Start von oben (umgekehrte Richtung)
-            const R = 70; // moderate Kurve
-            // Von center nach rechts-oben zu Tagesgeld linke Seite
-            const toTagesgeldX = toRect.left - containerRect.left + toRect.width * 0.3; // linke Seite von Tagesgeld
-            pathData = `M ${fromX},${fromY} C ${fromX + R},${fromY - R} ${toTagesgeldX - R},${toY + R} ${toTagesgeldX},${toY}`;
+            // Flow von Vermieterkonto (rechts oben) zu Tagesgeld (links mitte)
+            // Organische S-Kurve nach rechts-oben (Einnahmen fließen zu)
+            // Start: Rechts oben am Vermieterkonto
+            fromX = fromRect.left - containerRect.left + fromRect.width * 0.85; // Rechte Seite (85%)
+            fromY = fromRect.top - containerRect.top; // Oberkante
+
+            // Ziel: Links-Mitte am Tagesgeld
+            const toTagesgeldX = toRect.left - containerRect.left + toRect.width * 0.2; // Linke Seite (20%)
+            const toTagesgeldY = toRect.top - containerRect.top + toRect.height * 0.5; // Vertikale Mitte
+
+            // Organische Kurve mit zwei Kontrollpunkten
+            const dx = toTagesgeldX - fromX;
+            const dy = toTagesgeldY - fromY;
+            const c1x = fromX + dx * 0.4; // Erster Kontrollpunkt: 40% horizontal
+            const c1y = fromY - 30; // Leicht nach oben
+            const c2x = toTagesgeldX - 40; // Zweiter Kontrollpunkt: vor dem Ziel
+            const c2y = toTagesgeldY - 20; // Leicht über dem Ziel
+
+            pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toTagesgeldX},${toTagesgeldY}`;
+        } else if (pathId === 'tagesgeld-vermieterkonto-flow') {
+            // Flow von Tagesgeld (links mitte) zu Vermieterkonto (rechts oben)
+            // Exakt gleiche Kurve wie vermieterkonto-tagesgeld-flow, nur umgekehrte Richtung
+            // Start: Links-Mitte am Tagesgeld
+            fromX = fromRect.left - containerRect.left + fromRect.width * 0.2; // Linke Seite (20%)
+            fromY = fromRect.top - containerRect.top + fromRect.height * 0.5; // Vertikale Mitte
+
+            // Ziel: Rechts oben am Vermieterkonto
+            const toVermieterkontoX = toRect.left - containerRect.left + toRect.width * 0.85; // Rechte Seite
+            const toVermieterkontoY = toRect.top - containerRect.top; // Oberkante
+
+            // Gleiche organische Kurve wie Vorwärts-Flow (gespiegelt)
+            const dx = toVermieterkontoX - fromX;
+            const dy = toVermieterkontoY - fromY;
+            const c1x = fromX + 40; // Erster Kontrollpunkt: vom Tagesgeld weg
+            const c1y = fromY + 20; // Leicht nach unten
+            const c2x = toVermieterkontoX - dx * 0.4; // Zweiter Kontrollpunkt: vor Vermieterkonto
+            const c2y = toVermieterkontoY - 30; // Leicht über dem Ziel (gespiegelt zu +30 beim Vorwärts-Flow)
+
+            pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toVermieterkontoX},${toVermieterkontoY}`;
         } else {
             // Default smooth S-curve between centers
             fromY -= EXIT_OFFSET_Y;
@@ -1739,7 +1778,14 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         
         valueLabel.textContent = formatCurrency(value);
         if(textLabel) textLabel.textContent = labelText;
-        const midPoint = path.getPointAtLength(path.getTotalLength() / 2);
+
+        // Spezielle Label-Positionierung für Vermieterkonto-Flows (näher am Vermieterkonto)
+        let labelPosition = 0.5; // Standard: 50% (Mitte)
+        if (pathId === 'vermieterkonto-tagesgeld-flow' || pathId === 'tagesgeld-vermieterkonto-flow') {
+            labelPosition = 0.35; // 35% - näher am Vermieterkonto (Start/Ziel)
+        }
+
+        const midPoint = path.getPointAtLength(path.getTotalLength() * labelPosition);
         valueLabel.style.left = `${midPoint.x}px`; valueLabel.style.top = `${midPoint.y}px`;
         if (textLabel) {
             textLabel.style.left = `${midPoint.x}px`;
@@ -1824,12 +1870,13 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const konsumInflow = (currentVariant === 'A')
               ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
               : Math.max(0, income);                // Variante B: Einkommen geht direkt auf Konsum
-            // Vermieterkonto-Saldo berücksichtigen
+            // Vermieterkonto-Saldo berücksichtigen (bidirektional)
             const vermieterData = getVermieterkontoData();
-            const vermieterkontoZufluss = Math.max(0, vermieterData.saldo); // Nur positiver Saldo fließt zu
+            // Positiv: Zufluss zu Tagesgeld | Negativ: Abfluss von Tagesgeld
+            const vermieterkontoFlow = vermieterData.saldo;
 
             const { tagesgeldInflow, depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
-            const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow + vermieterkontoZufluss; // Vermieterkonto-Zufluss hinzufügen
+            const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow + vermieterkontoFlow; // Bidirektionaler Flow
             const totalDepotInflow = depotSparplanTotal + depotOverflow;
             
             let konsumValue;
@@ -1934,13 +1981,24 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             }
             // === END: Flow visibility control ===
 
-            // === Vermieterkonto Flows (independent of variant) ===
-            // Flow: Vermieterkonto -> Tagesgeld (wenn Saldo vorhanden, auch negativ)
-            const showVermieterTagesgeld = bothVisible(basins.vermieterkonto, basins.tagesgeld) && Math.abs(vermieterData.saldo) > 0;
-            if (showVermieterTagesgeld) {
-                drawFlow('vermieterkonto-tagesgeld-flow', basins.vermieterkonto, basins.tagesgeld, Math.abs(vermieterData.saldo), maxFlow, vermieterData.saldo >= 0 ? 'Netto-Mieteinnahmen' : 'Netto-Ausgaben');
+            // === Vermieterkonto Flows (bidirektional) ===
+            // Positiver Cashflow: Vermieterkonto -> Tagesgeld (Einnahmen fließen zu)
+            // Negativer Cashflow: Tagesgeld -> Vermieterkonto (Deckung aus Tagesgeld)
+            const hasVermieterkontoCashflow = bothVisible(basins.vermieterkonto, basins.tagesgeld) && Math.abs(vermieterData.saldo) > 0;
+
+            if (hasVermieterkontoCashflow) {
+                if (vermieterData.saldo > 0) {
+                    // Positiv: Vermieterkonto → Tagesgeld (grüner Flow)
+                    drawFlow('vermieterkonto-tagesgeld-flow', basins.vermieterkonto, basins.tagesgeld, vermieterData.saldo, maxFlow, 'Netto-Mieteinnahmen');
+                    hideFlow('tagesgeld-vermieterkonto-flow'); // Rückfluss ausblenden
+                } else {
+                    // Negativ: Tagesgeld → Vermieterkonto (roter Flow, Deckung)
+                    drawFlow('tagesgeld-vermieterkonto-flow', basins.tagesgeld, basins.vermieterkonto, Math.abs(vermieterData.saldo), maxFlow, 'Deckung Immobilien-Kosten');
+                    hideFlow('vermieterkonto-tagesgeld-flow'); // Vorwärts-Flow ausblenden
+                }
             } else {
                 hideFlow('vermieterkonto-tagesgeld-flow');
+                hideFlow('tagesgeld-vermieterkonto-flow');
             }
 
             // Visuelle Verbindung: Immobilien <-> Vermieterkonto (gestrichelte Linie, immer sichtbar)
@@ -2796,6 +2854,7 @@ function updateFixkostenItem(index, key, value) {
         inputs = { income: getEl('income'), konsumMin: getEl('konsumMin'), konsumLeftover: getEl('konsumLeftover'), tagesgeldCurrent: getEl('tagesgeldCurrent'), tagesgeldLimit: getEl('tagesgeldLimit'), depotCurrent: getEl('depotCurrent'), anlagezeitraum: getEl('anlagezeitraum'), rendite: getEl('rendite') };
         basins = { einkommen: getEl('einkommen-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin'), vermieterkonto: getEl('vermieterkonto-basin'), immobilien: getEl('immobilien-basin') };
         flowContainer = getEl('flow-container');
+        flowSvg = getEl('flow-svg');
         setupBookingPlanner();
 
         // THEME init
