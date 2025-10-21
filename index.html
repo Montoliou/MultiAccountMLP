@@ -753,6 +753,7 @@
                 <div id="konsum-basin" class="account-basin"></div>
                 <div id="tagesgeld-basin" class="account-basin"></div>
                 <button id="depot-basin" class="account-basin cursor-pointer hover:border-purple-500" type="button" aria-controls="depot-modal" aria-haspopup="dialog" onclick="openModal('depot-modal')"></button>
+                <button id="vermieterkonto-basin" class="account-basin cursor-pointer hover:border-blue-500" type="button" aria-controls="vermieterkonto-modal" aria-haspopup="dialog" onclick="openModal('vermieterkonto-modal')" style="height: 100px;"></button>
                 <button id="immobilien-basin" class="account-basin cursor-pointer hover:border-amber-500" type="button" aria-controls="immobilien-modal" aria-haspopup="dialog" onclick="openModal('immobilien-modal')"></button>
             </div>
         </div>
@@ -813,7 +814,7 @@
             <h3 id="immobilien-modal-title" class="text-xl font-bold mb-4">Immobilien-Verwaltung</h3>
             <p id="immobilien-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Verwalte deine Immobilien, Einnahmen und Ausgaben.</p>
 
-            <!-- Grid für 4 Kategorien -->
+            <!-- Grid für 2 Kategorien -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- Vermögen (Immobilienwert) -->
@@ -844,21 +845,49 @@
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Zusammenfassung -->
+            <div class="mt-6 bg-gray-900 p-4 rounded-lg">
+                <div class="text-center">
+                    <p class="text-sm text-gray-400 mb-2">Nettovermögen (Wert - Darlehen)</p>
+                    <p id="immo-nettovermoegen" class="text-3xl font-bold text-green-400">0 €</p>
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-blue-900 bg-opacity-30 rounded-lg border border-blue-500">
+                <p class="text-sm text-blue-300">💡 <strong>Tipp:</strong> Einnahmen und Ausgaben werden im <strong>Vermieterkonto</strong> verwaltet.</p>
+            </div>
+
+            <button type="button" onclick="saveImmobilien()" class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern &amp; Schließen</button>
+        </div>
+    </div>
+
+    <!-- Vermieterkonto Modal -->
+    <div id="vermieterkonto-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="vermieterkonto-modal-title">
+        <div class="bg-gray-800 w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+            <button type="button" onclick="closeModal('vermieterkonto-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Vermieterkonto schließen">&times;</button>
+            <h3 id="vermieterkonto-modal-title" class="text-xl font-bold mb-4">MLP Vermieterkonto</h3>
+            <p class="text-sm text-gray-400 -mt-3 mb-4">Alle Einnahmen und Ausgaben deiner Immobilien laufen über dieses kostenlose Konto.</p>
+
+            <!-- Grid für 2 Kategorien -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
                 <!-- Monatliche Einnahmen -->
                 <div class="bg-gray-900 p-4 rounded-lg">
-                    <h4 class="text-lg font-bold mb-3 text-blue-400">Monatliche Einnahmen</h4>
+                    <h4 class="text-lg font-bold mb-3 text-green-400">Monatliche Einnahmen</h4>
                     <div class="space-y-3">
                         <div>
                             <label class="text-sm text-gray-400 block mb-1">Mieteinnahmen</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-miete" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Monatliche Miete">
+                                <input type="number" id="vk-miete" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Monatliche Miete">
                                 <span class="text-gray-400">€ / Monat</span>
                             </div>
                         </div>
                         <div>
                             <label class="text-sm text-gray-400 block mb-1">Sonstige Einnahmen</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-sonstige-einnahmen" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. Stellplatz">
+                                <input type="number" id="vk-sonstige-einnahmen" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. Stellplatz, Garage">
                                 <span class="text-gray-400">€ / Monat</span>
                             </div>
                         </div>
@@ -867,26 +896,26 @@
 
                 <!-- Monatliche Ausgaben -->
                 <div class="bg-gray-900 p-4 rounded-lg">
-                    <h4 class="text-lg font-bold mb-3 text-yellow-400">Monatliche Ausgaben</h4>
+                    <h4 class="text-lg font-bold mb-3 text-red-400">Monatliche Ausgaben</h4>
                     <div class="space-y-3">
                         <div>
                             <label class="text-sm text-gray-400 block mb-1">Darlehensrate</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-rate" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Monatliche Rate">
+                                <input type="number" id="vk-rate" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Monatliche Rate">
                                 <span class="text-gray-400">€ / Monat</span>
                             </div>
                         </div>
                         <div>
                             <label class="text-sm text-gray-400 block mb-1">Instandhaltung</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-instandhaltung" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Rücklagen">
+                                <input type="number" id="vk-instandhaltung" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Rücklagen">
                                 <span class="text-gray-400">€ / Monat</span>
                             </div>
                         </div>
                         <div>
                             <label class="text-sm text-gray-400 block mb-1">Steuern & Nebenkosten</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-steuern" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Grundsteuer, Versicherung">
+                                <input type="number" id="vk-steuern" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Grundsteuer, Versicherung">
                                 <span class="text-gray-400">€ / Monat</span>
                             </div>
                         </div>
@@ -897,19 +926,23 @@
 
             <!-- Zusammenfassung -->
             <div class="mt-6 bg-gray-900 p-4 rounded-lg">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <p class="text-sm text-gray-400">Nettovermögen (Wert - Darlehen)</p>
-                        <p id="immo-nettovermoegen" class="text-2xl font-bold text-green-400">0 €</p>
+                        <p class="text-sm text-gray-400">Einnahmen</p>
+                        <p id="vk-einnahmen-total" class="text-xl font-bold text-green-400">0 €</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-400">Monatlicher Cashflow</p>
-                        <p id="immo-cashflow" class="text-2xl font-bold text-blue-400">0 €</p>
+                        <p class="text-sm text-gray-400">Ausgaben</p>
+                        <p id="vk-ausgaben-total" class="text-xl font-bold text-red-400">0 €</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-400">Monatlicher Saldo</p>
+                        <p id="vk-saldo" class="text-2xl font-bold text-blue-400">0 €</p>
                     </div>
                 </div>
             </div>
 
-            <button type="button" onclick="saveImmobilien()" class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern &amp; Schließen</button>
+            <button type="button" onclick="saveVermieterkonto()" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Speichern &amp; Schließen</button>
         </div>
     </div>
 
@@ -1341,6 +1374,7 @@ let fixkostenItems = [
         show(basins.tagesgeld, consultationStep >= 3);
         show(basins.depot, consultationStep >= 4);
         show(basins.immobilien, consultationStep >= 6); // Step 6: Immobilien
+        show(basins.vermieterkonto, consultationStep >= 6); // Step 6: Vermieterkonto (zusammen mit Immobilien)
       } else {
         show(secIncome, true);
         show(secKonsum, true); // B: income + konsum from step 1
@@ -1353,6 +1387,7 @@ let fixkostenItems = [
         show(basins.tagesgeld, consultationStep >= 3);
         show(basins.depot, consultationStep >= 4);
         show(basins.immobilien, consultationStep >= 6); // Step 6: Immobilien
+        show(basins.vermieterkonto, consultationStep >= 6); // Step 6: Vermieterkonto (zusammen mit Immobilien)
       }
     }
     
@@ -1517,10 +1552,15 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if (basins.immobilien) {
             basins.immobilien.style.width = `${immoWidth}px`;
         }
+        if (basins.vermieterkonto) {
+            basins.vermieterkonto.style.width = `${immoWidth}px`;
+            basins.vermieterkonto.style.height = '100px'; // Kompakter als normale Basins
+        }
 
         // === NEUE ZENTRIERUNG: Immobilien & Depot bilden Außenrahmen ===
         // Berechne Gesamtbreite des Außenrahmens
         const outerFrameWidth = immoWidth + gapBetweenDepotImmo + depotWidth; // 220 + 50 + 440 = 710px
+        const vermieterkontoOffset = 140; // Vertikaler Abstand zwischen Vermieterkonto und Immobilien (erhöht von 90 auf 140)
 
         // Linker Rand des Außenrahmens (zentriert im Container)
         const outerFrameLeft = (containerWidth - outerFrameWidth) / 2;
@@ -1532,24 +1572,28 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if (currentVariant === 'B') {
             // Variante B: Einkommen -> Konsum -> Fixkosten -> Tagesgeld -> Depot
             positions = {
-                einkommen:   { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
-                konsum:      { top: v_gap,      left: newCenterX - basins.konsum.offsetWidth - h_gap_side },
-                fixkosten:   { top: v_gap * 2,  left: newCenterX + h_gap_side },
-                tagesgeld:   { top: v_gap * 3,  left: newCenterX - basins.tagesgeld.offsetWidth / 2 },
-                // GETAUSCHT: Immobilien links, Depot rechts
-                immobilien:  { top: v_gap * 4.0, left: outerFrameLeft },
-                depot:       { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
+                einkommen:      { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
+                konsum:         { top: v_gap,      left: newCenterX - basins.konsum.offsetWidth - h_gap_side },
+                fixkosten:      { top: v_gap * 2,  left: newCenterX + h_gap_side },
+                tagesgeld:      { top: v_gap * 3,  left: newCenterX - basins.tagesgeld.offsetWidth / 2 + 40 }, // 40px nach rechts
+                // DEPOT und IMMOBILIEN: Gleiche Unterkante (top position)
+                depot:          { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
+                immobilien:     { top: v_gap * 4.0, left: outerFrameLeft },
+                // VERMIETERKONTO: 90px ÜBER Immobilien
+                vermieterkonto: { top: v_gap * 4.0 - vermieterkontoOffset, left: outerFrameLeft },
             };
         } else { // Variante A
             // Variante A: Einkommen -> Fixkosten -> Konsum -> Tagesgeld -> Depot
             positions = {
-                einkommen:   { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
-                fixkosten:   { top: v_gap,      left: newCenterX + h_gap_side },
-                konsum:      { top: v_gap * 2,  left: newCenterX - basins.konsum.offsetWidth - h_gap_side },
-                tagesgeld:   { top: v_gap * 3,  left: newCenterX - basins.tagesgeld.offsetWidth / 2 },
-                // GETAUSCHT: Immobilien links, Depot rechts
-                immobilien:  { top: v_gap * 4.0, left: outerFrameLeft },
-                depot:       { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
+                einkommen:      { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
+                fixkosten:      { top: v_gap,      left: newCenterX + h_gap_side },
+                konsum:         { top: v_gap * 2,  left: newCenterX - basins.konsum.offsetWidth - h_gap_side },
+                tagesgeld:      { top: v_gap * 3,  left: newCenterX - basins.tagesgeld.offsetWidth / 2 + 40 }, // 40px nach rechts
+                // DEPOT und IMMOBILIEN: Gleiche Unterkante (top position)
+                depot:          { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
+                immobilien:     { top: v_gap * 4.0, left: outerFrameLeft },
+                // VERMIETERKONTO: 90px ÜBER Immobilien
+                vermieterkonto: { top: v_gap * 4.0 - vermieterkontoOffset, left: outerFrameLeft },
             };
         }
 
@@ -1651,6 +1695,14 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             fromY -= EXIT_OFFSET_Y;
             const toRightX = toRect.left - containerRect.left + toRect.width * 0.75; // enter right half
             pathData = `M ${fromX},${fromY} C ${fromX + R},${fromY + R} ${toRightX - R},${toY - R} ${toRightX},${toY}`;
+        } else if (pathId === 'vermieterkonto-tagesgeld-flow') {
+            // Flow von Vermieterkonto (links) zu Tagesgeld (rechts-oben)
+            // Sanfter Bogen nach rechts-oben
+            fromY += EXIT_OFFSET_Y; // Start von oben (umgekehrte Richtung)
+            const R = 70; // moderate Kurve
+            // Von center nach rechts-oben zu Tagesgeld linke Seite
+            const toTagesgeldX = toRect.left - containerRect.left + toRect.width * 0.3; // linke Seite von Tagesgeld
+            pathData = `M ${fromX},${fromY} C ${fromX + R},${fromY - R} ${toTagesgeldX - R},${toY + R} ${toTagesgeldX},${toY}`;
         } else {
             // Default smooth S-curve between centers
             fromY -= EXIT_OFFSET_Y;
@@ -1720,6 +1772,35 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if (dotGroup)  dotGroup.innerHTML = '';
     }
 
+    function drawConnectionLine(lineId, fromBasin, toBasin) {
+        // Zeichnet eine gestrichelte vertikale Verbindungslinie (kein Flow, nur Visualisierung)
+        if (!fromBasin || !toBasin) return;
+
+        let line = getEl(lineId);
+        if (!line) {
+            line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            line.id = lineId;
+            line.setAttribute('stroke', '#60a5fa'); // blue-400
+            line.setAttribute('stroke-width', '2');
+            line.setAttribute('stroke-dasharray', '8,4'); // gestrichelt
+            line.setAttribute('fill', 'none');
+            line.setAttribute('opacity', '0.5');
+            flowSvg.appendChild(line);
+        }
+
+        const fromRect = fromBasin.getBoundingClientRect();
+        const toRect = toBasin.getBoundingClientRect();
+        const containerRect = flowContainer.getBoundingClientRect();
+
+        // Vertikale Linie von der Mitte des oberen Basins zur Mitte des unteren Basins
+        const centerX = fromRect.left - containerRect.left + fromRect.width / 2;
+        const fromY = fromRect.bottom - containerRect.top;
+        const toY = toRect.top - containerRect.top;
+
+        const pathData = `M ${centerX},${fromY} L ${centerX},${toY}`;
+        line.setAttribute('d', pathData);
+    }
+
     function drawSchutzschirm(fromBasin, toBasin) {
         if (!fromBasin || !toBasin) return;
         const path = getEl('schutzschirm-path');
@@ -1743,8 +1824,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const konsumInflow = (currentVariant === 'A')
               ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
               : Math.max(0, income);                // Variante B: Einkommen geht direkt auf Konsum
+            // Vermieterkonto-Saldo berücksichtigen
+            const vermieterData = getVermieterkontoData();
+            const vermieterkontoZufluss = Math.max(0, vermieterData.saldo); // Nur positiver Saldo fließt zu
+
             const { tagesgeldInflow, depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
-            const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow;
+            const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow + vermieterkontoZufluss; // Vermieterkonto-Zufluss hinzufügen
             const totalDepotInflow = depotSparplanTotal + depotOverflow;
             
             let konsumValue;
@@ -1768,15 +1853,29 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             renderBasin(basins.tagesgeld, 'Tagesgeldkonto', formatCurrency(finalTagesgeld), '<svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', `Zufluss: ${formatCurrency(tagesgeldInflow)}`, { current: finalTagesgeld, min: 0, limit: tagesgeldLimit });
             renderBasin(basins.depot, 'Vermögensaufbau', `+ ${formatCurrency(totalDepotInflow)}`, '', '(Klick zum Bearbeiten)', {}, createGrowthChartSVG());
 
-            // Immobilien-Basin rendern
-            const immoNettovermoegen = immobilienData.wert - immobilienData.darlehen;
-            const immoCashflow = (immobilienData.miete + immobilienData.sonstigeEinnahmen) - (immobilienData.rate + immobilienData.instandhaltung + immobilienData.steuern);
+            // Vermieterkonto-Basin rendern (über Immobilien) - vermieterData wurde bereits oben berechnet
+            renderBasin(
+                basins.vermieterkonto,
+                'MLP Vermieterkonto',
+                formatCurrency(vermieterData.saldo),
+                '',
+                `Ein: ${formatCurrency(vermieterData.einnahmen)} | Aus: ${formatCurrency(vermieterData.ausgaben)}`,
+                {},
+                createAccountSVG()
+            );
+
+            // Immobilien-Basin rendern (Summe aller Immobilien)
+            const gesamtwert = immobilienData.reduce((sum, immo) => sum + (immo.wert || 0), 0);
+            const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
+            const immoNettovermoegen = gesamtwert - gesamtdarlehen;
+            const anzahlImmobilien = immobilienData.length;
+
             renderBasin(
                 basins.immobilien,
                 'Immobilien',
                 formatCurrency(immoNettovermoegen),
                 '',
-                `Cashflow: ${formatCurrency(immoCashflow)} / Monat`,
+                anzahlImmobilien > 0 ? `${anzahlImmobilien} Immobilie${anzahlImmobilien > 1 ? 'n' : ''}` : '(Klick zum Bearbeiten)',
                 {},
                 createHouseSVG()
             );
@@ -1834,6 +1933,24 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 else             hideFlow('fixkosten-depot-flow');
             }
             // === END: Flow visibility control ===
+
+            // === Vermieterkonto Flows (independent of variant) ===
+            // Flow: Vermieterkonto -> Tagesgeld (wenn Saldo vorhanden, auch negativ)
+            const showVermieterTagesgeld = bothVisible(basins.vermieterkonto, basins.tagesgeld) && Math.abs(vermieterData.saldo) > 0;
+            if (showVermieterTagesgeld) {
+                drawFlow('vermieterkonto-tagesgeld-flow', basins.vermieterkonto, basins.tagesgeld, Math.abs(vermieterData.saldo), maxFlow, vermieterData.saldo >= 0 ? 'Netto-Mieteinnahmen' : 'Netto-Ausgaben');
+            } else {
+                hideFlow('vermieterkonto-tagesgeld-flow');
+            }
+
+            // Visuelle Verbindung: Immobilien <-> Vermieterkonto (gestrichelte Linie, immer sichtbar)
+            const showImmoVermieterbindung = bothVisible(basins.immobilien, basins.vermieterkonto);
+            if (showImmoVermieterbindung) {
+                drawConnectionLine('immobilien-vermieterkonto-connection', basins.immobilien, basins.vermieterkonto);
+            } else {
+                hideFlow('immobilien-vermieterkonto-connection');
+            }
+
             drawSchutzschirm(basins.tagesgeld, basins.depot);
             // --- Shield visibility based on available liquidity on Tagesgeld, scaled by liquidity level ---
             const shield = getEl('schutzschirm-path');
@@ -2025,6 +2142,21 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         </svg>`;
     }
 
+    // SVG für Vermieterkonto (Verrechnungskonto-Icon)
+    function createAccountSVG() {
+        return `<svg viewBox="0 0 100 60" class="w-16 h-12 mb-1">
+            <!-- Konto-Karte -->
+            <rect x="10" y="15" width="80" height="30" rx="4" fill="#3b82f6" opacity="0.85" stroke="#60a5fa" stroke-width="2"/>
+            <!-- Magnetstreifen -->
+            <rect x="10" y="25" width="80" height="8" fill="#1e3a8a" opacity="0.9"/>
+            <!-- Chip -->
+            <rect x="20" y="35" width="12" height="10" rx="2" fill="#fbbf24" opacity="0.8"/>
+            <!-- Flow-Pfeile (rein/raus) -->
+            <path d="M 5 30 L 10 30" stroke="#10b981" stroke-width="2" opacity="0.7"/>
+            <path d="M 90 30 L 95 30" stroke="#ef4444" stroke-width="2" opacity="0.7"/>
+        </svg>`;
+    }
+
     function calculateOverflow(inflow, current, limit) { if (limit <= 0) return { tagesgeldInflow: inflow, depotOverflow: 0 }; const potential = current + inflow; if (potential <= limit) return { tagesgeldInflow: inflow, depotOverflow: 0 }; const overflow = potential - limit; return { tagesgeldInflow: inflow - overflow, depotOverflow: overflow }; }
     const modalFocusableSelectors = 'a[href], area[href], button:not([disabled]), input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])';
     const modalFocusState = { activeModal: null, lastFocusedElement: null };
@@ -2146,9 +2278,13 @@ function updateFixkostenItem(index, key, value) {
 
     // === IMMOBILIEN FUNCTIONS ===
     // Immobilien-Daten Objekt (wird in localStorage gespeichert)
-    let immobilienData = {
-        wert: 0,                    // Immobilienwert
-        darlehen: 0,                // Restdarlehen
+    // === IMMOBILIEN-DATENMODELL ===
+    // Liste von Immobilien mit Wert und Darlehen
+    let immobilienData = [];
+
+    // === VERMIETERKONTO-DATENMODELL ===
+    // Separates Datenmodell für Einnahmen und Ausgaben
+    let vermieterkontoData = {
         miete: 0,                   // Monatliche Mieteinnahmen
         sonstigeEinnahmen: 0,       // Sonstige monatliche Einnahmen
         rate: 0,                    // Monatliche Darlehensrate
@@ -2156,12 +2292,43 @@ function updateFixkostenItem(index, key, value) {
         steuern: 0                  // Monatliche Steuern & Nebenkosten
     };
 
+    function getVermieterkontoData() {
+        const einnahmen = vermieterkontoData.miete + vermieterkontoData.sonstigeEinnahmen;
+        const ausgaben = vermieterkontoData.rate + vermieterkontoData.instandhaltung + vermieterkontoData.steuern;
+        const saldo = einnahmen - ausgaben;
+
+        // Berechne Gesamtdarlehen aus allen Immobilien
+        const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
+
+        return {
+            einnahmen,      // Gesamt-Einnahmen
+            ausgaben,       // Gesamt-Ausgaben
+            saldo,          // Netto-Cashflow (kann positiv oder negativ sein)
+            // Zur Info: Wie viel davon ist Tilgung? (später für Tooltip)
+            tilgung: calculateTilgungsanteil(vermieterkontoData.rate, gesamtdarlehen)
+        };
+    }
+
+    // Hilfsfunktion: Berechnet ungefähren Tilgungsanteil (vereinfacht: 1-2% Zinsen angenommen)
+    function calculateTilgungsanteil(rate, restdarlehen) {
+        if (restdarlehen === 0 || rate === 0) return 0;
+        // Annahme: 2% Zinsen (kann später präziser gemacht werden)
+        const geschaetzterZins = restdarlehen * 0.02 / 12;
+        return Math.max(0, rate - geschaetzterZins);
+    }
+
     // Lädt Immobilien-Daten aus localStorage
     function loadImmobilienData() {
         const saved = localStorage.getItem('immobilienData');
         if (saved) {
             try {
-                immobilienData = JSON.parse(saved);
+                const parsed = JSON.parse(saved);
+                // Kompatibilität: Altes Objekt-Format in Array konvertieren
+                if (!Array.isArray(parsed)) {
+                    immobilienData = [{ wert: parsed.wert || 0, darlehen: parsed.darlehen || 0 }];
+                } else {
+                    immobilienData = parsed;
+                }
             } catch (e) {
                 console.warn('Fehler beim Laden der Immobilien-Daten', e);
             }
@@ -2172,53 +2339,45 @@ function updateFixkostenItem(index, key, value) {
 
     // Aktualisiert die Eingabefelder im Modal mit den gespeicherten Werten
     function updateImmobilienInputs() {
-        const fields = ['wert', 'darlehen', 'miete', 'sonstigeEinnahmen', 'rate', 'instandhaltung', 'steuern'];
-        fields.forEach(field => {
-            const input = getEl('immo-' + field.toLowerCase().replace(/([A-Z])/g, '-$1').toLowerCase());
-            if (input) input.value = immobilienData[field] || 0;
-        });
+        // Quick-Fix: Zeige erste Immobilie im Modal
+        const immo = immobilienData[0] || { wert: 0, darlehen: 0 };
+
+        if (getEl('immo-wert')) getEl('immo-wert').value = immo.wert || 0;
+        if (getEl('immo-darlehen')) getEl('immo-darlehen').value = immo.darlehen || 0;
     }
 
-    // Berechnet und zeigt Nettovermögen und Cashflow an
+    // Berechnet und zeigt Nettovermögen an (Cashflow jetzt im Vermieterkonto)
     function updateImmobilienSummary() {
         const wert = parseFloat(getEl('immo-wert')?.value || 0);
         const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
-        const miete = parseFloat(getEl('immo-miete')?.value || 0);
-        const sonstigeEinnahmen = parseFloat(getEl('immo-sonstige-einnahmen')?.value || 0);
-        const rate = parseFloat(getEl('immo-rate')?.value || 0);
-        const instandhaltung = parseFloat(getEl('immo-instandhaltung')?.value || 0);
-        const steuern = parseFloat(getEl('immo-steuern')?.value || 0);
-
         const nettovermoegen = wert - darlehen;
-        const einnahmen = miete + sonstigeEinnahmen;
-        const ausgaben = rate + instandhaltung + steuern;
-        const cashflow = einnahmen - ausgaben;
 
         const nettoEl = getEl('immo-nettovermoegen');
-        const cashflowEl = getEl('immo-cashflow');
 
         if (nettoEl) {
             nettoEl.textContent = formatCurrency(nettovermoegen);
             nettoEl.className = `text-2xl font-bold ${nettovermoegen >= 0 ? 'text-green-400' : 'text-red-400'}`;
         }
 
-        if (cashflowEl) {
-            cashflowEl.textContent = formatCurrency(cashflow);
-            cashflowEl.className = `text-2xl font-bold ${cashflow >= 0 ? 'text-blue-400' : 'text-red-400'}`;
+        // Cashflow-Element ausblenden (jetzt im Vermieterkonto)
+        const cashflowContainer = getEl('immo-cashflow')?.parentElement;
+        if (cashflowContainer) {
+            cashflowContainer.style.display = 'none';
         }
     }
 
     // Speichert Immobilien-Daten und schließt Modal
     function saveImmobilien() {
-        immobilienData = {
-            wert: parseFloat(getEl('immo-wert')?.value || 0),
-            darlehen: parseFloat(getEl('immo-darlehen')?.value || 0),
-            miete: parseFloat(getEl('immo-miete')?.value || 0),
-            sonstigeEinnahmen: parseFloat(getEl('immo-sonstige-einnahmen')?.value || 0),
-            rate: parseFloat(getEl('immo-rate')?.value || 0),
-            instandhaltung: parseFloat(getEl('immo-instandhaltung')?.value || 0),
-            steuern: parseFloat(getEl('immo-steuern')?.value || 0)
-        };
+        // Quick-Fix: Erstelle/Update erste Immobilie aus Modal-Daten
+        // TODO: Später erweitern für mehrere Immobilien
+        const wert = parseFloat(getEl('immo-wert')?.value || 0);
+        const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+
+        if (immobilienData.length === 0) {
+            immobilienData.push({ wert, darlehen });
+        } else {
+            immobilienData[0] = { wert, darlehen };
+        }
 
         localStorage.setItem('immobilienData', JSON.stringify(immobilienData));
         calculateAndUpdate();
@@ -2237,6 +2396,80 @@ function updateFixkostenItem(index, key, value) {
     }
 
     // === END IMMOBILIEN FUNCTIONS ===
+
+    // === VERMIETERKONTO FUNCTIONS ===
+    function saveVermieterkonto() {
+        vermieterkontoData = {
+            miete: parseFloat(getEl('vk-miete')?.value || 0),
+            sonstigeEinnahmen: parseFloat(getEl('vk-sonstige-einnahmen')?.value || 0),
+            rate: parseFloat(getEl('vk-rate')?.value || 0),
+            instandhaltung: parseFloat(getEl('vk-instandhaltung')?.value || 0),
+            steuern: parseFloat(getEl('vk-steuern')?.value || 0)
+        };
+
+        localStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
+        calculateAndUpdate();
+        closeModal('vermieterkonto-modal');
+    }
+
+    // Event Listener für Vermieterkonto-Inputs (Live-Update der Zusammenfassung)
+    function setupVermieterkontoListeners() {
+        const fields = ['miete', 'sonstige-einnahmen', 'rate', 'instandhaltung', 'steuern'];
+        fields.forEach(field => {
+            const input = getEl('vk-' + field);
+            if (input) {
+                input.addEventListener('input', updateVermieterkontoSummary);
+            }
+        });
+    }
+
+    function updateVermieterkontoSummary() {
+        const miete = parseFloat(getEl('vk-miete')?.value || 0);
+        const sonstigeEinnahmen = parseFloat(getEl('vk-sonstige-einnahmen')?.value || 0);
+        const rate = parseFloat(getEl('vk-rate')?.value || 0);
+        const instandhaltung = parseFloat(getEl('vk-instandhaltung')?.value || 0);
+        const steuern = parseFloat(getEl('vk-steuern')?.value || 0);
+
+        const einnahmen = miete + sonstigeEinnahmen;
+        const ausgaben = rate + instandhaltung + steuern;
+        const saldo = einnahmen - ausgaben;
+
+        // Zusammenfassung aktualisieren
+        const einnahmenEl = getEl('vk-einnahmen-total');
+        const ausgabenEl = getEl('vk-ausgaben-total');
+        const saldoEl = getEl('vk-saldo');
+
+        if (einnahmenEl) einnahmenEl.textContent = formatCurrency(einnahmen);
+        if (ausgabenEl) ausgabenEl.textContent = formatCurrency(ausgaben);
+        if (saldoEl) {
+            saldoEl.textContent = formatCurrency(saldo);
+            // Farbe je nach Saldo
+            saldoEl.className = saldo >= 0
+                ? 'text-2xl font-bold text-green-400'
+                : 'text-2xl font-bold text-red-400';
+        }
+    }
+
+    function loadVermieterkontoData() {
+        const saved = localStorage.getItem('vermieterkontoData');
+        if (saved) {
+            try {
+                vermieterkontoData = JSON.parse(saved);
+            } catch (e) {
+                console.error('Failed to load vermieterkonto data:', e);
+            }
+        }
+
+        // Felder im Modal befüllen
+        if (getEl('vk-miete')) getEl('vk-miete').value = vermieterkontoData.miete || 0;
+        if (getEl('vk-sonstige-einnahmen')) getEl('vk-sonstige-einnahmen').value = vermieterkontoData.sonstigeEinnahmen || 0;
+        if (getEl('vk-rate')) getEl('vk-rate').value = vermieterkontoData.rate || 0;
+        if (getEl('vk-instandhaltung')) getEl('vk-instandhaltung').value = vermieterkontoData.instandhaltung || 0;
+        if (getEl('vk-steuern')) getEl('vk-steuern').value = vermieterkontoData.steuern || 0;
+
+        updateVermieterkontoSummary();
+    }
+    // === END VERMIETERKONTO FUNCTIONS ===
 
     // --- Helpers: Export current SVG flow and Chart.js chart as images ---
     async function svgToPngDataUrl(svgElement, scale = 2, bg = '#ffffff') {
@@ -2561,7 +2794,7 @@ function updateFixkostenItem(index, key, value) {
     // INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
         inputs = { income: getEl('income'), konsumMin: getEl('konsumMin'), konsumLeftover: getEl('konsumLeftover'), tagesgeldCurrent: getEl('tagesgeldCurrent'), tagesgeldLimit: getEl('tagesgeldLimit'), depotCurrent: getEl('depotCurrent'), anlagezeitraum: getEl('anlagezeitraum'), rendite: getEl('rendite') };
-        basins = { einkommen: getEl('einkommen-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin'), immobilien: getEl('immobilien-basin') };
+        basins = { einkommen: getEl('einkommen-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin'), vermieterkonto: getEl('vermieterkonto-basin'), immobilien: getEl('immobilien-basin') };
         flowContainer = getEl('flow-container');
         setupBookingPlanner();
 
@@ -2625,8 +2858,10 @@ function updateFixkostenItem(index, key, value) {
         setTimeout(() => {
             renderFixkostenList();
             renderDepotList();
-            loadImmobilienData();       // Immobilien-Daten laden
-            setupImmobilienListeners(); // Event-Listener für Immobilien-Inputs
+            loadImmobilienData();        // Immobilien-Daten laden
+            setupImmobilienListeners();  // Event-Listener für Immobilien-Inputs
+            loadVermieterkontoData();    // Vermieterkonto-Daten laden
+            setupVermieterkontoListeners(); // Event-Listener für Vermieterkonto-Inputs
             setVariantUI();
             updateRenditeSuggestions(parseInt(inputs.anlagezeitraum.value, 10));
             calculateAndUpdate();
