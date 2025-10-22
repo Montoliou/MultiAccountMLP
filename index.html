@@ -124,6 +124,87 @@
         /* Base background/text via CSS vars (keine Änderung an Tailwind nötig) */
         body { background: var(--bg); color: var(--fg); }
 
+        /* === HORIZONTAL GRADIENT ZONES === */
+        .gradient-zone {
+            position: absolute;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            z-index: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        /* Ebene 1: Einkommen (Quelle) - Hellstes Blau */
+        .gradient-zone-1 {
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 47, 108, 0.04) 0%,
+                rgba(30, 58, 95, 0.06) 100%
+            );
+        }
+
+        /* Ebene 2: Girokonten (Verteilung) - Mittleres Blau */
+        .gradient-zone-2 {
+            background: linear-gradient(
+                to bottom,
+                rgba(30, 58, 95, 0.06) 0%,
+                rgba(42, 74, 111, 0.08) 100%
+            );
+        }
+
+        /* Ebene 3: Liquidität (Puffer) - Dunkleres Blau */
+        .gradient-zone-3 {
+            background: linear-gradient(
+                to bottom,
+                rgba(42, 74, 111, 0.08) 0%,
+                rgba(30, 41, 59, 0.10) 100%
+            );
+        }
+
+        /* Ebene 4: Vermögensaufbau (Langfristig) - Gold-Akzent */
+        .gradient-zone-4 {
+            background: linear-gradient(
+                to bottom,
+                rgba(30, 41, 59, 0.10) 0%,
+                rgba(189, 161, 119, 0.05) 50%,
+                rgba(155, 132, 97, 0.08) 100%
+            );
+        }
+
+        /* Light Theme Anpassung */
+        .theme-light .gradient-zone-1 {
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 47, 108, 0.02) 0%,
+                rgba(60, 106, 163, 0.03) 100%
+            );
+        }
+
+        .theme-light .gradient-zone-2 {
+            background: linear-gradient(
+                to bottom,
+                rgba(60, 106, 163, 0.03) 0%,
+                rgba(0, 47, 108, 0.04) 100%
+            );
+        }
+
+        .theme-light .gradient-zone-3 {
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 47, 108, 0.04) 0%,
+                rgba(0, 47, 108, 0.05) 100%
+            );
+        }
+
+        .theme-light .gradient-zone-4 {
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 47, 108, 0.05) 0%,
+                rgba(189, 161, 119, 0.04) 50%,
+                rgba(189, 161, 119, 0.06) 100%
+            );
+        }
+
         /* === SESSION MODAL OVERLAY (v1.2.0) === */
         .modal-overlay {
             position: fixed;
@@ -820,6 +901,13 @@
                     </g>
                     <path id="schutzschirm-path" class="schutzschirm"></path>
                 </svg>
+
+                <!-- Horizontal Gradient Zones für visuelle Ebenen-Trennung -->
+                <div class="gradient-zone gradient-zone-1" style="top: 0; height: 240px;"></div>
+                <div class="gradient-zone gradient-zone-2" style="top: 240px; height: 480px;"></div>
+                <div class="gradient-zone gradient-zone-3" style="top: 720px; height: 240px;"></div>
+                <div class="gradient-zone gradient-zone-4" style="top: 960px; height: 300px;"></div>
+
                 <div id="einkommen-basin" class="account-basin"></div>
                 <button id="fixkosten-basin" class="account-basin cursor-pointer hover:border-indigo-500" type="button" aria-controls="fixkosten-modal" aria-haspopup="dialog" onclick="openModal('fixkosten-modal')"></button>
                 <div id="konsum-basin" class="account-basin"></div>
