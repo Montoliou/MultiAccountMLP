@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.1.0
+**Aktuelle Version:** 1.2.0-dev
 **Ziel-Version:** 2.0.0
 **Datum:** Oktober 2025
 

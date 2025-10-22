@@ -1847,6 +1847,70 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         line.setAttribute('d', pathData);
     }
 
+    function drawDeficitLine(lineId, fromBasin, toBasin, amount) {
+        // Zeichnet eine gestrichelte rote Deckungsbedarfs-Linie (Fixkosten → Vermieterkonto bei Defizit)
+        if (!fromBasin || !toBasin) return;
+
+        let line = getEl(lineId);
+        let label = getEl(`${lineId}-label`);
+
+        if (!line) {
+            line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            line.id = lineId;
+            line.setAttribute('stroke', '#ef4444'); // red-500
+            line.setAttribute('stroke-width', '3');
+            line.setAttribute('stroke-dasharray', '10,5'); // dicker gestrichelt
+            line.setAttribute('fill', 'none');
+            line.setAttribute('opacity', '0.7');
+            flowSvg.appendChild(line);
+        }
+
+        if (!label) {
+            label = document.createElement('div');
+            label.id = `${lineId}-label`;
+            label.className = 'flow-label';
+            label.style.backgroundColor = '#7f1d1d'; // red-900
+            label.style.borderColor = '#ef4444'; // red-500
+            flowContainer.appendChild(label);
+        }
+
+        const fromRect = fromBasin.getBoundingClientRect();
+        const toRect = toBasin.getBoundingClientRect();
+        const containerRect = flowContainer.getBoundingClientRect();
+
+        // Von links unten Fixkosten zu rechts oben Vermieterkonto
+        const fromX = fromRect.left - containerRect.left + fromRect.width * 0.15; // Links am Fixkosten
+        const fromY = fromRect.bottom - containerRect.top;
+        const toX = toRect.left - containerRect.left + toRect.width * 0.5; // Mitte Vermieterkonto
+        const toY = toRect.top - containerRect.top;
+
+        // Organische Kurve nach links-unten
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        const c1x = fromX - 30;
+        const c1y = fromY + dy * 0.3;
+        const c2x = toX + 30;
+        const c2y = toY - 30;
+
+        const pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toX},${toY}`;
+        line.setAttribute('d', pathData);
+
+        // Label positionieren
+        label.textContent = `Deckungsbedarf: ${formatCurrency(amount)}`;
+        const midX = (fromX + toX) / 2 - 20; // Leicht links
+        const midY = (fromY + toY) / 2;
+        label.style.left = `${midX}px`;
+        label.style.top = `${midY}px`;
+        label.style.display = 'block';
+    }
+
+    function hideDeficitLine(lineId) {
+        const line = getEl(lineId);
+        const label = getEl(`${lineId}-label`);
+        if (line) line.style.opacity = '0';
+        if (label) label.style.display = 'none';
+    }
+
     function drawSchutzschirm(fromBasin, toBasin) {
         if (!fromBasin || !toBasin) return;
         const path = getEl('schutzschirm-path');
@@ -1870,13 +1934,13 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const konsumInflow = (currentVariant === 'A')
               ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
               : Math.max(0, income);                // Variante B: Einkommen geht direkt auf Konsum
-            // Vermieterkonto-Saldo berücksichtigen (bidirektional)
+            // Vermieterkonto-Saldo berücksichtigen
             const vermieterData = getVermieterkontoData();
-            // Positiv: Zufluss zu Tagesgeld | Negativ: Abfluss von Tagesgeld
-            const vermieterkontoFlow = vermieterData.saldo;
+            // Nur positiver Saldo fließt zu Tagesgeld (negativ wird von Fixkosten gedeckt)
+            const vermieterkontoFlow = Math.max(0, vermieterData.saldo);
 
             const { tagesgeldInflow, depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
-            const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow + vermieterkontoFlow; // Bidirektionaler Flow
+            const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow + vermieterkontoFlow;
             const totalDepotInflow = depotSparplanTotal + depotOverflow;
             
             let konsumValue;
@@ -1981,24 +2045,24 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             }
             // === END: Flow visibility control ===
 
-            // === Vermieterkonto Flows (bidirektional) ===
-            // Positiver Cashflow: Vermieterkonto -> Tagesgeld (Einnahmen fließen zu)
-            // Negativer Cashflow: Tagesgeld -> Vermieterkonto (Deckung aus Tagesgeld)
-            const hasVermieterkontoCashflow = bothVisible(basins.vermieterkonto, basins.tagesgeld) && Math.abs(vermieterData.saldo) > 0;
+            // === Vermieterkonto Flows ===
+            const hasVermieterkontoCashflow = bothVisible(basins.vermieterkonto, basins.fixkosten) && Math.abs(vermieterData.saldo) > 0;
 
             if (hasVermieterkontoCashflow) {
                 if (vermieterData.saldo > 0) {
-                    // Positiv: Vermieterkonto → Tagesgeld (grüner Flow)
-                    drawFlow('vermieterkonto-tagesgeld-flow', basins.vermieterkonto, basins.tagesgeld, vermieterData.saldo, maxFlow, 'Netto-Mieteinnahmen');
-                    hideFlow('tagesgeld-vermieterkonto-flow'); // Rückfluss ausblenden
+                    // Positiv: Vermieterkonto → Tagesgeld (Einnahmen fließen zu)
+                    if (bothVisible(basins.vermieterkonto, basins.tagesgeld)) {
+                        drawFlow('vermieterkonto-tagesgeld-flow', basins.vermieterkonto, basins.tagesgeld, vermieterData.saldo, maxFlow, 'Netto-Mieteinnahmen');
+                    }
+                    hideDeficitLine('fixkosten-vermieterkonto-deficit'); // Deckungsbedarfs-Linie ausblenden
                 } else {
-                    // Negativ: Tagesgeld → Vermieterkonto (roter Flow, Deckung)
-                    drawFlow('tagesgeld-vermieterkonto-flow', basins.tagesgeld, basins.vermieterkonto, Math.abs(vermieterData.saldo), maxFlow, 'Deckung Immobilien-Kosten');
+                    // Negativ: Fixkosten decken Vermieterkonto (gestrichelte Linie statt Flow)
                     hideFlow('vermieterkonto-tagesgeld-flow'); // Vorwärts-Flow ausblenden
+                    drawDeficitLine('fixkosten-vermieterkonto-deficit', basins.fixkosten, basins.vermieterkonto, Math.abs(vermieterData.saldo));
                 }
             } else {
                 hideFlow('vermieterkonto-tagesgeld-flow');
-                hideFlow('tagesgeld-vermieterkonto-flow');
+                hideDeficitLine('fixkosten-vermieterkonto-deficit');
             }
 
             // Visuelle Verbindung: Immobilien <-> Vermieterkonto (gestrichelte Linie, immer sichtbar)
