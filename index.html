@@ -2186,11 +2186,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
     function drawDeficitLine(lineId, fromBasin, toBasin, amount) {
         // Zeichnet eine gestrichelte Platin-Linie (Fixkosten → Vermieterkonto bei Defizit)
-        // Sehr dezent, läuft hinter allen anderen Objekten
+        // Sehr dezent, läuft hinter allen anderen Objekten, ohne Label
         if (!fromBasin || !toBasin) return;
 
         let line = getEl(lineId);
-        let label = getEl(`${lineId}-label`);
 
         if (!line) {
             line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -2202,17 +2201,6 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             line.setAttribute('opacity', '0.15'); // Sehr dezent
             // Insert at beginning of SVG (hinter allen anderen Objekten)
             flowSvg.insertBefore(line, flowSvg.firstChild);
-        }
-
-        if (!label) {
-            label = document.createElement('div');
-            label.id = `${lineId}-label`;
-            label.className = 'flow-label';
-            label.style.backgroundColor = 'rgba(189, 161, 119, 0.15)'; // MLP Platin transparent
-            label.style.borderColor = '#BDA177'; // MLP Platin
-            label.style.color = '#BDA177';
-            label.style.opacity = '0.6'; // Dezent
-            flowContainer.appendChild(label);
         }
 
         const fromRect = fromBasin.getBoundingClientRect();
@@ -2235,21 +2223,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
         const pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toX},${toY}`;
         line.setAttribute('d', pathData);
-
-        // Label positionieren
-        label.textContent = `Deckungsbedarf: ${formatCurrency(amount)}`;
-        const midX = (fromX + toX) / 2 - 20; // Leicht links
-        const midY = (fromY + toY) / 2;
-        label.style.left = `${midX}px`;
-        label.style.top = `${midY}px`;
-        label.style.display = 'block';
     }
 
     function hideDeficitLine(lineId) {
         const line = getEl(lineId);
-        const label = getEl(`${lineId}-label`);
         if (line) line.setAttribute('opacity', '0');
-        if (label) label.style.display = 'none';
     }
 
     function drawSchutzschirm(fromBasin, toBasin) {
@@ -2631,6 +2609,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const activeElement = document.activeElement;
         modalFocusState.lastFocusedElement = (activeElement && typeof activeElement.focus === 'function') ? activeElement : null;
 
+        modal.style.display = 'flex'; // Show modal
         modal.classList.add('modal-active');
         modal.removeAttribute('aria-hidden');
         modalFocusState.activeModal = modal;
@@ -2651,6 +2630,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const modal = getEl(modalId);
         if (!modal) return;
 
+        modal.style.display = 'none'; // Hide modal
         modal.classList.remove('modal-active');
         modal.setAttribute('aria-hidden', 'true');
 
@@ -3414,7 +3394,7 @@ function updateFixkostenItem(index, key, value) {
     </div>
 
     <!-- Session Start Dialog -->
-    <div id="session-start-dialog" class="modal-overlay">
+    <div id="session-start-dialog" class="modal-overlay" style="display: none;">
         <div class="modal-content max-w-lg">
             <h2 class="text-2xl font-bold text-white mb-4">Neue Beratung beginnen</h2>
             <p class="text-gray-300 mb-6">
@@ -3457,7 +3437,7 @@ function updateFixkostenItem(index, key, value) {
     </div>
 
     <!-- Session Recovery Dialog -->
-    <div id="session-recovery-dialog" class="modal-overlay">
+    <div id="session-recovery-dialog" class="modal-overlay" style="display: none;">
         <div class="modal-content max-w-lg">
             <h2 class="text-2xl font-bold text-white mb-4">Vorherige Session gefunden</h2>
             <p class="text-gray-300 mb-4">
@@ -3480,7 +3460,7 @@ function updateFixkostenItem(index, key, value) {
     </div>
 
     <!-- Session End Dialog -->
-    <div id="session-end-dialog" class="modal-overlay">
+    <div id="session-end-dialog" class="modal-overlay" style="display: none;">
         <div class="modal-content max-w-lg">
             <h2 class="text-2xl font-bold text-white mb-4">Beratung beenden?</h2>
             <p class="text-gray-300 mb-6">
