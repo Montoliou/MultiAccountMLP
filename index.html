@@ -138,8 +138,8 @@
         .gradient-zone-1 {
             background: linear-gradient(
                 to bottom,
-                rgba(0, 47, 108, 0.04) 0%,
-                rgba(30, 58, 95, 0.06) 100%
+                rgba(0, 47, 108, 0.12) 0%,
+                rgba(30, 58, 95, 0.15) 100%
             );
         }
 
@@ -147,8 +147,8 @@
         .gradient-zone-2 {
             background: linear-gradient(
                 to bottom,
-                rgba(30, 58, 95, 0.06) 0%,
-                rgba(42, 74, 111, 0.08) 100%
+                rgba(30, 58, 95, 0.15) 0%,
+                rgba(42, 74, 111, 0.18) 100%
             );
         }
 
@@ -156,8 +156,8 @@
         .gradient-zone-3 {
             background: linear-gradient(
                 to bottom,
-                rgba(42, 74, 111, 0.08) 0%,
-                rgba(30, 41, 59, 0.10) 100%
+                rgba(42, 74, 111, 0.18) 0%,
+                rgba(30, 41, 59, 0.20) 100%
             );
         }
 
@@ -165,9 +165,9 @@
         .gradient-zone-4 {
             background: linear-gradient(
                 to bottom,
-                rgba(30, 41, 59, 0.10) 0%,
-                rgba(189, 161, 119, 0.05) 50%,
-                rgba(155, 132, 97, 0.08) 100%
+                rgba(30, 41, 59, 0.20) 0%,
+                rgba(189, 161, 119, 0.12) 50%,
+                rgba(155, 132, 97, 0.18) 100%
             );
         }
 
@@ -175,33 +175,33 @@
         .theme-light .gradient-zone-1 {
             background: linear-gradient(
                 to bottom,
-                rgba(0, 47, 108, 0.02) 0%,
-                rgba(60, 106, 163, 0.03) 100%
+                rgba(0, 47, 108, 0.06) 0%,
+                rgba(60, 106, 163, 0.08) 100%
             );
         }
 
         .theme-light .gradient-zone-2 {
             background: linear-gradient(
                 to bottom,
-                rgba(60, 106, 163, 0.03) 0%,
-                rgba(0, 47, 108, 0.04) 100%
+                rgba(60, 106, 163, 0.08) 0%,
+                rgba(0, 47, 108, 0.10) 100%
             );
         }
 
         .theme-light .gradient-zone-3 {
             background: linear-gradient(
                 to bottom,
-                rgba(0, 47, 108, 0.04) 0%,
-                rgba(0, 47, 108, 0.05) 100%
+                rgba(0, 47, 108, 0.10) 0%,
+                rgba(0, 47, 108, 0.12) 100%
             );
         }
 
         .theme-light .gradient-zone-4 {
             background: linear-gradient(
                 to bottom,
-                rgba(0, 47, 108, 0.05) 0%,
-                rgba(189, 161, 119, 0.04) 50%,
-                rgba(189, 161, 119, 0.06) 100%
+                rgba(0, 47, 108, 0.12) 0%,
+                rgba(189, 161, 119, 0.10) 50%,
+                rgba(189, 161, 119, 0.14) 100%
             );
         }
 
@@ -903,10 +903,10 @@
                 </svg>
 
                 <!-- Horizontal Gradient Zones für visuelle Ebenen-Trennung -->
-                <div class="gradient-zone gradient-zone-1" style="top: 0; height: 240px;"></div>
-                <div class="gradient-zone gradient-zone-2" style="top: 240px; height: 480px;"></div>
-                <div class="gradient-zone gradient-zone-3" style="top: 720px; height: 240px;"></div>
-                <div class="gradient-zone gradient-zone-4" style="top: 960px; height: 300px;"></div>
+                <div id="gradient-zone-1" class="gradient-zone gradient-zone-1" style="top: 0; height: 240px;"></div>
+                <div id="gradient-zone-2" class="gradient-zone gradient-zone-2" style="top: 240px; height: 480px;"></div>
+                <div id="gradient-zone-3" class="gradient-zone gradient-zone-3" style="top: 720px; height: 240px;"></div>
+                <div id="gradient-zone-4" class="gradient-zone gradient-zone-4" style="top: 960px; height: 300px;"></div>
 
                 <div id="einkommen-basin" class="account-basin"></div>
                 <button id="fixkosten-basin" class="account-basin cursor-pointer hover:border-indigo-500" type="button" aria-controls="fixkosten-modal" aria-haspopup="dialog" onclick="openModal('fixkosten-modal')"></button>
@@ -1849,11 +1849,19 @@ let fixkostenItems = [
       const secTG     = getEl('sec-tagesgeld');
       const secProg   = getEl('sec-prognose');
 
+      // Gradient zones
+      const zone1 = getEl('gradient-zone-1');
+      const zone2 = getEl('gradient-zone-2');
+      const zone3 = getEl('gradient-zone-3');
+      const zone4 = getEl('gradient-zone-4');
+
       // Default: all visible (normal mode)
       if (!consultationMode) {
         [secIncome, secKonsum, secTG, secProg].forEach(el => show(el, true));
         // all basins visible
         for (const key in basins) show(basins[key], true);
+        // all zones visible
+        [zone1, zone2, zone3, zone4].forEach(el => show(el, true));
         return;
       }
 
@@ -1865,13 +1873,20 @@ let fixkostenItems = [
         show(secTG,     consultationStep >= 3);
         show(secProg,   consultationStep >= 4);
 
+        // Step 1: Nur Einkommen
         show(basins.einkommen, true);
-        show(basins.fixkosten, true);
-        show(basins.konsum, consultationStep >= 2);
-        show(basins.tagesgeld, consultationStep >= 3);
-        show(basins.depot, consultationStep >= 4);
+        show(basins.fixkosten, consultationStep >= 2);
+        show(basins.konsum, consultationStep >= 3);
+        show(basins.tagesgeld, consultationStep >= 4);
+        show(basins.depot, consultationStep >= 5);
         show(basins.immobilien, consultationStep >= 6); // Step 6: Immobilien
         show(basins.vermieterkonto, consultationStep >= 6); // Step 6: Vermieterkonto (zusammen mit Immobilien)
+
+        // Gradient zones
+        show(zone1, true); // Einkommen immer sichtbar
+        show(zone2, consultationStep >= 2); // Girokonten ab Step 2
+        show(zone3, consultationStep >= 4); // Liquidität ab Step 4
+        show(zone4, consultationStep >= 5); // Vermögensaufbau ab Step 5
       } else {
         show(secIncome, true);
         show(secKonsum, true); // B: income + konsum from step 1
@@ -1885,6 +1900,12 @@ let fixkostenItems = [
         show(basins.depot, consultationStep >= 4);
         show(basins.immobilien, consultationStep >= 6); // Step 6: Immobilien
         show(basins.vermieterkonto, consultationStep >= 6); // Step 6: Vermieterkonto (zusammen mit Immobilien)
+
+        // Gradient zones (Variante B)
+        show(zone1, true); // Einkommen immer sichtbar
+        show(zone2, true); // Konsum ab Step 1
+        show(zone3, consultationStep >= 3); // Liquidität ab Step 3
+        show(zone4, consultationStep >= 4); // Vermögensaufbau ab Step 4
       }
     }
     
