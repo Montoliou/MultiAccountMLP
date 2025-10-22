@@ -9,6 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
+        /* Session Info Bar spacing */
+        #session-info-bar { height: 52px; }
+        body.has-session-bar { padding-top: 52px; }
         .skip-link { position: absolute; left: -1000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
         .skip-link:focus { left: 50%; top: 1rem; width: auto; height: auto; padding: 0.75rem 1rem; background: var(--accent1, #3b82f6); color: #ffffff; border-radius: 999px; transform: translateX(-50%); z-index: 9999; box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
         .account-basin {
@@ -954,6 +957,311 @@
     </div>
 
     <script>
+    // ===== SESSION MANAGEMENT SYSTEM (v1.2.0) =====
+    // Implements DSGVO-compliant session-based data storage
+
+    const SESSION_STORAGE_KEY = 'mlp_current_session';
+    const INACTIVITY_WARNING_MS = 30 * 60 * 1000; // 30 minutes
+    const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000; // 60 minutes
+
+    let sessionInactivityWarningTimer = null;
+    let sessionInactivityTimeoutTimer = null;
+    let sessionStartTime = null;
+    let sessionTimerInterval = null;
+
+    // Generate unique session ID: YYYYMMDD-HHMM-XXXX
+    function generateSessionId() {
+        const now = new Date();
+        const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+        const time = now.toTimeString().slice(0, 5).replace(':', '');
+        const random = Math.random().toString(36).substr(2, 4).toUpperCase();
+        return `${date}-${time}-${random}`;
+    }
+
+    // Get current session data
+    function getCurrentSession() {
+        try {
+            const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            console.warn('Failed to load session:', e);
+            return null;
+        }
+    }
+
+    // Save session data
+    function saveSession(session) {
+        try {
+            session.letzteAktivitaet = new Date().toISOString();
+            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+            resetInactivityTimers();
+        } catch (e) {
+            console.error('Failed to save session:', e);
+        }
+    }
+
+    // Start new session
+    function startSession(kundenKuerzel = null, berater = null) {
+        const sessionId = generateSessionId();
+        const now = new Date().toISOString();
+
+        const session = {
+            id: sessionId,
+            kundenKuerzel: kundenKuerzel || null,
+            berater: berater || null,
+            startzeit: now,
+            letzteAktivitaet: now,
+            status: 'aktiv'
+        };
+
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+        sessionStartTime = new Date();
+
+        // Start session timer
+        updateSessionInfoBar();
+        startSessionTimer();
+        resetInactivityTimers();
+
+        // Hide session start dialog
+        closeModal('session-start-dialog');
+
+        console.log(`📋 Session gestartet: ${sessionId}`);
+        return session;
+    }
+
+    // End session and clear all data
+    function endSession(exportFirst = false) {
+        const session = getCurrentSession();
+
+        if (exportFirst) {
+            // TODO: Implement exportAllData() function
+            console.log('Export functionality to be implemented');
+        }
+
+        // Clear all session storage
+        sessionStorage.clear();
+
+        if (session) {
+            console.log(`🗑️ Session gelöscht: ${session.id} am ${new Date().toISOString()}`);
+        }
+
+        // Stop timers
+        if (sessionTimerInterval) {
+            clearInterval(sessionTimerInterval);
+            sessionTimerInterval = null;
+        }
+        clearInactivityTimers();
+
+        // Reload to show session start dialog
+        window.location.reload();
+    }
+
+    // Update session info bar
+    function updateSessionInfoBar() {
+        const session = getCurrentSession();
+        if (!session) return;
+
+        const infoBar = getEl('session-info-bar');
+        if (!infoBar) return;
+
+        const sessionIdEl = getEl('session-id-display');
+        const kundenKuerzelEl = getEl('session-kunden-display');
+        const timerEl = getEl('session-timer');
+
+        if (sessionIdEl) sessionIdEl.textContent = session.id;
+        if (kundenKuerzelEl) {
+            kundenKuerzelEl.textContent = session.kundenKuerzel || 'Keine Angabe';
+        }
+
+        infoBar.style.display = 'flex';
+        document.body.classList.add('has-session-bar');
+    }
+
+    // Start session duration timer
+    function startSessionTimer() {
+        if (sessionTimerInterval) {
+            clearInterval(sessionTimerInterval);
+        }
+
+        sessionTimerInterval = setInterval(() => {
+            const session = getCurrentSession();
+            if (!session) return;
+
+            const start = new Date(session.startzeit);
+            const now = new Date();
+            const diffMs = now - start;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            const timerEl = getEl('session-timer');
+            if (timerEl) {
+                if (diffMins < 60) {
+                    timerEl.textContent = `Läuft seit ${diffMins} Min.`;
+                } else {
+                    const hours = Math.floor(diffMins / 60);
+                    const mins = diffMins % 60;
+                    timerEl.textContent = `Läuft seit ${hours}h ${mins}m`;
+                }
+            }
+        }, 30000); // Update every 30 seconds
+    }
+
+    // Reset inactivity timers
+    function resetInactivityTimers() {
+        clearInactivityTimers();
+
+        // Warning after 30 min
+        sessionInactivityWarningTimer = setTimeout(() => {
+            showInactivityWarning();
+        }, INACTIVITY_WARNING_MS);
+
+        // Auto-end after 60 min
+        sessionInactivityTimeoutTimer = setTimeout(() => {
+            showInactivityTimeout();
+        }, INACTIVITY_TIMEOUT_MS);
+    }
+
+    // Clear inactivity timers
+    function clearInactivityTimers() {
+        if (sessionInactivityWarningTimer) {
+            clearTimeout(sessionInactivityWarningTimer);
+            sessionInactivityWarningTimer = null;
+        }
+        if (sessionInactivityTimeoutTimer) {
+            clearTimeout(sessionInactivityTimeoutTimer);
+            sessionInactivityTimeoutTimer = null;
+        }
+    }
+
+    // Show inactivity warning
+    function showInactivityWarning() {
+        const toast = document.createElement('div');
+        toast.id = 'inactivity-warning-toast';
+        toast.className = 'fixed bottom-4 right-4 bg-yellow-600 text-white px-6 py-4 rounded-lg shadow-2xl z-50 max-w-md';
+        toast.innerHTML = `
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <p class="font-bold mb-1">Beratung noch aktiv?</p>
+                    <p class="text-sm mb-3">Daten werden bei weiterer Inaktivität nach 60 Min. automatisch gelöscht.</p>
+                    <button onclick="confirmSessionActive()" class="bg-white text-yellow-600 px-4 py-2 rounded font-bold hover:bg-yellow-50">
+                        Ich bin noch da
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+    }
+
+    // Confirm session is still active
+    function confirmSessionActive() {
+        const toast = getEl('inactivity-warning-toast');
+        if (toast) toast.remove();
+
+        const session = getCurrentSession();
+        if (session) {
+            saveSession(session);
+        }
+    }
+
+    // Show inactivity timeout dialog
+    function showInactivityTimeout() {
+        if (confirm('Die Beratung wurde wegen Inaktivität beendet. Alle Daten werden gelöscht.\n\nMöchten Sie die Daten vor dem Löschen exportieren?')) {
+            endSession(true);
+        } else {
+            endSession(false);
+        }
+    }
+
+    // Show session start dialog
+    function showSessionStartDialog() {
+        openModal('session-start-dialog');
+    }
+
+    // Show session recovery dialog
+    function showSessionRecoveryDialog(session) {
+        const dialog = getEl('session-recovery-dialog');
+        if (!dialog) return;
+
+        const sessionInfo = getEl('recovery-session-info');
+        if (sessionInfo) {
+            const start = new Date(session.startzeit);
+            const now = new Date();
+            const diffMins = Math.floor((now - start) / 60000);
+
+            sessionInfo.innerHTML = `
+                <p class="mb-2"><strong>Session-ID:</strong> ${session.id}</p>
+                <p class="mb-2"><strong>Kunde:</strong> ${session.kundenKuerzel || 'Keine Angabe'}</p>
+                <p><strong>Gestartet:</strong> vor ${diffMins} Min.</p>
+            `;
+        }
+
+        openModal('session-recovery-dialog');
+    }
+
+    // Continue existing session
+    function continueSession() {
+        const session = getCurrentSession();
+        if (session) {
+            sessionStartTime = new Date(session.startzeit);
+            updateSessionInfoBar();
+            startSessionTimer();
+            resetInactivityTimers();
+            closeModal('session-recovery-dialog');
+            console.log(`▶️ Session fortgesetzt: ${session.id}`);
+        }
+    }
+
+    // Start new session (discard old one)
+    function startNewSessionAndDiscard() {
+        sessionStorage.clear();
+        closeModal('session-recovery-dialog');
+        showSessionStartDialog();
+    }
+
+    // Show session end confirmation dialog
+    function showSessionEndDialog() {
+        const session = getCurrentSession();
+        if (!session) return;
+
+        const dialog = getEl('session-end-dialog');
+        if (!dialog) return;
+
+        openModal('session-end-dialog');
+    }
+
+    // Prevent tab close without confirmation
+    window.addEventListener('beforeunload', (e) => {
+        const session = getCurrentSession();
+        if (session && session.status !== 'exportiert') {
+            e.preventDefault();
+            e.returnValue = 'Beratung beenden? Daten gehen verloren!';
+        }
+    });
+
+    // Track user activity
+    function trackActivity() {
+        const session = getCurrentSession();
+        if (session) {
+            saveSession(session);
+        }
+    }
+
+    // Attach activity listeners
+    ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+        document.addEventListener(event, trackActivity, { passive: true, once: false });
+    });
+
+    // Start session from dialog with user input
+    function startSessionFromDialog() {
+        const kundenKuerzel = getEl('session-kunden-kuerzel')?.value.trim() || null;
+        const berater = getEl('session-berater')?.value.trim() || null;
+        startSession(kundenKuerzel, berater);
+    }
+
+    // ===== END SESSION MANAGEMENT SYSTEM =====
+
     let currentVariant = 'A';
     
     const BOOKING_DAYS = 31;
@@ -1053,7 +1361,7 @@ const bookingTypeLookup = {};
 
     function loadBookingPlan() {
         try {
-            const raw = localStorage.getItem(bookingStorageKey);
+            const raw = sessionStorage.getItem(bookingStorageKey);
             if (!raw) return null;
             const parsed = JSON.parse(raw);
             return (parsed && typeof parsed === 'object') ? parsed : null;
@@ -1066,7 +1374,7 @@ const bookingTypeLookup = {};
     function saveBookingPlan() {
         pruneEmptyMonths();
         try {
-            localStorage.setItem(bookingStorageKey, JSON.stringify(bookingPlan));
+            sessionStorage.setItem(bookingStorageKey, JSON.stringify(bookingPlan));
         } catch (err) {
             console.warn('Buchungsplan konnte nicht gespeichert werden.', err);
         }
@@ -2439,9 +2747,9 @@ function updateFixkostenItem(index, key, value) {
         return Math.max(0, rate - geschaetzterZins);
     }
 
-    // Lädt Immobilien-Daten aus localStorage
+    // Lädt Immobilien-Daten aus sessionStorage
     function loadImmobilienData() {
-        const saved = localStorage.getItem('immobilienData');
+        const saved = sessionStorage.getItem('immobilienData');
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
@@ -2501,7 +2809,7 @@ function updateFixkostenItem(index, key, value) {
             immobilienData[0] = { wert, darlehen };
         }
 
-        localStorage.setItem('immobilienData', JSON.stringify(immobilienData));
+        sessionStorage.setItem('immobilienData', JSON.stringify(immobilienData));
         calculateAndUpdate();
         closeModal('immobilien-modal');
     }
@@ -2529,7 +2837,7 @@ function updateFixkostenItem(index, key, value) {
             steuern: parseFloat(getEl('vk-steuern')?.value || 0)
         };
 
-        localStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
+        sessionStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
         calculateAndUpdate();
         closeModal('vermieterkonto-modal');
     }
@@ -2573,7 +2881,7 @@ function updateFixkostenItem(index, key, value) {
     }
 
     function loadVermieterkontoData() {
-        const saved = localStorage.getItem('vermieterkontoData');
+        const saved = sessionStorage.getItem('vermieterkontoData');
         if (saved) {
             try {
                 vermieterkontoData = JSON.parse(saved);
@@ -2915,6 +3223,28 @@ function updateFixkostenItem(index, key, value) {
 
     // INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
+        // === SESSION INITIALIZATION (v1.2.0) ===
+        // Check for existing session or show start dialog
+        const existingSession = getCurrentSession();
+        if (existingSession) {
+            // Session found - show recovery dialog
+            const sessionAge = new Date() - new Date(existingSession.startzeit);
+            const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+            if (sessionAge > maxAge) {
+                // Session too old, discard and start new
+                sessionStorage.clear();
+                showSessionStartDialog();
+            } else {
+                // Session valid, offer recovery
+                showSessionRecoveryDialog(existingSession);
+            }
+        } else {
+            // No session, show start dialog
+            showSessionStartDialog();
+        }
+        // === END SESSION INITIALIZATION ===
+
         inputs = { income: getEl('income'), konsumMin: getEl('konsumMin'), konsumLeftover: getEl('konsumLeftover'), tagesgeldCurrent: getEl('tagesgeldCurrent'), tagesgeldLimit: getEl('tagesgeldLimit'), depotCurrent: getEl('depotCurrent'), anlagezeitraum: getEl('anlagezeitraum'), rendite: getEl('rendite') };
         basins = { einkommen: getEl('einkommen-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin'), vermieterkonto: getEl('vermieterkonto-basin'), immobilien: getEl('immobilien-basin') };
         flowContainer = getEl('flow-container');
@@ -3008,6 +3338,134 @@ function updateFixkostenItem(index, key, value) {
         }, 100);
     });
     </script>
+
+    <!-- ===== SESSION UI ELEMENTS (v1.2.0) ===== -->
+
+    <!-- Session Info Bar -->
+    <div id="session-info-bar" style="display: none;" class="fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-lg z-40 px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span class="text-sm font-semibold">Session:</span>
+                <span id="session-id-display" class="text-xs font-mono bg-blue-950 px-2 py-1 rounded">-</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span class="text-sm font-semibold">Kunde:</span>
+                <span id="session-kunden-display" class="text-xs">-</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span id="session-timer" class="text-xs font-semibold text-green-300">Läuft seit 0 Min.</span>
+            </div>
+        </div>
+        <button onclick="showSessionEndDialog()" class="bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors">
+            Session beenden
+        </button>
+    </div>
+
+    <!-- Session Start Dialog -->
+    <div id="session-start-dialog" class="modal-overlay">
+        <div class="modal-content max-w-lg">
+            <h2 class="text-2xl font-bold text-white mb-4">Neue Beratung beginnen</h2>
+            <p class="text-gray-300 mb-6">
+                Starten Sie eine neue Beratungssession. Alle Daten werden nur während der Session gespeichert und beim Schließen automatisch gelöscht.
+            </p>
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label for="session-kunden-kuerzel" class="block text-sm font-semibold text-gray-300 mb-2">
+                        Kundenkürzel (optional)
+                    </label>
+                    <input type="text" id="session-kunden-kuerzel"
+                           placeholder="z.B. MX-2025-001"
+                           class="w-full bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none">
+                    <p class="text-xs text-gray-500 mt-1">Für interne Zuordnung. Keine persönlichen Daten!</p>
+                </div>
+
+                <div>
+                    <label for="session-berater" class="block text-sm font-semibold text-gray-300 mb-2">
+                        Berater (optional)
+                    </label>
+                    <input type="text" id="session-berater"
+                           placeholder="Ihr Name"
+                           class="w-full bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="startSessionFromDialog()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    Session starten
+                </button>
+            </div>
+
+            <div class="mt-4 p-4 bg-blue-900 bg-opacity-50 rounded-lg">
+                <p class="text-xs text-gray-300">
+                    <strong>Datenschutz:</strong> Alle Daten werden nur in Ihrem Browser gespeichert (sessionStorage). Beim Schließen des Tabs werden alle Daten automatisch gelöscht.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Recovery Dialog -->
+    <div id="session-recovery-dialog" class="modal-overlay">
+        <div class="modal-content max-w-lg">
+            <h2 class="text-2xl font-bold text-white mb-4">Vorherige Session gefunden</h2>
+            <p class="text-gray-300 mb-4">
+                Eine vorherige Beratungssession wurde gefunden. Möchten Sie diese fortsetzen?
+            </p>
+
+            <div id="recovery-session-info" class="bg-gray-800 p-4 rounded-lg mb-6 text-sm text-gray-300">
+                <!-- Wird dynamisch befüllt -->
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="continueSession()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    Fortsetzen
+                </button>
+                <button onclick="startNewSessionAndDiscard()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    Neue Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session End Dialog -->
+    <div id="session-end-dialog" class="modal-overlay">
+        <div class="modal-content max-w-lg">
+            <h2 class="text-2xl font-bold text-white mb-4">Beratung beenden?</h2>
+            <p class="text-gray-300 mb-6">
+                Alle Daten werden gelöscht. Möchten Sie vor dem Beenden die Daten exportieren?
+            </p>
+
+            <div class="bg-yellow-900 bg-opacity-50 border border-yellow-600 rounded-lg p-4 mb-6">
+                <p class="text-sm text-yellow-200">
+                    <strong>Warnung:</strong> Diese Aktion kann nicht rückgängig gemacht werden!
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="endSession(true)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    Exportieren & Beenden
+                </button>
+                <button onclick="endSession(false)" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    Ohne Export beenden
+                </button>
+                <button onclick="closeModal('session-end-dialog')" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    Abbrechen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== END SESSION UI ELEMENTS ===== -->
+
     <script src="scripts/a11y.js" defer></script>
     <script src="scripts/autoRecalc.js" defer></script>
     <script src="scripts/variantFix.js" defer></script>
