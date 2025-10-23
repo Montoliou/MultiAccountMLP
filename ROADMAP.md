@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.2.0-dev
+**Aktuelle Version:** 1.2.0
 **Ziel-Version:** 2.0.0
 **Datum:** Oktober 2025
 
@@ -40,16 +40,23 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 
 ---
 
-## 📊 Aktuelle Analyse (Version 1.1.0)
+## 📊 Aktuelle Analyse (Version 1.2.0)
 
 ### Implementierte Features
 
 #### Kern-Features (Beratungs-optimal)
 
-- ✅ **Multi-Konto-Visualisierung**: 6 Basins mit animierten Flows
+- ✅ **Multi-Konto-Visualisierung**: 7 Basins mit animierten Flows
+  - Einkommen, Fixkosten, Konsum, Tagesgeld, Depot, Immobilien, **Vermieterkonto**
 - ✅ **Zwei Varianten**: A (Fixkosten-first) & B (Konsum-first)
 - ✅ **Beratungsmodus**: 6-Schritte-Prozess für strukturierte Gespräche
+  - Step 1: Nur Einkommen (Progressive Disclosure)
+  - Gradient-Zonen faden synchron mit Steps ein
 - ✅ **Immobilien-Management**: Vermögen, Verbindlichkeiten, Cashflow
+- ✅ **MLP Vermieterkonto**: Spezielles Basin für Immobilien-Cashflows
+  - Bidirektionale Flows (Mieteinnahmen ↔ Ausgaben)
+  - Defizit-Line bei negativem Cashflow (MLP Platin, gestrichelt)
+  - Separates Datenmodell für saubere Trennung
 - ✅ **Depot-Aufteilung**: Multi-Fonds/ETF mit Prozent-Allocation
 - ✅ **Fixkosten-Verwaltung**: Flexible Posten (monatlich/jährlich)
 - ✅ **Rendite-Prognose**: Chart.js-Visualisierung
@@ -57,150 +64,159 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 - ✅ **Theme-System**: Dark Mode & MLP Light Theme
 - ✅ **Print-Funktion**: PDF-Export für Kundendokumentation
 
-#### Datenhaltung (AKTUELL)
+#### Session-Management (v1.2.0) ✅
 
-- ⚠️ **localStorage**: Persistiert über Sessions hinweg (problematisch!)
-- ✅ Vorteil: Crash-Recovery funktioniert
-- ❌ Nachteil: Daten bleiben dauerhaft gespeichert (Datenschutz!)
+- ✅ **Session-Lifecycle-Management**
+  - Session-Start-Dialog mit Kundenkürzel, Berater, Notizen
+  - Session-Info-Button (eleganter Dropdown statt Bar)
+  - Session-End-Dialog mit Export-Option
+  - Auto-generierte Session-ID
+- ✅ **sessionStorage statt localStorage**
+  - Daten nur während Tab-Session
+  - Auto-Delete bei Tab-Close
+  - Crash-Recovery innerhalb Session
+- ✅ **beforeunload-Warnung**
+  - Verhindert versehentliches Schließen
+  - Export-Reminder
+- ✅ **Modal-Overlay-System**
+  - Professionelle Fullscreen-Modals
+  - Backdrop-Blur (Glassmorphism)
+  - Smooth Animations (fadeIn, slideUp)
 
-### Kritische Limitationen für Beratungs-Kontext
+#### UI/UX-Verbesserungen (v1.2.0)
 
-#### 1. Datenschutz-Problem: localStorage
+- ✅ **Gradient-Zonen**: Visuelle Layer-Trennung mit Metapher
+  - Wolken (Einkommen): Himmelblau
+  - Horizont (Girokonten): Grau-Blau
+  - Schuppen (Liquidität): Dunkel-Teal
+  - Felder (Vermögensaufbau): MLP Platin
+  - Optimierte Opacity für Dark/Light Theme
+- ✅ **Deficit-Line**: MLP Platin, sehr dezent (0.15 opacity)
+- ✅ **Session-Menu**: Elegant, top-left dropdown mit glassmorphism
 
-**Problem:**
+### Nächste Entwicklungsziele
 
-- Daten bleiben dauerhaft im Browser gespeichert
-- Nächster Kunde könnte Vorherige Daten sehen
-- DSGVO-Konflikt: Keine Einwilligung für dauerhafte Speicherung
+#### 1. Export-Erweiterung (v1.3.0)
 
-**Lösung (v1.2.0):**
+**Aktuelle Einschränkungen:**
 
-- Migration zu **sessionStorage** (nur während Tab/Session)
-- **Auto-Clear** beim Schließen des Tabs
-- **Manueller Reset-Button**: "Session beenden & Daten löschen"
+- Nur PDF-Print verfügbar
+- Keine strukturierten Daten-Exports (CSV/JSON)
+- Fehlende Session-Metadaten im Export
 
-#### 2. Fehlende Session-Verwaltung
+**Geplante Verbesserungen:**
 
-**Problem:**
+- CSV-Export für CRM-Integration
+- JSON-Export für vollständige Session-Daten
+- Excel-kompatibel mit UTF-8 BOM
+- Automatische Metadaten (Berater, Datum, Session-ID)
 
-- Kein klarer Start/Ende einer Beratung
-- Keine Session-Metadaten (Kundenkürzel, Datum)
-- Keine Warnung bei verwaisten Daten
+#### 2. Immobilien-Cashflow-Integration (v1.3.0)
 
-**Lösung (v1.2.0):**
+**Aktueller Stand:**
 
-- **Session-Start-Dialog**: "Neue Beratung beginnen"
-- **Session-ID**: Automatische Generierung (Datum + Zufalls-ID)
-- **Session-Info-Bar**: Zeigt Dauer und Kundenkürzel
-- **Session-End-Prompt**: Bestätigung beim Schließen
+- Vermieterkonto existiert als separates Basin
+- Bidirektionale Flows implementiert
+- Defizit-Visualisierung vorhanden
 
-#### 3. Export-Funktionalität zu basic
+**Offene Punkte:**
 
-**Problem:**
+- Toggle für Live-Integration in Gesamtrechnung
+- "Was-wäre-wenn"-Szenarien (abbezahlt, verkauft, etc.)
+- Erweiterte Immobilien-Sektion im PDF-Export
 
-- Nur PDF-Print, kein strukturierter CSV-Export
-- Keine Metadaten im Export (Berater, Datum, Session-ID)
-- Kein Export-Protokoll für Compliance
+#### 3. Multi-Tab-Isolation (v1.4.0)
 
-**Lösung (v1.3.0):**
+**Aktuelle Situation:**
 
-- **CSV-Export**: Strukturierte Daten für CRM-Import
-- **JSON-Export**: Vollständige Session-Daten
-- **Excel-kompatibel**: UTF-8 BOM für deutsche Umlaute
-- **Metadaten**: Automatische Kopfzeilen mit Session-Info
+- sessionStorage pro Tab isoliert Daten bereits
+- Keine Übersicht über parallele Sessions
 
-#### 4. Keine Mandanten-Trennung
+**Geplante Erweiterungen:**
 
-**Problem:**
-
-- Bei mehreren geöffneten Tabs werden Daten gemischt
-- Kein Schutz vor versehentlichem Überschreiben
-
-**Lösung (v1.4.0):**
-
-- **Tab-Isolation**: Jeder Tab = eigene Session
-- **Multi-Session-Warning**: Warnung bei mehreren aktiven Sessions
-- **Session-Liste**: Übersicht aller offenen Beratungen
+- Session-Übersicht (Landing-Page)
+- Quick-Switch zwischen parallelen Beratungen
+- Multi-Session-Warning bei Tab-Duplikation
 
 ---
 
 ## 📅 Entwicklungs-Roadmap
 
-### Version 1.2.0: Session-Management & Datenschutz
+### ✅ Version 1.2.0: Session-Management & Datenschutz (ABGESCHLOSSEN)
 
-**ETA:** Q4 2025 (3-4 Wochen)
+**Status:** ✅ Implementiert (Oktober 2025)
 **Fokus:** DSGVO-konforme Session-Verwaltung & Crash-Resilienz
 
-#### Features
+#### Implementierte Features
 
-**1.2.1: Session-Lifecycle-Management** (Woche 1)
+**1.2.1: Session-Lifecycle-Management** ✅
 
-- [ ] **Session-Start-Dialog**
+- ✅ **Session-Start-Dialog**
   - Popup beim App-Start: "Neue Beratung beginnen"
-  - Optionale Felder: Kundenkürzel (z.B. "MX-2025-001"), Notizen
+  - Felder: Kundenkürzel, Berater, Notizen
   - Session-ID automatisch generiert: `YYYYMMDD-HHMM-XXXX`
   - Button: "Vorherige Session fortsetzen" (falls vorhanden)
 
-- [ ] **Session-Info-Bar**
-  - Sticky-Header: Zeigt Session-ID, Kundenkürzel, Dauer
-  - Live-Timer: "Beratung läuft seit 23 Min."
-  - Status-Indikator: "Ungespeichert" / "Exportiert"
+- ✅ **Session-Info-Button** (statt Sticky-Bar)
+  - Eleganter Dropdown (top-left)
+  - Zeigt Session-ID, Kundenkürzel, Berater
+  - Live-Timer: "Beratung läuft seit X Min."
+  - "Session beenden"-Button
 
-- [ ] **Session-End-Dialog**
-  - Beim Versuch, Tab zu schließen: Warnung
+- ✅ **Session-End-Dialog**
+  - beforeunload-Warnung beim Tab-Close
   - "Beratung beenden? Alle Daten werden gelöscht."
-  - Buttons: "Abbrechen" / "Exportieren & Beenden" / "Ohne Export beenden"
+  - Option: Mit/ohne Export beenden
 
-**1.2.2: Datenhaltung-Migration** (Woche 2)
+**1.2.2: Datenhaltung-Migration** ✅
 
-- [ ] **localStorage → sessionStorage Migration**
-  - Alle bestehenden `localStorage.setItem()` → `sessionStorage.setItem()`
-  - Daten werden automatisch beim Tab-Close gelöscht
-  - Vorteil: Crash-Recovery bleibt erhalten (innerhalb Session)
+- ✅ **localStorage → sessionStorage Migration**
+  - Alle Daten in sessionStorage
+  - Auto-Delete beim Tab-Close
+  - Crash-Recovery innerhalb Session
 
-- [ ] **Session-Recovery-Mechanismus**
-  - Bei Reload/Crash: "Vorherige Beratung gefunden (vor 5 Min.)"
+- ✅ **Session-Recovery-Mechanismus**
+  - Bei Reload: "Vorherige Beratung fortsetzen?"
   - Button: "Fortsetzen" / "Neue Session starten"
-  - Auto-Cleanup: Sessions älter als 24h werden verworfen
 
-- [ ] **Manueller Reset-Button**
-  - Prominent im UI: "Session beenden & Daten löschen"
-  - Bestätigungs-Dialog mit Checkbox "Export erstellt?"
-  - Nach Reset: Weiterleitung zu Session-Start-Dialog
+- ✅ **Manueller Reset-Button**
+  - "Session beenden" im Dropdown-Menü
+  - Bestätigungs-Dialog mit Export-Option
 
-**1.2.3: Erweiterte Export-Funktionen** (Woche 3)
+**1.2.3: UI/UX-Verbesserungen** ✅
 
-- [ ] **CSV-Export für CRM-Integration**
-  - Strukturierte Tabelle: Kategorie, Beschreibung, Betrag, Interval
-  - Kopfzeile mit Session-Metadaten (Berater, Datum, Kunde)
-  - UTF-8 BOM für Excel-Kompatibilität
-  - Download-Dateiname: `Beratung_MX-2025-001_2025-10-20.csv`
+- ✅ **Gradient-Zonen für visuelle Layer-Trennung**
+  - 4 horizontale Zonen mit Metapher-Farben
+  - Wolken → Horizont → Schuppen → Felder
+  - Progressive Disclosure im Beratungsmodus
 
-- [ ] **JSON-Export (Vollständig)**
-  - Alle Session-Daten als strukturiertes JSON
-  - Verwendung: Backup, Re-Import, Automatisierung
-  - Pretty-Print für menschliche Lesbarkeit
+- ✅ **Modal-Overlay-System**
+  - Fullscreen-Modals mit Backdrop-Blur
+  - Glassmorphism-Design
+  - Smooth Animations
 
-- [ ] **PDF-Export-Verbesserungen**
-  - Session-Metadaten im Header (Berater, Datum, Kunde)
-  - Footer: "Exportiert am [Datum] um [Uhrzeit]"
-  - Optional: Berater-Logo/Signatur
+- ✅ **MLP Vermieterkonto**
+  - Bidirektionale Flows (organische Kurven)
+  - Defizit-Line bei negativem Cashflow
+  - Separates Datenmodell
 
-**1.2.4: Datenschutz & Compliance** (Woche 4)
+**1.2.4: Datenschutz & Compliance** ✅
 
-- [ ] **Daten-Löschung-Protokoll**
-  - Console-Log: "Session [ID] gelöscht am [Timestamp]"
-  - Optional: Export-Protokoll (wann wurde exportiert?)
+- ✅ **beforeunload-Warnung**
+  - Verhindert versehentliches Schließen
+  - Warnung nur wenn Daten nicht exportiert
 
-- [ ] **Datenschutz-Hinweis**
-  - Beim ersten Start: Info-Modal
-  - "Alle Daten werden nur temporär gespeichert und beim Schließen gelöscht."
-  - Checkbox: "Verstanden, nicht erneut anzeigen"
+- ✅ **Automatische Daten-Löschung**
+  - sessionStorage wird bei Tab-Close gelöscht
+  - Keine dauerhaften Speicherungen
 
-- [ ] **Inaktivitäts-Warnung**
-  - Nach 30 Min. Inaktivität: Toast-Notification
-  - "Beratung noch aktiv? Daten werden bei Inaktivität nach 60 Min. gelöscht."
-  - Button: "Ich bin noch da"
+**Offene Punkte (verschoben zu v1.3.0):**
+
+- [ ] CSV-Export für CRM-Integration
+- [ ] JSON-Export (vollständige Session-Daten)
+- [ ] PDF-Export-Verbesserungen (Session-Metadaten)
+- [ ] Datenschutz-Hinweis beim ersten Start
+- [ ] Inaktivitäts-Warnung (30/60 Min.)
 
 #### Technische Umsetzung
 
@@ -317,14 +333,32 @@ function exportToCSV() {
 
 ---
 
-### Version 1.3.0: Immobilien-Cashflow-Integration
+### Version 1.3.0: Export-Erweiterung & Immobilien-Integration
 
-**ETA:** Q1 2026 (4-6 Wochen)
-**Fokus:** Live-Visualisierung von Immobilien-Cashflows im Beratungsgespräch
+**ETA:** Q4 2025 / Q1 2026 (4-6 Wochen)
+**Fokus:** Strukturierte Daten-Exports & erweiterte Immobilien-Szenarien
 
 #### Features
 
-**1.3.1: Cashflow-Toggle im Beratungsgespräch** (Woche 1-2)
+**1.3.1: CSV/JSON-Export** (Woche 1-2)
+
+- [ ] **CSV-Export für CRM-Integration**
+  - Strukturierte Tabelle: Kategorie, Beschreibung, Betrag, Intervall
+  - Kopfzeile mit Session-Metadaten (Berater, Datum, Kunde)
+  - UTF-8 BOM für Excel-Kompatibilität
+  - Download-Dateiname: `Beratung_MX-2025-001_2025-10-23.csv`
+
+- [ ] **JSON-Export (Vollständig)**
+  - Alle Session-Daten als strukturiertes JSON
+  - Verwendung: Backup, Re-Import, Automatisierung
+  - Pretty-Print für menschliche Lesbarkeit
+
+- [ ] **PDF-Export-Verbesserungen**
+  - Session-Metadaten im Header (Berater, Datum, Kunde)
+  - Footer: "Exportiert am [Datum] um [Uhrzeit]"
+  - Erweiterte Immobilien-Sektion
+
+**1.3.2: Cashflow-Toggle im Beratungsgespräch** (Woche 2-3)
 
 - [ ] **Immobilien-Modal: Toggle "Flows aktivieren"**
   - Checkbox: "Cashflows ins Gesamtsystem integrieren"
@@ -335,18 +369,6 @@ function exportToCSV() {
   - Einkommen-Basin: +X€ durch Mieteinnahmen
   - Fixkosten-Basin: +Y€ durch Darlehen/Kosten
   - Sparrate: Automatische Neuberechnung
-
-**1.3.2: Flow-Visualisierung** (Woche 2-3)
-
-- [ ] **Grüner Flow: Immobilien → Einkommen**
-  - Mieteinnahmen als dicker grüner Pfeil
-  - Label: "Mieteinnahmen +1.250€"
-  - Animation: Fließt elegant nach oben
-
-- [ ] **Roter Flow: Fixkosten → Immobilien**
-  - Ausgaben als gestrichelter roter Pfeil
-  - Label: "Darlehen & Kosten -1.330€"
-  - Tooltip: "Davon 100€ Tilgung = Vermögensaufbau"
 
 **1.3.3: Beratungs-Szenarien** (Woche 3-4)
 
@@ -360,12 +382,16 @@ function exportToCSV() {
   - "Immobilie vermieten statt selbst nutzen"
   - "Zweite Immobilie kaufen"
 
-**1.3.4: Export-Erweiterung** (Woche 4)
+**1.3.4: Datenschutz-Compliance** (Woche 4)
 
-- [ ] **Immobilien-Sektion im PDF**
-  - Übersicht: Vermögen, Verbindlichkeiten, Cashflow
-  - Tabelle: Einnahmen & Ausgaben detailliert
-  - Berechnung: Nettovermögen, ROI, Tilgungsplan
+- [ ] **Datenschutz-Hinweis beim ersten Start**
+  - Info-Modal: "Alle Daten werden nur temporär gespeichert"
+  - Checkbox: "Verstanden, nicht erneut anzeigen"
+
+- [ ] **Inaktivitäts-Warnung**
+  - Nach 30 Min. Inaktivität: Toast-Notification
+  - "Beratung noch aktiv? Session läuft ab in 30 Min."
+  - Button: "Ich bin noch da"
 
 ---
 
@@ -630,28 +656,28 @@ Tab-Close → sessionStorage.clear()
 
 ---
 
-## 🚀 Quick Wins (Nächste 2-4 Wochen)
+## 🚀 Quick Wins (Nächste 2-4 Wochen) - v1.3.0
 
-### Prio 1: Session-Management-MVP
-
-- [ ] localStorage → sessionStorage Migration (2h)
-- [ ] Session-Start-Dialog (4h)
-- [ ] Manueller "Session beenden"-Button (2h)
-- [ ] beforeunload-Warnung (1h)
-
-### Prio 2: CSV-Export
+### Prio 1: CSV/JSON-Export
 
 - [ ] CSV-Export-Funktion (6h)
 - [ ] UTF-8 BOM für Excel (1h)
 - [ ] Session-Metadaten im Header (2h)
+- [ ] JSON-Export (vollständige Session-Daten) (3h)
 
-### Prio 3: UX-Verbesserungen
+### Prio 2: PDF-Export-Verbesserungen
 
-- [ ] Session-Info-Bar (Sticky Header) (4h)
-- [ ] Timer "Beratung läuft seit..." (2h)
-- [ ] Export-Status-Indikator (2h)
+- [ ] Session-Metadaten in PDF-Header (2h)
+- [ ] Footer mit Export-Timestamp (1h)
+- [ ] Erweiterte Immobilien-Sektion (4h)
 
-**Gesamtaufwand:** ~26 Stunden (ca. 1 Woche)
+### Prio 3: Compliance & UX
+
+- [ ] Datenschutz-Hinweis beim ersten Start (3h)
+- [ ] Inaktivitäts-Warnung (30/60 Min.) (4h)
+- [ ] Export-Status-Indikator verbessern (2h)
+
+**Gesamtaufwand:** ~28 Stunden (ca. 1 Woche)
 
 ---
 
@@ -691,6 +717,25 @@ Tab-Close → sessionStorage.clear()
 
 ## 📝 Changelog
 
+### v1.2.0 (Oktober 2025) ✅
+
+**Session-Management & UI/UX-Verbesserungen**
+
+- ✅ **Session-Lifecycle**: Start/End-Dialogs, Session-Recovery
+- ✅ **sessionStorage-Migration**: Daten nur während Tab-Session
+- ✅ **MLP Vermieterkonto**: 7. Basin mit bidirektionalen Flows
+- ✅ **Gradient-Zonen**: Visuelle Layer-Trennung (Wolken → Felder)
+- ✅ **Modal-Overlay-System**: Fullscreen-Modals mit Backdrop-Blur
+- ✅ **Session-Menu**: Eleganter Dropdown statt Bar
+- ✅ **Defizit-Line**: MLP Platin, dezent (0.15 opacity)
+- ✅ **Beratungsmodus-Fix**: Step 1 nur Einkommen
+
+**Commits:**
+- e860bec: Session lifecycle management
+- ffe2da1, a2d9e1b, eaebe66: Vermieterkonto mit Flows
+- 29f4ac6, b713b41, ad5f173, 085a3ee: Gradient-Zonen
+- 00c4173, 9a931a3, 1cc1b9f: Modal-System & UI-Polish
+
 ### v1.1.0 (Oktober 2025)
 
 - ✅ Immobilien-Basin mit Cashflow-Verwaltung
@@ -708,9 +753,9 @@ Tab-Close → sessionStorage.clear()
 ---
 
 **🎯 Ziel: Version 2.0.0 bis Q1 2027**
-**📅 Nächster Meilenstein: v1.2.0 (Session-Management) - Q4 2025**
+**📅 Nächster Meilenstein: v1.3.0 (Export-Erweiterung) - Q4 2025 / Q1 2026**
 
 ---
 
-*Letzte Aktualisierung: Oktober 2025*
-*Version: 2.0 (Roadmap - Beratungs-Fokus)*
+*Letzte Aktualisierung: 23. Oktober 2025*
+*Version: 2.1 (Roadmap - v1.2.0 abgeschlossen)*
