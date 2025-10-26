@@ -1054,6 +1054,13 @@
                                 <span class="text-gray-400">€</span>
                             </div>
                         </div>
+                        <div>
+                            <label class="text-sm text-gray-400 block mb-1">Wertsteigerung (optional)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="immo-wertsteigerung" value="0" step="0.1" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. 2.0">
+                                <span class="text-gray-400">% p.a.</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1068,6 +1075,20 @@
                                 <span class="text-gray-400">€</span>
                             </div>
                         </div>
+                        <div>
+                            <label class="text-sm text-gray-400 block mb-1">Zinssatz (optional)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="immo-zinssatz" value="0" step="0.1" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. 3.5">
+                                <span class="text-gray-400">%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400 block mb-1">Tilgungssatz (optional)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="immo-tilgungssatz" value="0" step="0.1" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. 2.0">
+                                <span class="text-gray-400">%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1078,6 +1099,52 @@
                 <div class="text-center">
                     <p class="text-sm text-gray-400 mb-2">Nettovermögen (Wert - Darlehen)</p>
                     <p id="immo-nettovermoegen" class="text-3xl font-bold text-green-400">0 €</p>
+                </div>
+            </div>
+
+            <!-- Berechnete Darlehensrate anzeigen -->
+            <div id="immo-rate-berechnet-display" class="mt-6 p-4 bg-blue-900 bg-opacity-30 rounded-lg border border-blue-500 hidden">
+                <h4 class="text-sm font-semibold text-blue-300 mb-2">📊 Berechnete monatliche Darlehensrate</h4>
+                <p class="text-2xl font-bold text-white"><span id="immo-rate-berechnet-wert">0 €</span></p>
+                <p class="text-xs text-gray-400 mt-1">
+                    Zinsen: <span id="immo-rate-zinsen">0 €</span> | Tilgung: <span id="immo-rate-tilgung">0 €</span>
+                </p>
+                <p class="text-xs text-blue-300 mt-2">💡 Diese Rate wird automatisch ins Vermieterkonto übertragen.</p>
+            </div>
+
+            <!-- Tilgungsplan Slider -->
+            <div id="immo-tilgungsplan-section" class="mt-6 bg-gray-900 p-4 rounded-lg hidden">
+                <h4 class="text-lg font-bold mb-3 text-blue-400">📈 Tilgungsplan & Vermögensaufbau</h4>
+
+                <div class="mb-4">
+                    <label class="text-sm text-gray-400 block mb-2">
+                        Zeitraum: <span id="immo-tilgungsplan-jahre" class="font-bold text-white">10</span> Jahre
+                    </label>
+                    <input type="range" id="immo-tilgungsplan-slider" min="0" max="20" value="10" step="1" class="w-full">
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>0 Jahre</span>
+                        <span>20 Jahre</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div class="text-center">
+                        <p class="text-xs text-gray-400">Restschuld</p>
+                        <p id="immo-tilgungsplan-restschuld" class="text-lg font-bold text-red-400">0 €</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-400">Gezahlte Zinsen</p>
+                        <p id="immo-tilgungsplan-zinsen" class="text-lg font-bold text-yellow-400">0 €</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-gray-400">Eigenkapital</p>
+                        <p id="immo-tilgungsplan-eigenkapital" class="text-lg font-bold text-green-400">0 €</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <p class="text-xs text-gray-400">Immobilienwert (mit Wertsteigerung)</p>
+                    <p id="immo-tilgungsplan-wert" class="text-xl font-bold text-blue-400">0 €</p>
                 </div>
             </div>
 
@@ -1095,46 +1162,6 @@
             <button type="button" onclick="closeModal('vermieterkonto-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Vermieterkonto schließen">&times;</button>
             <h3 id="vermieterkonto-modal-title" class="text-xl font-bold mb-4">Vermieterkonto</h3>
             <p class="text-sm text-gray-400 -mt-3 mb-4">Alle Einnahmen und Ausgaben deiner Immobilien laufen über dieses kostenlose Konto.</p>
-
-            <!-- Darlehensberechnung (Optional) -->
-            <div class="bg-gray-900 p-4 rounded-lg mb-6">
-                <h4 class="text-lg font-bold mb-3 text-yellow-400">📊 Darlehensberechnung (Optional)</h4>
-                <p class="text-xs text-gray-400 mb-3">Lasse die monatliche Rate automatisch berechnen oder lasse Felder leer für abbezahlte Immobilien.</p>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                        <label class="text-sm text-gray-400 block mb-1">Zinssatz</label>
-                        <div class="flex items-center gap-2">
-                            <input type="number" id="vk-zinssatz" value="0" step="0.1" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. 3.5">
-                            <span class="text-gray-400">%</span>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-400 block mb-1">Tilgungssatz</label>
-                        <div class="flex items-center gap-2">
-                            <input type="number" id="vk-tilgungssatz" value="0" step="0.1" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. 2.0">
-                            <span class="text-gray-400">%</span>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-400 block mb-1">Wertsteigerung</label>
-                        <div class="flex items-center gap-2">
-                            <input type="number" id="vk-wertsteigerung" value="0" step="0.1" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. 2.0">
-                            <span class="text-gray-400">% p.a.</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Berechnete Rate anzeigen -->
-                <div id="vk-rate-berechnet-display" class="mt-3 p-3 bg-blue-900 bg-opacity-30 rounded-lg border border-blue-500 hidden">
-                    <p class="text-sm text-blue-300">
-                        <strong>Berechnete monatliche Rate:</strong> <span id="vk-rate-berechnet-wert" class="font-bold">0 €</span>
-                        <span class="text-xs block mt-1">
-                            (davon Zinsen: <span id="vk-rate-zinsen">0 €</span>, Tilgung: <span id="vk-rate-tilgung">0 €</span>)
-                        </span>
-                    </p>
-                </div>
-            </div>
 
             <!-- Grid für 2 Kategorien -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1217,42 +1244,6 @@
                         <p class="text-xs text-gray-400">Mieteinnahmen fließen ins Einkommen, Ausgaben in die Fixkosten</p>
                     </div>
                 </label>
-            </div>
-
-            <!-- Tilgungsplan Slider -->
-            <div id="tilgungsplan-section" class="mt-6 bg-gray-900 p-4 rounded-lg hidden">
-                <h4 class="text-lg font-bold mb-3 text-blue-400">📈 Tilgungsplan & Vermögensaufbau</h4>
-
-                <div class="mb-4">
-                    <label class="text-sm text-gray-400 block mb-2">
-                        Zeitraum: <span id="tilgungsplan-jahre" class="font-bold text-white">10</span> Jahre
-                    </label>
-                    <input type="range" id="tilgungsplan-slider" min="0" max="20" value="10" step="1" class="w-full">
-                    <div class="flex justify-between text-xs text-gray-500">
-                        <span>0 Jahre</span>
-                        <span>20 Jahre</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div class="text-center">
-                        <p class="text-xs text-gray-400">Restschuld</p>
-                        <p id="tilgungsplan-restschuld" class="text-lg font-bold text-red-400">0 €</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-xs text-gray-400">Gezahlte Zinsen</p>
-                        <p id="tilgungsplan-zinsen" class="text-lg font-bold text-yellow-400">0 €</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-xs text-gray-400">Eigenkapital</p>
-                        <p id="tilgungsplan-eigenkapital" class="text-lg font-bold text-green-400">0 €</p>
-                    </div>
-                </div>
-
-                <div class="mt-4 text-center">
-                    <p class="text-xs text-gray-400">Immobilienwert (mit Wertsteigerung)</p>
-                    <p id="tilgungsplan-wert" class="text-xl font-bold text-blue-400">0 €</p>
-                </div>
             </div>
 
             <button type="button" onclick="saveVermieterkonto()" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Speichern &amp; Schließen</button>
@@ -3598,10 +3589,18 @@ function updateFixkostenItem(index, key, value) {
     // Aktualisiert die Eingabefelder im Modal mit den gespeicherten Werten
     function updateImmobilienInputs() {
         // Quick-Fix: Zeige erste Immobilie im Modal
-        const immo = immobilienData[0] || { wert: 0, darlehen: 0 };
+        const immo = immobilienData[0] || { wert: 0, darlehen: 0, zinssatz: 0, tilgungssatz: 0, wertsteigerung: 0 };
 
         if (getEl('immo-wert')) getEl('immo-wert').value = immo.wert || 0;
         if (getEl('immo-darlehen')) getEl('immo-darlehen').value = immo.darlehen || 0;
+        if (getEl('immo-zinssatz')) getEl('immo-zinssatz').value = immo.zinssatz || 0;
+        if (getEl('immo-tilgungssatz')) getEl('immo-tilgungssatz').value = immo.tilgungssatz || 0;
+        if (getEl('immo-wertsteigerung')) getEl('immo-wertsteigerung').value = immo.wertsteigerung || 0;
+
+        // Trigger Darlehensberechnung wenn Werte vorhanden
+        if (immo.zinssatz > 0 || immo.tilgungssatz > 0) {
+            updateImmoDarlehensrateBerechnung();
+        }
     }
 
     // Berechnet und zeigt Nettovermögen an (Cashflow jetzt im Vermieterkonto)
@@ -3630,11 +3629,24 @@ function updateFixkostenItem(index, key, value) {
         // TODO: Später erweitern für mehrere Immobilien
         const wert = parseFloat(getEl('immo-wert')?.value || 0);
         const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+        const zinssatz = parseFloat(getEl('immo-zinssatz')?.value || 0);
+        const tilgungssatz = parseFloat(getEl('immo-tilgungssatz')?.value || 0);
+        const wertsteigerung = parseFloat(getEl('immo-wertsteigerung')?.value || 0);
 
         if (immobilienData.length === 0) {
-            immobilienData.push({ wert, darlehen });
+            immobilienData.push({ wert, darlehen, zinssatz, tilgungssatz, wertsteigerung });
         } else {
-            immobilienData[0] = { wert, darlehen };
+            immobilienData[0] = { wert, darlehen, zinssatz, tilgungssatz, wertsteigerung };
+        }
+
+        // Übertrage berechnete Rate ins Vermieterkonto
+        if (zinssatz > 0 || tilgungssatz > 0) {
+            const result = berechneDarlehensrate(darlehen, zinssatz, tilgungssatz);
+            vermieterkontoData.rate = result.gesamt;
+            vermieterkontoData.zinssatz = zinssatz;
+            vermieterkontoData.tilgungssatz = tilgungssatz;
+            vermieterkontoData.wertsteigerung = wertsteigerung;
+            sessionStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
         }
 
         sessionStorage.setItem('immobilienData', JSON.stringify(immobilienData));
@@ -3644,13 +3656,118 @@ function updateFixkostenItem(index, key, value) {
 
     // Event Listener für Immobilien-Inputs (Live-Update der Zusammenfassung)
     function setupImmobilienListeners() {
-        const fields = ['wert', 'darlehen', 'miete', 'sonstige-einnahmen', 'rate', 'instandhaltung', 'steuern'];
+        const fields = ['wert', 'darlehen'];
         fields.forEach(field => {
             const input = getEl('immo-' + field);
             if (input) {
                 input.addEventListener('input', updateImmobilienSummary);
             }
         });
+
+        // Darlehens-Felder: Auto-Berechnung der Rate
+        const darlehensFields = ['zinssatz', 'tilgungssatz'];
+        darlehensFields.forEach(field => {
+            const input = getEl('immo-' + field);
+            if (input) {
+                input.addEventListener('input', updateImmoDarlehensrateBerechnung);
+            }
+        });
+
+        // Wertsteigerung: Update Tilgungsplan
+        const wertsteigerungInput = getEl('immo-wertsteigerung');
+        if (wertsteigerungInput) {
+            wertsteigerungInput.addEventListener('input', updateImmoTilgungsplan);
+        }
+
+        // Tilgungsplan-Slider
+        const slider = getEl('immo-tilgungsplan-slider');
+        if (slider) {
+            slider.addEventListener('input', updateImmoTilgungsplan);
+        }
+    }
+
+    // Darlehensberechnung für Immobilien-Modal
+    function updateImmoDarlehensrateBerechnung() {
+        const zinssatz = parseFloat(getEl('immo-zinssatz')?.value || 0);
+        const tilgungssatz = parseFloat(getEl('immo-tilgungssatz')?.value || 0);
+        const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+
+        if (darlehen === 0 || (zinssatz === 0 && tilgungssatz === 0)) {
+            // Verstecke Anzeige, wenn keine Berechnung möglich
+            const display = getEl('immo-rate-berechnet-display');
+            if (display) display.classList.add('hidden');
+
+            const tilgungsplanSection = getEl('immo-tilgungsplan-section');
+            if (tilgungsplanSection) tilgungsplanSection.classList.add('hidden');
+            return;
+        }
+
+        // Berechne Rate
+        const result = berechneDarlehensrate(darlehen, zinssatz, tilgungssatz);
+
+        // Zeige berechnete Rate
+        const display = getEl('immo-rate-berechnet-display');
+        const wertEl = getEl('immo-rate-berechnet-wert');
+        const zinsenEl = getEl('immo-rate-zinsen');
+        const tilgungEl = getEl('immo-rate-tilgung');
+
+        if (display) display.classList.remove('hidden');
+        if (wertEl) wertEl.textContent = formatCurrency(result.gesamt);
+        if (zinsenEl) zinsenEl.textContent = formatCurrency(result.zinsen);
+        if (tilgungEl) tilgungEl.textContent = formatCurrency(result.tilgung);
+
+        // Zeige Tilgungsplan
+        const tilgungsplanSection = getEl('immo-tilgungsplan-section');
+        if (tilgungsplanSection) tilgungsplanSection.classList.remove('hidden');
+
+        // Initial Tilgungsplan aktualisieren
+        updateImmoTilgungsplan();
+    }
+
+    // Tilgungsplan-Berechnung für Immobilien-Modal
+    function updateImmoTilgungsplan() {
+        const jahre = parseInt(getEl('immo-tilgungsplan-slider')?.value || 10);
+        const jahreEl = getEl('immo-tilgungsplan-jahre');
+        if (jahreEl) jahreEl.textContent = jahre;
+
+        const zinssatz = parseFloat(getEl('immo-zinssatz')?.value || 0);
+        const tilgungssatz = parseFloat(getEl('immo-tilgungssatz')?.value || 0);
+        const wertsteigerung = parseFloat(getEl('immo-wertsteigerung')?.value || 0);
+        const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+        const immowert = parseFloat(getEl('immo-wert')?.value || 0);
+
+        if (darlehen === 0) return;
+
+        // Berechnung über Jahre
+        let restschuld = darlehen;
+        let gezahlteZinsen = 0;
+        const result = berechneDarlehensrate(darlehen, zinssatz, tilgungssatz);
+        const monatsrate = result.gesamt;
+
+        for (let monat = 1; monat <= jahre * 12; monat++) {
+            const zinsenDiesenMonat = (restschuld * zinssatz / 100) / 12;
+            const tilgungDiesenMonat = monatsrate - zinsenDiesenMonat;
+
+            gezahlteZinsen += zinsenDiesenMonat;
+            restschuld = Math.max(0, restschuld - tilgungDiesenMonat);
+
+            if (restschuld === 0) break;
+        }
+
+        // Wertsteigerung der Immobilie
+        const wertMitSteigerung = immowert * Math.pow(1 + wertsteigerung / 100, jahre);
+        const eigenkapital = wertMitSteigerung - restschuld;
+
+        // Anzeige aktualisieren
+        const restschuldEl = getEl('immo-tilgungsplan-restschuld');
+        const zinsenEl = getEl('immo-tilgungsplan-zinsen');
+        const eigenkapitalEl = getEl('immo-tilgungsplan-eigenkapital');
+        const wertEl = getEl('immo-tilgungsplan-wert');
+
+        if (restschuldEl) restschuldEl.textContent = formatCurrency(restschuld);
+        if (zinsenEl) zinsenEl.textContent = formatCurrency(gezahlteZinsen);
+        if (eigenkapitalEl) eigenkapitalEl.textContent = formatCurrency(eigenkapital);
+        if (wertEl) wertEl.textContent = formatCurrency(wertMitSteigerung);
     }
 
     // === END IMMOBILIEN FUNCTIONS ===
@@ -3683,21 +3800,6 @@ function updateFixkostenItem(index, key, value) {
                 input.addEventListener('input', updateVermieterkontoSummary);
             }
         });
-
-        // Darlehens-Felder: Auto-Berechnung der Rate
-        const darlehensFields = ['zinssatz', 'tilgungssatz'];
-        darlehensFields.forEach(field => {
-            const input = getEl('vk-' + field);
-            if (input) {
-                input.addEventListener('input', updateDarlehensrateBerechnung);
-            }
-        });
-
-        // Tilgungsplan-Slider
-        const slider = getEl('tilgungsplan-slider');
-        if (slider) {
-            slider.addEventListener('input', updateTilgungsplan);
-        }
 
         // Cashflow-Integration Toggle
         const toggle = getEl('vk-cashflow-integration');
@@ -3736,102 +3838,6 @@ function updateFixkostenItem(index, key, value) {
         }
     }
 
-    // Automatische Darlehensraten-Berechnung
-    function updateDarlehensrateBerechnung() {
-        const zinssatz = parseFloat(getEl('vk-zinssatz')?.value || 0);
-        const tilgungssatz = parseFloat(getEl('vk-tilgungssatz')?.value || 0);
-
-        // Gesamtdarlehen aus Immobilien holen
-        const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
-
-        if (gesamtdarlehen === 0 || (zinssatz === 0 && tilgungssatz === 0)) {
-            // Verstecke Anzeige, wenn keine Berechnung möglich
-            const display = getEl('vk-rate-berechnet-display');
-            if (display) display.classList.add('hidden');
-
-            // Zeige Tilgungsplan nur wenn Darlehen vorhanden
-            const tilgungsplanSection = getEl('tilgungsplan-section');
-            if (tilgungsplanSection) tilgungsplanSection.classList.add('hidden');
-            return;
-        }
-
-        // Berechne Rate
-        const result = berechneDarlehensrate(gesamtdarlehen, zinssatz, tilgungssatz);
-
-        // Zeige berechnete Rate
-        const display = getEl('vk-rate-berechnet-display');
-        const wertEl = getEl('vk-rate-berechnet-wert');
-        const zinsenEl = getEl('vk-rate-zinsen');
-        const tilgungEl = getEl('vk-rate-tilgung');
-
-        if (display) display.classList.remove('hidden');
-        if (wertEl) wertEl.textContent = formatCurrency(result.gesamt);
-        if (zinsenEl) zinsenEl.textContent = formatCurrency(result.zinsen);
-        if (tilgungEl) tilgungEl.textContent = formatCurrency(result.tilgung);
-
-        // Fülle Rate-Feld automatisch aus
-        const rateInput = getEl('vk-rate');
-        if (rateInput) {
-            rateInput.value = result.gesamt.toFixed(2);
-            updateVermieterkontoSummary(); // Aktualisiere Zusammenfassung
-        }
-
-        // Zeige Tilgungsplan
-        const tilgungsplanSection = getEl('tilgungsplan-section');
-        if (tilgungsplanSection) tilgungsplanSection.classList.remove('hidden');
-
-        // Initial Tilgungsplan aktualisieren
-        updateTilgungsplan();
-    }
-
-    // Tilgungsplan-Berechnung
-    function updateTilgungsplan() {
-        const jahre = parseInt(getEl('tilgungsplan-slider')?.value || 10);
-        const jahreEl = getEl('tilgungsplan-jahre');
-        if (jahreEl) jahreEl.textContent = jahre;
-
-        const zinssatz = parseFloat(getEl('vk-zinssatz')?.value || 0);
-        const tilgungssatz = parseFloat(getEl('vk-tilgungssatz')?.value || 0);
-        const wertsteigerung = parseFloat(getEl('vk-wertsteigerung')?.value || 0);
-
-        // Startwerte
-        const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
-        const immowert = immobilienData.reduce((sum, immo) => sum + (immo.wert || 0), 0);
-
-        if (gesamtdarlehen === 0) return;
-
-        // Berechnung über Jahre
-        let restschuld = gesamtdarlehen;
-        let gezahlteZinsen = 0;
-        const result = berechneDarlehensrate(gesamtdarlehen, zinssatz, tilgungssatz);
-        const monatsrate = result.gesamt;
-
-        for (let monat = 1; monat <= jahre * 12; monat++) {
-            const zinsenDiesenMonat = (restschuld * zinssatz / 100) / 12;
-            const tilgungDiesenMonat = monatsrate - zinsenDiesenMonat;
-
-            gezahlteZinsen += zinsenDiesenMonat;
-            restschuld = Math.max(0, restschuld - tilgungDiesenMonat);
-
-            if (restschuld === 0) break;
-        }
-
-        // Wertsteigerung der Immobilie
-        const wertMitSteigerung = immowert * Math.pow(1 + wertsteigerung / 100, jahre);
-        const eigenkapital = wertMitSteigerung - restschuld;
-
-        // Anzeige aktualisieren
-        const restschuldEl = getEl('tilgungsplan-restschuld');
-        const zinsenEl = getEl('tilgungsplan-zinsen');
-        const eigenkapitalEl = getEl('tilgungsplan-eigenkapital');
-        const wertEl = getEl('tilgungsplan-wert');
-
-        if (restschuldEl) restschuldEl.textContent = formatCurrency(restschuld);
-        if (zinsenEl) zinsenEl.textContent = formatCurrency(gezahlteZinsen);
-        if (eigenkapitalEl) eigenkapitalEl.textContent = formatCurrency(eigenkapital);
-        if (wertEl) wertEl.textContent = formatCurrency(wertMitSteigerung);
-    }
-
     function loadVermieterkontoData() {
         const saved = sessionStorage.getItem('vermieterkontoData');
         if (saved) {
@@ -3846,19 +3852,11 @@ function updateFixkostenItem(index, key, value) {
         if (getEl('vk-miete')) getEl('vk-miete').value = vermieterkontoData.miete || 0;
         if (getEl('vk-sonstige-einnahmen')) getEl('vk-sonstige-einnahmen').value = vermieterkontoData.sonstigeEinnahmen || 0;
         if (getEl('vk-rate')) getEl('vk-rate').value = vermieterkontoData.rate || 0;
-        if (getEl('vk-zinssatz')) getEl('vk-zinssatz').value = vermieterkontoData.zinssatz || 0;
-        if (getEl('vk-tilgungssatz')) getEl('vk-tilgungssatz').value = vermieterkontoData.tilgungssatz || 0;
-        if (getEl('vk-wertsteigerung')) getEl('vk-wertsteigerung').value = vermieterkontoData.wertsteigerung || 0;
         if (getEl('vk-instandhaltung')) getEl('vk-instandhaltung').value = vermieterkontoData.instandhaltung || 0;
         if (getEl('vk-steuern')) getEl('vk-steuern').value = vermieterkontoData.steuern || 0;
         if (getEl('vk-cashflow-integration')) getEl('vk-cashflow-integration').checked = vermieterkontoData.cashflowIntegration || false;
 
         updateVermieterkontoSummary();
-
-        // Trigger Darlehensberechnung wenn Zinsen/Tilgung vorhanden
-        if (vermieterkontoData.zinssatz > 0 || vermieterkontoData.tilgungssatz > 0) {
-            updateDarlehensrateBerechnung();
-        }
     }
     // === END VERMIETERKONTO FUNCTIONS ===
 
