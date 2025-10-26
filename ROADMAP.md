@@ -367,36 +367,40 @@ function exportToCSV() {
   - Flowchart originalgetreu (1150px Container)
   - Keine Leerseiten, optimierte Page-Breaks
 
-**1.3.2: Cashflow-Toggle & Darlehensberechnung** (Woche 2-3) - IN PROGRESS
+**1.3.2: Cashflow-Toggle & Darlehensberechnung** ✅ (ABGESCHLOSSEN - Oktober 2025)
 
-- [ ] **Automatische Darlehensraten-Berechnung**
-  - Eingabefelder: Zinssatz (%), Tilgungssatz (%)
-  - Auto-Berechnung: Monatliche Annuitätenrate
-  - Anzeige: Zinsen vs. Tilgung (Split)
+- ✅ **Automatische Darlehensraten-Berechnung**
+  - Eingabefelder im Immobilien-Modal: Zinssatz (%), Tilgungssatz (%)
+  - Auto-Berechnung: Monatliche Annuitätenrate (Annuität)
+  - Anzeige: Zinsen vs. Tilgung (Split) mit Live-Update
   - Optional: Felder leer lassen (für abbezahlte Immobilien)
-  - Vorausfüllung im Vermieterkonto
+  - Automatische Übertragung der berechneten Rate ins Vermieterkonto-Datenmodell
 
-- [ ] **Tilgungsplan mit Slider (0-20 Jahre)**
-  - Slider: Zeitraum auswählen (0-20 Jahre)
+- ✅ **Tilgungsplan mit Slider (0-20 Jahre)**
+  - Slider: Zeitraum auswählen (0-20 Jahre) mit Live-Update
   - Anzeige: Restschuld, gezahlte Zinsen, Eigenkapital
-  - Wertsteigerung der Immobilie (Eingabefeld: % pro Jahr)
+  - Wertsteigerung der Immobilie (Eingabefeld: % p.a. neben Immobilienwert)
   - Visualisierung: Vermögensaufbau durch Tilgung + Wertsteigerung
+  - Compound-Growth-Berechnung für realistische Immobilien-Wertentwicklung
 
-- [ ] **Immobilien-Modal: Toggle "Flows aktivieren"**
+- ✅ **Vermieterkonto-Modal: Toggle "Cashflows ins Gesamtsystem integrieren"**
   - Checkbox: "Cashflows ins Gesamtsystem integrieren"
-  - Live-Preview: Zeigt Auswirkung auf Einkommen/Fixkosten
-  - Tooltip: "Aktivieren, um dem Kunden die Auswirkungen zu zeigen"
+  - Funktion: Mieteinnahmen fließen ins Einkommen, Ausgaben in Fixkosten
+  - Ermöglicht Kunden zu zeigen, wie Immobilien die Gesamtfinanzen beeinflussen
+  - sessionStorage-Persistenz
 
-- [ ] **Live-Update der Basins**
-  - Einkommen-Basin: +X€ durch Mieteinnahmen
-  - Fixkosten-Basin: +Y€ durch Darlehen/Kosten
+- ✅ **Live-Update der Basins**
+  - Einkommen-Basin: +X€ durch Mieteinnahmen (bei aktiviertem Toggle)
+  - Fixkosten-Basin: +Y€ durch Darlehen/Kosten (bei aktiviertem Toggle)
   - Sparrate: Automatische Neuberechnung
-  - Flows: Dezent/subtil hinter Hauptflows (keine Überlappung)
+  - Flows: Dezent/subtil mit 0.35 opacity (läuft hinter Hauptflows)
+  - Immobilien-Vermieterkonto-Connection: Sehr dezent (0.25 opacity, stroke-width 1.5px)
 
-- [ ] **Layout-Optimierung**
-  - Vermieterkonto auf Girokonto-Ebene (höher)
-  - Konsumkonto in die Mitte
+- ✅ **Layout-Optimierung**
+  - Vermieterkonto auf Girokonto-Ebene (gleiche Höhe wie Tagesgeld, v_gap * 3)
+  - Links positioniert für klare Trennung vom Hauptflow
   - Harmonische Abstände in Variante A und B
+  - Konsumkonto bleibt zentral in der Kaskade
 
 **1.3.3: Beratungs-Szenarien** (Woche 3-4)
 
@@ -946,14 +950,19 @@ Tab-Close → sessionStorage.clear()
 - ✅ **JSON-Import**: Vollständige Session-Wiederherstellung
 - ✅ **Toast-System**: Elegante Benachrichtigungen statt Alerts
 - ✅ **PDF-Optimierung**: Session-Daten im Header, optimiertes Layout
-- 🔄 **Darlehensberechnung**: Automatische Annuitätenrate (Zinssatz + Tilgung)
-- 🔄 **Tilgungsplan**: 0-20 Jahre Slider mit Wertsteigerung
-- 🔄 **Cashflow-Integration**: Toggle für Immobilien-Flows ins Gesamtsystem
+- ✅ **Darlehensberechnung**: Automatische Annuitätenrate im Immobilien-Modal (Zinssatz + Tilgung)
+- ✅ **Tilgungsplan**: 0-20 Jahre Slider mit Wertsteigerung & Compound-Growth
+- ✅ **Cashflow-Integration**: Toggle für Immobilien-Flows ins Gesamtsystem
+- ✅ **Layout-Optimierung**: Vermieterkonto auf Girokonto-Ebene, dezente Immobilien-Flows (0.35 opacity)
+- ✅ **UX-Verbesserung**: Logische Feld-Gruppierung (Wertsteigerung neben Immobilienwert, Zinssatz/Tilgung unter Darlehen)
 
 **Commits:**
 - 99366b0: PDF fixes and import UX optimization
 - 342ac9b: Suppress browser reload confirmation
 - dd306c3: Restore flowchart original layout
+- 8c96384: Rename "MLP Vermieterkonto" to "Vermieterkonto" (style consistency)
+- e7c6bf6: Move loan fields to Immobilien modal, implement auto-calculation & Tilgungsplan
+- [PENDING]: Complete v1.3.2 with cashflow integration and layout optimization
 
 ### v1.2.0 (Oktober 2025) ✅
 

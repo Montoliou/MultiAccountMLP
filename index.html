@@ -2627,8 +2627,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 // DEPOT und IMMOBILIEN: Gleiche Unterkante (top position)
                 depot:          { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
                 immobilien:     { top: v_gap * 4.0, left: outerFrameLeft },
-                // VERMIETERKONTO: 90px ÜBER Immobilien
-                vermieterkonto: { top: v_gap * 4.0 - vermieterkontoOffset, left: outerFrameLeft },
+                // VERMIETERKONTO: Auf Girokonto-Ebene (gleiche Höhe wie Tagesgeld), links positioniert
+                vermieterkonto: { top: v_gap * 3,  left: outerFrameLeft - immoWidth - 60 },
             };
         } else { // Variante A
             // Variante A: Einkommen -> Fixkosten -> Konsum -> Tagesgeld -> Depot
@@ -2640,8 +2640,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 // DEPOT und IMMOBILIEN: Gleiche Unterkante (top position)
                 depot:          { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
                 immobilien:     { top: v_gap * 4.0, left: outerFrameLeft },
-                // VERMIETERKONTO: 90px ÜBER Immobilien
-                vermieterkonto: { top: v_gap * 4.0 - vermieterkontoOffset, left: outerFrameLeft },
+                // VERMIETERKONTO: Auf Girokonto-Ebene (gleiche Höhe wie Tagesgeld), links positioniert
+                vermieterkonto: { top: v_gap * 3,  left: outerFrameLeft - immoWidth - 60 },
             };
         }
 
@@ -2678,7 +2678,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         g.appendChild(circle);
     }
 
-    function drawFlow(pathId, fromBasin, toBasin, value, maxFlowValue, labelText = '') {
+    function drawFlow(pathId, fromBasin, toBasin, value, maxFlowValue, labelText = '', flowOpacity = 1.0) {
         if (!fromBasin || !toBasin) return;
         const path = getEl(pathId), pathAnim = getEl(`${pathId}-anim`);
         const fromRect = fromBasin.getBoundingClientRect(), toRect = toBasin.getBoundingClientRect(), containerRect = flowContainer.getBoundingClientRect();
@@ -2690,6 +2690,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const normalizedValue = Math.max(0, value) / maxFlowValue;
         const strokeWidth = minWidth + normalizedValue * (maxWidth - minWidth);
         path.style.strokeWidth = `${value > 0 ? Math.max(minWidth, strokeWidth) : 0}px`;
+        path.style.opacity = flowOpacity; // Opacity für dezente Flows
 
         let pathData;
         // REPLACED BLOCK: custom anchor, curve, and offsets for each flow
@@ -2868,10 +2869,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             line.id = lineId;
             line.setAttribute('stroke', '#60a5fa'); // blue-400
-            line.setAttribute('stroke-width', '2');
+            line.setAttribute('stroke-width', '1.5'); // Reduziert von 2 auf 1.5
             line.setAttribute('stroke-dasharray', '8,4'); // gestrichelt
             line.setAttribute('fill', 'none');
-            line.setAttribute('opacity', '0.5');
+            line.setAttribute('opacity', '0.25'); // Reduziert von 0.5 auf 0.25 für dezentere Darstellung
             flowSvg.appendChild(line);
         }
 
@@ -2948,17 +2949,37 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     function calculateAndUpdate() {
         requestAnimationFrame(() => {
             positionCascade();
-            const income = parseFloat(inputs.income.value) || 0, konsumMin = parseFloat(inputs.konsumMin.value) || 0, konsumLeftover = parseFloat(inputs.konsumLeftover.value) || 0;
-            const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent.value) || 0, tagesgeldLimit = parseFloat(inputs.tagesgeldLimit.value) || 0;
-            const fixkostenOnlyTotal = fixkostenItems.filter(i => i.target === 'fixkosten').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
+
+            // Vermieterkonto-Daten holen
+            const vermieterData = getVermieterkontoData();
+            const cashflowIntegrated = vermieterkontoData.cashflowIntegration || false;
+
+            // Basiswerte
+            let income = parseFloat(inputs.income.value) || 0;
+            const konsumMin = parseFloat(inputs.konsumMin.value) || 0;
+            const konsumLeftover = parseFloat(inputs.konsumLeftover.value) || 0;
+            const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent.value) || 0;
+            const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit.value) || 0;
+
+            // Cashflow-Integration: Mieteinnahmen zum Einkommen hinzufügen
+            if (cashflowIntegrated && vermieterData.einnahmen > 0) {
+                income += vermieterData.einnahmen;
+            }
+
+            let fixkostenOnlyTotal = fixkostenItems.filter(i => i.target === 'fixkosten').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
             const depotSparplanTotal = fixkostenItems.filter(i => i.target === 'depot').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
+
+            // Cashflow-Integration: Vermieterkonto-Ausgaben zu Fixkosten hinzufügen
+            if (cashflowIntegrated && vermieterData.ausgaben > 0) {
+                fixkostenOnlyTotal += vermieterData.ausgaben;
+            }
+
             const totalAbgang = fixkostenOnlyTotal + depotSparplanTotal;
             // Zufluss (Inflow) in das Konsumkonto zur Skalierung der Min-Linie
             const konsumInflow = (currentVariant === 'A')
               ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
               : Math.max(0, income);                // Variante B: Einkommen geht direkt auf Konsum
-            // Vermieterkonto-Saldo berücksichtigen
-            const vermieterData = getVermieterkontoData();
+            // Vermieterkonto-Saldo berücksichtigen (vermieterData bereits oben deklariert)
             // Nur positiver Saldo fließt zu Tagesgeld (negativ wird von Fixkosten gedeckt)
             const vermieterkontoFlow = Math.max(0, vermieterData.saldo);
 
@@ -3073,9 +3094,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
             if (hasVermieterkontoCashflow) {
                 if (vermieterData.saldo > 0) {
-                    // Positiv: Vermieterkonto → Tagesgeld (Einnahmen fließen zu)
+                    // Positiv: Vermieterkonto → Tagesgeld (Einnahmen fließen zu) - DEZENT (0.35 opacity)
                     if (bothVisible(basins.vermieterkonto, basins.tagesgeld)) {
-                        drawFlow('vermieterkonto-tagesgeld-flow', basins.vermieterkonto, basins.tagesgeld, vermieterData.saldo, maxFlow, 'Netto-Mieteinnahmen');
+                        drawFlow('vermieterkonto-tagesgeld-flow', basins.vermieterkonto, basins.tagesgeld, vermieterData.saldo, maxFlow, 'Netto-Mieteinnahmen', 0.35);
                     }
                     hideDeficitLine('fixkosten-vermieterkonto-deficit'); // Deckungsbedarfs-Linie ausblenden
                 } else {
@@ -3774,17 +3795,14 @@ function updateFixkostenItem(index, key, value) {
 
     // === VERMIETERKONTO FUNCTIONS ===
     function saveVermieterkonto() {
-        vermieterkontoData = {
-            miete: parseFloat(getEl('vk-miete')?.value || 0),
-            sonstigeEinnahmen: parseFloat(getEl('vk-sonstige-einnahmen')?.value || 0),
-            rate: parseFloat(getEl('vk-rate')?.value || 0),
-            zinssatz: parseFloat(getEl('vk-zinssatz')?.value || 0),
-            tilgungssatz: parseFloat(getEl('vk-tilgungssatz')?.value || 0),
-            wertsteigerung: parseFloat(getEl('vk-wertsteigerung')?.value || 0),
-            instandhaltung: parseFloat(getEl('vk-instandhaltung')?.value || 0),
-            steuern: parseFloat(getEl('vk-steuern')?.value || 0),
-            cashflowIntegration: getEl('vk-cashflow-integration')?.checked || false
-        };
+        // Zinssatz, Tilgungssatz, Wertsteigerung werden jetzt im Immobilien-Modal verwaltet
+        // und automatisch beim Speichern der Immobilie ins vermieterkontoData übertragen
+        vermieterkontoData.miete = parseFloat(getEl('vk-miete')?.value || 0);
+        vermieterkontoData.sonstigeEinnahmen = parseFloat(getEl('vk-sonstige-einnahmen')?.value || 0);
+        vermieterkontoData.rate = parseFloat(getEl('vk-rate')?.value || 0);
+        vermieterkontoData.instandhaltung = parseFloat(getEl('vk-instandhaltung')?.value || 0);
+        vermieterkontoData.steuern = parseFloat(getEl('vk-steuern')?.value || 0);
+        vermieterkontoData.cashflowIntegration = getEl('vk-cashflow-integration')?.checked || false;
 
         sessionStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
         calculateAndUpdate();
