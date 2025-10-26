@@ -1542,6 +1542,31 @@
             csv += `Saldo (monatlich);${vermieterData.saldo}\n`;
         }
 
+        // Buchungsplaner
+        if (typeof bookingPlan !== 'undefined' && bookingPlan && Object.keys(bookingPlan).length > 0) {
+            csv += `\n# Buchungsplaner (Transaktionstermine)\n`;
+            csv += `Monat;Tag;Buchungstyp;Beschreibung\n`;
+
+            Object.keys(bookingPlan).forEach(month => {
+                const monthData = bookingPlan[month];
+                if (monthData && typeof monthData === 'object') {
+                    Object.keys(monthData).forEach(day => {
+                        const bookings = monthData[day];
+                        if (Array.isArray(bookings)) {
+                            bookings.forEach(bookingTypeId => {
+                                const bookingType = bookingTypeLookup[bookingTypeId];
+                                if (bookingType) {
+                                    const label = getActiveBookingLabel(bookingType);
+                                    const description = getActiveBookingDescription(bookingType);
+                                    csv += `${month === '0' ? 'Standard' : month};${day};${bookingTypeId};${description || label}\n`;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
         // Create download
         const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
         const filename = `Beratung_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.csv`;
@@ -1597,7 +1622,8 @@
                 fixkostenItems: fixkostenItems,
                 depotItems: depotItems,
                 immobilienData: immobilienData || [],
-                vermieterkonto: getVermieterkontoData()
+                vermieterkonto: getVermieterkontoData(),
+                buchungsplan: (typeof bookingPlan !== 'undefined') ? bookingPlan : {}
             }
         };
 
