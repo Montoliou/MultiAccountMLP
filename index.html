@@ -3867,8 +3867,6 @@ function updateFixkostenItem(index, key, value) {
         // Fallbacks für Browser, die die CSS-Regel ignorieren
         section.style.breakBefore = 'page';
         section.style.pageBreakBefore = 'always';
-        section.style.breakAfter = 'page';  // Prevent trailing empty page
-        section.style.pageBreakAfter = 'auto';
         section.innerHTML = `<h2>Dein Finanzfluss (aktueller Stand)</h2>`;
 
         // Live-DOM klonen: Ströme + Konten + Werte
@@ -3880,13 +3878,12 @@ function updateFixkostenItem(index, key, value) {
           // Interaktivität entfernen (keine Modals im Print)
           clone.querySelectorAll('[onclick]').forEach(n => n.removeAttribute('onclick'));
 
-          // Optimierte Größe für PDF (auto height statt fixed)
+          // Deterministische Größe wie im Live-UI (DO NOT CHANGE - flowchart layout depends on it!)
+          const cs = getComputedStyle(live);
           clone.style.position = 'relative';
-          clone.style.minHeight = 'auto';
-          clone.style.height    = 'auto';
-          clone.style.maxHeight = '1150px';
+          clone.style.minHeight = cs.minHeight || '1150px';
+          clone.style.height    = cs.height || '1150px';
           clone.style.width     = '100%';
-          clone.style.overflow  = 'visible';
 
           const holder = document.createElement('div');
           holder.style.marginTop = '8px';
