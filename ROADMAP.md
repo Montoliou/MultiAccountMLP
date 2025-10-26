@@ -395,33 +395,28 @@ function exportToCSV() {
 
 ---
 
-### Version 1.4.0: Multi-Client-Session-Management
+### Version 1.4.0: Session-Übersicht & Templates
 
-**ETA:** Q2 2026 (4-5 Wochen)
-**Fokus:** Mehrere parallele Beratungen, Session-Isolation
+**ETA:** Q2 2026 (3-4 Wochen)
+**Fokus:** Berater-Produktivität, Session-Management
+
+**Hinweis:** Multi-Tab-Isolation bereits durch sessionStorage gelöst (v1.2.0)
 
 #### Features
 
-**1.4.1: Multi-Tab-Support** (Woche 1-2)
+**1.4.1: Session-Übersicht (Landing-Page)** (Woche 1-2)
 
-- [ ] **Tab-Isolation**
-  - Jeder Tab = eigene Session mit eigenem sessionStorage-Namespace
-  - Eindeutige Tab-ID in URL-Parameter: `?session=ABC123`
-  - Keine Daten-Überschneidungen zwischen Tabs
+- [ ] **Übersicht aller offenen Sessions**
+  - Landing-Page beim App-Start
+  - Liste: Session-ID, Kundenkürzel, Dauer, Status
+  - "Du hast bereits 2 Beratungen in anderen Tabs offen"
+  - Actions: "Zu Session wechseln" / "Neue Session starten"
 
-- [ ] **Session-Übersicht**
-  - Landing-Page: Liste aller offenen Sessions
-  - Karten: Session-ID, Kundenkürzel, Dauer, Status
-  - Actions: "Fortsetzen" / "Export" / "Löschen"
+- [ ] **Session-Historie**
+  - Letzte 10 Sessions (aus sessionStorage)
+  - Quick-Reload: "Letzte Session fortsetzen"
 
-**1.4.2: Quick-Session-Switch** (Woche 2-3)
-
-- [ ] **Session-Switcher im UI**
-  - Dropdown in Session-Info-Bar
-  - Schnelles Wechseln zwischen parallelen Beratungen
-  - Warnung: "Ungespeicherte Änderungen in Session XYZ"
-
-**1.4.3: Template-System** (Woche 3-4)
+**1.4.2: Template-System** (Woche 2-3)
 
 - [ ] **Beratungs-Templates**
   - Vordefinierte Szenarien: "Gutverdiener", "Familie", "Rentner"
@@ -432,6 +427,14 @@ function exportToCSV() {
   - Erfolgreiche Beratung als Template speichern
   - Wiederverwendbar für ähnliche Kunden
   - Anonymisiert (nur Struktur, keine echten Daten)
+
+**1.4.3: Dual-Monitor-Support (Optional)** (Woche 3-4)
+
+- [ ] **Presenter-View-Synchronisation**
+  - Szenario: Berater hat 2 Monitore
+  - Monitor 1: Eingabe-View (für Berater)
+  - Monitor 2: Presenter-View (für Kunde, read-only)
+  - Beide Tabs zeigen gleiche Session, live synchronisiert
 
 ---
 
@@ -540,56 +543,245 @@ function exportToCSV() {
 
 ---
 
-### Version 2.0.0: Enterprise-Berater-Platform
+### Version 2.0.0: Vermögensverzehr-Modus (Ruhestandsplanung)
 
-**ETA:** Q1 2027 (12-14 Wochen)
-**Fokus:** Skalierung, White-Label, Multi-Mandanten
+**ETA:** Q1-Q2 2027 (10-12 Wochen)
+**Fokus:** Paradigmenwechsel - Von "Vermögensaufbau" zu "Vermögensverzehr"
+
+**Zielgruppe:** Pensionäre, Rentner, Menschen vor dem Ruhestand
+
+#### Konzept-Überblick
+
+**Problem:**
+Kunde ist Pensionär. Depot ist nicht mehr Ziel, sondern **Einkommensquelle**.
+Frage: "Wie lange reicht mein Vermögen bei gewünschtem Lebensstandard?"
+
+**Lösung:**
+- Modus-Toggle (wie Variante A/B): "Vermögensaufbau" ⇄ "Vermögensverzehr"
+- Umgekehrte Flow-Logik: Depot → Entnahme → Ausgaben → Reserve → Rückfluss Depot
+- Berechnung: Vermögensprognose, Entnahmedauer, Risiko-Analyse
+- Immobilien-Verkaufs-Simulation bei Fehlbetrag
+
+**Neue Logik:**
+```
+Einnahmen-Quellen:
+1. Depot-Entnahme (berechnet)
+2. Immobilien (Mieteinnahmen netto)
+3. Gesetzliche Renten (netto)
+4. Sonstige Einkünfte (netto)
+        ↓
+    Konsum-Konto (IMMER zuerst!)
+        ↓
+    Dauerauftrag → Fixkosten
+        ↓
+    Überschuss → Tagesgeld
+        ↓
+    Bei Tagesgeld-Ziel erreicht → Rückfluss ins Depot
+```
 
 #### Features
 
-**2.0.1: Mandanten-System** (Woche 1-4)
+**2.0.1: Modus-Toggle & Datenmodell** (Woche 1-2)
 
-- [ ] **Multi-Berater-Support**
-  - Jeder Berater: eigenes Login
-  - Eigene Session-Historie
-  - Keine Daten-Vermischung
+- [ ] **App-Modus-Switch**
+  - Toggle-Button (wie Variante A/B): "Vermögensaufbau" ⇄ "Vermögensverzehr"
+  - `let appMode = 'AUFBAU' | 'VERZEHR'`
+  - Persistierung in sessionStorage
+  - UI passt sich komplett an
 
-- [ ] **Berater-Profile**
-  - Name, Logo, Signatur
-  - Erscheint in PDFs
-  - Customization pro Berater
+- [ ] **Neues Datenmodell für Verzehr-Modus**
+  ```javascript
+  const verzehrData = {
+    // Vermögen
+    depotStart: 500000,
+    tagesgeldStart: 50000,
+    tagesgeldZiel: 50000,
 
-**2.0.2: White-Label für MLP-Partner** (Woche 4-6)
+    // Passive Einkünfte
+    gesetzlicheRenteNetto: 1800,
+    betriebsrenteNetto: 0,
+    immobilienMieteNetto: 800,
+    sonstigeEinkuenfte: 0,
 
-- [ ] **Branding-Anpassung**
-  - Eigenes Logo, Farben
-  - Custom Domain (z.B. finanzplanung.berater-mueller.de)
-  - Eigene Texte/Disclaimer
+    // Gewünschte Ausgaben (USER-Eingabe!)
+    fixkostenMonatlich: 1200,
+    gewuenschterKonsum: 2000,
 
-**2.0.3: Offline-Modus** (Woche 6-8)
+    // Zeitraum
+    aktuellesAlter: 67,
+    gewuenschtesEndalter: 95,
 
-- [ ] **PWA (Progressive Web App)**
-  - Installierbar auf Desktop
-  - Funktioniert ohne Internet
-  - Service-Worker für Caching
+    // Annahmen
+    depotRendite: 0.05,
+    inflation: 0.02,
+    steuersatz: 0.26375
+  };
+  ```
 
-- [ ] **Offline-Export-Queue**
-  - Exports werden gespeichert
-  - Bei Internet-Rückkehr: Auto-Upload
+- [ ] **Eingabe-Panel für Verzehr-Modus**
+  - Neue Eingabefelder: Gesetzliche Rente, Aktuelles Alter, Endalter
+  - Gewünschter Konsum (statt berechnet)
+  - Depot-Startwert, Rendite, Inflation
 
-**2.0.4: Analytics für Berater-Leitung** (Woche 8-10)
+**2.0.2: Berechnungs-Engine** (Woche 2-4)
 
-- [ ] **Aggregierte Statistiken (Anonymisiert)**
-  - Durchschnittliche Beratungsdauer
-  - Häufigste Optimierungen
-  - Depot-Allocation-Trends
+- [ ] **Vermögensverzehr-Algorithmus**
+  - Berechne monatliche Depot-Entnahme
+  - Formel: Annuitätenberechnung (umgekehrt)
+  - Input: Depot, Passive Einkünfte, Ausgaben, Rendite, Inflation
+  - Output: Wie lange reicht das Vermögen?
 
-**2.0.5: React/TypeScript-Migration** (Woche 10-14)
+- [ ] **Entnahmedauer-Berechnung**
+  ```javascript
+  function berechneEntnahmeDauer(startkapital, jaehrlicheEntnahme, rendite) {
+    // Annuitätenformel umgestellt nach n (Laufzeit)
+    // n = -ln(1 - K*r/E) / ln(1+r)
+    return -Math.log(1 - (startkapital * rendite / jaehrlicheEntnahme))
+            / Math.log(1 + rendite);
+  }
+  ```
 
-- [ ] **Moderne Architektur**
-  - Component-basiert
-  - Type-Safety
-  - Unit-Tests (80% Coverage)
+- [ ] **Risiko-Analyse**
+  - Vergleich: Depot-Erschöpfung vs. Gewünschtes Endalter
+  - Status: ✅ SICHER | ⚠️ RISIKO | 🚨 KRITISCH
+  - Fehlbetrag-Berechnung bei Risiko
+
+- [ ] **4%-Regel-Validator**
+  - Nachhaltige Entnahmerate berechnen
+  - Warnung: "Sie entnehmen 6% p.a. - empfohlen: max. 4%"
+
+**2.0.3: UI/UX - Umgekehrte Flows** (Woche 4-6)
+
+- [ ] **Neue Basin-Anordnung (Verzehr-Modus)**
+  ```
+  Ebene 1 (Einnahmen):
+  - [Depot-Entnahme] [Immobilie] [Renten] [Sonstige]
+
+  Ebene 2 (Ausgaben):
+  - [Konsum-Konto] ──Dauerauftrag──> [Fixkosten]
+
+  Ebene 3 (Reserve):
+  - [Tagesgeld] ──bei Ziel erreicht──> [Depot]
+  ```
+
+- [ ] **Umgekehrte Flow-Visualisierung**
+  - Depot → Konsum (grüner Flow, nach UNTEN)
+  - Konsum → Fixkosten (Dauerauftrag, IMMER aktiv)
+  - Überschuss → Tagesgeld → Depot (Rückfluss!)
+
+- [ ] **Depot-Entnahme-Anzeige**
+  - Basin zeigt: "Entnahme: 1.400€/Monat"
+  - Depot-Restlaufzeit: "Reicht noch: 28 Jahre"
+  - Progress-Bar: Vermögen vs. Verbrauch
+
+- [ ] **Tagesgeld-Rückfluss-Logik**
+  - WICHTIG: Erst Tagesgeld auf Ziel (50k)
+  - Dann Überschuss zurück ins Depot
+  - Visual: Grüner Rückfluss-Pfeil Tagesgeld → Depot
+
+**2.0.4: Prognose-Chart (Must-Have)** (Woche 6-7)
+
+- [ ] **Vermögensverlaufs-Chart**
+  - X-Achse: Alter (67 → 105 Jahre)
+  - Y-Achse: Vermögen (€)
+  - Linie 1: Depot-Verlauf (rot, wird weniger)
+  - Linie 2: Tagesgeld (grün, konstant)
+  - Vertikale Linie: Gewünschtes Endalter (orange)
+  - Farbige Zone: Risiko-Bereich (rot) vs. Sicher (grün)
+
+- [ ] **Inflation-Berücksichtigung**
+  - Toggle: "Mit Inflation" / "Ohne Inflation"
+  - Chart zeigt Kaufkraft-bereinigte Werte
+  - Tooltip: "In heutiger Kaufkraft: X€"
+
+- [ ] **Interaktive Szenarien**
+  - Slider: "Was wenn Rendite nur 3% statt 5%?"
+  - Chart aktualisiert live
+  - Vergleich: Optimistisch / Realistisch / Pessimistisch
+
+**2.0.5: Immobilien-Verkaufs-Simulation** (Woche 7-8)
+
+- [ ] **Automatischer Vorschlag bei Fehlbetrag**
+  ```
+  ⚠️ WARNUNG: Vermögen reicht nur 23 Jahre (bis Alter 90)
+  Gewünscht: 28 Jahre (bis Alter 95)
+  Fehlbetrag: ca. 120.000 €
+
+  💡 EMPFEHLUNG: Immobilie verkaufen
+  - Verkaufserlös: 285.000 € (netto, -5% Kosten)
+  - Vermögen reicht dann: 35 Jahre (bis Alter 102)
+  - Zusätzliche Sicherheit: +12 Jahre
+
+  ⚠️ HINWEIS: Bei Verkauf eigener Immobilie
+  → Bitte Mietausgabe in Fixkosten nachtragen!
+
+  [Immobilien-Verkauf simulieren] [Mietausgabe hinzufügen]
+  ```
+
+- [ ] **Szenario-Vergleich: Mit/Ohne Verkauf**
+  - Side-by-Side Chart
+  - Links: Ohne Immobilienverkauf
+  - Rechts: Mit Immobilienverkauf
+  - Highlight: Unterschiede (Laufzeit, Sicherheit)
+
+- [ ] **Mietausgabe-Erinnerung**
+  - Bei Immobilienverkauf: Modal
+  - "Bitte Mietausgabe in Fixkosten eintragen!"
+  - Input-Feld direkt im Modal
+  - Automatisches Hinzufügen zu Fixkosten
+
+**2.0.6: Depot-Verzehr-Szenarien** (Woche 8-9)
+
+- [ ] **Szenario-Auswahl**
+  - Checkbox 1: "Depot-Verzehr aktivieren" (Standard)
+  - Checkbox 2: "Immobilien-Verkauf einberechnen"
+  - Kombinierbar: Beide, nur Depot, nur Immobilie
+
+- [ ] **Vergleichs-Tabelle**
+  ```
+  | Szenario              | Laufzeit | Bis Alter | Status   |
+  |-----------------------|----------|-----------|----------|
+  | Nur passive Einkünfte | 8 Jahre  | 75        | 🚨 KRITISCH |
+  | + Depot-Verzehr       | 23 Jahre | 90        | ⚠️ RISIKO   |
+  | + Immobilien-Verkauf  | 35 Jahre | 102       | ✅ SICHER   |
+  ```
+
+- [ ] **Empfehlungs-Logik**
+  - Automatische Berechnung aller Szenarien
+  - Highlight: Beste Option für gewünschtes Endalter
+  - Erklärung: "Warum dieses Szenario?"
+
+**2.0.7: Export-Erweiterung für Verzehr-Modus** (Woche 9-10)
+
+- [ ] **PDF-Export: Ruhestandsplanung**
+  - Sektion: "Vermögensverzehr-Analyse"
+  - Tabelle: Passive Einkünfte, Ausgaben, Depot-Entnahme
+  - Chart: Vermögensverlauf eingebettet
+  - Szenarien-Vergleich
+  - Risiko-Bewertung & Empfehlungen
+
+- [ ] **CSV-Export: Jahres-Prognose**
+  - Spalten: Jahr, Alter, Depot, Tagesgeld, Entnahme, Rendite
+  - 50 Jahre vorausberechnet
+  - Excel-kompatibel (UTF-8 BOM)
+
+**2.0.8: Testing & Finalisierung** (Woche 10-12)
+
+- [ ] **Modus-Wechsel testen**
+  - Aufbau ↔ Verzehr ohne Datenverlust
+  - Session-Daten korrekt migriert
+  - UI vollständig angepasst
+
+- [ ] **Edge Cases**
+  - Depot-Rendite = 0%
+  - Negative Rendite (Crash-Szenario)
+  - Passive Einkünfte > Ausgaben (kein Depot-Verzehr nötig)
+  - Immobilie ohne Wert
+
+- [ ] **Dokumentation**
+  - Benutzerhandbuch: Verzehr-Modus
+  - Berechnungs-Formeln dokumentiert
+  - Screenshots & Beispiele
 
 ---
 
@@ -752,10 +944,15 @@ Tab-Close → sessionStorage.clear()
 
 ---
 
-**🎯 Ziel: Version 2.0.0 bis Q1 2027**
+**🎯 Ziel: Version 2.0.0 (Vermögensverzehr-Modus) bis Q1-Q2 2027**
 **📅 Nächster Meilenstein: v1.3.0 (Export-Erweiterung) - Q4 2025 / Q1 2026**
+
+**Langfristige Vision:**
+- v1.x: Vermögensaufbau-Fokus (Erwerbstätige)
+- v2.0: Vermögensverzehr-Modus (Pensionäre/Rentner)
+- v3.0: Unified Platform (beide Modi, nahtloser Übergang)
 
 ---
 
 *Letzte Aktualisierung: 23. Oktober 2025*
-*Version: 2.1 (Roadmap - v1.2.0 abgeschlossen)*
+*Version: 2.2 (Roadmap - v2.0 Konzept: Vermögensverzehr-Modus)*
