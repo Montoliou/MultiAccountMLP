@@ -1784,6 +1784,9 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
 
                 console.log('✅ Session-Backup erfolgreich importiert:', backup.session?.id);
 
+                // Set flag to skip recovery dialog after reload
+                sessionStorage.setItem('skipRecoveryDialog', 'true');
+
                 // Reload page to apply all changes
                 alert('Session-Backup erfolgreich importiert!\n\nDie Seite wird neu geladen, um alle Daten anzuzeigen.');
                 location.reload();
@@ -3779,7 +3782,19 @@ function updateFixkostenItem(index, key, value) {
         // === SESSION INITIALIZATION (v1.2.0) ===
         // Check for existing session or show start dialog
         const existingSession = getCurrentSession();
-        if (existingSession) {
+
+        // Check if we just imported a backup (skip recovery dialog)
+        const skipRecovery = sessionStorage.getItem('skipRecoveryDialog');
+        if (skipRecovery) {
+            sessionStorage.removeItem('skipRecoveryDialog');
+            // Imported session - continue directly without asking
+            if (existingSession) {
+                updateSessionInfoBar();
+                startSessionTimer();
+                resetInactivityTimers();
+                console.log('📥 Importierte Session fortgesetzt:', existingSession.id);
+            }
+        } else if (existingSession) {
             // Session found - show recovery dialog
             const sessionAge = new Date() - new Date(existingSession.startzeit);
             const maxAge = 24 * 60 * 60 * 1000; // 24 hours
