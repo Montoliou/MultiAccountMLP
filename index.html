@@ -1515,9 +1515,9 @@
 
         // Depot-Allocation
         csv += `\n# Depot-Aufteilung\n`;
-        csv += `Fonds/ETF;Allocation (%);Farbe\n`;
+        csv += `Fonds/ETF;Allocation (%)\n`;
         depotItems.forEach(item => {
-            csv += `${item.name};${item.allocation};${item.color}\n`;
+            csv += `${item.name};${item.allocation}\n`;
         });
 
         // Immobilien
@@ -1545,7 +1545,7 @@
         // Buchungsplaner
         if (typeof bookingPlan !== 'undefined' && bookingPlan && Object.keys(bookingPlan).length > 0) {
             csv += `\n# Buchungsplaner (Transaktionstermine)\n`;
-            csv += `Monat;Tag;Buchungstyp;Beschreibung\n`;
+            csv += `Tag;Beschreibung\n`;
 
             Object.keys(bookingPlan).forEach(month => {
                 const monthData = bookingPlan[month];
@@ -1556,9 +1556,8 @@
                             bookings.forEach(bookingTypeId => {
                                 const bookingType = bookingTypeLookup[bookingTypeId];
                                 if (bookingType) {
-                                    const label = getActiveBookingLabel(bookingType);
                                     const description = getActiveBookingDescription(bookingType);
-                                    csv += `${month === '0' ? 'Standard' : month};${day};${bookingTypeId};${description || label}\n`;
+                                    csv += `${day};${description}\n`;
                                 }
                             });
                         }
