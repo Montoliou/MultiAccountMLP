@@ -962,7 +962,7 @@ Tab-Close → sessionStorage.clear()
 - dd306c3: Restore flowchart original layout
 - 8c96384: Rename "MLP Vermieterkonto" to "Vermieterkonto" (style consistency)
 - e7c6bf6: Move loan fields to Immobilien modal, implement auto-calculation & Tilgungsplan
-- [PENDING]: Complete v1.3.2 with cashflow integration and layout optimization
+- 8bc5ddb: Complete v1.3.2 with cashflow integration and layout optimization
 
 ### v1.2.0 (Oktober 2025) ✅
 
