@@ -75,17 +75,92 @@
         input:checked + .slider:before { transform: translateX(26px); }
         
         #printable-report { display: none; }
-        @media print { body > *:not(#printable-report) { display: none !important; } #printable-report { display: block; color: #000; background: #fff; } .print-table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; } .print-table th, .print-table td { border: 1px solid #ccc; padding: 8px; text-align: left; } .print-table th { background-color: #f2f2f2; } .print-break { page-break-after: always; break-after: page; height: 1px; } }
         @media print {
+          /* Hide everything except the report */
+          body > *:not(#printable-report) { display: none !important; }
+
+          /* Report container */
+          #printable-report {
+            display: block;
+            color: #000;
+            background: #fff;
+            padding: 20mm;
+            max-width: 100%;
+          }
+
+          /* Headers */
+          #printable-report h1 {
+            font-size: 24pt;
+            margin-bottom: 12pt;
+            color: #002F6C; /* MLP Blue */
+          }
+
+          #printable-report h2 {
+            font-size: 16pt;
+            margin-top: 20pt;
+            margin-bottom: 10pt;
+            color: #002F6C;
+            break-after: avoid;
+            page-break-after: avoid;
+          }
+
+          #printable-report p.muted {
+            font-size: 10pt;
+            color: #666;
+            margin-bottom: 8pt;
+          }
+
+          /* Tables */
+          .print-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+
+          .print-table th, .print-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            font-size: 10pt;
+          }
+
+          .print-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+          }
+
+          /* Prevent orphaned table headers */
+          .print-table thead {
+            break-after: avoid;
+            page-break-after: avoid;
+          }
+
+          /* Print breaks */
+          .print-break {
+            page-break-after: always;
+            break-after: page;
+            height: 1px;
+          }
+
           /* Eigene Seite für den Finanzfluss */
           .print-finanzfluss {
-            break-before: page;        /* modern */
-            page-break-before: always; /* legacy */
+            break-before: page;
+            page-break-before: always;
           }
-          /* Verhindert „hängende“ Überschrift am Seitenende */
+
+          /* Verhindert „hängende" Überschrift am Seitenende */
           .print-finanzfluss h2 {
             break-after: avoid;
             page-break-after: avoid;
+          }
+
+          /* Optimize flowchart container for print */
+          #flow-container-print {
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
         }
 
@@ -845,16 +920,7 @@
                             </div>
                         </section>
                     </div>
-                    <div class="print-area">
-                        <button onclick="prepareAndPrint()" class="btn btn-secondary btn-lg btn-block print-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2"></path>
-                                <path d="M7 21h10a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2z"></path>
-                                <path d="M7 5V3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                            Planung als PDF drucken
-                        </button>
-                    </div>
+                    <!-- PDF Print Button removed - now in Session Menu -->
                 </div>
             </aside>
             <div id="flow-container" class="w-full lg:flex-grow relative min-h-[1150px]">
@@ -1724,11 +1790,11 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
 
                 // Validate backup format
                 if (!backup.version || backup.exportType !== 'FULL_SESSION_BACKUP') {
-                    alert('Ungültiges Backup-Format! Bitte wähle eine gültige Session-Backup-Datei.');
+                    showToast('Ungültiges Backup-Format! Bitte wähle eine gültige Session-Backup-Datei.', 'error', 5000);
                     return;
                 }
 
-                // Confirm import
+                // Show confirmation modal (keep the existing modal from screenshot)
                 const confirmed = confirm(
                     `Session-Backup importieren?\n\n` +
                     `Session-ID: ${backup.session?.id || 'Unbekannt'}\n` +
@@ -1787,13 +1853,21 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
                 // Set flag to skip recovery dialog after reload
                 sessionStorage.setItem('skipRecoveryDialog', 'true');
 
-                // Reload page to apply all changes
-                alert('Session-Backup erfolgreich importiert!\n\nDie Seite wird neu geladen, um alle Daten anzuzeigen.');
-                location.reload();
+                // Show success toast and reload automatically after 2 seconds
+                showToast(
+                    `Session-Backup erfolgreich importiert! Seite wird neu geladen...`,
+                    'success',
+                    2000
+                );
+
+                // Reload page automatically after toast
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
 
             } catch (error) {
                 console.error('Import-Fehler:', error);
-                alert('Fehler beim Importieren der Backup-Datei!\n\n' + error.message);
+                showToast(`Fehler beim Importieren: ${error.message}`, 'error', 6000);
             }
         };
 
@@ -3235,6 +3309,83 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if (el.getAttribute('aria-hidden') === 'true') return false;
         return isVisible(el);
     }
+
+    // Toast Notification System
+    function showToast(message, type = 'success', duration = 4000) {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            min-width: 300px;
+            max-width: 500px;
+            font-size: 14px;
+            line-height: 1.5;
+            animation: slideIn 0.3s ease-out;
+            cursor: pointer;
+        `;
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>' :
+                      type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>' :
+                      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
+                </svg>
+                <span>${message}</span>
+            </div>
+        `;
+
+        // Add animation styles if not already present
+        if (!document.getElementById('toast-animations')) {
+            const style = document.createElement('style');
+            style.id = 'toast-animations';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(400px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(400px); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Add toast to container
+        toastContainer.appendChild(toast);
+
+        // Remove toast on click
+        toast.addEventListener('click', () => removeToast(toast));
+
+        // Auto-remove after duration
+        if (duration > 0) {
+            setTimeout(() => removeToast(toast), duration);
+        }
+
+        return toast;
+    }
+
+    function removeToast(toast) {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }
     const fixkostenModal = { list: getEl('fixkosten-list'), total: getEl('modal-total') };
     function saveFixkosten() { calculateAndUpdate(); closeModal('fixkosten-modal'); }
     function renderFixkostenList() { fixkostenModal.list.innerHTML = ''; let total = 0; fixkostenItems.forEach((item, index) => { const itemEl = document.createElement('div'); itemEl.className = 'grid grid-cols-12 gap-2 items-center'; itemEl.innerHTML = `<input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten" class="col-span-4 bg-gray-700 p-1 rounded"><input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="Betrag" class="col-span-2 bg-gray-700 p-1 rounded"><select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="col-span-2 bg-gray-700 p-1 rounded">${['monthly','quarterly','annually'].map(i => `<option value="${i}" ${item.interval === i ? 'selected' : ''}>${i==='monthly'?'mtl.':i==='quarterly'?'viertelj.':'jährl.'}</option>`).join('')}</select><select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="col-span-3 bg-gray-700 p-1 rounded"><option value="fixkosten" ${item.target==='fixkosten'?'selected':''}>-> Fixkosten</option><option value="depot" ${item.target==='depot'?'selected':''}>-> Sparplan</option></select><button onclick="removeFixkostenItem(${index})" class="col-span-1 text-red-400 hover:text-red-300 text-xl">&times;</button>`; fixkostenModal.list.appendChild(itemEl); total += getMonthlyAmount(item); }); fixkostenModal.total.textContent = formatCurrency(total); }
@@ -3669,9 +3820,15 @@ function updateFixkostenItem(index, key, value) {
         const fixRows = fixkostenItems.map(i => `<tr><td>${i.name}</td><td>${formatCurrency(i.amount)}</td><td>${i.interval}</td><td>${i.target}</td></tr>`).join('');
         const depRows = depotItems.map(i => `<tr><td>${i.name}</td><td>${i.allocation}%</td></tr>`).join('');
 
-        // 4) Compose report HTML (theme-neutral for print)
+        // 4) Get session data
+        const session = getCurrentSession();
+        const kundenKuerzel = session?.kundenKuerzel || 'N/A';
+        const berater = session?.berater || 'N/A';
+
+        // 5) Compose report HTML (theme-neutral for print)
         let html = `
           <h1>Zusammenfassung: Das intelligente Vermögensmanagement</h1>
+          <p class="muted">Planung für: <strong>${kundenKuerzel}</strong> • von: <strong>${berater}</strong></p>
           <p class="muted">Variante: <strong>${currentVariant}</strong> • Theme: <strong>${themeNote}</strong> • Datum: ${new Date().toLocaleDateString('de-DE')}</p>
 
           <h2>Ihre Planung</h2>
@@ -3703,6 +3860,8 @@ function updateFixkostenItem(index, key, value) {
         // Fallbacks für Browser, die die CSS-Regel ignorieren
         section.style.breakBefore = 'page';
         section.style.pageBreakBefore = 'always';
+        section.style.breakAfter = 'page';  // Prevent trailing empty page
+        section.style.pageBreakAfter = 'auto';
         section.innerHTML = `<h2>Dein Finanzfluss (aktueller Stand)</h2>`;
 
         // Live-DOM klonen: Ströme + Konten + Werte
@@ -3714,12 +3873,13 @@ function updateFixkostenItem(index, key, value) {
           // Interaktivität entfernen (keine Modals im Print)
           clone.querySelectorAll('[onclick]').forEach(n => n.removeAttribute('onclick'));
 
-          // Deterministische Größe wie im Live-UI
-          const cs = getComputedStyle(live);
+          // Optimierte Größe für PDF (auto height statt fixed)
           clone.style.position = 'relative';
-          clone.style.minHeight = cs.minHeight || '1150px';
-          clone.style.height    = cs.height || '1150px';
+          clone.style.minHeight = 'auto';
+          clone.style.height    = 'auto';
+          clone.style.maxHeight = '1150px';
           clone.style.width     = '100%';
+          clone.style.overflow  = 'visible';
 
           const holder = document.createElement('div');
           holder.style.marginTop = '8px';
@@ -3949,6 +4109,12 @@ function updateFixkostenItem(index, key, value) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
                     </svg>
                     Als JSON exportieren
+                </button>
+                <button onclick="prepareAndPrint(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 rounded transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    Als PDF drucken
                 </button>
             </div>
             <div class="p-2">

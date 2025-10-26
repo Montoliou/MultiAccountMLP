@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\ndocs(roadmap): update to reflect v1.2.0 completion\n\nMajor updates:\n- ✅ v1.2.0 marked as completed (Session-Management & UI/UX)\n- Updated \"Aktuelle Version\" from 1.2.0-dev to 1.2.0\n- Documented all implemented features:\n  - Session lifecycle management (Start/End dialogs, Recovery)\n  - sessionStorage migration (auto-delete on tab close)\n  - MLP Vermieterkonto (7th basin with bidirectional flows)\n  - Gradient zones (weather metaphor: Wolken→Horizont→Schuppen→Felder)\n  - Modal overlay system (fullscreen, backdrop-blur, glassmorphism)\n  - Session menu (elegant dropdown instead of bar)\n  - Deficit line (MLP Platin, 0.15 opacity)\n  - Consultation mode fix (Step 1: only Einkommen)\n\n- Reorganized development roadmap:\n  - v1.2.0: Marked as completed with all implemented features\n  - v1.3.0: Refocused on Export-Erweiterung & Immobilien-Integration\n  - Moved pending features (CSV/JSON export, compliance) to v1.3.0\n\n- Updated changelog with v1.2.0 achievements and commit references\n- Updated \"Quick Wins\" section for v1.3.0 priorities\n- Updated \"Nächster Meilenstein\" to v1.3.0\n\nNext milestone: v1.3.0 (Export extensions) - Q4 2025 / Q1 2026\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
