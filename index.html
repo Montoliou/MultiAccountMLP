@@ -1480,7 +1480,13 @@
     }
 
     // Prevent tab close without confirmation
+    let allowReloadWithoutWarning = false;
     window.addEventListener('beforeunload', (e) => {
+        // Skip warning if we're reloading after import
+        if (allowReloadWithoutWarning) {
+            return;
+        }
+
         const session = getCurrentSession();
         if (session && session.status !== 'exportiert') {
             e.preventDefault();
@@ -1860,8 +1866,9 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
                     2000
                 );
 
-                // Reload page automatically after toast
+                // Reload page automatically after toast (without confirmation)
                 setTimeout(() => {
+                    allowReloadWithoutWarning = true;
                     location.reload();
                 }, 2000);
 
