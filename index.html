@@ -1589,8 +1589,12 @@
             return;
         }
 
-        // Collect all application data
+        // Collect ALL application data for complete session backup
         const exportData = {
+            // Format version for future compatibility
+            version: '1.3.0',
+            exportType: 'FULL_SESSION_BACKUP',
+
             // Session metadata
             session: {
                 id: session.id,
@@ -1598,18 +1602,20 @@
                 berater: session.berater,
                 startzeit: session.startzeit,
                 letzteAktivitaet: session.letzteAktivitaet,
-                exportiert: new Date().toISOString()
+                exportiert: new Date().toISOString(),
+                status: session.status
             },
 
-            // Application settings
+            // Application settings (for UI state restoration)
             settings: {
                 currentVariant: currentVariant,
                 consultationMode: consultationMode,
-                consultationStep: consultationStep
+                consultationStep: consultationStep,
+                theme: localStorage.getItem('theme') || 'dark'
             },
 
-            // Financial data
-            data: {
+            // All financial input data
+            inputs: {
                 income: parseFloat(inputs.income.value) || 0,
                 konsumMin: parseFloat(inputs.konsumMin.value) || 0,
                 konsumLeftover: parseFloat(inputs.konsumLeftover.value) || 0,
@@ -1617,22 +1623,44 @@
                 tagesgeldLimit: parseFloat(inputs.tagesgeldLimit.value) || 0,
                 depotCurrent: parseFloat(inputs.depotCurrent.value) || 0,
                 anlagezeitraum: parseInt(inputs.anlagezeitraum.value, 10),
-                rendite: parseFloat(inputs.rendite.value) || 0,
-                fixkostenItems: fixkostenItems,
-                depotItems: depotItems,
-                immobilienData: immobilienData || [],
-                vermieterkonto: getVermieterkontoData(),
-                buchungsplan: (typeof bookingPlan !== 'undefined') ? bookingPlan : {}
+                rendite: parseFloat(inputs.rendite.value) || 0
+            },
+
+            // Structured data arrays
+            fixkostenItems: fixkostenItems || [],
+            depotItems: depotItems || [],
+            immobilienData: immobilienData || [],
+
+            // Vermieterkonto (complete structure)
+            vermieterkontoData: (function() {
+                try {
+                    const saved = sessionStorage.getItem('vermieterkontoData');
+                    return saved ? JSON.parse(saved) : null;
+                } catch (e) {
+                    return null;
+                }
+            })(),
+
+            // Buchungsplan (transaction scheduler)
+            buchungsplan: (typeof bookingPlan !== 'undefined') ? bookingPlan : {},
+
+            // Raw sessionStorage snapshot (for complete restoration)
+            sessionStorageSnapshot: {
+                mlp_current_session: sessionStorage.getItem('mlp_current_session'),
+                mlp_booking_plan_v1: sessionStorage.getItem('mlp_booking_plan_v1'),
+                immobilienData: sessionStorage.getItem('immobilienData'),
+                vermieterkontoData: sessionStorage.getItem('vermieterkontoData')
             }
         };
 
         // Create pretty-printed JSON
         const json = JSON.stringify(exportData, null, 2);
         const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
-        const filename = `Beratung_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.json`;
+        const filename = `Session-Backup_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.json`;
         downloadFile(blob, filename);
 
-        console.log('📄 JSON-Export erstellt:', filename);
+        console.log('📄 JSON-Backup erstellt:', filename);
+        console.log('💾 Vollständiges Session-Backup - kann für Re-Import verwendet werden');
     }
 
     // Helper function to download files
