@@ -2614,28 +2614,35 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const newCenterX = outerFrameLeft + outerFrameWidth / 2;
 
         // === GIROKONTO-BEREICH: Horizontale Verteilung ===
-        // 3 Basins (Fixkosten, Konsum, Vermieterkonto) gleichmäßig horizontal verteilt
+        // 3 Basins: Vermieterkonto (links), Konsumkonto (mitte), Fixkostenkonto (weiter rechts!)
         const giroBasinWidth = 200; // Standard Basin-Breite
-        const totalGiroWidth = giroBasinWidth * 3; // 3 Giro-Basins
         const availableWidth = containerWidth - 200; // Padding links/rechts
-        const giroGap = (availableWidth - totalGiroWidth) / 4; // 4 Gaps (links, zwischen 1-2, zwischen 2-3, rechts)
 
-        // Horizontale Positionen (gleichmäßig verteilt, von links nach rechts)
-        const giroLeft1 = giroGap;
-        const giroLeft2 = giroGap * 2 + giroBasinWidth;
-        const giroLeft3 = giroGap * 3 + giroBasinWidth * 2;
+        // NEUE VERTEILUNG: Fixkostenkonto weiter nach rechts gerückt
+        // Vermieterkonto: links (mit Abstand zum Rand)
+        // Konsumkonto: näher links-mitte
+        // Fixkostenkonto: weiter rechts (mehr Abstand zwischen Konsum und Fixkosten)
+        const giroLeft1 = 100; // Vermieterkonto: links
+        const giroLeft2 = availableWidth * 0.35; // Konsumkonto: 35% von links
+        const giroLeft3 = availableWidth * 0.65; // Fixkostenkonto: 65% von links (weiter rechts!)
+
+        // Höhen-Differenz: Vermieterkonto ist 100px, normale Basins sind größer (~150px?)
+        // Um Untergrenze anzugleichen: Vermieterkonto muss TIEFER positioniert werden
+        const normalBasinHeight = basins.konsum ? basins.konsum.offsetHeight : 150;
+        const vermieterkontoHeight = 100;
+        const heightDiff = normalBasinHeight - vermieterkontoHeight; // Differenz ausgleichen
 
         let positions;
         if (currentVariant === 'B') {
             // Variante B (Konsum-first): Einkommen -> Konsum -> (Fixkosten + Vermieterkonto) -> Tagesgeld -> Depot
             // Ebene 1: Konsum
-            // Ebene 2: Fixkosten + Vermieterkonto (beide gleiche Höhe)
+            // Ebene 2: Fixkosten + Vermieterkonto (beide UNTERKANTE bündig!)
             positions = {
                 einkommen:      { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
-                konsum:         { top: v_gap,      left: giroLeft2 }, // Mitte (gleichmäßig verteilt)
-                // Ebene 2: Fixkosten + Vermieterkonto auf gleicher Höhe
-                vermieterkonto: { top: v_gap * 2,  left: giroLeft1 }, // Links
-                fixkosten:      { top: v_gap * 2,  left: giroLeft3 }, // Rechts
+                konsum:         { top: v_gap,      left: giroLeft2 }, // Mitte
+                // Ebene 2: UNTERKANTEN bündig (Vermieterkonto tiefer wegen kleinerer Höhe)
+                vermieterkonto: { top: v_gap * 2 + heightDiff,  left: giroLeft1 }, // Links, tiefer!
+                fixkosten:      { top: v_gap * 2,  left: giroLeft3 }, // Rechts (weiter rechts!)
                 tagesgeld:      { top: v_gap * 3,  left: newCenterX - basins.tagesgeld.offsetWidth / 2 + 40 },
                 depot:          { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
                 immobilien:     { top: v_gap * 4.0, left: outerFrameLeft },
@@ -2643,12 +2650,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         } else { // Variante A
             // Variante A (Fixkosten-first): Einkommen -> Fixkosten -> (Konsum + Vermieterkonto) -> Tagesgeld -> Depot
             // Ebene 1: Fixkosten
-            // Ebene 2: Konsum + Vermieterkonto (beide gleiche Höhe)
+            // Ebene 2: Konsum + Vermieterkonto (beide UNTERKANTE bündig!)
             positions = {
                 einkommen:      { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
-                fixkosten:      { top: v_gap,      left: giroLeft3 }, // Rechts (gleichmäßig verteilt)
-                // Ebene 2: Konsum + Vermieterkonto auf gleicher Höhe
-                vermieterkonto: { top: v_gap * 2,  left: giroLeft1 }, // Links
+                fixkosten:      { top: v_gap,      left: giroLeft3 }, // Rechts (weiter rechts!)
+                // Ebene 2: UNTERKANTEN bündig (Vermieterkonto tiefer wegen kleinerer Höhe)
+                vermieterkonto: { top: v_gap * 2 + heightDiff,  left: giroLeft1 }, // Links, tiefer!
                 konsum:         { top: v_gap * 2,  left: giroLeft2 }, // Mitte
                 tagesgeld:      { top: v_gap * 3,  left: newCenterX - basins.tagesgeld.offsetWidth / 2 + 40 },
                 depot:          { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
@@ -2757,22 +2764,24 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             pathData = `M ${fromX},${fromY} C ${fromX + R},${fromY + R} ${toRightX - R},${toY - R} ${toRightX},${toY}`;
         } else if (pathId === 'vermieterkonto-einkommen-flow') {
             // Flow von Vermieterkonto HOCH zum Einkommen (Mieteinnahmen fließen ins Einkommen)
-            // Organische Kurve nach OBEN (vertikaler Flow mit leichter Biegung)
-            // Start: Mitte-Oben am Vermieterkonto
-            fromX = fromRect.left - containerRect.left + fromRect.width * 0.5; // Mitte
+            // Mäandernder organischer Flow wie alle anderen (kein Stilbruch!)
+            // Start: Rechts-Oben am Vermieterkonto (damit es schön zur Seite mäandert)
+            fromX = fromRect.left - containerRect.left + fromRect.width * 0.75; // Rechts (75%)
             fromY = fromRect.top - containerRect.top; // Oberkante
 
-            // Ziel: Mitte-Unten am Einkommen
-            const toEinkommenX = toRect.left - containerRect.left + toRect.width * 0.5; // Mitte
+            // Ziel: Links-Unten am Einkommen (Andockpunkt NICHT in der Mitte wo Hauptflow abgeht!)
+            const toEinkommenX = toRect.left - containerRect.left + toRect.width * 0.25; // Links (25%)
             const toEinkommenY = toRect.bottom - containerRect.top; // Unterkante
 
-            // Vertikale Kurve mit leichter horizontaler Biegung
+            // Mäandernde S-Kurve wie andere Flows (organisch, nicht linear!)
             const dx = toEinkommenX - fromX;
             const dy = toEinkommenY - fromY;
-            const c1x = fromX + dx * 0.3; // Erster Kontrollpunkt: leicht zur Seite
-            const c1y = fromY + dy * 0.3; // 30% des Weges nach oben
-            const c2x = toEinkommenX - dx * 0.3; // Zweiter Kontrollpunkt: zurück zur Mitte
-            const c2y = toEinkommenY - dy * 0.3; // 70% des Weges nach oben
+
+            // Zwei Kontrollpunkte für organische Kurve (erst nach rechts/oben, dann zurück nach links)
+            const c1x = fromX + 60; // Erst nach rechts schwingen
+            const c1y = fromY + dy * 0.35; // 35% des Weges nach oben
+            const c2x = toEinkommenX - 50; // Dann zurück nach links zum Ziel
+            const c2y = toEinkommenY - dy * 0.25; // 75% des Weges (nah am Ziel)
 
             pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toEinkommenX},${toEinkommenY}`;
         } else {
@@ -2903,11 +2912,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const toRect = toBasin.getBoundingClientRect();
         const containerRect = flowContainer.getBoundingClientRect();
 
-        // Von links unten Fixkosten zu rechts oben Vermieterkonto
-        const fromX = fromRect.left - containerRect.left + fromRect.width * 0.15; // Links am Fixkosten
-        const fromY = fromRect.bottom - containerRect.top;
+        // Von LINKER SEITE Fixkosten zu Mitte Vermieterkonto (bei Defizit)
+        const fromX = fromRect.left - containerRect.left + fromRect.width * 0.05; // Linker Rand (5%) am Fixkosten
+        const fromY = fromRect.bottom - containerRect.top - 20; // Etwas über Unterkante
         const toX = toRect.left - containerRect.left + toRect.width * 0.5; // Mitte Vermieterkonto
-        const toY = toRect.top - containerRect.top;
+        const toY = toRect.bottom - containerRect.top; // Unterkante Vermieterkonto
 
         // Organische Kurve nach links-unten
         const dx = toX - fromX;
