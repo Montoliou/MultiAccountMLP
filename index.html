@@ -1707,6 +1707,97 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
         console.log('💾 Vollständiges Session-Backup - kann für Re-Import verwendet werden');
     }
 
+    // Import session from JSON backup file
+    function importSessionBackup() {
+        // Create file input element
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const backup = JSON.parse(text);
+
+                // Validate backup format
+                if (!backup.version || backup.exportType !== 'FULL_SESSION_BACKUP') {
+                    alert('Ungültiges Backup-Format! Bitte wähle eine gültige Session-Backup-Datei.');
+                    return;
+                }
+
+                // Confirm import
+                const confirmed = confirm(
+                    `Session-Backup importieren?\n\n` +
+                    `Session-ID: ${backup.session?.id || 'Unbekannt'}\n` +
+                    `Kunde: ${backup.session?.kundenKuerzel || 'N/A'}\n` +
+                    `Berater: ${backup.session?.berater || 'N/A'}\n` +
+                    `Exportiert: ${backup.session?.exportiert ? new Date(backup.session.exportiert).toLocaleString('de-DE') : 'N/A'}\n\n` +
+                    `Alle aktuellen Daten werden überschrieben!`
+                );
+
+                if (!confirmed) return;
+
+                // Restore sessionStorage
+                if (backup.sessionStorageSnapshot) {
+                    Object.keys(backup.sessionStorageSnapshot).forEach(key => {
+                        const value = backup.sessionStorageSnapshot[key];
+                        if (value) {
+                            sessionStorage.setItem(key, value);
+                        }
+                    });
+                }
+
+                // Restore global variables
+                if (backup.fixkostenItems) {
+                    fixkostenItems = backup.fixkostenItems;
+                }
+                if (backup.depotItems) {
+                    depotItems = backup.depotItems;
+                }
+                if (backup.immobilienData) {
+                    immobilienData = backup.immobilienData;
+                }
+                if (backup.buchungsplan && typeof bookingPlan !== 'undefined') {
+                    bookingPlan = backup.buchungsplan;
+                    saveBookingPlan();
+                }
+
+                // Restore UI settings
+                if (backup.settings) {
+                    if (backup.settings.currentVariant) {
+                        currentVariant = backup.settings.currentVariant;
+                    }
+                    if (typeof backup.settings.consultationMode !== 'undefined') {
+                        consultationMode = backup.settings.consultationMode;
+                    }
+                    if (typeof backup.settings.consultationStep !== 'undefined') {
+                        consultationStep = backup.settings.consultationStep;
+                    }
+                    if (backup.settings.theme) {
+                        localStorage.setItem('theme', backup.settings.theme);
+                        loadTheme();
+                    }
+                }
+
+                console.log('✅ Session-Backup erfolgreich importiert:', backup.session?.id);
+
+                // Reload page to apply all changes
+                alert('Session-Backup erfolgreich importiert!\n\nDie Seite wird neu geladen, um alle Daten anzuzeigen.');
+                location.reload();
+
+            } catch (error) {
+                console.error('Import-Fehler:', error);
+                alert('Fehler beim Importieren der Backup-Datei!\n\n' + error.message);
+            }
+        };
+
+        // Trigger file picker
+        input.click();
+    }
+
     // Helper function to download files
     function downloadFile(blob, filename) {
         const url = URL.createObjectURL(blob);
@@ -3895,6 +3986,18 @@ function updateFixkostenItem(index, key, value) {
             <div class="flex gap-3">
                 <button onclick="startSessionFromDialog()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
                     Session starten
+                </button>
+            </div>
+
+            <div class="mt-4">
+                <div class="text-center">
+                    <span class="text-gray-500 text-sm">oder</span>
+                </div>
+                <button onclick="importSessionBackup(); closeModal('session-start-dialog');" class="w-full mt-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Session-Backup importieren
                 </button>
             </div>
 
