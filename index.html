@@ -1444,6 +1444,186 @@
 
     // ===== END SESSION MANAGEMENT SYSTEM =====
 
+    // ===== EXPORT FUNCTIONS (v1.3.0) =====
+
+    // Export all session data as CSV
+    function exportAsCSV() {
+        const session = getCurrentSession();
+        if (!session) {
+            alert('Keine Session gefunden!');
+            return;
+        }
+
+        // Check if inputs are initialized
+        if (typeof inputs === 'undefined') {
+            console.error('Export failed: inputs not initialized');
+            alert('Export-Fehler: Bitte warten Sie, bis die Seite vollständig geladen ist.');
+            return;
+        }
+
+        // Collect all data
+        const income = parseFloat(inputs.income.value) || 0;
+        const konsumMin = parseFloat(inputs.konsumMin.value) || 0;
+        const konsumLeftover = parseFloat(inputs.konsumLeftover.value) || 0;
+        const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent.value) || 0;
+        const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit.value) || 0;
+        const depotCurrent = parseFloat(inputs.depotCurrent.value) || 0;
+        const anlagezeitraum = parseInt(inputs.anlagezeitraum.value, 10);
+        const rendite = parseFloat(inputs.rendite.value) || 0;
+
+        // Build CSV content
+        const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+        let csv = '';
+
+        // Header with session metadata
+        csv += `# Beratungsprotokoll - MLP Vermögensmanagement\n`;
+        csv += `# Session-ID: ${session.id}\n`;
+        csv += `# Kunde: ${session.kundenKuerzel || 'N/A'}\n`;
+        csv += `# Berater: ${session.berater || 'N/A'}\n`;
+        csv += `# Datum: ${new Date(session.startzeit).toLocaleDateString('de-DE')}\n`;
+        csv += `# Exportiert am: ${new Date().toLocaleDateString('de-DE')} um ${new Date().toLocaleTimeString('de-DE')}\n`;
+        csv += `# Variante: ${currentVariant}\n`;
+        csv += `\n`;
+
+        // Data section
+        csv += `Kategorie;Beschreibung;Betrag (EUR);Intervall;Ziel\n`;
+
+        // Einkommen
+        csv += `Einkommen;Haupteinkommen;${income};monatlich;einkommen\n`;
+
+        // Fixkosten & Sparpläne
+        fixkostenItems.forEach(item => {
+            const monthlyAmount = getMonthlyAmount(item);
+            const kategorie = item.target === 'depot' ? 'Sparplan' : 'Fixkosten';
+            const intervall = item.interval === 'monthly' ? 'monatlich' :
+                             item.interval === 'quarterly' ? 'vierteljährlich' : 'jährlich';
+            csv += `${kategorie};${item.name};${monthlyAmount};${intervall};${item.target}\n`;
+        });
+
+        // Konsum
+        csv += `Konsum;Mindestbetrag;${konsumMin};monatlich;konsum\n`;
+        csv += `Konsum;Überschuss;${konsumLeftover};monatlich;konsum\n`;
+
+        // Tagesgeld
+        csv += `Tagesgeld;Aktueller Stand;${tagesgeldCurrent};einmalig;tagesgeld\n`;
+        csv += `Tagesgeld;Sparziel;${tagesgeldLimit};einmalig;tagesgeld\n`;
+
+        // Depot
+        csv += `Depot;Aktueller Stand;${depotCurrent};einmalig;depot\n`;
+        csv += `Depot;Anlagezeitraum (Jahre);${anlagezeitraum};-;depot\n`;
+        csv += `Depot;Erwartete Rendite (%);${rendite};jährlich;depot\n`;
+
+        // Depot-Allocation
+        csv += `\n# Depot-Aufteilung\n`;
+        csv += `Fonds/ETF;Allocation (%);Farbe\n`;
+        depotItems.forEach(item => {
+            csv += `${item.name};${item.allocation};${item.color}\n`;
+        });
+
+        // Immobilien
+        if (immobilienData && immobilienData.length > 0) {
+            csv += `\n# Immobilien\n`;
+            csv += `Objekt;Wert (EUR);Darlehen (EUR);Zinssatz (%);Tilgungssatz (%);Mieteinnahmen (EUR);Kosten (EUR)\n`;
+            immobilienData.forEach(immo => {
+                csv += `${immo.objekt || 'Immobilie'};${immo.wert || 0};${immo.darlehen || 0};${immo.zinssatz || 0};${immo.tilgungssatz || 0};${immo.mieteinnahmen || 0};${immo.kosten || 0}\n`;
+            });
+        }
+
+        // Vermieterkonto
+        const vermieterData = getVermieterkontoData();
+        if (vermieterData) {
+            csv += `\n# MLP Vermieterkonto\n`;
+            csv += `Beschreibung;Betrag (EUR)\n`;
+            csv += `Mieteinnahmen (netto);${vermieterData.mieteinnahmenNetto}\n`;
+            csv += `Darlehenszinsen;${vermieterData.darlehenszinsen}\n`;
+            csv += `Tilgung;${vermieterData.tilgung}\n`;
+            csv += `Nebenkosten & Instandhaltung;${vermieterData.nebenkostenInstand}\n`;
+            csv += `Gesamt-Ausgaben;${vermieterData.gesamtAusgaben}\n`;
+            csv += `Saldo (monatlich);${vermieterData.saldo}\n`;
+        }
+
+        // Create download
+        const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
+        const filename = `Beratung_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.csv`;
+        downloadFile(blob, filename);
+
+        console.log('📄 CSV-Export erstellt:', filename);
+    }
+
+    // Export all session data as JSON
+    function exportAsJSON() {
+        const session = getCurrentSession();
+        if (!session) {
+            alert('Keine Session gefunden!');
+            return;
+        }
+
+        // Check if inputs are initialized
+        if (typeof inputs === 'undefined') {
+            console.error('Export failed: inputs not initialized');
+            alert('Export-Fehler: Bitte warten Sie, bis die Seite vollständig geladen ist.');
+            return;
+        }
+
+        // Collect all application data
+        const exportData = {
+            // Session metadata
+            session: {
+                id: session.id,
+                kundenKuerzel: session.kundenKuerzel,
+                berater: session.berater,
+                startzeit: session.startzeit,
+                letzteAktivitaet: session.letzteAktivitaet,
+                exportiert: new Date().toISOString()
+            },
+
+            // Application settings
+            settings: {
+                currentVariant: currentVariant,
+                consultationMode: consultationMode,
+                consultationStep: consultationStep
+            },
+
+            // Financial data
+            data: {
+                income: parseFloat(inputs.income.value) || 0,
+                konsumMin: parseFloat(inputs.konsumMin.value) || 0,
+                konsumLeftover: parseFloat(inputs.konsumLeftover.value) || 0,
+                tagesgeldCurrent: parseFloat(inputs.tagesgeldCurrent.value) || 0,
+                tagesgeldLimit: parseFloat(inputs.tagesgeldLimit.value) || 0,
+                depotCurrent: parseFloat(inputs.depotCurrent.value) || 0,
+                anlagezeitraum: parseInt(inputs.anlagezeitraum.value, 10),
+                rendite: parseFloat(inputs.rendite.value) || 0,
+                fixkostenItems: fixkostenItems,
+                depotItems: depotItems,
+                immobilienData: immobilienData || [],
+                vermieterkonto: getVermieterkontoData()
+            }
+        };
+
+        // Create pretty-printed JSON
+        const json = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+        const filename = `Beratung_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.json`;
+        downloadFile(blob, filename);
+
+        console.log('📄 JSON-Export erstellt:', filename);
+    }
+
+    // Helper function to download files
+    function downloadFile(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // ===== END EXPORT FUNCTIONS =====
+
     let currentVariant = 'A';
     
     const BOOKING_DAYS = 31;
@@ -3553,6 +3733,27 @@ function updateFixkostenItem(index, key, value) {
                     <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Dauer</span>
                     <span id="session-timer" class="text-xs font-semibold text-green-400">0 Min.</span>
                 </div>
+            </div>
+            <div class="p-2 border-b border-gray-700">
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">Export</div>
+                <button onclick="exportAsCSV(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 rounded transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Als CSV exportieren
+                </button>
+                <button onclick="exportAsJSON(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 rounded transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                    </svg>
+                    Als JSON exportieren
+                </button>
+                <button onclick="window.print(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 rounded transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    Als PDF drucken
+                </button>
             </div>
             <div class="p-2">
                 <button onclick="showSessionEndDialog(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
