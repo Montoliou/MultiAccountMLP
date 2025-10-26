@@ -1595,6 +1595,50 @@
             version: '1.3.0',
             exportType: 'FULL_SESSION_BACKUP',
 
+            // LLM Prompt for generating consultation protocol
+            llmPrompt: `Du bist ein professioneller Finanzberater bei MLP. Erstelle aus den folgenden Session-Daten ein strukturiertes, professionelles Gesprächsprotokoll für die Kundendokumentation.
+
+**Aufgabe:**
+Erstelle ein Beratungsprotokoll im MLP-Stil mit folgender Struktur:
+
+1. **Kopfdaten**
+   - Session-ID, Datum, Berater, Kunde
+   - Beratungsdauer
+
+2. **Ist-Situation (Einnahmen)**
+   - Monatliches Einkommen
+   - Sonstige Einnahmen (falls vorhanden)
+
+3. **Ausgabenstruktur**
+   - Fixkosten (detailliert auflisten)
+   - Lebenshaltungskosten
+   - Kontenmodell (Variante A oder B?)
+
+4. **Vermögenssituation**
+   - Tagesgeld (aktuell, Ziel)
+   - Depot (aktuell, Sparplan, Allocation, Renditeerwartung)
+   - Immobilien (falls vorhanden: Wert, Darlehen, Cashflow)
+   - Vermieterkonto (falls vorhanden: Einnahmen/Ausgaben)
+
+5. **Finanzplanung**
+   - Monatliche Sparrate
+   - Anlagehorizont
+   - Buchungsplan (Transaktionstermine)
+
+6. **Empfehlungen**
+   - Basierend auf den Daten: Was läuft gut? Wo gibt es Optimierungspotenzial?
+   - Nächste Schritte
+
+**Tonalität:**
+- Professionell, aber verständlich
+- Faktenbasiert
+- Positive Formulierungen
+- Konkrete Zahlen nennen
+
+**Format:** Markdown mit klaren Überschriften und Bullet-Points.
+
+Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs, fixkostenItems, depotItems, immobilienData, vermieterkontoData, buchungsplan.`,
+
             // Session metadata
             session: {
                 id: session.id,
