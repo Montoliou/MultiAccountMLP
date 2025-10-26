@@ -333,32 +333,54 @@ function exportToCSV() {
 
 ---
 
-### Version 1.3.0: Export-Erweiterung & Immobilien-Integration
+### Version 1.3.0: Export-Erweiterung & Immobilien-Integration (IN PROGRESS)
 
 **ETA:** Q4 2025 / Q1 2026 (4-6 Wochen)
 **Fokus:** Strukturierte Daten-Exports & erweiterte Immobilien-Szenarien
 
 #### Features
 
-**1.3.1: CSV/JSON-Export** (Woche 1-2)
+**1.3.1: CSV/JSON-Export** ✅ (ABGESCHLOSSEN - Oktober 2025)
 
-- [ ] **CSV-Export für CRM-Integration**
+- ✅ **CSV-Export für CRM-Integration**
   - Strukturierte Tabelle: Kategorie, Beschreibung, Betrag, Intervall
   - Kopfzeile mit Session-Metadaten (Berater, Datum, Kunde)
   - UTF-8 BOM für Excel-Kompatibilität
   - Download-Dateiname: `Beratung_MX-2025-001_2025-10-23.csv`
+  - Vereinfachte Spalten (keine technischen IDs, Farben etc.)
 
-- [ ] **JSON-Export (Vollständig)**
+- ✅ **JSON-Export (Vollständig)**
   - Alle Session-Daten als strukturiertes JSON
-  - Verwendung: Backup, Re-Import, Automatisierung
+  - Complete Session Backup für Re-Import
+  - LLM-Prompt für automatische Protokoll-Generierung
   - Pretty-Print für menschliche Lesbarkeit
 
-- [ ] **PDF-Export-Verbesserungen**
-  - Session-Metadaten im Header (Berater, Datum, Kunde)
-  - Footer: "Exportiert am [Datum] um [Uhrzeit]"
-  - Erweiterte Immobilien-Sektion
+- ✅ **JSON-Import-Funktion**
+  - Session-Backup wiederherstellen
+  - Vollständige Datenwiederherstellung (sessionStorage, UI-Settings)
+  - Toast-Notification-System (statt Alerts)
+  - Skip Recovery Dialog nach Import
 
-**1.3.2: Cashflow-Toggle im Beratungsgespräch** (Woche 2-3)
+- ✅ **PDF-Export-Verbesserungen**
+  - Session-Metadaten im Header (Planung für [Kunde], von [Berater])
+  - Optimiertes Layout (20mm Padding, MLP Blue Headers)
+  - Flowchart originalgetreu (1150px Container)
+  - Keine Leerseiten, optimierte Page-Breaks
+
+**1.3.2: Cashflow-Toggle & Darlehensberechnung** (Woche 2-3) - IN PROGRESS
+
+- [ ] **Automatische Darlehensraten-Berechnung**
+  - Eingabefelder: Zinssatz (%), Tilgungssatz (%)
+  - Auto-Berechnung: Monatliche Annuitätenrate
+  - Anzeige: Zinsen vs. Tilgung (Split)
+  - Optional: Felder leer lassen (für abbezahlte Immobilien)
+  - Vorausfüllung im Vermieterkonto
+
+- [ ] **Tilgungsplan mit Slider (0-20 Jahre)**
+  - Slider: Zeitraum auswählen (0-20 Jahre)
+  - Anzeige: Restschuld, gezahlte Zinsen, Eigenkapital
+  - Wertsteigerung der Immobilie (Eingabefeld: % pro Jahr)
+  - Visualisierung: Vermögensaufbau durch Tilgung + Wertsteigerung
 
 - [ ] **Immobilien-Modal: Toggle "Flows aktivieren"**
   - Checkbox: "Cashflows ins Gesamtsystem integrieren"
@@ -369,6 +391,12 @@ function exportToCSV() {
   - Einkommen-Basin: +X€ durch Mieteinnahmen
   - Fixkosten-Basin: +Y€ durch Darlehen/Kosten
   - Sparrate: Automatische Neuberechnung
+  - Flows: Dezent/subtil hinter Hauptflows (keine Überlappung)
+
+- [ ] **Layout-Optimierung**
+  - Vermieterkonto auf Girokonto-Ebene (höher)
+  - Konsumkonto in die Mitte
+  - Harmonische Abstände in Variante A und B
 
 **1.3.3: Beratungs-Szenarien** (Woche 3-4)
 
@@ -909,13 +937,31 @@ Tab-Close → sessionStorage.clear()
 
 ## 📝 Changelog
 
+### v1.3.0 (Oktober 2025) - IN PROGRESS
+
+**Export-Erweiterung & Immobilien-Integration**
+
+- ✅ **CSV-Export**: CRM-Integration mit UTF-8 BOM, Session-Metadaten
+- ✅ **JSON-Export**: Complete Session Backup mit LLM-Prompt
+- ✅ **JSON-Import**: Vollständige Session-Wiederherstellung
+- ✅ **Toast-System**: Elegante Benachrichtigungen statt Alerts
+- ✅ **PDF-Optimierung**: Session-Daten im Header, optimiertes Layout
+- 🔄 **Darlehensberechnung**: Automatische Annuitätenrate (Zinssatz + Tilgung)
+- 🔄 **Tilgungsplan**: 0-20 Jahre Slider mit Wertsteigerung
+- 🔄 **Cashflow-Integration**: Toggle für Immobilien-Flows ins Gesamtsystem
+
+**Commits:**
+- 99366b0: PDF fixes and import UX optimization
+- 342ac9b: Suppress browser reload confirmation
+- dd306c3: Restore flowchart original layout
+
 ### v1.2.0 (Oktober 2025) ✅
 
 **Session-Management & UI/UX-Verbesserungen**
 
 - ✅ **Session-Lifecycle**: Start/End-Dialogs, Session-Recovery
 - ✅ **sessionStorage-Migration**: Daten nur während Tab-Session
-- ✅ **MLP Vermieterkonto**: 7. Basin mit bidirektionalen Flows
+- ✅ **Vermieterkonto**: 7. Basin mit bidirektionalen Flows
 - ✅ **Gradient-Zonen**: Visuelle Layer-Trennung (Wolken → Felder)
 - ✅ **Modal-Overlay-System**: Fullscreen-Modals mit Backdrop-Blur
 - ✅ **Session-Menu**: Eleganter Dropdown statt Bar
