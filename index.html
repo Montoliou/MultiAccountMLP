@@ -1486,6 +1486,9 @@
         if (session) {
             saveSession(session);
         }
+
+        // Reset inactivity timers so user gets another 30 minutes
+        resetInactivityTimers();
     }
 
     // Show inactivity timeout dialog
@@ -1500,6 +1503,13 @@
     // Show session start dialog
     function showSessionStartDialog() {
         openModal('session-start-dialog');
+
+        // Check if privacy notice was previously acknowledged
+        const privacyAcknowledged = localStorage.getItem('mlp-privacy-acknowledged') === 'true';
+        const privacyBox = getEl('privacy-notice-box');
+        if (privacyBox) {
+            privacyBox.style.display = privacyAcknowledged ? 'none' : 'block';
+        }
     }
 
     // Show session recovery dialog
@@ -1586,6 +1596,13 @@
     function startSessionFromDialog() {
         const kundenKuerzel = getEl('session-kunden-kuerzel')?.value.trim() || null;
         const berater = getEl('session-berater')?.value.trim() || null;
+
+        // Save privacy acknowledgment if checkbox is checked
+        const privacyCheckbox = getEl('privacy-understood-checkbox');
+        if (privacyCheckbox && privacyCheckbox.checked) {
+            localStorage.setItem('mlp-privacy-acknowledged', 'true');
+        }
+
         startSession(kundenKuerzel, berater);
     }
 
@@ -4446,10 +4463,21 @@ function updateFixkostenItem(index, key, value) {
                 </button>
             </div>
 
-            <div class="mt-4 p-4 bg-blue-900 bg-opacity-50 rounded-lg">
-                <p class="text-xs text-gray-300">
-                    <strong>Datenschutz:</strong> Alle Daten werden nur in Ihrem Browser gespeichert (sessionStorage). Beim Schließen des Tabs werden alle Daten automatisch gelöscht.
+            <div id="privacy-notice-box" class="mt-4 p-4 bg-blue-900 bg-opacity-50 rounded-lg">
+                <p class="text-sm text-gray-300 mb-3">
+                    <strong>ℹ️ Datenschutz & DSGVO-Konformität:</strong>
                 </p>
+                <ul class="text-xs text-gray-300 space-y-1 mb-3 ml-4 list-disc">
+                    <li>Alle Daten werden <strong>nur in Ihrem Browser</strong> gespeichert (sessionStorage)</li>
+                    <li><strong>Keine Cloud</strong>, keine Datenbank, kein Server-Upload</li>
+                    <li>Beim Schließen des Tabs werden <strong>alle Daten automatisch gelöscht</strong></li>
+                    <li>Export nur manuell durch Sie (PDF, CSV, JSON)</li>
+                    <li>Session-Daten bleiben bei Ihnen - <strong>100% DSGVO-konform</strong></li>
+                </ul>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="privacy-understood-checkbox" class="w-4 h-4 rounded">
+                    <span class="text-xs text-gray-400">Verstanden, diesen Hinweis nicht mehr anzeigen</span>
+                </label>
             </div>
         </div>
     </div>
