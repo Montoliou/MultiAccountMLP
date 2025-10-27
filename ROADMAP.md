@@ -427,28 +427,22 @@ function exportToCSV() {
 
 ---
 
-### Version 1.4.0: Session-Übersicht & Templates
+### Version 1.4.0: Session-Historie & Templates
 
-**ETA:** Q2 2026 (3-4 Wochen)
-**Fokus:** Berater-Produktivität, Session-Management
-
-**Hinweis:** Multi-Tab-Isolation bereits durch sessionStorage gelöst (v1.2.0)
+**ETA:** Q2 2026 (2-3 Wochen)
+**Fokus:** Session-Management & Berater-Produktivität
 
 #### Features
 
-**1.4.1: Session-Übersicht (Landing-Page)** (Woche 1-2)
+**1.4.1: Session-Historie** (Woche 1)
 
-- [ ] **Übersicht aller offenen Sessions**
-  - Landing-Page beim App-Start
-  - Liste: Session-ID, Kundenkürzel, Dauer, Status
-  - "Du hast bereits 2 Beratungen in anderen Tabs offen"
-  - Actions: "Zu Session wechseln" / "Neue Session starten"
-
-- [ ] **Session-Historie**
-  - Letzte 10 Sessions (aus sessionStorage)
+- [ ] **Letzte 10 Sessions**
+  - Gespeicherte JSON-Sessions anzeigen
+  - Liste: Session-ID, Kundenkürzel, Datum, Status
   - Quick-Reload: "Letzte Session fortsetzen"
+  - Session löschen / umbenennen
 
-**1.4.2: Template-System** (Woche 2-3)
+**1.4.2: Template-System** (Woche 2)
 
 - [ ] **Beratungs-Templates**
   - Vordefinierte Szenarien: "Gutverdiener", "Familie", "Rentner"
@@ -460,124 +454,230 @@ function exportToCSV() {
   - Wiederverwendbar für ähnliche Kunden
   - Anonymisiert (nur Struktur, keine echten Daten)
 
-**1.4.3: Dual-Monitor-Support (Optional)** (Woche 3-4)
-
-- [ ] **Presenter-View-Synchronisation**
-  - Szenario: Berater hat 2 Monitore
-  - Monitor 1: Eingabe-View (für Berater)
-  - Monitor 2: Presenter-View (für Kunde, read-only)
-  - Beide Tabs zeigen gleiche Session, live synchronisiert
-
 ---
 
-### Version 1.5.0: Erweiterte Export-Formate & Berater-Tools
+### Version 1.5.0: Berater-Notizen & Excel-Export ⭐⭐
 
-**ETA:** Q3 2026 (5-6 Wochen)
-**Fokus:** CRM-Integration, Automatisierung, Berater-Produktivität
+**ETA:** Q2 2026 (3-4 Wochen)
+**Fokus:** Nachvollziehbarkeit für Kunden & erweiterte Export-Formate
+
+**Warum wichtig:** Berater-Notizen helfen Kunde die Beratung später besser nachzuvollziehen!
 
 #### Features
 
-**1.5.1: Excel-Export mit Formeln** (Woche 1-2)
+**1.5.1: Berater-Notizen & Annotations** ⭐⭐ (Woche 1-2)
+
+- [ ] **Notizen-Feld pro Basin**
+  - Freitext-Notizen zu jedem Basin
+  - **Erscheint im PDF-Export** → Kunde kann später nachlesen!
+  - Toggle: "Notizen für Kunde sichtbar" vs. "Nur intern"
+  - Markdown-Support für Formatierung
+
+- [ ] **Gesprächs-Protokoll**
+  - Chronologische Notizen während Beratung
+  - "Min 5: Kunde will Sparrate erhöhen"
+  - "Min 12: Immobilie besprochen, Tilgung angepasst"
+  - Erscheint als Timeline im PDF
+
+- [ ] **Markierungen & Empfehlungen**
+  - Tool: Flows/Basins markieren & annotieren
+  - Icons: ⚠️ Warnung, ✅ Optimierung, 💡 Idee, 📌 Wichtig
+  - Erscheint im PDF als farbige Callouts
+  - Beispiel: "💡 Tipp: Hier können Sie 50€ mehr sparen!"
+
+**1.5.2: Excel-Export mit Formeln** (Woche 3-4)
 
 - [ ] **Multi-Sheet-Workbook**
   - Sheet 1: Übersicht (Dashboard)
   - Sheet 2: Einnahmen & Ausgaben (Detailliert)
-  - Sheet 3: Immobilien-Analyse
+  - Sheet 3: Immobilien-Analyse (falls vorhanden)
   - Sheet 4: Depot-Aufteilung
   - Sheet 5: Prognose (10 Jahre)
 
 - [ ] **Live-Formeln**
   - Excel-Formeln statt statische Werte
   - Kunde kann später selbst anpassen
-  - Conditional Formatting für Warnungen
-
-**1.5.2: CRM-Integration (API-Vorbereitung)** (Woche 2-3)
-
-- [ ] **Standardisierte JSON-Struktur**
-  - Schema-Definition für externe Systeme
-  - Mapping-Dokumentation
-  - Validierung vor Export
-
-- [ ] **Webhook-Support (optional)**
-  - POST-Request nach Export
-  - Direkt ins CRM-System
-  - Authentifizierung (API-Key)
-
-**1.5.3: Berater-Notizen & Annotations** (Woche 3-4)
-
-- [ ] **Notizen-Feld**
-  - Pro Basin: Freitext-Notizen
-  - Erscheint im PDF-Export
-  - Nicht sichtbar in Live-Ansicht (nur Berater)
-
-- [ ] **Screenshots & Markierungen**
-  - Tool: Flows markieren & annotieren
-  - Erscheint im PDF als "Empfehlung"
-  - Icons: ⚠️ Warnung, ✅ Optimierung, 💡 Idee
-
-**1.5.4: Berater-Dashboard** (Woche 4-5)
-
-- [ ] **Session-Statistiken**
-  - Anzahl Beratungen heute/Woche/Monat
-  - Durchschnittliche Dauer
-  - Häufigste Export-Formate
-
-- [ ] **Quick-Actions**
-  - "Letzte Session fortsetzen"
-  - "Template laden"
-  - "Neue Beratung mit Standardwerten"
+  - Conditional Formatting für Warnungen (rot bei Engpässen)
 
 ---
 
-### Version 1.6.0: Präsentations-Modus & UX-Polish
+### Version 1.6.0: UX-Polish & Kunden-Verständnis ⭐⭐⭐
 
-**ETA:** Q4 2026 (4-5 Wochen)
-**Fokus:** Optimierung für Bildschirm-Sharing & Kundenpräsentation
+**ETA:** Q3 2026 (4-5 Wochen)
+**Fokus:** MEGA! Je schöner für Kunden, desto einfacher zu verstehen
+
+**Mission:** Kunde soll auf einen Blick verstehen wie sein Geld "automatisch fließt"
 
 #### Features
 
-**1.6.1: Presenter-Mode** (Woche 1-2)
+**1.6.1: Presenter-Mode** (Woche 1)
 
 - [ ] **Vollbild-Modus**
   - F11-ähnlich, aber mit Controls
-  - Versteckt Berater-Tools (Notizen, Export)
-  - Fokus auf Visualisierung
+  - Versteckt Berater-Tools (Notizen, Export, Menü)
+  - Fokus rein auf Visualisierung
+  - Perfekt für Bildschirm-Sharing
 
 - [ ] **Highlight-Modus**
   - Click auf Basin: Spot-Light-Effekt
   - Temporäres Dimmen anderer Elemente
-  - Gut für Bildschirm-Sharing
+  - "Kunde fokussiert auf dieses Basin"
 
-**1.6.2: Animierte Transitionen** (Woche 2-3)
+**1.6.2: Animierte Transitionen** ⭐ (Woche 2)
 
 - [ ] **Smooth Beratungsmodus-Steps**
   - Fade-In/Out statt hartes Show/Hide
   - Highlight: "Hier erscheint jetzt..."
-  - Flow-Animation beim Aktivieren
+  - Flow-Animation beim Aktivieren (Wasser fließt!)
 
-**1.6.3: Kunden-Verständnis-Features** (Woche 3-4)
+- [ ] **Flow-Pulse-Effekt**
+  - Kleine Wellen-Animation entlang der Flows
+  - Zeigt "Geld fließt automatisch"
+  - Dezent, nicht ablenkend
+
+**1.6.3: Kunden-Verständnis-Features** ⭐⭐ (Woche 3-4)
 
 - [ ] **Tooltip-System**
-  - Hover auf Basin: Erklärung
+  - Hover auf Basin: Kurze Erklärung
   - "Was ist ein Tagesgeldkonto?"
-  - "Warum Sparrate wichtig ist"
+  - "Warum ist die Sparrate wichtig?"
+  - "Was passiert bei finanziellen Engpässen?"
 
-- [ ] **Info-Overlays**
-  - Click auf "?" neben Titel
-  - Modal: Ausführliche Erklärung
-  - Schließbar, non-modal
+- [ ] **Info-Overlays mit Beispielen**
+  - Click auf "?" neben Basin-Titel
+  - Modal mit:
+    - Ausführliche Erklärung
+    - Konkretes Beispiel (mit Zahlen!)
+    - Visuelle Illustration
+  - Kunde versteht sofort den Zweck
 
-**1.6.4: Dark/Light-Theme für Präsentationen** (Woche 4)
+- [ ] **"Wie funktioniert das?"-Button**
+  - Erklärt automatische Logik
+  - "Ihr Geld fließt automatisch in dieser Reihenfolge..."
+  - Zeigt Priorisierung visuell
 
-- [ ] **Auto-Theme basierend auf Umgebung**
-  - Hell: Für Räume mit viel Licht
-  - Dunkel: Für gedämpfte Beratungsräume
+---
+
+### Version 1.7.0: Verständnis-Features - Schutzschild & Automatik ⭐⭐⭐
+
+**ETA:** Q4 2026 (3-4 Wochen)
+**Fokus:** Kunde soll SEHEN & VERSTEHEN wie das System ihn schützt
+
+**Mission-Critical:** Tagesgeld = Schutzschild vor Depot-Entnahmen visuell zeigen!
+
+#### Features
+
+**1.7.1: Schutzschild-Visualisierung** ⭐⭐⭐ (Woche 1-2)
+
+- [ ] **Visueller Schutz-Effekt**
+  - Tagesgeld zeigt "🛡️ Schutzschild aktiv" wenn Limit erreicht
+  - Animation: Bei Engpass → Tagesgeld springt ein (leuchtet kurz auf)
+  - Depot zeigt "Geschützt durch Tagesgeld"
+  - Kunde **SIEHT** wie Schutz funktioniert!
+
+- [ ] **Depot-Schutz-Indikator**
+  - Visuelles Schild-Icon zwischen Tagesgeld und Depot
+  - Zeigt: "Depot vor Entnahmen geschützt"
+  - Bei Tagesgeld < Limit: Icon wird orange/rot
+  - Kunde versteht sofort den Zusammenhang
+
+**1.7.2: Automatik-Indicator** ⭐⭐ (Woche 2)
+
+- [ ] **"🤖 Automatik aktiv"-Badge**
+  - Kleine Animation/Icon bei jedem Basin
+  - Zeigt: "System reagiert automatisch"
+  - Bei Änderungen: Kurz aufleuchten "Auto-Anpassung erfolgt"
+  - Verstärkt Gefühl: "Eine KI managed das für mich"
+
+- [ ] **Priorisierungs-Animation**
+  - Visuell zeigen: "1. Tagesgeld auffüllen → 2. Depot"
+  - Zahlen-Badges an Flows: "Priorität 1", "Priorität 2"
+  - Bei Überschuss: Animation zeigt Reihenfolge
+
+**1.7.3: Liquiditäts-Ampel** ⭐⭐ (Woche 3)
+
+- [ ] **Status-Ampel am Tagesgeld**
+  - 🟢 Grün: Tagesgeld > Limit → "Alles sicher!"
+  - 🟡 Gelb: Tagesgeld < Limit → "Depot geschützt, aber knapp"
+  - 🔴 Rot: Tagesgeld fast leer → "Nur noch X€ bis Notfall"
+  - Kunde **versteht sofort** seinen Liquiditäts-Status
+
+- [ ] **Puffer-Anzeige**
+  - "Ihr Puffer: 3 Monate abgesichert"
+  - Berechnung: Tagesgeld / monatliche Fixkosten
+  - Visueller Balken zeigt Puffer-Monate
+
+---
+
+### Version 1.8.0: Flow-Animationen & Interaktive Erklärungen ⭐⭐
+
+**ETA:** Q1 2027 (3-4 Wochen)
+**Fokus:** Geld-Fluss wird "lebendig" - Kunde sieht die Automatik in Aktion
+
+#### Features
+
+**1.8.1: Animierte Geld-Flows** ⭐⭐ (Woche 1-2)
+
+- [ ] **Flow-Partikel-System**
+  - Kleine "Geld-Partikel" (💶) fließen entlang der Flows
+  - Geschwindigkeit proportional zur Höhe des Betrags
+  - Dezent, aber sichtbar → "Geld fließt automatisch"
+
+- [ ] **Hover-Effekte auf Flows**
+  - Hover: Flow wird heller, zeigt Details
+  - Tooltip: "Dieser Flow transportiert monatlich X€"
+  - Click: Detaillierte Aufschlüsselung
+
+**1.8.2: Szenario-Simulation** ⭐ (Woche 2-3)
+
+- [ ] **"Was passiert wenn..."-Modus**
+  - Slider: "Einkommen -500€ diesen Monat"
+  - Live-Animation: System reagiert automatisch
+  - Zeigt: Tagesgeld wird angezapft, Depot bleibt unangetastet
+  - Kunde **SIEHT** die Flexibilität
+
+- [ ] **Engpass-Simulation**
+  - Button: "Zeig mir einen schwierigen Monat"
+  - Animation: Konsumkonto wird knapp → Tagesgeld springt ein
+  - Text: "So reagiert Ihr System automatisch auf Engpässe"
+
+---
+
+### Version 1.9.0: Dual-Monitor-Support ⭐
+
+**ETA:** Q1 2027 (2-3 Wochen)
+**Fokus:** Berater-Monitor (mit Menü) + Kunden-Monitor (clean)
+
+**Warum jetzt:** Kurz vor v2.0, für beste Präsentation
+
+#### Features
+
+**1.9.1: Presenter-View-Synchronisation** (Woche 1-2)
+
+- [ ] **Dual-Monitor-Mode**
+  - Button: "Presenter-View öffnen"
+  - Monitor 1 (Berater): Alle Tools, Menü, Notizen sichtbar
+  - Monitor 2 (Kunde): Clean View, nur Visualisierung
+  - Live-Synchronisation: Änderungen sofort auf beiden Screens
+
+- [ ] **Kunden-View-Optimierung**
+  - Versteckt: Menü, Export-Buttons, Berater-Notizen
+  - Zeigt: Nur Flows, Basins, Werte
+  - Größere Schrift für bessere Lesbarkeit
+  - Perfekt für Beamer/großen Monitor
+
+**1.9.2: Synchronisations-Kontrolle** (Woche 2)
+
+- [ ] **Lock/Unlock-Modus**
+  - Berater kann Kunden-View "einfrieren"
+  - Nützlich für Fotos/Screenshots
+  - "Sync pausiert" - Indikator
 
 ---
 
 ### Version 2.0.0: Vermögensverzehr-Modus (Ruhestandsplanung)
 
-**ETA:** Q1-Q2 2027 (10-12 Wochen)
+**ETA:** Q2 2027 (10-12 Wochen)
 **Fokus:** Paradigmenwechsel - Von "Vermögensaufbau" zu "Vermögensverzehr"
 
 **Zielgruppe:** Pensionäre, Rentner, Menschen vor dem Ruhestand
