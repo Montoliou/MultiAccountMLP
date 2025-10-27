@@ -2613,18 +2613,22 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         // Neuer Mittelpunkt X: Mitte zwischen Immobilien-Links und Depot-Rechts
         const newCenterX = outerFrameLeft + outerFrameWidth / 2;
 
-        // === GIROKONTO-BEREICH: Horizontale Verteilung ===
-        // 3 Basins: Vermieterkonto (links), Konsumkonto (mitte), Fixkostenkonto (weiter rechts!)
+        // === GIROKONTO-BEREICH: Ausrichtung an Depot & Immobilien ===
         const giroBasinWidth = 200; // Standard Basin-Breite
-        const availableWidth = containerWidth - 200; // Padding links/rechts
 
-        // NEUE VERTEILUNG: Fixkostenkonto weiter nach rechts gerückt
-        // Vermieterkonto: links (mit Abstand zum Rand)
-        // Konsumkonto: näher links-mitte
-        // Fixkostenkonto: weiter rechts (mehr Abstand zwischen Konsum und Fixkosten)
-        const giroLeft1 = 100; // Vermieterkonto: links
-        const giroLeft2 = availableWidth * 0.35; // Konsumkonto: 35% von links
-        const giroLeft3 = availableWidth * 0.65; // Fixkostenkonto: 65% von links (weiter rechts!)
+        // Berechne Positionen basierend auf Depot & Immobilien:
+        // 1. Fixkostenkonto: Mitte über rechtem Rand des Depot-Basins
+        const depotRightEdge = outerFrameLeft + immoWidth + gapBetweenDepotImmo + depotWidth;
+        const giroLeft3 = depotRightEdge - (giroBasinWidth / 2); // Mitte über rechtem Depot-Rand
+
+        // 2. Vermieterkonto: Mitte über linkem Rand des Immobilien-Basins
+        const immobilienLeftEdge = outerFrameLeft;
+        const giroLeft1 = immobilienLeftEdge - (giroBasinWidth / 2); // Mitte über linkem Immobilien-Rand
+
+        // 3. Konsumkonto: Mittig zwischen rechtem Rand Vermieterkonto und linkem Rand Fixkosten
+        const vermieterkontoRightEdge = giroLeft1 + giroBasinWidth;
+        const fixkostenLeftEdge = giroLeft3;
+        const giroLeft2 = (vermieterkontoRightEdge + fixkostenLeftEdge) / 2 - (giroBasinWidth / 2);
 
         // Höhen-Differenz: Vermieterkonto ist 100px, normale Basins sind größer (~150px?)
         // Um Untergrenze anzugleichen: Vermieterkonto muss TIEFER positioniert werden
