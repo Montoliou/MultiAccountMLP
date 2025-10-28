@@ -1066,11 +1066,19 @@
                     <h4 class="text-lg font-bold mb-3 text-red-400">Verbindlichkeiten</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Restdarlehen</label>
+                            <label class="text-sm text-gray-400 block mb-1">Restdarlehen (aktuell)</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-darlehen" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Restschuld">
+                                <input type="number" id="immo-darlehen" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Aktuelle Restschuld">
                                 <span class="text-gray-400">€</span>
                             </div>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400 block mb-1">Ursprüngliches Darlehen</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="immo-darlehen-original" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Darlehensbetrag bei Aufnahme">
+                                <span class="text-gray-400">€</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Für korrekte Ratenberechnung (Annuität bleibt konstant)</p>
                         </div>
                         <div>
                             <label class="text-sm text-gray-400 block mb-1">Zinssatz (optional)</label>
@@ -3631,10 +3639,11 @@ function updateFixkostenItem(index, key, value) {
     // Aktualisiert die Eingabefelder im Modal mit den gespeicherten Werten
     function updateImmobilienInputs() {
         // Quick-Fix: Zeige erste Immobilie im Modal
-        const immo = immobilienData[0] || { wert: 0, darlehen: 0, zinssatz: 0, tilgungssatz: 0, wertsteigerung: 0 };
+        const immo = immobilienData[0] || { wert: 0, darlehen: 0, darlehenOriginal: 0, zinssatz: 0, tilgungssatz: 0, wertsteigerung: 0 };
 
         if (getEl('immo-wert')) getEl('immo-wert').value = immo.wert || 0;
         if (getEl('immo-darlehen')) getEl('immo-darlehen').value = immo.darlehen || 0;
+        if (getEl('immo-darlehen-original')) getEl('immo-darlehen-original').value = immo.darlehenOriginal || 0;
         if (getEl('immo-zinssatz')) getEl('immo-zinssatz').value = immo.zinssatz || 0;
         if (getEl('immo-tilgungssatz')) getEl('immo-tilgungssatz').value = immo.tilgungssatz || 0;
         if (getEl('immo-wertsteigerung')) getEl('immo-wertsteigerung').value = immo.wertsteigerung || 0;
@@ -3671,23 +3680,29 @@ function updateFixkostenItem(index, key, value) {
         // TODO: Später erweitern für mehrere Immobilien
         const wert = parseFloat(getEl('immo-wert')?.value || 0);
         const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+        const darlehenOriginal = parseFloat(getEl('immo-darlehen-original')?.value || 0);
         const zinssatz = parseFloat(getEl('immo-zinssatz')?.value || 0);
         const tilgungssatz = parseFloat(getEl('immo-tilgungssatz')?.value || 0);
         const wertsteigerung = parseFloat(getEl('immo-wertsteigerung')?.value || 0);
 
         if (immobilienData.length === 0) {
-            immobilienData.push({ wert, darlehen, zinssatz, tilgungssatz, wertsteigerung });
+            immobilienData.push({ wert, darlehen, darlehenOriginal, zinssatz, tilgungssatz, wertsteigerung });
         } else {
-            immobilienData[0] = { wert, darlehen, zinssatz, tilgungssatz, wertsteigerung };
+            immobilienData[0] = { wert, darlehen, darlehenOriginal, zinssatz, tilgungssatz, wertsteigerung };
         }
 
         // Übertrage berechnete Rate ins Vermieterkonto
-        if (zinssatz > 0 || tilgungssatz > 0) {
-            const result = berechneDarlehensrate(darlehen, zinssatz, tilgungssatz);
+        // WICHTIG: Verwende darlehenOriginal für Berechnung (Annuität bleibt konstant!)
+        // Falls darlehenOriginal nicht gesetzt, fallback auf aktuelles Restdarlehen
+        const darlehenFuerBerechnung = darlehenOriginal > 0 ? darlehenOriginal : darlehen;
+
+        if ((zinssatz > 0 || tilgungssatz > 0) && darlehenFuerBerechnung > 0) {
+            const result = berechneDarlehensrate(darlehenFuerBerechnung, zinssatz, tilgungssatz);
             vermieterkontoData.rate = result.gesamt;
             vermieterkontoData.zinssatz = zinssatz;
             vermieterkontoData.tilgungssatz = tilgungssatz;
             vermieterkontoData.wertsteigerung = wertsteigerung;
+            updateVermieterkontoInputs(); // UPDATE: Inputs im Modal aktualisieren
             sessionStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
         }
 
@@ -3707,7 +3722,7 @@ function updateFixkostenItem(index, key, value) {
         });
 
         // Darlehens-Felder: Auto-Berechnung der Rate
-        const darlehensFields = ['zinssatz', 'tilgungssatz'];
+        const darlehensFields = ['zinssatz', 'tilgungssatz', 'darlehen-original'];
         darlehensFields.forEach(field => {
             const input = getEl('immo-' + field);
             if (input) {
@@ -3733,8 +3748,13 @@ function updateFixkostenItem(index, key, value) {
         const zinssatz = parseFloat(getEl('immo-zinssatz')?.value || 0);
         const tilgungssatz = parseFloat(getEl('immo-tilgungssatz')?.value || 0);
         const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+        const darlehenOriginal = parseFloat(getEl('immo-darlehen-original')?.value || 0);
 
-        if (darlehen === 0 || (zinssatz === 0 && tilgungssatz === 0)) {
+        // WICHTIG: Verwende ursprüngliches Darlehen für Berechnung (Annuität bleibt konstant!)
+        // Falls nicht gesetzt, fallback auf aktuelles Restdarlehen
+        const darlehenFuerBerechnung = darlehenOriginal > 0 ? darlehenOriginal : darlehen;
+
+        if (darlehenFuerBerechnung === 0 || (zinssatz === 0 && tilgungssatz === 0)) {
             // Verstecke Anzeige, wenn keine Berechnung möglich
             const display = getEl('immo-rate-berechnet-display');
             if (display) display.classList.add('hidden');
@@ -3744,8 +3764,8 @@ function updateFixkostenItem(index, key, value) {
             return;
         }
 
-        // Berechne Rate
-        const result = berechneDarlehensrate(darlehen, zinssatz, tilgungssatz);
+        // Berechne Rate mit ursprünglichem Darlehen
+        const result = berechneDarlehensrate(darlehenFuerBerechnung, zinssatz, tilgungssatz);
 
         // Zeige berechnete Rate
         const display = getEl('immo-rate-berechnet-display');
@@ -3776,14 +3796,18 @@ function updateFixkostenItem(index, key, value) {
         const tilgungssatz = parseFloat(getEl('immo-tilgungssatz')?.value || 0);
         const wertsteigerung = parseFloat(getEl('immo-wertsteigerung')?.value || 0);
         const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+        const darlehenOriginal = parseFloat(getEl('immo-darlehen-original')?.value || 0);
         const immowert = parseFloat(getEl('immo-wert')?.value || 0);
 
         if (darlehen === 0) return;
 
-        // Berechnung über Jahre
+        // WICHTIG: Verwende ursprüngliches Darlehen für Ratenberechnung (Annuität konstant!)
+        const darlehenFuerBerechnung = darlehenOriginal > 0 ? darlehenOriginal : darlehen;
+
+        // Berechnung über Jahre (Tilgung beginnt bei aktuellem Restdarlehen)
         let restschuld = darlehen;
         let gezahlteZinsen = 0;
-        const result = berechneDarlehensrate(darlehen, zinssatz, tilgungssatz);
+        const result = berechneDarlehensrate(darlehenFuerBerechnung, zinssatz, tilgungssatz);
         const monatsrate = result.gesamt;
 
         for (let monat = 1; monat <= jahre * 12; monat++) {
@@ -4412,6 +4436,11 @@ function updateFixkostenItem(index, key, value) {
                     </svg>
                     Session beenden
                 </button>
+            </div>
+            <div class="px-3 py-2 border-t border-gray-700">
+                <div class="text-xs text-gray-500 text-center">
+                    <span class="font-mono">v1.3.4</span>
+                </div>
             </div>
         </div>
     </div>
