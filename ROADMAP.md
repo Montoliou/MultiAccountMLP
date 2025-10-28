@@ -414,16 +414,41 @@ function exportToCSV() {
   - "Immobilie vermieten statt selbst nutzen"
   - "Zweite Immobilie kaufen"
 
-**1.3.4: Datenschutz-Compliance** (Woche 4)
+**1.3.4: Datenschutz-Compliance** (Woche 4) ✅ **LIVE: v1.3.4 (bbdcd96)**
 
-- [ ] **Datenschutz-Hinweis beim ersten Start**
+- ✅ **Datenschutz-Hinweis beim ersten Start**
   - Info-Modal: "Alle Daten werden nur temporär gespeichert"
   - Checkbox: "Verstanden, nicht erneut anzeigen"
+  - localStorage-Persistierung der User-Präferenz
 
-- [ ] **Inaktivitäts-Warnung**
+- ✅ **Inaktivitäts-Warnung**
   - Nach 30 Min. Inaktivität: Toast-Notification
   - "Beratung noch aktiv? Session läuft ab in 30 Min."
   - Button: "Ich bin noch da"
+  - Timer-Reset nach Bestätigung
+
+---
+
+## 🚀 LIVE DEPLOYMENT MARKER
+
+**Current Live Version: v1.3.4** (Tag: `v1.3.4`, Commit: `bbdcd96`)
+**Deployment Date:** 2025-10-28
+
+### Features in Production:
+- ✅ Multi-Basin Cashflow-Visualisierung
+- ✅ Automatische Geldfluss-Berechnung
+- ✅ Immobilien-Integration mit Tilgungsplan
+- ✅ Session-Management mit Auto-Save
+- ✅ Export: PDF, CSV, JSON
+- ✅ DSGVO-konform (sessionStorage only)
+- ✅ 30-Min Inaktivitäts-Warnung
+
+**To identify live version:**
+```bash
+git tag -l v1.3.4 -n20        # Show tag details
+git checkout v1.3.4           # Return to this version
+git log --oneline --decorate  # See all tagged versions
+```
 
 ---
 
