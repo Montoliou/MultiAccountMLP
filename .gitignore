@@ -143,6 +143,9 @@ vite.config.ts.timestamp-*
 *.patch
 .DS_Store
 
-# FTP Credentials (NEVER commit these!)
+# FTP/SFTP Credentials (NEVER commit these!)
 .ftp-credentials
 deployment-log.txt
+
+# WinSCP (auto-downloaded for deployment)
+WinSCP/

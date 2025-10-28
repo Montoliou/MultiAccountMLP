@@ -1,10 +1,24 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\ndocs(roadmap): update to reflect v1.2.0 completion\n\nMajor updates:\n- ✅ v1.2.0 marked as completed (Session-Management & UI/UX)\n- Updated \"Aktuelle Version\" from 1.2.0-dev to 1.2.0\n- Documented all implemented features:\n  - Session lifecycle management (Start/End dialogs, Recovery)\n  - sessionStorage migration (auto-delete on tab close)\n  - MLP Vermieterkonto (7th basin with bidirectional flows)\n  - Gradient zones (weather metaphor: Wolken→Horizont→Schuppen→Felder)\n  - Modal overlay system (fullscreen, backdrop-blur, glassmorphism)\n  - Session menu (elegant dropdown instead of bar)\n  - Deficit line (MLP Platin, 0.15 opacity)\n  - Consultation mode fix (Step 1: only Einkommen)\n\n- Reorganized development roadmap:\n  - v1.2.0: Marked as completed with all implemented features\n  - v1.3.0: Refocused on Export-Erweiterung & Immobilien-Integration\n  - Moved pending features (CSV/JSON export, compliance) to v1.3.0\n\n- Updated changelog with v1.2.0 achievements and commit references\n- Updated \"Quick Wins\" section for v1.3.0 priorities\n- Updated \"Nächster Meilenstein\" to v1.3.0\n\nNext milestone: v1.3.0 (Export extensions) - Q4 2025 / Q1 2026\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git commit:*)",
-      "Bash(start index.html)"
+      "Bash(git tag -a v1.3.4 -m \"$(cat <<''EOF''\n🚀 LIVE DEPLOYMENT v1.3.4\n\nRelease Date: 2025-10-28\n\nFeatures in this Live Version:\n✅ v1.3.0: Session Management & Export-System\n✅ v1.3.1: Immobilien-Integration (Wert, Darlehen, Wertsteigerung)\n✅ v1.3.2: Darlehensberechnung mit Tilgungsplan & Cashflow\n✅ v1.3.3: Layout-Optimierung (geometrische Ausrichtung, mäandernde Flows)\n✅ v1.3.4: Datenschutz-Hinweis & Inaktivitäts-Warnung\n\nKey Capabilities:\n- Multi-Basin Cashflow-Visualisierung\n- Automatische Geldfluss-Berechnung\n- Immobilien-Management mit Tilgungsplan\n- Session-Management mit Auto-Save\n- Export: PDF, CSV, JSON\n- DSGVO-konform (sessionStorage only)\n- 30-Min Inaktivitäts-Warnung\n\nThis tag marks the version deployed to production.\nUse ''git checkout v1.3.4'' to return to this version.\nEOF\n)\")",
+      "Bash(git add:*)",
+      "Bash(start index.html)",
+      "Bash(powershell -ExecutionPolicy Bypass -File deploy-final.ps1 -Test -Force)",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -Command \"& { . .\\deploy-final.ps1 -Test -Force }\")",
+      "Bash(powershell -NoProfile -Command \"Test-Path .ftp-credentials; Get-Module -ListAvailable Posh-SSH | Select-Object Name, Version, Path\")",
+      "Bash(powershell -NoProfile -Command:*)",
+      "Bash(powershell -Command \"Import-Module Posh-SSH; Get-Module Posh-SSH\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File deploy-ionos-posh.ps1:*)",
+      "Bash(powershell -Command \"Install-Module -Name Posh-SSH -Force -Scope CurrentUser -AllowClobber\")",
+      "Bash(powershell -Command \"Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser; Install-Module -Name Posh-SSH -Force -Scope CurrentUser -AllowClobber\")",
+      "Bash(powershell -Command \"Get-Module -ListAvailable Posh-SSH | Select-Object Name, Version, Path\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File deploy-test-simple.ps1:*)",
+      "Bash(powershell:*)",
+      "Bash(curl:*)",
+      "Read(//c/Users/monto/.ssh/**)",
+      "Bash(git tag:*)"
     ],
     "deny": [],
     "ask": []
