@@ -976,7 +976,7 @@
                 <div id="konsum-basin" class="account-basin"></div>
                 <div id="tagesgeld-basin" class="account-basin"></div>
                 <button id="depot-basin" class="account-basin cursor-pointer hover:border-purple-500" type="button" aria-controls="depot-modal" aria-haspopup="dialog" onclick="openModal('depot-modal')"></button>
-                <button id="vermieterkonto-basin" class="account-basin cursor-pointer hover:border-blue-500" type="button" aria-controls="vermieterkonto-modal" aria-haspopup="dialog" onclick="openModal('vermieterkonto-modal')" style="height: 100px;"></button>
+                <button id="vermieterkonto-basin" class="account-basin cursor-pointer hover:border-blue-500" type="button" aria-controls="vermieterkonto-modal" aria-haspopup="dialog" onclick="loadVermieterkontoData(); openModal('vermieterkonto-modal')" style="height: 100px;"></button>
                 <button id="immobilien-basin" class="account-basin cursor-pointer hover:border-amber-500" type="button" aria-controls="immobilien-modal" aria-haspopup="dialog" onclick="openModal('immobilien-modal')"></button>
             </div>
         </div>
@@ -1179,14 +1179,14 @@
                             <label class="text-sm text-gray-400 block mb-1">Mieteinnahmen</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-miete" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Monatliche Miete">
-                                <span class="text-gray-400">€ / Monat</span>
+                                <span class="text-gray-400">€</span>
                             </div>
                         </div>
                         <div>
                             <label class="text-sm text-gray-400 block mb-1">Sonstige Einnahmen</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-sonstige-einnahmen" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. Stellplatz, Garage">
-                                <span class="text-gray-400">€ / Monat</span>
+                                <span class="text-gray-400">€</span>
                             </div>
                         </div>
                     </div>
@@ -1200,21 +1200,21 @@
                             <label class="text-sm text-gray-400 block mb-1">Darlehensrate</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-rate" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Monatliche Rate">
-                                <span class="text-gray-400">€ / Monat</span>
+                                <span class="text-gray-400">€</span>
                             </div>
                         </div>
                         <div>
                             <label class="text-sm text-gray-400 block mb-1">Instandhaltung</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-instandhaltung" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Rücklagen">
-                                <span class="text-gray-400">€ / Monat</span>
+                                <span class="text-gray-400">€</span>
                             </div>
                         </div>
                         <div>
                             <label class="text-sm text-gray-400 block mb-1">Steuern & Nebenkosten</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-steuern" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Grundsteuer, Versicherung">
-                                <span class="text-gray-400">€ / Monat</span>
+                                <span class="text-gray-400">€</span>
                             </div>
                         </div>
                     </div>
