@@ -3702,12 +3702,11 @@ function updateFixkostenItem(index, key, value) {
             vermieterkontoData.zinssatz = zinssatz;
             vermieterkontoData.tilgungssatz = tilgungssatz;
             vermieterkontoData.wertsteigerung = wertsteigerung;
-            updateVermieterkontoInputs(); // UPDATE: Inputs im Modal aktualisieren
             sessionStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
         }
 
         sessionStorage.setItem('immobilienData', JSON.stringify(immobilienData));
-        calculateAndUpdate();
+        calculateAndUpdate(); // Aktualisiert alle Basins inkl. Vermieterkonto
         closeModal('immobilien-modal');
     }
 
