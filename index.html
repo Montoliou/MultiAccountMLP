@@ -3698,7 +3698,7 @@ function updateFixkostenItem(index, key, value) {
 
         if ((zinssatz > 0 || tilgungssatz > 0) && darlehenFuerBerechnung > 0) {
             const result = berechneDarlehensrate(darlehenFuerBerechnung, zinssatz, tilgungssatz);
-            vermieterkontoData.rate = result.gesamt;
+            vermieterkontoData.rate = Math.round(result.gesamt); // Auf volle Euro runden
             vermieterkontoData.zinssatz = zinssatz;
             vermieterkontoData.tilgungssatz = tilgungssatz;
             vermieterkontoData.wertsteigerung = wertsteigerung;
