@@ -23,8 +23,8 @@
         .flow-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; }
         .flow-path { fill: none; stroke: var(--mlp-blue-1); stroke: url(#flow-gradient); stroke-linecap: round; stroke-linejoin: round; transition: opacity 0.5s, stroke-width 0.5s; opacity: 0; }
         .flow-path.active { opacity: 1; }
-        .flow-path-animation { stroke: white; stroke-width: 1.5px; stroke-dasharray: 10 15; animation: flow 2s linear infinite; opacity: 0; transition: opacity 0.5s; }
-        .flow-path.active + .flow-path-animation { opacity: 0.4; }
+        .flow-path-animation { stroke: white; stroke-width: 2px; stroke-dasharray: 10 15; animation: flow 2s linear infinite; opacity: 0; transition: opacity 0.5s; }
+        .flow-path.active + .flow-path-animation { opacity: 0.6; }
         /* Erase any underlay with background color (covers legacy grey ribbons) */
         .flow-erase {
           fill: none;
@@ -37,7 +37,7 @@
         .theme-light .flow-erase { stroke: #ffffff !important; }
         .theme-dark  .flow-erase { stroke: #111827 !important; }
         /* Light theme: full blue flows, no grey halo */
-        .theme-light .flow-path { stroke: var(--mlp-blue-1) !important; filter: none; }
+        .theme-light .flow-path { stroke: var(--mlp-blue-1); filter: none; }
         .theme-light .flow-path-animation { stroke: #2f6fb2; stroke-dasharray: 8 14; opacity: .9; }
         .flow-dot { fill: #60a5fa; opacity: .95; }
         .theme-light .flow-dot { fill: var(--mlp-blue-2); }
@@ -494,7 +494,7 @@
         .theme-light .limit-line span { background: #ffffff !important; color: #111827 !important; }
 
         /* Flow animation color on light */
-        .theme-light .flow-path-animation { stroke: var(--mlp-blue-1); opacity: .5; }
+        .theme-light .flow-path-animation { stroke: white; opacity: .5; }
 
         /* Mask strokes (define visible river area) */
         .flow-mask-stroke {
@@ -945,9 +945,14 @@
                         <path id="tagesgeld-depot-flow-mask" class="flow-mask-stroke"></path>
                         <path id="fixkosten-depot-flow-mask" class="flow-mask-stroke"></path>
                         <path id="vermieterkonto-einkommen-flow-mask" class="flow-mask-stroke"></path>
+                        <path id="fixkosten-vermieterkonto-flow-mask" class="flow-mask-stroke"></path>
                       </mask>
                     </defs>
                     <g id="flow-visuals" mask="url(#flow-mask)">
+                      <!-- Deficitline ganz hinten (erstes Element = hinterste Ebene) -->
+                      <path id="fixkosten-vermieterkonto-flow-erase" class="flow-erase"></path>
+                      <path id="fixkosten-vermieterkonto-flow" class="flow-path"></path><path id="fixkosten-vermieterkonto-flow-anim" class="flow-path-animation"></path><g id="fixkosten-vermieterkonto-flow-dot"></g>
+                      <!-- Normale Flows -->
                       <path id="flow-path-1-erase" class="flow-erase"></path>
                       <path id="flow-path-1" class="flow-path"></path><path id="flow-path-1-anim" class="flow-path-animation"></path><g id="flow-path-1-dot"></g>
                       <path id="flow-path-2-erase" class="flow-erase"></path>
@@ -958,7 +963,7 @@
                       <path id="tagesgeld-depot-flow" class="flow-path"></path><path id="tagesgeld-depot-flow-anim" class="flow-path-animation"></path><g id="tagesgeld-depot-flow-dot"></g>
                       <path id="fixkosten-depot-flow-erase" class="flow-erase"></path>
                       <path id="fixkosten-depot-flow" class="flow-path"></path><path id="fixkosten-depot-flow-anim" class="flow-path-animation"></path><g id="fixkosten-depot-flow-dot"></g>
-                      <!-- Vermieterkonto Flows -->
+                      <!-- Vermieterkonto positive Flow -->
                       <path id="vermieterkonto-einkommen-flow-erase" class="flow-erase"></path>
                       <path id="vermieterkonto-einkommen-flow" class="flow-path"></path><path id="vermieterkonto-einkommen-flow-anim" class="flow-path-animation"></path><g id="vermieterkonto-einkommen-flow-dot"></g>
                     </g>
@@ -972,7 +977,7 @@
                 <div id="gradient-zone-4" class="gradient-zone gradient-zone-4" style="top: 960px; height: 300px;"></div>
 
                 <div id="einkommen-basin" class="account-basin"></div>
-                <button id="fixkosten-basin" class="account-basin cursor-pointer hover:border-indigo-500" type="button" aria-controls="fixkosten-modal" aria-haspopup="dialog" onclick="openModal('fixkosten-modal')"></button>
+                <button id="fixkosten-basin" class="account-basin cursor-pointer hover:border-indigo-500" type="button" aria-controls="fixkosten-modal" aria-haspopup="dialog" onclick="openFixkostenModal()"></button>
                 <div id="konsum-basin" class="account-basin"></div>
                 <div id="tagesgeld-basin" class="account-basin"></div>
                 <button id="depot-basin" class="account-basin cursor-pointer hover:border-purple-500" type="button" aria-controls="depot-modal" aria-haspopup="dialog" onclick="openModal('depot-modal')"></button>
@@ -1027,6 +1032,55 @@
             </div>
             <p id="depot-warning" class="text-center text-yellow-400 mt-2 h-6"></p>
             <button id="depot-save-button" type="button" onclick="saveDepot()" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern &amp; Schließen</button>
+            <button type="button" onclick="openMsciRenditedreieck()" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                MSCI Renditedreieck anzeigen
+            </button>
+        </div>
+    </div>
+
+    <!-- MSCI Renditedreieck Modal -->
+    <div id="msci-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="msci-modal-title">
+        <div class="w-full h-full max-w-7xl max-h-screen relative flex flex-col" role="document" tabindex="-1">
+            <div class="flex justify-between items-center mb-3">
+                <h3 id="msci-modal-title" class="text-2xl font-bold text-white">MSCI World Renditedreieck</h3>
+                <button type="button" onclick="closeMsciRenditedreieck()" class="text-gray-400 hover:text-white text-3xl" aria-label="MSCI Renditedreieck schließen">&times;</button>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex flex-wrap gap-2 mb-3">
+                <button type="button" onclick="toggleMsciFilter('1-5')" class="msci-filter-btn px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors" data-filter="1-5">1-5 Jahre</button>
+                <button type="button" onclick="toggleMsciFilter('6-10')" class="msci-filter-btn px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors" data-filter="6-10">6-10 Jahre</button>
+                <button type="button" onclick="toggleMsciFilter('11-15')" class="msci-filter-btn px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors" data-filter="11-15">11-15 Jahre</button>
+                <button type="button" onclick="toggleMsciFilter('16-20')" class="msci-filter-btn px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors" data-filter="16-20">16-20 Jahre</button>
+                <button type="button" onclick="toggleMsciFilter('20plus')" class="msci-filter-btn px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors" data-filter="20plus">20+ Jahre</button>
+                <button type="button" onclick="resetMsciFilters()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">Alle anzeigen</button>
+            </div>
+
+            <div class="flex-1 bg-white rounded-lg overflow-hidden relative cursor-zoom-in" id="msci-container" onclick="toggleMsciZoom(event)">
+                <img id="msci-image" src="assets/msci_renditedreieck.png" alt="MSCI World Renditedreieck" class="w-full h-full object-contain transition-transform duration-300">
+
+                <!-- SVG Overlay für Filter -->
+                <svg id="msci-overlay" class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet">
+                    <!-- 1-5 Jahre: Kleines Dreieck oben rechts -->
+                    <polygon id="filter-1-5" class="msci-filter-area" points="1475,140 1765,140 1765,430" fill="rgba(0,0,0,0.75)" style="display:none; transition: opacity 0.3s;"/>
+
+                    <!-- 6-10 Jahre: Diagonaler Streifen -->
+                    <polygon id="filter-6-10" class="msci-filter-area" points="1185,140 1475,140 1765,430 1765,720" fill="rgba(0,0,0,0.75)" style="display:none; transition: opacity 0.3s;"/>
+
+                    <!-- 11-15 Jahre: Mittlerer Bereich -->
+                    <polygon id="filter-11-15" class="msci-filter-area" points="895,140 1185,140 1765,720 1765,1010" fill="rgba(0,0,0,0.75)" style="display:none; transition: opacity 0.3s;"/>
+
+                    <!-- 16-20 Jahre: Größerer Bereich -->
+                    <polygon id="filter-16-20" class="msci-filter-area" points="605,140 895,140 1765,1010 1765,1300 145,880" fill="rgba(0,0,0,0.75)" style="display:none; transition: opacity 0.3s;"/>
+
+                    <!-- 20+ Jahre: Großes Dreieck links unten -->
+                    <polygon id="filter-20plus" class="msci-filter-area" points="145,140 605,140 145,880" fill="rgba(0,0,0,0.75)" style="display:none; transition: opacity 0.3s;"/>
+                </svg>
+            </div>
+            <p class="text-sm text-gray-400 text-center mt-3">Klicke auf das Bild zum Zoomen | Filter: Zeiträume ausblenden</p>
         </div>
     </div>
 
@@ -2441,23 +2495,23 @@ let fixkostenItems = [
         show(zone4, consultationStep >= 5); // Vermögensaufbau ab Step 5
       } else {
         show(secIncome, true);
-        show(secKonsum, true); // B: income + konsum from step 1
+        show(secKonsum, consultationStep >= 2); // B: konsum ab step 2 (wie Fixkosten in A)
         show(secTG,     consultationStep >= 3);
         show(secProg,   consultationStep >= 4);
 
         show(basins.einkommen, true);
-        show(basins.konsum, true);
-        show(basins.fixkosten, consultationStep >= 2);
-        show(basins.tagesgeld, consultationStep >= 3);
-        show(basins.depot, consultationStep >= 4);
+        show(basins.konsum, consultationStep >= 2); // Step 2: Konsum (wie Fixkosten in A)
+        show(basins.fixkosten, consultationStep >= 3); // Step 3: Fixkosten
+        show(basins.tagesgeld, consultationStep >= 4); // Step 4: Tagesgeld
+        show(basins.depot, consultationStep >= 5); // Step 5: Depot
         show(basins.immobilien, consultationStep >= 6); // Step 6: Immobilien
         show(basins.vermieterkonto, consultationStep >= 6); // Step 6: Vermieterkonto (zusammen mit Immobilien)
 
         // Gradient zones (Variante B)
         show(zone1, true); // Einkommen immer sichtbar
-        show(zone2, true); // Konsum ab Step 1
-        show(zone3, consultationStep >= 3); // Liquidität ab Step 3
-        show(zone4, consultationStep >= 4); // Vermögensaufbau ab Step 4
+        show(zone2, consultationStep >= 2); // Konsum/Fixkosten ab Step 2
+        show(zone3, consultationStep >= 4); // Liquidität ab Step 4
+        show(zone4, consultationStep >= 5); // Vermögensaufbau ab Step 5
       }
     }
     
@@ -2737,7 +2791,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const normalizedValue = Math.max(0, value) / maxFlowValue;
         const strokeWidth = minWidth + normalizedValue * (maxWidth - minWidth);
         path.style.strokeWidth = `${value > 0 ? Math.max(minWidth, strokeWidth) : 0}px`;
-        path.style.opacity = flowOpacity; // Opacity für dezente Flows
+        // Nur für spezielle Flows (z.B. Deficitline) opacity setzen, sonst CSS-Animation überschreiben
+        if (flowOpacity !== 1.0) {
+            path.style.opacity = flowOpacity; // Opacity für dezente Flows
+        } else {
+            path.style.opacity = ''; // CSS-Default verwenden (für Animationen)
+        }
 
         let pathData;
         // REPLACED BLOCK: custom anchor, curve, and offsets for each flow
@@ -2813,13 +2872,58 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const c2y = toEinkommenY - dy * 0.25; // 75% des Weges (nah am Ziel)
 
             pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toEinkommenX},${toEinkommenY}`;
+        } else if (pathId === 'fixkosten-vermieterkonto-flow') {
+            // Bidirektionaler Flow zwischen Vermieterkonto und Fixkosten/Konsum
+            // Richtung wird durch fromBasin/toBasin bestimmt
+
+            // Prüfe ob Vermieterkonto der Startpunkt ist (positiver Saldo)
+            const isPositiveFlow = fromBasin.id === 'vermieterkonto-basin';
+
+            if (isPositiveFlow) {
+                // Positiv: Vermieterkonto → Fixkosten/Konsum
+                // Start: Oberkante Mitte vom Vermieterkonto
+                fromX = fromRect.left - containerRect.left + fromRect.width * 0.5;
+                fromY = fromRect.top - containerRect.top;
+
+                // Ziel: Linke Seite Mitte vom Ziel-Basin (Fixkosten oder Konsum)
+                const toTargetX = toRect.left - containerRect.left + toRect.width * 0.10;
+                const toTargetY = toRect.top - containerRect.top + toRect.height * 0.5;
+
+                // Umgekehrte mäandernde Kurve (nach oben und rechts)
+                const c1x = fromX - 40; // Nach links schwingen
+                const c1y = fromY - 60;
+                const c2x = toTargetX - 60; // Nach links vorbei
+                const c2y = toTargetY - (toTargetY - fromY) * 0.3;
+
+                pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toTargetX},${toTargetY}`;
+            } else {
+                // Negativ: Fixkosten → Vermieterkonto (Deckung)
+                // Start: Linker Rand vom Fixkostenkonto (10%)
+                fromX = fromRect.left - containerRect.left + fromRect.width * 0.10;
+                fromY = fromRect.top - containerRect.top + fromRect.height * 0.5;
+
+                // Ziel: Oberkante Mitte vom Vermieterkonto
+                const toVermX = toRect.left - containerRect.left + toRect.width * 0.5;
+                const toVermY = toRect.top - containerRect.top;
+
+                // Mäandernde Kurve (nach links und unten)
+                const c1x = fromX - 60; // Nach links schwingen
+                const c1y = fromY + (toVermY - fromY) * 0.3;
+                const c2x = toVermX - 40; // Zurück zur Mitte
+                const c2y = toVermY - 60;
+
+                pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toVermX},${toVermY}`;
+            }
         } else {
             // Default smooth S-curve between centers
             fromY -= EXIT_OFFSET_Y;
             pathData = `M ${fromX},${fromY} C ${fromX},${fromY + CURVE_MAIN} ${toX},${toY - CURVE_MAIN} ${toX},${toY}`;
         }
         // --- END NEW BLOCK ---
-        path.setAttribute('d', pathData); pathAnim.setAttribute('d', pathData);
+        path.setAttribute('d', pathData);
+        pathAnim.setAttribute('d', pathData);
+        // Reset inline opacity to allow CSS to control animation visibility
+        pathAnim.style.opacity = '';
 
         // Update mask stroke to define visible river area
         const pathMask = getEl(`${pathId}-mask`);
@@ -2854,13 +2958,15 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         let labelPosition = 0.5; // Standard: 50% (Mitte)
         if (pathId === 'vermieterkonto-einkommen-flow') {
             labelPosition = 0.35; // 35% - näher am Vermieterkonto (Start)
+        } else if (pathId === 'fixkosten-vermieterkonto-flow') {
+            labelPosition = 0.67; // 67% - im ersten Drittel vom Vermieterkonto aus (= letztes Drittel vom Start)
         }
 
         const midPoint = path.getPointAtLength(path.getTotalLength() * labelPosition);
         valueLabel.style.left = `${midPoint.x}px`; valueLabel.style.top = `${midPoint.y}px`;
         if (textLabel) {
             textLabel.style.left = `${midPoint.x}px`;
-            textLabel.style.top  = `${midPoint.y - 36}px`; // clearer separation above the amount pill
+            textLabel.style.top  = `${midPoint.y - 22}px`; // closer spacing above the amount pill
         }
         path.classList.toggle('active', value > 0);
         valueLabel.style.display = (value > 0) ? 'block' : 'none';
@@ -2964,6 +3070,54 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if (line) line.setAttribute('opacity', '0');
     }
 
+    function drawMeanderingDeficitLine(lineId, fromBasin, toBasin, amount, viaBasin) {
+        // Zeichnet eine mäandernde gestrichelte Linie die um ein Zwischenbecken (z.B. Konsum) herumführt
+        // Sehr dezent, läuft komplett im Hintergrund
+        if (!fromBasin || !toBasin || !viaBasin) return;
+
+        let line = getEl(lineId);
+
+        if (!line) {
+            line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            line.id = lineId;
+            line.setAttribute('stroke', '#BDA177'); // MLP Platin/Gold
+            line.setAttribute('stroke-width', '1.5');
+            line.setAttribute('stroke-dasharray', '8,6');
+            line.setAttribute('fill', 'none');
+            line.setAttribute('opacity', '0.15'); // Dezent wie andere Verbindungslinien
+            flowSvg.appendChild(line);
+        }
+
+        const fromRect = fromBasin.getBoundingClientRect();
+        const toRect = toBasin.getBoundingClientRect();
+        const viaRect = viaBasin.getBoundingClientRect();
+        const containerRect = flowContainer.getBoundingClientRect();
+
+        // Startpunkt: Fixkosten (linke Seite)
+        const fromX = fromRect.left - containerRect.left + fromRect.width * 0.1;
+        const fromY = fromRect.top - containerRect.top + fromRect.height * 0.5;
+
+        // Endpunkt: Vermieterkonto (obere Seite)
+        const toX = toRect.left - containerRect.left + toRect.width * 0.5;
+        const toY = toRect.top - containerRect.top;
+
+        // Zwischenpunkte um Konsum herum mäandern
+        const viaX = viaRect.left - containerRect.left - 80; // Links am Konsum vorbei
+        const viaY = viaRect.top - containerRect.top + viaRect.height * 0.5;
+
+        // Zweiter Kontrollpunkt unter Konsum
+        const via2X = viaRect.left - containerRect.left + viaRect.width * 0.3;
+        const via2Y = viaRect.bottom - containerRect.top + 60;
+
+        // Mäandernder Pfad mit mehreren Bezier-Kurven
+        const pathData = `M ${fromX},${fromY}
+                          C ${fromX - 40},${fromY - 20} ${viaX + 20},${viaY - 40} ${viaX},${viaY}
+                          S ${viaX - 20},${via2Y - 20} ${via2X},${via2Y}
+                          S ${toX + 40},${toY + 60} ${toX},${toY}`;
+
+        line.setAttribute('d', pathData);
+    }
+
     function drawSchutzschirm(fromBasin, toBasin) {
         if (!fromBasin || !toBasin) return;
         const path = getEl('schutzschirm-path');
@@ -2990,17 +3144,26 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent.value) || 0;
             const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit.value) || 0;
 
-            // Cashflow-Integration: Mieteinnahmen zum Einkommen hinzufügen
-            if (cashflowIntegrated && vermieterData.einnahmen > 0) {
-                income += vermieterData.einnahmen;
-            }
+            // Vermieterkonto-Integration wird jetzt direkt in Fixkosten/Konsum gerechnet
+            // (nicht mehr über Einkommen)
 
             let fixkostenOnlyTotal = fixkostenItems.filter(i => i.target === 'fixkosten').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
             const depotSparplanTotal = fixkostenItems.filter(i => i.target === 'depot').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
 
-            // Cashflow-Integration: Vermieterkonto-Ausgaben zu Fixkosten hinzufügen
-            if (cashflowIntegrated && vermieterData.ausgaben > 0) {
-                fixkostenOnlyTotal += vermieterData.ausgaben;
+            // Vermieterkonto-Integration Variante A:
+            // - Negativer Saldo: erhöht Fixkosten (Deckung)
+            // - Positiver Saldo: reduziert Fixkosten (Miete senkt Abgänge)
+            if (currentVariant === 'A') {
+                if (vermieterData.saldo < 0) {
+                    fixkostenOnlyTotal += Math.abs(vermieterData.saldo);
+                } else {
+                    fixkostenOnlyTotal = Math.max(0, fixkostenOnlyTotal - vermieterData.saldo);
+                }
+            } else {
+                // Variante B: Negativer Saldo erhöht Fixkosten
+                if (vermieterData.saldo < 0) {
+                    fixkostenOnlyTotal += Math.abs(vermieterData.saldo);
+                }
             }
 
             const totalAbgang = fixkostenOnlyTotal + depotSparplanTotal;
@@ -3008,19 +3171,20 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const konsumInflow = (currentVariant === 'A')
               ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
               : Math.max(0, income);                // Variante B: Einkommen geht direkt auf Konsum
-            // Vermieterkonto-Saldo berücksichtigen (vermieterData bereits oben deklariert)
-            // Nur positiver Saldo fließt zu Tagesgeld (negativ wird von Fixkosten gedeckt)
-            const vermieterkontoFlow = Math.max(0, vermieterData.saldo);
 
             const { tagesgeldInflow, depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
-            const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow + vermieterkontoFlow;
+            const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow;
             const totalDepotInflow = depotSparplanTotal + depotOverflow;
             
             let konsumValue;
             if(currentVariant === 'A') {
                 konsumValue = income - totalAbgang;
             } else {
+                // Variante B: Konsum wird bei positivem Vermieterkonto-Saldo erhöht
                 konsumValue = income - totalAbgang;
+                if (vermieterData.saldo > 0) {
+                    konsumValue += vermieterData.saldo;
+                }
             }
             
             renderBasin(basins.einkommen, 'Einkommen', formatCurrency(income), '<svg class="w-7 h-7 mb-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>');
@@ -3076,7 +3240,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 show2       = bothVisible(basins.fixkosten, basins.konsum)   && (!consultationMode || consultationStep >= 2);
                 showKTG     = bothVisible(basins.konsum,    basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
                 showTGDepot = bothVisible(basins.tagesgeld, basins.depot)     && (!consultationMode || consultationStep >= 4);
-                showFixDepot= bothVisible(basins.fixkosten, basins.depot)     && (allowDepotStream === true); // Step 5 in consultation
+                showFixDepot= bothVisible(basins.fixkosten, basins.depot)     && (!consultationMode || (consultationMode && allowDepotStream === true)); // Step 5 in consultation
 
                 if (show1)       drawFlow('flow-path-1', basins.einkommen,    basins.fixkosten, income, maxFlow);
                 else             hideFlow('flow-path-1');
@@ -3099,7 +3263,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 show2       = bothVisible(basins.konsum,   basins.fixkosten) && (!consultationMode || consultationStep >= 2);
                 showKTG     = bothVisible(basins.konsum,   basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
                 showTGDepot = bothVisible(basins.tagesgeld,basins.depot)    && (!consultationMode || consultationStep >= 4);
-                showFixDepot= bothVisible(basins.fixkosten,basins.depot)    && (allowDepotStream === true); // Step 5 in consultation
+                showFixDepot= bothVisible(basins.fixkosten,basins.depot)    && (!consultationMode || (consultationMode && allowDepotStream === true)); // Step 5 in consultation
 
                 if (show1)       drawFlow('flow-path-1', basins.einkommen,  basins.konsum, income, maxFlow);
                 else             hideFlow('flow-path-1');
@@ -3119,23 +3283,43 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             // === END: Flow visibility control ===
 
             // === Vermieterkonto Flows ===
-            const hasVermieterkontoCashflow = bothVisible(basins.vermieterkonto, basins.einkommen) && Math.abs(vermieterData.saldo) > 0;
+            const hasVermieterkontoCashflow = Math.abs(vermieterData.saldo) > 0;
 
             if (hasVermieterkontoCashflow) {
                 if (vermieterData.saldo > 0) {
-                    // Positiv: Vermieterkonto → Einkommen (Mieteinnahmen fließen ins Einkommen) - DEZENT (0.35 opacity)
-                    if (bothVisible(basins.vermieterkonto, basins.einkommen)) {
-                        drawFlow('vermieterkonto-einkommen-flow', basins.vermieterkonto, basins.einkommen, vermieterData.saldo, maxFlow, 'Netto-Mieteinnahmen', 0.35);
+                    // Positiv: Vermieterkonto → Fixkosten (Variante A) oder Konsum (Variante B)
+                    hideFlow('vermieterkonto-einkommen-flow'); // Alten Flow ausblenden
+
+                    if (currentVariant === 'A') {
+                        // Variante A: Vermieterkonto → Fixkosten (linke Seite Mitte)
+                        if (bothVisible(basins.vermieterkonto, basins.fixkosten)) {
+                            drawFlow('fixkosten-vermieterkonto-flow', basins.vermieterkonto, basins.fixkosten, vermieterData.saldo, maxFlow, 'Miete', 0.3);
+                        } else {
+                            hideFlow('fixkosten-vermieterkonto-flow');
+                        }
+                    } else {
+                        // Variante B: Vermieterkonto → Konsum (linke Seite Mitte)
+                        if (bothVisible(basins.vermieterkonto, basins.konsum)) {
+                            drawFlow('fixkosten-vermieterkonto-flow', basins.vermieterkonto, basins.konsum, vermieterData.saldo, maxFlow, 'Miete', 0.3);
+                        } else {
+                            hideFlow('fixkosten-vermieterkonto-flow');
+                        }
                     }
-                    hideDeficitLine('fixkosten-vermieterkonto-deficit'); // Deckungsbedarfs-Linie ausblenden
                 } else {
-                    // Negativ: Fixkosten decken Vermieterkonto (gestrichelte Linie statt Flow)
-                    hideFlow('vermieterkonto-einkommen-flow'); // Vorwärts-Flow ausblenden
-                    drawDeficitLine('fixkosten-vermieterkonto-deficit', basins.fixkosten, basins.vermieterkonto, Math.abs(vermieterData.saldo));
+                    // Negativ: Fixkosten → Vermieterkonto (Deckung der negativen Kosten)
+                    hideFlow('vermieterkonto-einkommen-flow'); // Alten Flow ausblenden
+                    if (bothVisible(basins.fixkosten, basins.vermieterkonto)) {
+                        drawFlow('fixkosten-vermieterkonto-flow', basins.fixkosten, basins.vermieterkonto, Math.abs(vermieterData.saldo), maxFlow, 'Deckung', 1.0);
+                        // Deficitline transparent machen - höhere Opacity für sichtbare Gradient-Farben
+                        const deficitPath = getEl('fixkosten-vermieterkonto-flow');
+                        if (deficitPath) deficitPath.style.filter = 'opacity(0.5)';
+                    } else {
+                        hideFlow('fixkosten-vermieterkonto-flow');
+                    }
                 }
             } else {
                 hideFlow('vermieterkonto-einkommen-flow');
-                hideDeficitLine('fixkosten-vermieterkonto-deficit');
+                hideFlow('fixkosten-vermieterkonto-flow');
             }
 
             // Visuelle Verbindung: Immobilien <-> Vermieterkonto (gestrichelte Linie, immer sichtbar)
@@ -3522,8 +3706,79 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         }, 300);
     }
     const fixkostenModal = { list: getEl('fixkosten-list'), total: getEl('modal-total') };
+
+    function openFixkostenModal() {
+        // Lade Vermieterkonto-Daten aus sessionStorage bevor Modal geöffnet wird
+        const saved = sessionStorage.getItem('vermieterkontoData');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                Object.assign(vermieterkontoData, parsed);
+            } catch (e) {
+                console.error('Fehler beim Laden der Vermieterkonto-Daten:', e);
+            }
+        }
+        openModal('fixkosten-modal');
+        // Render list AFTER modal is opened to ensure DOM is ready
+        renderFixkostenList();
+    }
+
     function saveFixkosten() { calculateAndUpdate(); closeModal('fixkosten-modal'); }
-    function renderFixkostenList() { fixkostenModal.list.innerHTML = ''; let total = 0; fixkostenItems.forEach((item, index) => { const itemEl = document.createElement('div'); itemEl.className = 'grid grid-cols-12 gap-2 items-center'; itemEl.innerHTML = `<input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten" class="col-span-4 bg-gray-700 p-1 rounded"><input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="Betrag" class="col-span-2 bg-gray-700 p-1 rounded"><select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="col-span-2 bg-gray-700 p-1 rounded">${['monthly','quarterly','annually'].map(i => `<option value="${i}" ${item.interval === i ? 'selected' : ''}>${i==='monthly'?'mtl.':i==='quarterly'?'viertelj.':'jährl.'}</option>`).join('')}</select><select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="col-span-3 bg-gray-700 p-1 rounded"><option value="fixkosten" ${item.target==='fixkosten'?'selected':''}>-> Fixkosten</option><option value="depot" ${item.target==='depot'?'selected':''}>-> Sparplan</option></select><button onclick="removeFixkostenItem(${index})" class="col-span-1 text-red-400 hover:text-red-300 text-xl">&times;</button>`; fixkostenModal.list.appendChild(itemEl); total += getMonthlyAmount(item); }); fixkostenModal.total.textContent = formatCurrency(total); }
+    function renderFixkostenList() {
+        fixkostenModal.list.innerHTML = '';
+        let total = 0;
+
+        // Vermieterkonto-Daten holen
+        const vermieterData = getVermieterkontoData();
+
+        // Automatische Zeile für Vermieterkonto (nur in Variante A)
+        if (currentVariant === 'A' && vermieterData.saldo !== 0) {
+            const autoItemEl = document.createElement('div');
+
+            if (vermieterData.saldo < 0) {
+                // Negativ: Zusätzliche Ausgabe (gelb/warnung)
+                autoItemEl.className = 'grid grid-cols-12 gap-2 items-center bg-gray-750 p-2 rounded border border-yellow-600';
+                autoItemEl.innerHTML = `
+                    <div class="col-span-4 text-yellow-400 text-sm flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        Vermieterkonto-Deckung
+                    </div>
+                    <div class="col-span-2 text-yellow-400 font-bold">${formatCurrency(Math.abs(vermieterData.saldo))}</div>
+                    <div class="col-span-2 text-gray-500 text-sm">mtl.</div>
+                    <div class="col-span-3 text-gray-500 text-sm">automatisch</div>
+                    <div class="col-span-1"></div>
+                `;
+                total += Math.abs(vermieterData.saldo);
+            } else {
+                // Positiv: Einsparung (grün)
+                autoItemEl.className = 'grid grid-cols-12 gap-2 items-center bg-gray-750 p-2 rounded border border-green-600';
+                autoItemEl.innerHTML = `
+                    <div class="col-span-4 text-green-400 text-sm flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Mieteinnahmen
+                    </div>
+                    <div class="col-span-2 text-green-400 font-bold">-${formatCurrency(vermieterData.saldo)}</div>
+                    <div class="col-span-2 text-gray-500 text-sm">mtl.</div>
+                    <div class="col-span-3 text-gray-500 text-sm">automatisch</div>
+                    <div class="col-span-1"></div>
+                `;
+                total -= vermieterData.saldo; // Reduziert die Fixkosten
+            }
+
+            fixkostenModal.list.appendChild(autoItemEl);
+        }
+
+        // Reguläre Fixkosten-Items
+        fixkostenItems.forEach((item, index) => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'grid grid-cols-12 gap-2 items-center';
+            itemEl.innerHTML = `<input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten" class="col-span-4 bg-gray-700 p-1 rounded"><input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="Betrag" class="col-span-2 bg-gray-700 p-1 rounded"><select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="col-span-2 bg-gray-700 p-1 rounded">${['monthly','quarterly','annually'].map(i => `<option value="${i}" ${item.interval === i ? 'selected' : ''}>${i==='monthly'?'mtl.':i==='quarterly'?'viertelj.':'jährl.'}</option>`).join('')}</select><select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="col-span-3 bg-gray-700 p-1 rounded"><option value="fixkosten" ${item.target==='fixkosten'?'selected':''}>-> Fixkosten</option><option value="depot" ${item.target==='depot'?'selected':''}>-> Sparplan</option></select><button onclick="removeFixkostenItem(${index})" class="col-span-1 text-red-400 hover:text-red-300 text-xl">&times;</button>`;
+            fixkostenModal.list.appendChild(itemEl);
+            total += getMonthlyAmount(item);
+        });
+
+        fixkostenModal.total.textContent = formatCurrency(total);
+    }
 function updateFixkostenItem(index, key, value) {
   // Normalize types per field
   if (key === 'amount') {
@@ -3547,6 +3802,128 @@ function updateFixkostenItem(index, key, value) {
     function addDepotItem() { depotItems.push({ name: '', allocation: 0, color: '#'+Math.floor(Math.random()*16777215).toString(16) }); renderDepotList(); }
     function removeDepotItem(index) { depotItems.splice(index, 1); renderDepotList(); }
     function checkDepotTotal() { const total = depotItems.reduce((sum, i) => sum + i.allocation, 0); depotModal.total.textContent = `${total} %`; if (total === 100) { depotModal.total.className = "text-2xl font-bold text-green-400"; depotModal.warning.textContent = ""; depotModal.saveButton.disabled = false; depotModal.saveButton.classList.remove('opacity-50', 'cursor-not-allowed'); return true; } else { depotModal.total.className = "text-2xl font-bold text-red-400"; depotModal.warning.textContent = "Die Summe der Verteilung muss 100% ergeben."; depotModal.saveButton.disabled = true; depotModal.saveButton.classList.add('opacity-50', 'cursor-not-allowed'); return false; } }
+
+    // === MSCI RENDITEDREIECK FUNCTIONS ===
+    let msciZoomState = {
+        zoomed: false,
+        scale: 1,
+        translateX: 0,
+        translateY: 0
+    };
+
+    function openMsciRenditedreieck() {
+        const modal = getEl('msci-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute('aria-hidden', 'false');
+            resetMsciZoom();
+        }
+    }
+
+    function closeMsciRenditedreieck() {
+        const modal = getEl('msci-modal');
+        if (modal) {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+            resetMsciZoom();
+        }
+    }
+
+    function resetMsciZoom() {
+        msciZoomState = { zoomed: false, scale: 1, translateX: 0, translateY: 0 };
+        const img = getEl('msci-image');
+        const container = getEl('msci-container');
+        if (img) {
+            img.style.transform = 'scale(1) translate(0, 0)';
+            img.style.cursor = 'zoom-in';
+        }
+        if (container) {
+            container.style.cursor = 'zoom-in';
+        }
+    }
+
+    function toggleMsciZoom(event) {
+        const img = getEl('msci-image');
+        const container = getEl('msci-container');
+        if (!img || !container) return;
+
+        if (!msciZoomState.zoomed) {
+            // Zoom in: Berechne Position relativ zum Klick
+            const rect = container.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            // Prozentuale Position (0-1)
+            const xPercent = x / rect.width;
+            const yPercent = y / rect.height;
+
+            // Zoom-Level
+            const zoomScale = 2.5;
+
+            // Berechne Translation um den Klickpunkt zu zentrieren
+            const translateX = (0.5 - xPercent) * 100 * (zoomScale - 1);
+            const translateY = (0.5 - yPercent) * 100 * (zoomScale - 1);
+
+            msciZoomState = {
+                zoomed: true,
+                scale: zoomScale,
+                translateX: translateX,
+                translateY: translateY
+            };
+
+            img.style.transform = `scale(${zoomScale}) translate(${translateX}%, ${translateY}%)`;
+            img.style.cursor = 'zoom-out';
+            container.style.cursor = 'zoom-out';
+        } else {
+            // Zoom out
+            resetMsciZoom();
+        }
+    }
+
+    // Filter state tracking
+    let msciActiveFilters = new Set();
+
+    function toggleMsciFilter(filterId) {
+        const filterElement = getEl(`filter-${filterId}`);
+        const button = document.querySelector(`button[data-filter="${filterId}"]`);
+
+        if (!filterElement || !button) return;
+
+        if (msciActiveFilters.has(filterId)) {
+            // Filter deaktivieren
+            msciActiveFilters.delete(filterId);
+            filterElement.style.display = 'none';
+            button.classList.remove('bg-blue-600');
+            button.classList.add('bg-gray-700');
+        } else {
+            // Filter aktivieren
+            msciActiveFilters.add(filterId);
+            filterElement.style.display = 'block';
+            button.classList.remove('bg-gray-700');
+            button.classList.add('bg-blue-600');
+        }
+    }
+
+    function resetMsciFilters() {
+        msciActiveFilters.clear();
+
+        // Alle Filter ausblenden
+        const filters = ['1-5', '6-10', '11-15', '16-20', '20plus'];
+        filters.forEach(filterId => {
+            const filterElement = getEl(`filter-${filterId}`);
+            const button = document.querySelector(`button[data-filter="${filterId}"]`);
+
+            if (filterElement) {
+                filterElement.style.display = 'none';
+            }
+            if (button) {
+                button.classList.remove('bg-blue-600');
+                button.classList.add('bg-gray-700');
+            }
+        });
+    }
 
     // === IMMOBILIEN FUNCTIONS ===
     // Immobilien-Daten Objekt (wird in localStorage gespeichert)
@@ -4438,7 +4815,7 @@ function updateFixkostenItem(index, key, value) {
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.3.4</span>
+                    <span class="font-mono">v1.3.5</span>
                 </div>
             </div>
         </div>
