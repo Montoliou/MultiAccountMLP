@@ -9,7 +9,10 @@ param(
     [switch]$Test
 )
 
-$FILES = @("index.html")
+$FILES = @(
+    "index.html",
+    "assets/msci_renditedreieck.png"
+)
 $CRED_FILE = ".ftp-credentials"
 $LOG_FILE = "deployment-log.txt"
 
@@ -145,26 +148,44 @@ Write-Host ""
 
 $uploadSuccess = $true
 
+# Erstelle assets-Verzeichnis auf Server falls nötig
+STEP "Prüfe/Erstelle assets-Verzeichnis..."
+$assetsDir = $creds.FTP_TARGET_DIR + "assets/"
+$mkdirUrl = "sftp://$($creds.FTP_HOST)$assetsDir"
+
+# Versuche Verzeichnis zu erstellen (ignoriere Fehler falls bereits existiert)
+$null = & curl.exe `
+    --ftp-create-dirs `
+    --user "$($creds.FTP_USER):$($creds.FTP_PASS)" `
+    --insecure `
+    $mkdirUrl `
+    2>&1
+
+OK "assets-Verzeichnis bereit"
+
 foreach ($file in $FILES) {
     $localPath = (Resolve-Path $file).Path
-    $fileName = [System.IO.Path]::GetFileName($file)
-    $remotePath = $creds.FTP_TARGET_DIR + $fileName
+
+    # Behalte die Verzeichnisstruktur bei
+    $relativePath = $file -replace '\\', '/'
+    $remotePath = $creds.FTP_TARGET_DIR + $relativePath
     $sftpUrl = "sftp://$($creds.FTP_HOST)$remotePath"
 
-    STEP "Uploading $fileName..."
+    STEP "Uploading $file..."
 
     $output = & curl.exe `
         --upload-file $localPath `
         --user "$($creds.FTP_USER):$($creds.FTP_PASS)" `
         --insecure `
+        --ftp-create-dirs `
         $sftpUrl `
         2>&1
 
     if ($LASTEXITCODE -eq 0) {
         $fileSize = [Math]::Round((Get-Item $file).Length / 1KB, 2)
-        OK "Upload erfolgreich: $fileName ($fileSize KB)"
+        OK "Upload erfolgreich: $file ($fileSize KB)"
     } else {
-        ERR "Upload fehlgeschlagen: $fileName"
+        ERR "Upload fehlgeschlagen: $file"
         Write-Host $output -ForegroundColor Red
         $uploadSuccess = $false
     }

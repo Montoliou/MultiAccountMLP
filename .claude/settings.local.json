@@ -18,7 +18,8 @@
       "Bash(powershell:*)",
       "Bash(curl:*)",
       "Read(//c/Users/monto/.ssh/**)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

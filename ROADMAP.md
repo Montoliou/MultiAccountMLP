@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.2.0
+**Aktuelle Version:** 1.3.5
 **Ziel-Version:** 2.0.0
 **Datum:** Oktober 2025
 
@@ -40,7 +40,7 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 
 ---
 
-## 📊 Aktuelle Analyse (Version 1.2.0)
+## 📊 Aktuelle Analyse (Version 1.3.5)
 
 ### Implementierte Features
 
@@ -83,7 +83,7 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
   - Backdrop-Blur (Glassmorphism)
   - Smooth Animations (fadeIn, slideUp)
 
-#### UI/UX-Verbesserungen (v1.2.0)
+#### UI/UX-Verbesserungen (v1.2.0 - v1.3.5)
 
 - ✅ **Gradient-Zonen**: Visuelle Layer-Trennung mit Metapher
   - Wolken (Einkommen): Himmelblau
@@ -93,6 +93,30 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
   - Optimierte Opacity für Dark/Light Theme
 - ✅ **Deficit-Line**: MLP Platin, sehr dezent (0.15 opacity)
 - ✅ **Session-Menu**: Elegant, top-left dropdown mit glassmorphism
+- ✅ **Flow-Label-Optimierung (v1.3.5)**: Nähere Positionierung der Labels zu Wert-Pills
+- ✅ **Deficitline-Transparenz (v1.3.5)**: Verbesserte Sichtbarkeit mit Gradient-Farben
+
+#### Export-System (v1.3.0+)
+
+- ✅ **PDF-Export**: Vollständiger Beratungsreport
+- ✅ **CSV-Export**: Strukturierte Daten für CRM-Systeme
+- ✅ **JSON-Export**: Komplette Session-Daten
+
+#### Immobilien & Vermieterkonto (v1.3.1 - v1.3.4)
+
+- ✅ **Immobilien-Verwaltung**: Wert, Darlehen, Wertsteigerung
+- ✅ **Darlehensberechnung**: Tilgungsplan mit Cashflow-Integration
+- ✅ **Vermieterkonto-Flows**:
+  - Positiver Cashflow → Fixkosten (Var A) oder Konsum (Var B)
+  - Negativer Cashflow → Deficitline mit Deckung aus Fixkosten
+- ✅ **Automatische Berechnung**: Sichtbar in Fixkosten-Modal
+
+#### MSCI Renditedreieck (v1.3.5)
+
+- ✅ **Zoom-Funktion**: Interaktiver Zoom ins Renditedreieck
+- ⏸️ **Beratungsmodus-Animation**: Auskommentiert für spätere Implementierung
+  - Konzept: Diagonales Trapez-Band zeigt Volatilität nach Anlagedauer
+  - TODO: Geometrie-Korrekturen und Animation verfeinern
 
 ### Nächste Entwicklungsziele
 
