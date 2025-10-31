@@ -1347,6 +1347,9 @@
         startSessionTimer();
         resetInactivityTimers();
 
+        // Start auto-export timer (v1.3.6)
+        startAutoExport();
+
         // Hide session start dialog
         closeModal('session-start-dialog');
 
@@ -1359,9 +1362,12 @@
         const session = getCurrentSession();
 
         if (exportFirst) {
-            // TODO: Implement exportAllData() function
-            console.log('Export functionality to be implemented');
+            // Export session as JSON before ending
+            exportAsJSON(false);
         }
+
+        // Stop auto-export timer (v1.3.6)
+        stopAutoExport();
 
         // Clear all session storage
         sessionStorage.clear();
@@ -1772,25 +1778,53 @@
         console.log('📄 CSV-Export erstellt:', filename);
     }
 
-    // Export all session data as JSON
-    function exportAsJSON() {
+    // ===== AUTO-EXPORT SYSTEM (v1.3.6) =====
+    let autoExportInterval = null;
+    let lastAutoExportTime = null;
+
+    // Generate auto-export filename: {DATUM}_{KÜRZEL}_{UHRZEIT}_{SESSION-ID}.json
+    function generateAutoExportFilename() {
+        const session = getCurrentSession();
+        if (!session) return null;
+
+        const now = new Date();
+
+        // DATUM: YYYY-MM-DD
+        const datum = now.toISOString().slice(0, 10);
+
+        // KÜRZEL: from session or "ANON"
+        const kuerzel = session.kundenKuerzel || 'ANON';
+
+        // UHRZEIT: HHMM
+        const stunden = String(now.getHours()).padStart(2, '0');
+        const minuten = String(now.getMinutes()).padStart(2, '0');
+        const uhrzeit = stunden + minuten;
+
+        // SESSION-ID: first 4 chars
+        const sessionId = session.id.substring(0, 8).toUpperCase();
+
+        return `${datum}_${kuerzel}_${uhrzeit}_SES-${sessionId}.json`;
+    }
+
+    // Export all session data as JSON (used for manual and auto-export)
+    function exportAsJSON(isAutoExport = false) {
         const session = getCurrentSession();
         if (!session) {
-            alert('Keine Session gefunden!');
+            if (!isAutoExport) alert('Keine Session gefunden!');
             return;
         }
 
         // Check if inputs are initialized
         if (typeof inputs === 'undefined') {
             console.error('Export failed: inputs not initialized');
-            alert('Export-Fehler: Bitte warten Sie, bis die Seite vollständig geladen ist.');
+            if (!isAutoExport) alert('Export-Fehler: Bitte warten Sie, bis die Seite vollständig geladen ist.');
             return;
         }
 
         // Collect ALL application data for complete session backup
         const exportData = {
             // Format version for future compatibility
-            version: '1.3.0',
+            version: '1.3.6',
             exportType: 'FULL_SESSION_BACKUP',
 
             // LLM Prompt for generating consultation protocol
@@ -1898,12 +1932,78 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
         // Create pretty-printed JSON
         const json = JSON.stringify(exportData, null, 2);
         const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
-        const filename = `Session-Backup_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.json`;
+
+        // Use auto-export filename format or fallback to old format
+        const filename = isAutoExport
+            ? generateAutoExportFilename()
+            : `Session-Backup_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.json`;
+
         downloadFile(blob, filename);
 
-        console.log('📄 JSON-Backup erstellt:', filename);
-        console.log('💾 Vollständiges Session-Backup - kann für Re-Import verwendet werden');
+        // Update last export time
+        if (isAutoExport) {
+            lastAutoExportTime = Date.now();
+            updateAutoExportStatus();
+            console.log('🔄 Auto-Export erstellt:', filename);
+        } else {
+            console.log('📄 JSON-Backup erstellt:', filename);
+            console.log('💾 Vollständiges Session-Backup - kann für Re-Import verwendet werden');
+        }
     }
+
+    // Start auto-export timer (runs every 2 minutes)
+    function startAutoExport() {
+        // Clear existing timer
+        if (autoExportInterval) {
+            clearInterval(autoExportInterval);
+        }
+
+        // First export after 30 seconds (give user time to enter data)
+        setTimeout(() => {
+            exportAsJSON(true);
+        }, 30000);
+
+        // Then export every 2 minutes (120000ms)
+        autoExportInterval = setInterval(() => {
+            exportAsJSON(true);
+        }, 120000);
+
+        console.log('✅ Auto-Export aktiviert (alle 2 Min., erster Export in 30 Sek.)');
+    }
+
+    // Stop auto-export timer
+    function stopAutoExport() {
+        if (autoExportInterval) {
+            clearInterval(autoExportInterval);
+            autoExportInterval = null;
+            console.log('⏹️ Auto-Export gestoppt');
+        }
+    }
+
+    // Update auto-export status display
+    function updateAutoExportStatus() {
+        const statusEl = document.getElementById('auto-export-status');
+        if (!statusEl) return;
+
+        if (!lastAutoExportTime) {
+            statusEl.innerHTML = '<span class="text-yellow-400">⏳ Wartet auf ersten Export...</span>';
+            return;
+        }
+
+        const secondsAgo = Math.floor((Date.now() - lastAutoExportTime) / 1000);
+
+        if (secondsAgo < 60) {
+            statusEl.innerHTML = `<span class="text-green-400">🟢 Vor ${secondsAgo} Sek.</span>`;
+        } else {
+            const minutesAgo = Math.floor(secondsAgo / 60);
+            statusEl.innerHTML = `<span class="text-green-400">🟢 Vor ${minutesAgo} Min.</span>`;
+        }
+    }
+
+    // Update status display every 5 seconds
+    setInterval(() => {
+        updateAutoExportStatus();
+    }, 5000);
 
     // Import session from JSON backup file
     function importSessionBackup() {
@@ -4939,14 +5039,32 @@ function updateFixkostenItem(index, key, value) {
                 </div>
             </div>
             <div class="p-2 border-b border-gray-700">
-                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">Export</div>
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">Auto-Export</div>
+                <div class="px-3 py-2 mb-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-400">Letzter Export:</span>
+                        <span id="auto-export-status" class="font-mono">
+                            <span class="text-yellow-400">⏳ Wartet...</span>
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Alle 2 Min. nach "MLP_Sessions"</p>
+                </div>
+                <button onclick="exportAsJSON(true); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-green-400 hover:bg-green-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Jetzt exportieren
+                </button>
+            </div>
+            <div class="p-2 border-b border-gray-700">
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">Manueller Export</div>
                 <button onclick="exportAsCSV(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 rounded transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     Als CSV exportieren
                 </button>
-                <button onclick="exportAsJSON(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 rounded transition-colors flex items-center gap-2">
+                <button onclick="exportAsJSON(false); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 rounded transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
                     </svg>
@@ -4959,6 +5077,15 @@ function updateFixkostenItem(index, key, value) {
                     Als PDF drucken
                 </button>
             </div>
+            <div class="p-2 border-b border-gray-700">
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">Import</div>
+                <button onclick="importSessionBackup(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-blue-400 hover:bg-blue-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    Session importieren
+                </button>
+            </div>
             <div class="p-2">
                 <button onclick="showSessionEndDialog(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4969,7 +5096,7 @@ function updateFixkostenItem(index, key, value) {
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.3.5</span>
+                    <span class="font-mono">v1.3.6</span>
                 </div>
             </div>
         </div>

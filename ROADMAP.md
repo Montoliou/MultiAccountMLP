@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.3.5
+**Aktuelle Version:** 1.3.6
 **Ziel-Version:** 2.0.0
 **Datum:** Oktober 2025
 
@@ -40,7 +40,7 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 
 ---
 
-## 📊 Aktuelle Analyse (Version 1.3.5)
+## 📊 Aktuelle Analyse (Version 1.3.6)
 
 ### Implementierte Features
 
@@ -96,11 +96,21 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 - ✅ **Flow-Label-Optimierung (v1.3.5)**: Nähere Positionierung der Labels zu Wert-Pills
 - ✅ **Deficitline-Transparenz (v1.3.5)**: Verbesserte Sichtbarkeit mit Gradient-Farben
 
-#### Export-System (v1.3.0+)
+#### Export-System (v1.3.0 - v1.3.6)
 
 - ✅ **PDF-Export**: Vollständiger Beratungsreport
 - ✅ **CSV-Export**: Strukturierte Daten für CRM-Systeme
 - ✅ **JSON-Export**: Komplette Session-Daten
+- ✅ **Auto-Export-System (v1.3.6)**: DSGVO-konforme Crash-Recovery
+  - Automatischer JSON-Export alle 2 Minuten
+  - Dateiname: `{DATUM}_{KÜRZEL}_{UHRZEIT}_SES-{SESSION-ID}.json`
+  - Empfohlener Speicherort: `Eigene Dateien\MLP\MLP_Sessions`
+  - Silent Downloads (keine Dialog-Boxen)
+  - Erster Export nach 30 Sekunden
+  - Status-Anzeige im Session-Menü ("🟢 Vor X Min.")
+  - Import-Funktion für Session-Wiederherstellung
+  - Dateigröße: ~5 KB pro Session
+  - Automatischer Stop beim Session-Ende
 
 #### Immobilien & Vermieterkonto (v1.3.1 - v1.3.4)
 
@@ -120,20 +130,19 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 
 ### Nächste Entwicklungsziele
 
-#### 1. Export-Erweiterung (v1.3.0)
+#### 1. MSCI Beratungsmodus-Animation (v1.4.0)
 
-**Aktuelle Einschränkungen:**
+**Aktueller Stand:**
 
-- Nur PDF-Print verfügbar
-- Keine strukturierten Daten-Exports (CSV/JSON)
-- Fehlende Session-Metadaten im Export
+- Zoom-Funktion implementiert ✅
+- Trapez-Animation auskommentiert (Geometrie-Probleme)
 
-**Geplante Verbesserungen:**
+**Geplante Alternative:**
 
-- CSV-Export für CRM-Integration
-- JSON-Export für vollständige Session-Daten
-- Excel-kompatibel mit UTF-8 BOM
-- Automatische Metadaten (Berater, Datum, Session-ID)
+- **Bild-Swap-Methode**: 5 vorbereitete Overlay-Bilder für unterschiedliche Jahres-Ranges
+- Smooth Crossfade-Transitions zwischen Bildern
+- Einfacher als Geometrie-Berechnung, visuell identisch
+- User erstellt Bilder (Photoshop/Figma), Code macht Crossfade
 
 #### 2. Immobilien-Cashflow-Integration (v1.3.0)
 
