@@ -1822,7 +1822,12 @@
             console.log('✅ Auto-Export-Ordner ausgewählt:', dirHandle.name);
             updateAutoExportFolderDisplay();
 
-            showToast(`Auto-Export-Ordner eingerichtet: ${dirHandle.name}`, 'success', 3000);
+            showToast(`Auto-Export-Ordner eingerichtet: ${dirHandle.name}\n\nEin Test-Export wird erstellt...`, 'success', 4000);
+
+            // Trigger immediate test export to verify it works
+            setTimeout(() => {
+                exportAsJSON(true);
+            }, 500);
 
             return true;
         } catch (err) {
@@ -1874,25 +1879,19 @@
     // Write file to selected directory using File System Access API
     async function writeToDirectory(filename, blob) {
         if (!autoExportDirectoryHandle) {
-            // Try to get directory handle again
-            try {
-                const dirHandle = await window.showDirectoryPicker({
-                    mode: 'readwrite',
-                    startIn: 'documents'
-                });
+            // Can't show picker automatically (needs user gesture)
+            // Return false to trigger fallback to download
+            console.warn('⚠️ Kein Ordner-Handle verfügbar. Bitte "Ordner auswählen" klicken.');
 
-                const permission = await dirHandle.requestPermission({ mode: 'readwrite' });
-                if (permission !== 'granted') {
-                    throw new Error('Permission denied');
-                }
-
-                autoExportDirectoryHandle = dirHandle;
-                localStorage.setItem('mlp-auto-export-dir-name', dirHandle.name);
-                updateAutoExportFolderDisplay();
-            } catch (err) {
-                console.warn('Konnte Ordner nicht öffnen, fallback zu Download:', err);
-                return false;
+            // Show user a hint (only once per session)
+            if (!sessionStorage.getItem('folder-hint-shown')) {
+                sessionStorage.setItem('folder-hint-shown', 'true');
+                setTimeout(() => {
+                    showToast('💡 Tipp: Klicke im Session-Menü auf "Ordner auswählen" für direkte Speicherung', 'info', 5000);
+                }, 1000);
             }
+
+            return false;
         }
 
         try {
@@ -5220,7 +5219,7 @@ function updateFixkostenItem(index, key, value) {
                     </div>
                     <p class="text-xs text-gray-500 mt-2">Automatisch alle 2 Minuten</p>
                 </div>
-                <button onclick="selectAutoExportDirectory(); toggleSessionMenu();" class="w-full text-left px-3 py-2 mb-1 text-sm text-blue-400 hover:bg-blue-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
+                <button onclick="selectAutoExportDirectory();" class="w-full text-left px-3 py-2 mb-1 text-sm text-blue-400 hover:bg-blue-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                     </svg>
