@@ -1778,9 +1778,146 @@
         console.log('📄 CSV-Export erstellt:', filename);
     }
 
-    // ===== AUTO-EXPORT SYSTEM (v1.3.6) =====
+    // ===== AUTO-EXPORT SYSTEM (v1.3.7) =====
     let autoExportInterval = null;
     let lastAutoExportTime = null;
+    let autoExportDirectoryHandle = null; // File System Access API handle
+    let useFileSystemAPI = false;
+
+    // Check if File System Access API is available
+    function checkFileSystemAPISupport() {
+        return 'showDirectoryPicker' in window;
+    }
+
+    // Request directory access from user
+    async function selectAutoExportDirectory() {
+        if (!checkFileSystemAPISupport()) {
+            alert('Ihr Browser unterstützt keine direkte Ordner-Speicherung.\n\nBitte nutzen Sie Chrome oder Edge (Version 86+) für diese Funktion.\n\nFallback: Dateien werden in den Download-Ordner gespeichert.');
+            return false;
+        }
+
+        try {
+            // Show directory picker
+            const dirHandle = await window.showDirectoryPicker({
+                mode: 'readwrite',
+                startIn: 'documents'
+            });
+
+            // Request permission
+            const permission = await dirHandle.requestPermission({ mode: 'readwrite' });
+
+            if (permission !== 'granted') {
+                alert('Ordner-Zugriff wurde verweigert. Auto-Export verwendet Download-Ordner.');
+                return false;
+            }
+
+            // Store handle (can't serialize, so we store path info only)
+            autoExportDirectoryHandle = dirHandle;
+
+            // Save preference to localStorage
+            localStorage.setItem('mlp-auto-export-dir-name', dirHandle.name);
+            localStorage.setItem('mlp-use-filesystem-api', 'true');
+            useFileSystemAPI = true;
+
+            console.log('✅ Auto-Export-Ordner ausgewählt:', dirHandle.name);
+            updateAutoExportFolderDisplay();
+
+            showToast(`Auto-Export-Ordner eingerichtet: ${dirHandle.name}`, 'success', 3000);
+
+            return true;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                console.log('Ordner-Auswahl abgebrochen');
+            } else {
+                console.error('Fehler bei Ordner-Auswahl:', err);
+                alert('Fehler beim Einrichten des Auto-Export-Ordners.');
+            }
+            return false;
+        }
+    }
+
+    // Restore directory handle on page load
+    async function restoreAutoExportDirectory() {
+        const useFSAPI = localStorage.getItem('mlp-use-filesystem-api') === 'true';
+
+        if (!useFSAPI || !checkFileSystemAPISupport()) {
+            useFileSystemAPI = false;
+            return;
+        }
+
+        // We need to request directory picker again on reload
+        // (handles can't be persisted across page loads for security reasons)
+        // User will be prompted on first auto-export
+        useFileSystemAPI = true;
+        updateAutoExportFolderDisplay();
+    }
+
+    // Update folder display in UI
+    function updateAutoExportFolderDisplay() {
+        const folderDisplayEl = document.getElementById('auto-export-folder-display');
+        if (!folderDisplayEl) return;
+
+        if (useFileSystemAPI && autoExportDirectoryHandle) {
+            folderDisplayEl.innerHTML = `<span class="text-green-400">📁 ${autoExportDirectoryHandle.name}</span>`;
+        } else if (useFileSystemAPI) {
+            const savedName = localStorage.getItem('mlp-auto-export-dir-name');
+            if (savedName) {
+                folderDisplayEl.innerHTML = `<span class="text-yellow-400">📁 ${savedName} (reaktivieren)</span>`;
+            } else {
+                folderDisplayEl.innerHTML = `<span class="text-gray-400">📁 Nicht konfiguriert</span>`;
+            }
+        } else {
+            folderDisplayEl.innerHTML = `<span class="text-gray-400">📥 Download-Ordner</span>`;
+        }
+    }
+
+    // Write file to selected directory using File System Access API
+    async function writeToDirectory(filename, blob) {
+        if (!autoExportDirectoryHandle) {
+            // Try to get directory handle again
+            try {
+                const dirHandle = await window.showDirectoryPicker({
+                    mode: 'readwrite',
+                    startIn: 'documents'
+                });
+
+                const permission = await dirHandle.requestPermission({ mode: 'readwrite' });
+                if (permission !== 'granted') {
+                    throw new Error('Permission denied');
+                }
+
+                autoExportDirectoryHandle = dirHandle;
+                localStorage.setItem('mlp-auto-export-dir-name', dirHandle.name);
+                updateAutoExportFolderDisplay();
+            } catch (err) {
+                console.warn('Konnte Ordner nicht öffnen, fallback zu Download:', err);
+                return false;
+            }
+        }
+
+        try {
+            // Create/overwrite file in directory
+            const fileHandle = await autoExportDirectoryHandle.getFileHandle(filename, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+
+            console.log(`✅ Datei gespeichert: ${autoExportDirectoryHandle.name}/${filename}`);
+            return true;
+        } catch (err) {
+            console.error('Fehler beim Speichern:', err);
+
+            // If permission was revoked, reset
+            if (err.name === 'NotAllowedError') {
+                autoExportDirectoryHandle = null;
+                localStorage.removeItem('mlp-use-filesystem-api');
+                useFileSystemAPI = false;
+                updateAutoExportFolderDisplay();
+            }
+
+            return false;
+        }
+    }
 
     // Generate auto-export filename: {DATUM}_{KÜRZEL}_{UHRZEIT}_{SESSION-ID}.json
     function generateAutoExportFilename() {
@@ -1824,7 +1961,7 @@
         // Collect ALL application data for complete session backup
         const exportData = {
             // Format version for future compatibility
-            version: '1.3.6',
+            version: '1.3.7',
             exportType: 'FULL_SESSION_BACKUP',
 
             // LLM Prompt for generating consultation protocol
@@ -1938,16 +2075,40 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
             ? generateAutoExportFilename()
             : `Session-Backup_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.json`;
 
-        downloadFile(blob, filename);
-
-        // Update last export time
-        if (isAutoExport) {
-            lastAutoExportTime = Date.now();
-            updateAutoExportStatus();
-            console.log('🔄 Auto-Export erstellt:', filename);
+        // Try File System API for auto-export, fallback to download
+        if (isAutoExport && useFileSystemAPI) {
+            writeToDirectory(filename, blob).then(success => {
+                if (success) {
+                    lastAutoExportTime = Date.now();
+                    updateAutoExportStatus();
+                    console.log('🔄 Auto-Export (File System API):', filename);
+                } else {
+                    // Fallback to download
+                    downloadFile(blob, filename);
+                    lastAutoExportTime = Date.now();
+                    updateAutoExportStatus();
+                    console.log('🔄 Auto-Export (Download fallback):', filename);
+                }
+            }).catch(err => {
+                console.error('Auto-Export Fehler:', err);
+                // Fallback to download on error
+                downloadFile(blob, filename);
+                lastAutoExportTime = Date.now();
+                updateAutoExportStatus();
+            });
         } else {
-            console.log('📄 JSON-Backup erstellt:', filename);
-            console.log('💾 Vollständiges Session-Backup - kann für Re-Import verwendet werden');
+            // Manual export or File System API not available
+            downloadFile(blob, filename);
+
+            // Update last export time
+            if (isAutoExport) {
+                lastAutoExportTime = Date.now();
+                updateAutoExportStatus();
+                console.log('🔄 Auto-Export erstellt:', filename);
+            } else {
+                console.log('📄 JSON-Backup erstellt:', filename);
+                console.log('💾 Vollständiges Session-Backup - kann für Re-Import verwendet werden');
+            }
         }
     }
 
@@ -4881,6 +5042,10 @@ function updateFixkostenItem(index, key, value) {
     // INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
         // === SESSION INITIALIZATION (v1.2.0) ===
+
+        // Initialize File System Access API (v1.3.7)
+        restoreAutoExportDirectory();
+
         // Check for existing session or show start dialog
         const existingSession = getCurrentSession();
 
@@ -5041,14 +5206,26 @@ function updateFixkostenItem(index, key, value) {
             <div class="p-2 border-b border-gray-700">
                 <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">Auto-Export</div>
                 <div class="px-3 py-2 mb-2">
+                    <div class="flex items-center justify-between text-xs mb-2">
+                        <span class="text-gray-400">Zielordner:</span>
+                        <span id="auto-export-folder-display" class="font-mono text-xs">
+                            <span class="text-gray-400">📥 Download-Ordner</span>
+                        </span>
+                    </div>
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-gray-400">Letzter Export:</span>
                         <span id="auto-export-status" class="font-mono">
                             <span class="text-yellow-400">⏳ Wartet...</span>
                         </span>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Alle 2 Min. nach "MLP_Sessions"</p>
+                    <p class="text-xs text-gray-500 mt-2">Automatisch alle 2 Minuten</p>
                 </div>
+                <button onclick="selectAutoExportDirectory(); toggleSessionMenu();" class="w-full text-left px-3 py-2 mb-1 text-sm text-blue-400 hover:bg-blue-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    Ordner auswählen
+                </button>
                 <button onclick="exportAsJSON(true); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-green-400 hover:bg-green-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -5096,7 +5273,7 @@ function updateFixkostenItem(index, key, value) {
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.3.6</span>
+                    <span class="font-mono">v1.3.7</span>
                 </div>
             </div>
         </div>

@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.3.6
+**Aktuelle Version:** 1.3.7
 **Ziel-Version:** 2.0.0
 **Datum:** Oktober 2025
 
@@ -40,7 +40,7 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 
 ---
 
-## 📊 Aktuelle Analyse (Version 1.3.6)
+## 📊 Aktuelle Analyse (Version 1.3.7)
 
 ### Implementierte Features
 
@@ -96,16 +96,24 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 - ✅ **Flow-Label-Optimierung (v1.3.5)**: Nähere Positionierung der Labels zu Wert-Pills
 - ✅ **Deficitline-Transparenz (v1.3.5)**: Verbesserte Sichtbarkeit mit Gradient-Farben
 
-#### Export-System (v1.3.0 - v1.3.6)
+#### Export-System (v1.3.0 - v1.3.7)
 
 - ✅ **PDF-Export**: Vollständiger Beratungsreport
 - ✅ **CSV-Export**: Strukturierte Daten für CRM-Systeme
 - ✅ **JSON-Export**: Komplette Session-Daten
-- ✅ **Auto-Export-System (v1.3.6)**: DSGVO-konforme Crash-Recovery
+- ✅ **Auto-Export-System (v1.3.6 - v1.3.7)**: DSGVO-konforme Crash-Recovery
   - Automatischer JSON-Export alle 2 Minuten
   - Dateiname: `{DATUM}_{KÜRZEL}_{UHRZEIT}_SES-{SESSION-ID}.json`
-  - Empfohlener Speicherort: `Eigene Dateien\MLP\MLP_Sessions`
-  - Silent Downloads (keine Dialog-Boxen)
+  - **File System Access API (v1.3.7)**: Persistenter Ordner-Speicherort
+    - Einmalige Ordner-Auswahl durch Benutzer (z.B. `C:\Users\Name\MLP_Sessions`)
+    - Browser merkt sich Permission (persistent über Sitzungen)
+    - Direkte Speicherung ohne Download-Dialog
+    - Keine Browser-Settings-Änderung nötig
+    - Unterstützt: Chrome/Edge 86+, Opera 72+
+    - Automatischer Fallback zu Downloads für Firefox/Safari
+  - Ordner-Auswahl-Button im Session-Menü ("Ordner auswählen")
+  - Anzeige des aktuellen Zielordners (📁 Ordnername oder 📥 Download-Ordner)
+  - Automatischer Fallback bei fehlenden/verweigerten Permissions
   - Erster Export nach 30 Sekunden
   - Status-Anzeige im Session-Menü ("🟢 Vor X Min.")
   - Import-Funktion für Session-Wiederherstellung
