@@ -5163,8 +5163,8 @@ function updateFixkostenItem(index, key, value) {
             showToast('Notfall-Export erstellt!', 'success', 3000);
         }
 
-        // Ctrl/Cmd + Shift + P = Emergency Print/PDF
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') {
+        // Ctrl/Cmd + Shift + D = Emergency Print/PDF (D wie Druck)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
             e.preventDefault();
             console.log('🚨 Emergency Print triggered via keyboard');
             prepareAndPrint();
@@ -5217,7 +5217,7 @@ function updateFixkostenItem(index, key, value) {
 Keyboard-Shortcuts:
 - Ctrl+Shift+E: JSON-Export
 - Ctrl+Shift+C: CSV-Export
-- Ctrl+Shift+P: PDF drucken
+- Ctrl+Shift+D: PDF drucken (D = Druck)
 - Ctrl+Shift+S: Session-Menü öffnen
 
 Console-Commands:
