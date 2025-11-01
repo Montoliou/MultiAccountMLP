@@ -2333,19 +2333,24 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
                     if (inputs.rendite) inputs.rendite.value = backup.inputs.rendite || 7;
                 }
 
-                // Restore global variables
+                // Restore global variables AND persist to sessionStorage for reload
                 if (backup.fixkostenItems) {
                     fixkostenItems = backup.fixkostenItems;
+                    // Persist to survive reload
+                    sessionStorage.setItem('mlp_fixkostenItems', JSON.stringify(backup.fixkostenItems));
                 }
                 if (backup.depotItems) {
                     depotItems = backup.depotItems;
+                    // Persist to survive reload
+                    sessionStorage.setItem('mlp_depotItems', JSON.stringify(backup.depotItems));
                 }
                 if (backup.immobilienData) {
                     immobilienData = backup.immobilienData;
+                    // Already persisted via sessionStorageSnapshot
                 }
                 if (backup.buchungsplan && typeof bookingPlan !== 'undefined') {
                     bookingPlan = backup.buchungsplan;
-                    saveBookingPlan();
+                    saveBookingPlan(); // This already saves to sessionStorage
                 }
 
                 // Restore UI settings
@@ -2752,17 +2757,46 @@ const bookingTypeLookup = {};
         }
     }
 
-let fixkostenItems = [ 
-        { name: 'Miete', amount: 850, interval: 'monthly', target: 'fixkosten' }, 
-        { name: 'Strom', amount: 60, interval: 'monthly', target: 'fixkosten' }, 
-        { name: 'Kommunikation (Handy/Netz)', amount: 40, interval: 'monthly', target: 'fixkosten' },
-        { name: 'Mobilität (Auto/Ticket)', amount: 150, interval: 'monthly', target: 'fixkosten' },
-        { name: 'Versicherungen', amount: 180, interval: 'quarterly', target: 'fixkosten' }, 
-        { name: 'Sport/Hobbies', amount: 50, interval: 'monthly', target: 'fixkosten' },
-        { name: 'Vorsorge (z.B. BU)', amount: 70, interval: 'monthly', target: 'fixkosten' },
-        { name: 'Sparplan Depot', amount: 250, interval: 'monthly', target: 'depot' }, 
-    ];
-    let depotItems = [ { name: 'MSCI World ETF', allocation: 70, color: '#3b82f6' }, { name: 'Emerging Markets ETF', allocation: 30, color: '#8b5cf6' } ];
+// Load from sessionStorage if available (for import restoration)
+    let fixkostenItems = (() => {
+        try {
+            const saved = sessionStorage.getItem('mlp_fixkostenItems');
+            if (saved) {
+                console.log('✅ fixkostenItems aus sessionStorage geladen');
+                return JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error('Fehler beim Laden von fixkostenItems aus sessionStorage:', e);
+        }
+        // Default values
+        return [
+            { name: 'Miete', amount: 850, interval: 'monthly', target: 'fixkosten' },
+            { name: 'Strom', amount: 60, interval: 'monthly', target: 'fixkosten' },
+            { name: 'Kommunikation (Handy/Netz)', amount: 40, interval: 'monthly', target: 'fixkosten' },
+            { name: 'Mobilität (Auto/Ticket)', amount: 150, interval: 'monthly', target: 'fixkosten' },
+            { name: 'Versicherungen', amount: 180, interval: 'quarterly', target: 'fixkosten' },
+            { name: 'Sport/Hobbies', amount: 50, interval: 'monthly', target: 'fixkosten' },
+            { name: 'Vorsorge (z.B. BU)', amount: 70, interval: 'monthly', target: 'fixkosten' },
+            { name: 'Sparplan Depot', amount: 250, interval: 'monthly', target: 'depot' },
+        ];
+    })();
+
+    let depotItems = (() => {
+        try {
+            const saved = sessionStorage.getItem('mlp_depotItems');
+            if (saved) {
+                console.log('✅ depotItems aus sessionStorage geladen');
+                return JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error('Fehler beim Laden von depotItems aus sessionStorage:', e);
+        }
+        // Default values
+        return [
+            { name: 'MSCI World ETF', allocation: 70, color: '#3b82f6' },
+            { name: 'Emerging Markets ETF', allocation: 30, color: '#8b5cf6' }
+        ];
+    })();
     let prognoseChartInstance = null;
     // Beratungsansicht state
     let consultationMode = false;      // off by default
