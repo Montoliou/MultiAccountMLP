@@ -2321,6 +2321,18 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
                     });
                 }
 
+                // Restore input field values
+                if (backup.inputs) {
+                    if (inputs.income) inputs.income.value = backup.inputs.income || 0;
+                    if (inputs.konsumMin) inputs.konsumMin.value = backup.inputs.konsumMin || 0;
+                    if (inputs.konsumLeftover) inputs.konsumLeftover.value = backup.inputs.konsumLeftover || 0;
+                    if (inputs.tagesgeldCurrent) inputs.tagesgeldCurrent.value = backup.inputs.tagesgeldCurrent || 0;
+                    if (inputs.tagesgeldLimit) inputs.tagesgeldLimit.value = backup.inputs.tagesgeldLimit || 0;
+                    if (inputs.depotCurrent) inputs.depotCurrent.value = backup.inputs.depotCurrent || 0;
+                    if (inputs.anlagezeitraum) inputs.anlagezeitraum.value = backup.inputs.anlagezeitraum || 15;
+                    if (inputs.rendite) inputs.rendite.value = backup.inputs.rendite || 7;
+                }
+
                 // Restore global variables
                 if (backup.fixkostenItems) {
                     fixkostenItems = backup.fixkostenItems;
