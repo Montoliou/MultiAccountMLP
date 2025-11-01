@@ -2325,8 +2325,12 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
                     });
                 }
 
-                // Restore input field values
+                // Restore input field values AND persist to sessionStorage for reload
                 if (backup.inputs) {
+                    // Persist to sessionStorage (to survive reload)
+                    sessionStorage.setItem('mlp_inputs', JSON.stringify(backup.inputs));
+
+                    // Set values (will be overwritten by reload, but needed for consistency)
                     if (inputs.income) inputs.income.value = backup.inputs.income || 0;
                     if (inputs.konsumMin) inputs.konsumMin.value = backup.inputs.konsumMin || 0;
                     if (inputs.konsumLeftover) inputs.konsumLeftover.value = backup.inputs.konsumLeftover || 0;
@@ -5326,6 +5330,28 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
         // === END SESSION INITIALIZATION ===
 
         inputs = { income: getEl('income'), konsumMin: getEl('konsumMin'), konsumLeftover: getEl('konsumLeftover'), tagesgeldCurrent: getEl('tagesgeldCurrent'), tagesgeldLimit: getEl('tagesgeldLimit'), depotCurrent: getEl('depotCurrent'), anlagezeitraum: getEl('anlagezeitraum'), rendite: getEl('rendite') };
+
+        // Restore input values from sessionStorage (after import reload)
+        try {
+            const savedInputs = sessionStorage.getItem('mlp_inputs');
+            if (savedInputs) {
+                const inputValues = JSON.parse(savedInputs);
+                if (inputs.income) inputs.income.value = inputValues.income || 3000;
+                if (inputs.konsumMin) inputs.konsumMin.value = inputValues.konsumMin || 100;
+                if (inputs.konsumLeftover) inputs.konsumLeftover.value = inputValues.konsumLeftover || 250;
+                if (inputs.tagesgeldCurrent) inputs.tagesgeldCurrent.value = inputValues.tagesgeldCurrent || 4800;
+                if (inputs.tagesgeldLimit) inputs.tagesgeldLimit.value = inputValues.tagesgeldLimit || 5000;
+                if (inputs.depotCurrent) inputs.depotCurrent.value = inputValues.depotCurrent || 25000;
+                if (inputs.anlagezeitraum) inputs.anlagezeitraum.value = inputValues.anlagezeitraum || 15;
+                if (inputs.rendite) inputs.rendite.value = inputValues.rendite || 7;
+                console.log('✅ Input-Werte aus sessionStorage wiederhergestellt');
+                // Clear after restore to prevent stale data
+                sessionStorage.removeItem('mlp_inputs');
+            }
+        } catch (e) {
+            console.error('Fehler beim Laden der Input-Werte aus sessionStorage:', e);
+        }
+
         basins = { einkommen: getEl('einkommen-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin'), vermieterkonto: getEl('vermieterkonto-basin'), immobilien: getEl('immobilien-basin') };
         flowContainer = getEl('flow-container');
         flowSvg = getEl('flow-svg');
