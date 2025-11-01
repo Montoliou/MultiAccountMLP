@@ -1784,6 +1784,88 @@
     let autoExportDirectoryHandle = null; // File System Access API handle
     let useFileSystemAPI = false;
 
+    // IndexedDB for persisting directory handle
+    const DB_NAME = 'mlp-auto-export-db';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'directory-handles';
+    const HANDLE_KEY = 'auto-export-directory';
+
+    // Open IndexedDB
+    function openHandleDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME);
+                }
+            };
+        });
+    }
+
+    // Save directory handle to IndexedDB
+    async function saveDirectoryHandle(handle) {
+        try {
+            const db = await openHandleDB();
+            const transaction = db.transaction(STORE_NAME, 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            store.put(handle, HANDLE_KEY);
+
+            return new Promise((resolve, reject) => {
+                transaction.oncomplete = () => {
+                    console.log('✅ Directory Handle in IndexedDB gespeichert');
+                    resolve(true);
+                };
+                transaction.onerror = () => reject(transaction.error);
+            });
+        } catch (err) {
+            console.error('Fehler beim Speichern des Handles:', err);
+            return false;
+        }
+    }
+
+    // Load directory handle from IndexedDB
+    async function loadDirectoryHandle() {
+        try {
+            const db = await openHandleDB();
+            const transaction = db.transaction(STORE_NAME, 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(HANDLE_KEY);
+
+            return new Promise((resolve, reject) => {
+                request.onsuccess = () => {
+                    const handle = request.result;
+                    if (handle) {
+                        console.log('📂 Directory Handle aus IndexedDB geladen');
+                        resolve(handle);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                request.onerror = () => reject(request.error);
+            });
+        } catch (err) {
+            console.error('Fehler beim Laden des Handles:', err);
+            return null;
+        }
+    }
+
+    // Verify permission for directory handle
+    async function verifyHandlePermission(handle) {
+        const permission = await handle.queryPermission({ mode: 'readwrite' });
+        if (permission === 'granted') {
+            return true;
+        }
+
+        // Try to request permission
+        const requestResult = await handle.requestPermission({ mode: 'readwrite' });
+        return requestResult === 'granted';
+    }
+
     // Check if File System Access API is available
     function checkFileSystemAPISupport() {
         return 'showDirectoryPicker' in window;
@@ -1811,10 +1893,13 @@
                 return false;
             }
 
-            // Store handle (can't serialize, so we store path info only)
+            // Store handle in memory AND IndexedDB
             autoExportDirectoryHandle = dirHandle;
 
-            // Save preference to localStorage
+            // Save to IndexedDB (persistent across reloads!)
+            await saveDirectoryHandle(dirHandle);
+
+            // Save preference to localStorage (as backup indicator)
             localStorage.setItem('mlp-auto-export-dir-name', dirHandle.name);
             localStorage.setItem('mlp-use-filesystem-api', 'true');
             useFileSystemAPI = true;
@@ -1847,14 +1932,42 @@
 
         if (!useFSAPI || !checkFileSystemAPISupport()) {
             useFileSystemAPI = false;
+            updateAutoExportFolderDisplay();
             return;
         }
 
-        // We need to request directory picker again on reload
-        // (handles can't be persisted across page loads for security reasons)
-        // User will be prompted on first auto-export
-        useFileSystemAPI = true;
-        updateAutoExportFolderDisplay();
+        try {
+            // Load handle from IndexedDB
+            const savedHandle = await loadDirectoryHandle();
+
+            if (!savedHandle) {
+                console.log('⚠️ Kein Handle in IndexedDB gefunden');
+                useFileSystemAPI = true;
+                updateAutoExportFolderDisplay();
+                return;
+            }
+
+            // Verify permission
+            const hasPermission = await verifyHandlePermission(savedHandle);
+
+            if (hasPermission) {
+                // Success! Handle restored and permission granted
+                autoExportDirectoryHandle = savedHandle;
+                useFileSystemAPI = true;
+                console.log('✅ Directory Handle wiederhergestellt:', savedHandle.name);
+                showToast(`Auto-Export-Ordner wiederhergestellt: ${savedHandle.name}`, 'success', 3000);
+            } else {
+                // Permission denied
+                console.log('❌ Permission verweigert für gespeicherten Ordner');
+                useFileSystemAPI = true; // Keep trying, will fallback to downloads
+            }
+
+            updateAutoExportFolderDisplay();
+        } catch (err) {
+            console.error('Fehler beim Wiederherstellen des Handles:', err);
+            useFileSystemAPI = false;
+            updateAutoExportFolderDisplay();
+        }
     }
 
     // Update folder display in UI
@@ -5038,6 +5151,90 @@ function updateFixkostenItem(index, key, value) {
         try { localStorage.setItem('vd_theme', theme); } catch(_) {}
     }
 
+    // ===== KEYBOARD SHORTCUTS & EMERGENCY ACCESS (v1.3.8) =====
+
+    // Global keyboard shortcuts for critical functions
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + Shift + E = Emergency JSON Export
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+            e.preventDefault();
+            console.log('🚨 Emergency Export triggered via keyboard');
+            exportAsJSON(false);
+            showToast('Notfall-Export erstellt!', 'success', 3000);
+        }
+
+        // Ctrl/Cmd + Shift + P = Emergency Print/PDF
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') {
+            e.preventDefault();
+            console.log('🚨 Emergency Print triggered via keyboard');
+            prepareAndPrint();
+        }
+
+        // Ctrl/Cmd + Shift + S = Show Session Menu (even if hidden)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+            e.preventDefault();
+            const buttonContainer = getEl('session-button-container');
+            if (buttonContainer) {
+                buttonContainer.style.display = 'block';
+                toggleSessionMenu();
+                console.log('🚨 Session-Menü erzwungen (Notfall-Zugriff)');
+            }
+        }
+
+        // Ctrl/Cmd + Shift + C = Export CSV
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+            e.preventDefault();
+            console.log('🚨 Emergency CSV Export triggered via keyboard');
+            exportAsCSV();
+            showToast('CSV-Export erstellt!', 'success', 3000);
+        }
+    });
+
+    // Console helper functions (accessible via browser console)
+    window.mlpEmergency = {
+        exportJSON: () => {
+            exportAsJSON(false);
+            console.log('✅ JSON-Export erstellt');
+        },
+        exportCSV: () => {
+            exportAsCSV();
+            console.log('✅ CSV-Export erstellt');
+        },
+        print: () => {
+            prepareAndPrint();
+            console.log('✅ Druck-Dialog geöffnet');
+        },
+        showSession: () => {
+            const buttonContainer = getEl('session-button-container');
+            if (buttonContainer) buttonContainer.style.display = 'block';
+            toggleSessionMenu();
+            console.log('✅ Session-Menü angezeigt');
+        },
+        help: () => {
+            console.log(`
+🚨 MLP NOTFALL-FUNKTIONEN:
+
+Keyboard-Shortcuts:
+- Ctrl+Shift+E: JSON-Export
+- Ctrl+Shift+C: CSV-Export
+- Ctrl+Shift+P: PDF drucken
+- Ctrl+Shift+S: Session-Menü öffnen
+
+Console-Commands:
+- mlpEmergency.exportJSON()  → JSON exportieren
+- mlpEmergency.exportCSV()   → CSV exportieren
+- mlpEmergency.print()       → PDF drucken
+- mlpEmergency.showSession() → Session-Menü zeigen
+- mlpEmergency.help()        → Diese Hilfe
+
+Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
+            `);
+        }
+    };
+
+    // Show help on load
+    console.log('💡 Notfall-Zugriff: mlpEmergency.help() für Hilfe');
+
     // INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
         // === SESSION INITIALIZATION (v1.2.0) ===
@@ -5272,7 +5469,10 @@ function updateFixkostenItem(index, key, value) {
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.3.7</span>
+                    <span class="font-mono">v1.3.8</span>
+                </div>
+                <div class="text-xs text-gray-600 text-center mt-1">
+                    Notfall: <kbd class="text-xs">Ctrl+Shift+E</kbd>
                 </div>
             </div>
         </div>
