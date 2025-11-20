@@ -2229,7 +2229,26 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
     }
 
     // Start auto-export timer (runs every 2 minutes)
+    // Check if auto-save is enabled
+    function isAutoSaveEnabled() {
+        // Default: OFF (manual save only)
+        const enabled = localStorage.getItem('mlp-auto-save-enabled');
+        return enabled === 'true';
+    }
+
+    // Save auto-save preference
+    function setAutoSaveEnabled(enabled) {
+        localStorage.setItem('mlp-auto-save-enabled', enabled ? 'true' : 'false');
+        console.log(`🔄 Auto-Save ${enabled ? 'aktiviert' : 'deaktiviert'}`);
+    }
+
     function startAutoExport() {
+        // Only start if auto-save is enabled
+        if (!isAutoSaveEnabled()) {
+            console.log('⏸️ Auto-Export nicht gestartet (manueller Modus)');
+            return;
+        }
+
         // Clear existing timer
         if (autoExportInterval) {
             clearInterval(autoExportInterval);
@@ -2237,12 +2256,16 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
 
         // First export after 30 seconds (give user time to enter data)
         setTimeout(() => {
-            exportAsJSON(true);
+            if (isAutoSaveEnabled()) {
+                exportAsJSON(true);
+            }
         }, 30000);
 
         // Then export every 2 minutes (120000ms)
         autoExportInterval = setInterval(() => {
-            exportAsJSON(true);
+            if (isAutoSaveEnabled()) {
+                exportAsJSON(true);
+            }
         }, 120000);
 
         console.log('✅ Auto-Export aktiviert (alle 2 Min., erster Export in 30 Sek.)');
@@ -2254,6 +2277,45 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
             clearInterval(autoExportInterval);
             autoExportInterval = null;
             console.log('⏹️ Auto-Export gestoppt');
+        }
+    }
+
+    // Toggle auto-save on/off
+    function toggleAutoSave(enabled) {
+        setAutoSaveEnabled(enabled);
+
+        if (enabled) {
+            startAutoExport();
+            showToast('Automatische Speicherung aktiviert (alle 2 Min.)', 'success', 3000);
+        } else {
+            stopAutoExport();
+            showToast('Automatische Speicherung deaktiviert', 'info', 3000);
+        }
+
+        // Update UI
+        updateAutoSaveUI();
+    }
+
+    // Update auto-save UI elements
+    function updateAutoSaveUI() {
+        const toggle = document.getElementById('auto-save-toggle');
+        const intervalInfo = document.getElementById('auto-save-interval-info');
+        const enabled = isAutoSaveEnabled();
+
+        if (toggle) {
+            toggle.checked = enabled;
+        }
+
+        if (intervalInfo) {
+            if (enabled) {
+                intervalInfo.textContent = 'Automatisch alle 2 Minuten';
+                intervalInfo.classList.remove('text-gray-500');
+                intervalInfo.classList.add('text-green-500');
+            } else {
+                intervalInfo.textContent = 'Manueller Speichermodus';
+                intervalInfo.classList.remove('text-green-500');
+                intervalInfo.classList.add('text-gray-500');
+            }
         }
     }
 
@@ -5373,6 +5435,18 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             });
         }
 
+        // AUTO-SAVE TOGGLE init
+        const autoSaveToggle = getEl('auto-save-toggle');
+        if (autoSaveToggle) {
+            // Initialize UI based on saved preference
+            updateAutoSaveUI();
+
+            // Add event listener
+            autoSaveToggle.addEventListener('change', (e) => {
+                toggleAutoSave(e.target.checked);
+            });
+        }
+
         const anlagezeitraumLabel = getEl('anlagezeitraum-label');
         const variantSwitch = getEl('variant-switch');
         const varianteALabel = getEl('variante-a-label');
@@ -5478,6 +5552,13 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             <div class="p-2 border-b border-gray-700">
                 <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">Auto-Export</div>
                 <div class="px-3 py-2 mb-2">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs text-gray-400">Automatische Speicherung</span>
+                        <label class="switch">
+                            <input type="checkbox" id="auto-save-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <div class="flex items-center justify-between text-xs mb-2">
                         <span class="text-gray-400">Zielordner:</span>
                         <span id="auto-export-folder-display" class="font-mono text-xs">
@@ -5490,7 +5571,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                             <span class="text-yellow-400">⏳ Wartet...</span>
                         </span>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">Automatisch alle 2 Minuten</p>
+                    <p id="auto-save-interval-info" class="text-xs text-gray-500 mt-2">Automatisch alle 2 Minuten</p>
                 </div>
                 <button onclick="selectAutoExportDirectory();" class="w-full text-left px-3 py-2 mb-1 text-sm text-blue-400 hover:bg-blue-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
