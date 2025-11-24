@@ -132,6 +132,18 @@
             font-weight: bold;
           }
 
+          /* Sum rows in tables */
+          .print-table tr.sum-row th,
+          .print-table tr.sum-row td {
+            font-weight: bold;
+            background-color: #e8e8e8;
+            border-top: 2px solid #999;
+          }
+
+          /* Positive/Negative values */
+          .text-positive { color: #059669; font-weight: 600; }
+          .text-negative { color: #dc2626; font-weight: 600; }
+
           /* Prevent orphaned table headers */
           .print-table thead {
             break-after: avoid;
@@ -5152,6 +5164,35 @@ function updateFixkostenItem(index, key, value) {
 
         // 3) Build Fixkosten & Depot tables
         const fixRows = fixkostenItems.map(i => `<tr><td>${i.name}</td><td>${formatCurrency(i.amount)}</td><td>${i.interval}</td><td>${i.target}</td></tr>`).join('');
+
+        // Calculate sum of fixkosten (convert to monthly)
+        const fixkostenSumme = fixkostenItems.reduce((sum, i) => {
+            const amount = i.amount || 0;
+            const monthly = i.interval === 'quarterly' ? amount / 3 : (i.interval === 'annually' ? amount / 12 : amount);
+            return sum + monthly;
+        }, 0);
+
+        // Get Vermieterkonto data if exists
+        const vermieterData = getVermieterkontoData();
+        const hasVermieterData = vermieterData && (vermieterData.einnahmen > 0 || vermieterData.ausgaben > 0);
+
+        // Add Vermieterkonto cashflow row if exists
+        let vermieterRow = '';
+        let vermieterMonthly = 0;
+        if (hasVermieterData) {
+            const cashflow = vermieterData.saldo;
+            vermieterMonthly = Math.abs(cashflow);
+            const cashflowText = cashflow >= 0
+                ? `<span class="text-positive">+${formatCurrency(cashflow)}</span>`
+                : `<span class="text-negative">-${formatCurrency(Math.abs(cashflow))}</span>`;
+            const ziel = currentVariant === 'A' ? 'fixkosten' : 'konsum';
+            vermieterRow = `<tr><td>Cashflow Vermieterkonto</td><td>${cashflowText}</td><td>monatlich</td><td>${ziel}</td></tr>`;
+        }
+
+        // Calculate total including Vermieterkonto
+        const fixkostenTotal = fixkostenSumme + (hasVermieterData && vermieterData.saldo < 0 ? Math.abs(vermieterData.saldo) : 0);
+        const sumRow = `<tr class="sum-row"><th>Summe (monatlich)</th><th>${formatCurrency(fixkostenTotal)}</th><th colspan="2"></th></tr>`;
+
         const depRows = depotItems.map(i => `<tr><td>${i.name}</td><td>${i.allocation}%</td></tr>`).join('');
 
         // 4) Get session data
@@ -5180,11 +5221,102 @@ function updateFixkostenItem(index, key, value) {
           </table>
 
           <h2>Fixkosten &amp; Sparpläne</h2>
-          <table class="print-table"><thead><tr><th>Posten</th><th>Betrag</th><th>Intervall</th><th>Ziel</th></tr></thead><tbody>${fixRows}</tbody></table>
+          <table class="print-table"><thead><tr><th>Posten</th><th>Betrag</th><th>Intervall</th><th>Ziel</th></tr></thead><tbody>${fixRows}${vermieterRow}${sumRow}</tbody></table>
 
           <h2>Depot-Aufteilung</h2>
           <table class="print-table"><thead><tr><th>Fonds/ETF</th><th>Verteilung</th></tr></thead><tbody>${depRows}</tbody></table>
         `;
+
+        // Add Immobilien section if data exists
+        if (immobilienData && immobilienData.length > 0) {
+            const immoRows = immobilienData.map(immo => {
+                const wert = immo.wert || 0;
+                const darlehen = immo.darlehen || 0;
+                const eigenkapital = wert - darlehen;
+                return `<tr><td>${immo.name || 'Objekt'}</td><td>${formatCurrency(wert)}</td><td>${formatCurrency(darlehen)}</td><td>${formatCurrency(eigenkapital)}</td></tr>`;
+            }).join('');
+
+            const gesamtwert = immobilienData.reduce((sum, immo) => sum + (immo.wert || 0), 0);
+            const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
+            const gesamtEigenkapital = gesamtwert - gesamtdarlehen;
+
+            const sumRowImmo = `<tr class="sum-row"><th>Gesamt</th><th>${formatCurrency(gesamtwert)}</th><th>${formatCurrency(gesamtdarlehen)}</th><th>${formatCurrency(gesamtEigenkapital)}</th></tr>`;
+
+            html += `
+              <h2>Immobilien-Portfolio</h2>
+              <table class="print-table">
+                <thead><tr><th>Objekt</th><th>Marktwert</th><th>Darlehen</th><th>Eigenkapital</th></tr></thead>
+                <tbody>${immoRows}${sumRowImmo}</tbody>
+              </table>
+            `;
+
+            // Add details about rates and appreciation if available
+            if (vermieterkontoData.zinssatz > 0 || vermieterkontoData.wertsteigerung > 0) {
+                const details = [];
+                if (vermieterkontoData.wertsteigerung > 0) {
+                    details.push(`Wertsteigerung: ${vermieterkontoData.wertsteigerung}% p.a.`);
+                }
+                if (vermieterkontoData.zinssatz > 0) {
+                    details.push(`Zinssatz: ${vermieterkontoData.zinssatz}%`);
+                }
+                if (vermieterkontoData.tilgungssatz > 0) {
+                    details.push(`Tilgung: ${vermieterkontoData.tilgungssatz}%`);
+                }
+                if (details.length > 0) {
+                    html += `<p class="muted">${details.join(' • ')}</p>`;
+                }
+            }
+        }
+
+        // Add Vermieterkonto section if data exists
+        if (hasVermieterData) {
+            const einnahmenRows = [];
+            if (vermieterkontoData.miete > 0) {
+                einnahmenRows.push(`<tr><td>Mieteinnahmen</td><td class="text-positive">+${formatCurrency(vermieterkontoData.miete)}</td></tr>`);
+            }
+            if (vermieterkontoData.sonstigeEinnahmen > 0) {
+                einnahmenRows.push(`<tr><td>Sonstige Einnahmen</td><td class="text-positive">+${formatCurrency(vermieterkontoData.sonstigeEinnahmen)}</td></tr>`);
+            }
+            einnahmenRows.push(`<tr class="sum-row"><th>Gesamt-Einnahmen</th><th class="text-positive">+${formatCurrency(vermieterData.einnahmen)}</th></tr>`);
+
+            const ausgabenRows = [];
+            if (vermieterkontoData.rate > 0) {
+                ausgabenRows.push(`<tr><td>Darlehensrate</td><td class="text-negative">-${formatCurrency(vermieterkontoData.rate)}</td></tr>`);
+            }
+            if (vermieterkontoData.instandhaltung > 0) {
+                ausgabenRows.push(`<tr><td>Instandhaltung</td><td class="text-negative">-${formatCurrency(vermieterkontoData.instandhaltung)}</td></tr>`);
+            }
+            if (vermieterkontoData.steuern > 0) {
+                ausgabenRows.push(`<tr><td>Steuern &amp; Nebenkosten</td><td class="text-negative">-${formatCurrency(vermieterkontoData.steuern)}</td></tr>`);
+            }
+            ausgabenRows.push(`<tr class="sum-row"><th>Gesamt-Ausgaben</th><th class="text-negative">-${formatCurrency(vermieterData.ausgaben)}</th></tr>`);
+
+            const saldoClass = vermieterData.saldo >= 0 ? 'text-positive' : 'text-negative';
+            const saldoSign = vermieterData.saldo >= 0 ? '+' : '-';
+            const cashflowRow = `<tr class="sum-row" style="background-color: #f9fafb;"><th>Netto-Cashflow (monatlich)</th><th class="${saldoClass}">${saldoSign}${formatCurrency(Math.abs(vermieterData.saldo))}</th></tr>`;
+
+            html += `
+              <h2>Vermieterkonto (Cashflow-Analyse)</h2>
+              <table class="print-table">
+                <tbody>
+                  ${einnahmenRows.join('')}
+                  ${ausgabenRows.join('')}
+                  ${cashflowRow}
+                </tbody>
+              </table>
+            `;
+
+            // Integration status
+            if (vermieterkontoData.cashflowIntegration) {
+                html += `<p class="muted">✅ Cashflows sind ins Gesamtsystem integriert</p>`;
+            }
+
+            // Tilgung info
+            if (vermieterData.tilgung > 0) {
+                html += `<p class="muted">ℹ️ Davon Tilgung (Vermögensaufbau): ${formatCurrency(vermieterData.tilgung)}/Monat</p>`;
+            }
+        }
+
         html += buildBookingPlanPrintHtml(); // (Überschrift wird unten im <section> gesetzt)
         report.innerHTML = html;
 
