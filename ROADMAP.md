@@ -2,7 +2,7 @@
 
 **Aktuelle Version:** 1.4.0
 **Ziel-Version:** 2.0.0
-**Datum:** Januar 2025
+**Datum:** November 2024
 
 ---
 
@@ -185,7 +185,7 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 
 ### ✅ Version 1.4.0: UI Overhaul - Sidebar Removal & Inline Editing (ABGESCHLOSSEN)
 
-**Status:** ✅ Implementiert (Januar 2025)
+**Status:** ✅ Implementiert (November 2024)
 **Fokus:** Complete UI restructure - removing sidebar, inline editing, fullwidth layout
 
 #### Implementierte Features
