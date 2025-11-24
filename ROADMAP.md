@@ -1,8 +1,8 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.3.7
+**Aktuelle Version:** 1.4.0
 **Ziel-Version:** 2.0.0
-**Datum:** Oktober 2025
+**Datum:** Januar 2025
 
 ---
 
@@ -40,7 +40,7 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 
 ---
 
-## 📊 Aktuelle Analyse (Version 1.3.7)
+## 📊 Aktuelle Analyse (Version 1.4.0)
 
 ### Implementierte Features
 
@@ -182,6 +182,64 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 ---
 
 ## 📅 Entwicklungs-Roadmap
+
+### ✅ Version 1.4.0: UI Overhaul - Sidebar Removal & Inline Editing (ABGESCHLOSSEN)
+
+**Status:** ✅ Implementiert (Januar 2025)
+**Fokus:** Complete UI restructure - removing sidebar, inline editing, fullwidth layout
+
+#### Implementierte Features
+
+**BREAKING CHANGES:**
+- ❌ **Sidebar komplett entfernt** (158 Zeilen HTML)
+  - Keine Planungs-Cockpit Sidebar mehr
+  - Alle Controls in neue Control Bar verschoben
+  - Fullwidth Layout für Flowchart
+
+**1.4.1: Inline Basin Editors** ✅
+- ✅ **Click-to-Edit Basin Interface**
+  - Einkommen: Single-Field Editor
+  - Konsum: Dual-Field Editor (Mindestbestand, Überschuss)
+  - Tagesgeld: Dual-Field Editor (Aktuell, Sparziel)
+  - Smooth overlay mit backdrop blur
+  - Keyboard shortcuts: Enter (Save), Esc (Cancel)
+
+**1.4.2: Control Bar (Top-Right Fixed)** ✅
+- ✅ **Compact Control Chips**
+  - Theme Toggle (Dark/Light)
+  - Variant Switch (A/B)
+  - Consultation Mode Toggle
+  - 44px minimum touch targets
+  - Hover states mit border highlight
+
+**1.4.3: Booking Calendar FAB** ✅
+- ✅ **Floating Action Button**
+  - Fixed bottom-right position
+  - Opens booking calendar in modal
+  - Icon-only compact buttons
+  - Dynamic content generation (no sidebar dependency)
+
+**1.4.4: Fullwidth Layout** ✅
+- ✅ **Screen Space Optimization**
+  - Flowchart uses entire viewport width
+  - No sidebar constraints
+  - Better use of large screens
+  - Responsive design maintained
+
+**Technical Improvements:**
+- ✅ Comprehensive null-checks for DOM elements
+- ✅ Optional chaining (?.) for input.value access
+- ✅ Fixed File System API permission errors
+- ✅ Removed duplicate event listener registrations
+- ✅ Hidden input fields for backward compatibility
+
+**Design:**
+- ✅ Design-Guide compliance (8px grid system)
+- ✅ Subtle shadows and clean borders
+- ✅ Backdrop blur effects
+- ✅ Professional typography hierarchy
+
+---
 
 ### ✅ Version 1.2.0: Session-Management & Datenschutz (ABGESCHLOSSEN)
 
