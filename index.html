@@ -766,6 +766,124 @@
         #printable-report .print-table-bookings td {
             vertical-align: top;
         }
+
+        /* === MOBILE OPTIMIZATIONS === */
+
+        /* Mobile Warning Overlay */
+        #mobile-warning {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            padding: 2rem;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #mobile-warning .warning-content {
+            max-width: 400px;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border: 2px solid #374151;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        #mobile-warning .warning-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        #mobile-warning h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #f59e0b;
+        }
+
+        #mobile-warning p {
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        #mobile-warning .btn-mobile {
+            background: #4f46e5;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        #mobile-warning .btn-mobile:hover {
+            background: #4338ca;
+        }
+
+        @media (max-width: 768px) {
+            #mobile-warning {
+                display: flex;
+            }
+
+            /* Session button fixed on mobile */
+            #session-button-container {
+                position: fixed !important;
+                top: 1rem !important;
+                left: 1rem !important;
+                z-index: 100 !important;
+            }
+
+            /* Smaller switch in mobile menu */
+            #session-dropdown .switch {
+                width: 48px;
+                height: 28px;
+            }
+
+            #session-dropdown .switch .slider:before {
+                height: 20px;
+                width: 20px;
+                left: 4px;
+                bottom: 4px;
+            }
+
+            #session-dropdown input:checked + .slider:before {
+                transform: translateX(20px);
+            }
+
+            /* Touch optimization */
+            button, .account-basin, .control-chip {
+                -webkit-tap-highlight-color: rgba(79, 70, 229, 0.3);
+                touch-action: manipulation;
+            }
+
+            /* Larger touch targets */
+            .account-basin {
+                min-height: 80px;
+            }
+
+            /* Modal optimization */
+            .modal-content {
+                max-height: 85vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Sidebar full width on mobile */
+            aside {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            /* Hide flowchart on very small screens */
+            @media (max-width: 480px) {
+                #flow-container {
+                    min-height: 400px !important;
+                }
+            }
+        }
     </style>
 </head>
 <body class="theme-dark bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden" id="theme-root">
@@ -940,6 +1058,24 @@
                 </div>
             </aside>
             <div id="flow-container" class="w-full lg:flex-grow relative min-h-[1150px]">
+                <!-- Mobile Warning Overlay -->
+                <div id="mobile-warning">
+                    <div class="warning-content">
+                        <div class="warning-icon">📱</div>
+                        <h3>Desktop empfohlen</h3>
+                        <p>
+                            Die Flowchart-Visualisierung ist für größere Bildschirme optimiert.
+                            <br><br>
+                            <strong>Verfügbar auf Mobile:</strong><br>
+                            ✓ Eingaben & Berechnungen<br>
+                            ✓ Export-Funktionen (PDF, CSV, JSON)<br>
+                            ✓ Session-Verwaltung
+                        </p>
+                        <button onclick="document.getElementById('mobile-warning').style.display='none'" class="btn-mobile">
+                            Verstanden
+                        </button>
+                    </div>
+                </div>
                 <svg id="flow-svg" class="flow-svg">
                     <defs>
                       <linearGradient id="flow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
