@@ -56,8 +56,8 @@
         .flow-value { position: absolute; background-color: #111827; color: #d1d5db; padding: 4px 10px; border-radius: 9999px; font-size: 0.9rem; font-weight: 600; z-index: 15; border: 1px solid #4b5563; white-space: nowrap; transform: translate(-50%, -50%); transition: top 0.3s, left 0.3s; }
         .limit-line { position: absolute; width: 100%; height: 2px; left: 0; z-index: 12; }
         .limit-line span { position: absolute; right: 4px; transform: translateY(-50%); font-size: 10px; background: #1f2937; padding: 0 3px; font-weight: 500;}
-        .modal { display: none; }
-        .modal-active { display: flex; }
+        .modal { display: none !important; }
+        .modal-active { display: flex !important; }
         .schutzschirm {
             fill: rgba(59, 130, 246, 0.15);
             stroke: rgba(96, 165, 250, 0.4);
@@ -75,7 +75,17 @@
         input:checked + .slider:before { transform: translateX(26px); }
         
         #printable-report { display: none; }
+
+        /* No-print class for elements that should never be printed */
         @media print {
+          /* Page setup: minimal margins for maximum content space */
+          @page {
+            size: A4;
+            margin: 8mm 10mm;
+          }
+
+          .no-print { display: none !important; }
+
           /* Hide everything except the report */
           body > *:not(#printable-report) { display: none !important; }
 
@@ -84,8 +94,21 @@
             display: block;
             color: #000;
             background: #fff;
-            padding: 20mm;
+            padding: 8mm 10mm;
             max-width: 100%;
+            overflow: hidden;
+          }
+
+          /* Images: use transform scale for guaranteed sizing */
+          #printable-report img {
+            max-width: none !important;
+            width: auto !important;
+            height: auto !important;
+            transform: scale(0.6) !important;
+            transform-origin: center top !important;
+            display: block !important;
+            margin: 0 auto !important;
+            page-break-inside: avoid !important;
           }
 
           /* Headers */
@@ -381,7 +404,7 @@
         .panel-title{max-width:420px;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start;text-align:left;padding-left:1.5rem;}
         .panel-eyebrow{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;}
         .panel-title h2{margin:0;font-size:clamp(1.9rem,2vw+1.6rem,2.4rem);font-weight:700;color:var(--fg);}
-        .panel-controls{display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;justify-content:flex-end;}
+        .panel-controls{display:none;} /* Hidden in v1.4.0 - moved to Control Bar */
         .control-chip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid var(--border);border-radius:14px;background:rgba(0,47,108,0.04);transition:all .25s ease;cursor:pointer;}
         .panel-controls .control-chip:hover{border-color:var(--accent1);color:var(--accent1);}
         .control-chip:focus-within{box-shadow:0 0 0 3px rgba(0,47,108,0.18);}
@@ -406,6 +429,577 @@
         .control-chip--consultation .chip-button.hidden{display:none;}
         .control-chip--consultation.is-active{background:linear-gradient(135deg,var(--accent1),var(--accent2));border-color:transparent;box-shadow:0 10px 18px -12px rgba(0,47,108,0.6);}
         .control-chip--consultation.is-active .chip-button .icon{color:#ffffff;}
+
+        /* ========================================
+           CONTROL BAR (v1.4.0) - Top-Right Fixed
+           ======================================== */
+        #control-bar {
+            position: fixed;
+            top: 16px; /* 2 * 8px grid */
+            right: 16px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 8px grid */
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            transition: all 0.25s ease;
+        }
+        .theme-dark #control-bar {
+            background: rgba(15, 23, 42, 0.90);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+
+        /* Control Bar Items (same as control-chip but adapted) */
+        .control-bar-item {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px; /* Touch target minimum */
+            height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(0, 47, 108, 0.04);
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+        .control-bar-item:hover {
+            border-color: var(--accent1);
+            color: var(--accent1);
+        }
+        .control-bar-item:focus-within {
+            box-shadow: 0 0 0 3px rgba(0, 47, 108, 0.18);
+        }
+        .theme-dark .control-bar-item {
+            background: rgba(148, 163, 184, 0.08);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+
+        /* Theme Toggle */
+        .control-bar-item--theme input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .control-bar-item--theme .bar-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+        }
+        .control-bar-item--theme .icon {
+            width: 18px;
+            height: 18px;
+            color: var(--muted);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .control-bar-item--theme .icon-moon {
+            opacity: 0;
+            transform: scale(0.65);
+        }
+        .control-bar-item--theme input:checked + .bar-icon {
+            background: rgba(0, 47, 108, 0.08);
+        }
+        .theme-light .control-bar-item--theme input:checked + .bar-icon {
+            background: rgba(0, 47, 108, 0.12);
+        }
+        .control-bar-item--theme input:checked + .bar-icon .icon-sun {
+            opacity: 0;
+            transform: scale(0.65);
+        }
+        .control-bar-item--theme input:checked + .bar-icon .icon-moon {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .control-bar-item--theme input:checked + .bar-icon .icon {
+            color: var(--accent1);
+        }
+
+        /* Variant Toggle */
+        .control-bar-item--variant {
+            min-width: 64px; /* Space for A|B */
+        }
+        .control-bar-item--variant input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .control-bar-item--variant .bar-pair {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 4px; /* Half of 8px for tight grouping */
+            align-items: center;
+            justify-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 6px;
+        }
+        .control-bar-item--variant .bar-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            background: rgba(0, 47, 108, 0.05);
+            transition: all 0.2s ease;
+        }
+        .theme-dark .control-bar-item--variant .bar-state {
+            background: rgba(148, 163, 184, 0.12);
+            color: #cbd5f5;
+        }
+        .control-bar-item--variant .bar-state--active {
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+            box-shadow: 0 4px 8px -4px rgba(0, 47, 108, 0.6);
+        }
+
+        /* Consultation Button */
+        .control-bar-item--consultation {
+            min-width: 44px;
+        }
+        .control-bar-item--consultation .bar-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .control-bar-item--consultation .bar-button:hover {
+            color: var(--accent1);
+        }
+        .control-bar-item--consultation .bar-button .icon {
+            width: 20px;
+            height: 20px;
+        }
+        .control-bar-item--consultation .bar-button.hidden {
+            display: none;
+        }
+        .control-bar-item--consultation.is-active {
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+            border-color: transparent;
+            box-shadow: 0 4px 8px -4px rgba(0, 47, 108, 0.6);
+        }
+        .control-bar-item--consultation.is-active .bar-button .icon {
+            color: #ffffff;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            #control-bar {
+                top: 64px; /* Below session button */
+                right: 16px;
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        /* ========================================
+           INLINE EDITOR (v1.4.0) - Basin Editing
+           ======================================== */
+        .account-basin--editable {
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .account-basin--editable:hover {
+            border-color: var(--accent1) !important;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+        }
+
+        /* Inline Editor Overlay */
+        .basin-inline-editor {
+            position: fixed; /* Fixed statt absolute - schwebt über allem */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999; /* Sehr hoch, über allem */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px; /* 2 * 8px grid */
+            padding: 40px; /* 5 * 8px grid - viel Platz */
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            min-width: 400px; /* Mindestbreite */
+            max-width: 90vw; /* Max 90% Viewport-Breite */
+
+            /* Smooth animation without transform conflict */
+            opacity: 0;
+            animation: smoothFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .theme-dark .basin-inline-editor {
+            background: rgba(15, 23, 42, 0.98);
+        }
+
+        /* Backdrop for inline editor */
+        .basin-inline-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            background: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: backdropFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        /* Smooth Animations */
+        @keyframes smoothFadeIn {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -48%);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        @keyframes smoothFadeOut {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -48%);
+            }
+        }
+
+        @keyframes backdropFadeIn {
+            0% {
+                opacity: 0;
+                background: rgba(0, 0, 0, 0);
+                backdrop-filter: blur(0px);
+            }
+            100% {
+                opacity: 1;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+            }
+        }
+
+        @keyframes backdropFadeOut {
+            0% {
+                opacity: 1;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+            }
+            100% {
+                opacity: 0;
+                background: rgba(0, 0, 0, 0);
+                backdrop-filter: blur(0px);
+            }
+        }
+
+        /* Old animations - keep for backward compatibility */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Inline Editor Input */
+        .basin-inline-input {
+            width: 100%;
+            max-width: 280px;
+            padding: 10px 12px; /* 8px grid: kompakter für Dual-Input */
+            font-size: 1rem; /* 16px - kleiner für mehr Platz */
+            font-weight: 600;
+            text-align: center;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--fg);
+            transition: all 0.25s ease;
+            font-family: 'Courier New', monospace;
+        }
+        .basin-inline-input:focus {
+            outline: none;
+            border-color: var(--accent1);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+        }
+        .basin-inline-input::placeholder {
+            color: var(--muted);
+            opacity: 0.6;
+        }
+
+        /* Inline Editor Label */
+        .basin-inline-label {
+            font-size: 0.875rem; /* 14px */
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Inline Editor Hint */
+        .basin-inline-hint {
+            font-size: 0.75rem; /* 12px */
+            color: var(--muted);
+            text-align: center;
+        }
+
+        /* Inline Editor Button Group */
+        .basin-inline-buttons {
+            display: flex;
+            gap: 8px; /* 8px grid */
+            margin-top: 8px;
+        }
+
+        .basin-inline-btn {
+            padding: 8px 16px; /* 8px grid: 1 * 8, 2 * 8 */
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--fg);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .basin-inline-btn:hover {
+            border-color: var(--accent1);
+            color: var(--accent1);
+        }
+        .basin-inline-btn--primary {
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+            color: #ffffff;
+            border-color: transparent;
+        }
+        .basin-inline-btn--primary:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Multi-Input Grid (for Konsum, Tagesgeld) */
+        .basin-inline-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px; /* 1.5 * 8px grid - kompakter */
+            width: 100%;
+            max-width: 360px; /* Etwas kleiner für bessere Passform */
+        }
+
+        .basin-inline-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px; /* Kompakter Gap */
+        }
+
+        .basin-inline-field .basin-inline-input {
+            max-width: 100%; /* Volle Breite im Grid */
+            font-size: 0.9rem; /* Noch kleiner für Dual-Input */
+            padding: 8px 10px;
+        }
+
+        /* Edit Indicator (Pencil Icon) */
+        .basin-edit-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(79, 70, 229, 0.15);
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+        .account-basin--editable:hover .basin-edit-indicator {
+            opacity: 1;
+        }
+        .basin-edit-indicator svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent1);
+        }
+
+        /* ========================================
+           FAB (Floating Action Button) - v1.4.0
+           ======================================== */
+        #booking-fab {
+            position: fixed;
+            bottom: 24px; /* 3 * 8px grid */
+            right: 24px;
+            z-index: 1000;
+            width: 56px; /* Material Design Standard */
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+        }
+
+        #booking-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.5);
+        }
+
+        #booking-fab:active {
+            transform: scale(0.95);
+        }
+
+        #booking-fab svg {
+            width: 24px;
+            height: 24px;
+            color: #ffffff;
+        }
+
+        /* FAB Label (appears on hover) */
+        .fab-label {
+            position: absolute;
+            right: 72px; /* 56px FAB + 16px gap */
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(8px);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #booking-fab:hover .fab-label {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Booking Modal (v1.4.0) */
+        #booking-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        #booking-modal.active {
+            display: flex;
+        }
+
+        .booking-modal-content {
+            background: var(--bg);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: smoothFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .booking-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .booking-modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--fg);
+            margin: 0;
+        }
+
+        .booking-modal-close {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .booking-modal-close:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--fg);
+        }
+
+        .theme-dark .booking-modal-close:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .booking-modal-body {
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        /* Mobile: FAB anpassen */
+        @media (max-width: 768px) {
+            #booking-fab {
+                bottom: 80px; /* Platz für Session-Button */
+                right: 16px;
+                width: 48px;
+                height: 48px;
+            }
+            #booking-fab svg {
+                width: 20px;
+                height: 20px;
+            }
+            .fab-label {
+                display: none; /* Kein Label auf Mobile */
+            }
+        }
+
         .btn{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border-radius:999px;font-weight:600;transition:all .25s ease;cursor:pointer;border:none;}
         .btn-sm{font-size:.85rem;padding:.45rem .95rem;}
         .btn-lg{font-size:.95rem;padding:.75rem 1.4rem;}
@@ -896,170 +1490,73 @@
             <p class="text-md md:text-lg text-gray-400">vom Einkommen zum Investment.</p>
         </header>
 
-        <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Input Controls -->
-            <aside class="w-full lg:w-1/3 xl:max-w-lg">
-                <div class="planning-panel" aria-labelledby="planning-title">
-                    <header class="panel-header">
-                        <div class="panel-title">
-                            <span class="panel-eyebrow">Planungs-Cockpit</span>
-                            <h2 id="planning-title" class="sr-only">Deine Planung</h2>
-                        </div>
-                        <div class="panel-controls" role="group" aria-label="Schnellaktionen">
-                            <label class="control-chip control-chip--toggle" title="Darstellung wechseln">
-                                <input type="checkbox" id="theme-switch" aria-label="Theme umschalten (Hell/Dunkel)" />
-                                <span class="chip-icon" aria-hidden="true">
-                                    <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="4" />
-                                        <path d="M12 2v2" />
-                                        <path d="M12 20v2" />
-                                        <path d="M4.93 4.93l1.42 1.42" />
-                                        <path d="M17.65 17.65l1.42 1.42" />
-                                        <path d="M2 12h2" />
-                                        <path d="M20 12h2" />
-                                        <path d="M4.93 19.07l1.42-1.42" />
-                                        <path d="M17.65 6.35l1.42-1.42" />
-                                    </svg>
-                                    <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 12.79A9 9 0 0 1 11.21 3 7 7 0 1 0 21 12.79z" />
-                                    </svg>
-                                </span>
-                            </label>
-                            <label class="control-chip control-chip--variant" title="Variante A/B umschalten">
-                                <input type="checkbox" id="variant-switch" aria-label="Variante A/B umschalten">
-                                <span class="chip-pair" aria-hidden="true">
-                                    <span id="variante-a-label" class="chip-state chip-state--active">A</span>
-                                    <span id="variante-b-label" class="chip-state">B</span>
-                                </span>
-                            </label>
-                            <div class="control-chip control-chip--consultation" title="Beratung">
-                                <button id="consult-toggle-btn" class="chip-button" type="button" aria-label="Beratung starten">
-                                    <svg class="icon icon-mlp" viewBox="0 0 24 24" aria-hidden="true">
-                                        <circle cx="10" cy="12" r="5.5" stroke="currentColor" stroke-width="1.6" fill="none" />
-                                        <path d="M10 8.5v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-                                        <path d="M18 7h3v10h-3z" fill="currentColor" />
-                                    </svg>
-                                </button>
-                                <button id="consult-next-btn" class="chip-button hidden" type="button" aria-label="Weiter zur naechsten Beratungsphase" title="Weiter zur naechsten Beratungsphase">
-                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M5 12h14" />
-                                        <path d="M13 6l6 6-6 6" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-</header>
-                    <div class="panel-body">
-                        <section class="panel-section" data-tone="blue">
-                            <header class="section-heading">
-                                <h3>Einkommen</h3>
-                            </header>
-                            <div id="sec-income" class="section-grid">
-                                <div class="mlp-input">
-                                    <label for="income" class="sr-only">Nettoeinkommen</label>
-                                    <div class="input-frame">
-                                        <span class="input-prefix">€</span>
-                                        <input type="number" id="income" value="3000" class="mlp-input-field" inputmode="decimal" placeholder="Nettoeinkommen">
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                        <section class="panel-section" data-tone="gold">
-                            <header class="section-heading">
-                                <h3>Konsumkonto</h3>
-                                <span class="section-subtitle">Minimum &amp; Überschuss (geschätzt)</span>
-                            </header>
-                            <div id="sec-konsum" class="section-grid section-grid--two">
-                                <div class="mlp-input">
-                                    <label for="konsumMin" class="sr-only">Mindestbestand (Sockelbetrag)</label>
-                                    <div class="input-frame">
-                                        <span class="input-prefix">€</span>
-                                        <input type="number" id="konsumMin" value="100" class="mlp-input-field" inputmode="decimal" placeholder="Mindestbestand">
-                                    </div>
-                                </div>
-                                <div class="mlp-input">
-                                    <label for="konsumLeftover" class="sr-only">Variabler Überschuss (Schätzung)</label>
-                                    <div class="input-frame">
-                                        <span class="input-prefix">€</span>
-                                        <input type="number" id="konsumLeftover" value="250" class="mlp-input-field" inputmode="decimal" placeholder="Variabler Überschuss">
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                        <section class="panel-section" data-tone="teal">
-                            <header class="section-heading">
-                                <h3>Tagesgeldkonto</h3>
-                                <span class="section-subtitle">Sparziel &amp; Bestand</span>
-                            </header>
-                            <div id="sec-tagesgeld" class="section-grid section-grid--two">
-                                <div class="mlp-input">
-                                    <label for="tagesgeldCurrent" class="sr-only">Aktueller Stand</label>
-                                    <div class="input-frame">
-                                        <span class="input-prefix">€</span>
-                                        <input type="number" id="tagesgeldCurrent" value="4800" class="mlp-input-field" inputmode="decimal" placeholder="Aktueller Stand">
-                                    </div>
-                                </div>
-                                <div class="mlp-input">
-                                    <label for="tagesgeldLimit" class="sr-only">Sparziel (Überlaufgrenze)</label>
-                                    <div class="input-frame">
-                                        <span class="input-prefix">€</span>
-                                        <input type="number" id="tagesgeldLimit" value="5000" class="mlp-input-field" inputmode="decimal" placeholder="Sparziel">
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                        <section class="panel-section" data-tone="slate">
-                            <header class="section-heading">
-                                <h3>Vermögensdepot</h3>
-                            </header>
-                            <div id="sec-prognose" class="section-stack">
-                                <div class="mlp-input">
-                                    <label for="depotCurrent" class="sr-only">Aktueller Depotstand</label>
-                                    <div class="input-frame">
-                                        <span class="input-prefix">€</span>
-                                        <input type="number" id="depotCurrent" value="25000" class="mlp-input-field" inputmode="decimal" placeholder="Aktueller Depotstand">
-                                    </div>
-                                </div>
-                                <div class="mlp-input mlp-range-group">
-                                    <label for="anlagezeitraum" class="sr-only">Anlagezeitraum</label>
-                                    <div class="range-meta" aria-hidden="true">
-                                        <span class="range-label">Anlagezeitraum</span>
-                                        <span id="anlagezeitraum-label" class="range-value">15 Jahre</span>
-                                    </div>
-                                    <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="mlp-range">
-                                </div>
-                                <div class="mlp-input">
-                                    <label for="rendite" class="sr-only">Ihre angenommene Rendite p.a.</label>
-                                    <div class="input-frame">
-                                        <input type="number" id="rendite" step="0.1" value="7" class="mlp-input-field" inputmode="decimal" placeholder="Rendite p.a.">
-                                        <span class="input-suffix">%</span>
-                                    </div>
-                                    <div id="rendite-info" class="section-note"></div>
-                                </div>
-                                <button onclick="calculateProjection()" class="btn btn-primary btn-lg btn-block">Prognose berechnen</button>
-                            </div>
-                        </section>
-                        <section class="panel-section" data-tone="blue">
-                            <header class="section-heading">
-                                <span class="section-eyebrow">Timing</span>
-                                <h3>Buchungskalender</h3>
-                            </header>
-                            <div id="sec-booking-plan" class="section-stack">
-                                <div id="booking-type-buttons" class="booking-type-group"></div>
-                                <div class="booking-toolbar">
-                                    <button id="booking-clear-month" type="button" class="btn btn-ghost btn-sm link-danger">Plan leeren</button>
-                                </div>
-                                <div id="booking-calendar" class="booking-calendar" role="grid" aria-label="Buchungskalender"></div>
-                                <p id="booking-hint" class="section-note"></p>
-                            </div>
-                        </section>
-                    </div>
-                    <!-- PDF Print Button removed - now in Session Menu -->
+        <!-- v1.4.0: Sidebar entfernt - Controls in Modals/FAB integriert -->
+        <div class="w-full">
+            <!-- v1.4.0: Control Bar (Top Right) -->
+            <div id="control-bar" class="fixed top-4 right-4 z-50 flex items-center gap-2">
+                <!-- Theme Toggle -->
+                <label class="control-chip control-chip--toggle" title="Darstellung wechseln">
+                    <input type="checkbox" id="theme-switch" aria-label="Theme umschalten (Hell/Dunkel)" />
+                    <span class="chip-icon" aria-hidden="true">
+                        <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4" />
+                            <path d="M12 2v2" />
+                            <path d="M12 20v2" />
+                            <path d="M4.93 4.93l1.42 1.42" />
+                            <path d="M17.65 17.65l1.42 1.42" />
+                            <path d="M2 12h2" />
+                            <path d="M20 12h2" />
+                            <path d="M4.93 19.07l1.42-1.42" />
+                            <path d="M17.65 6.35l1.42-1.42" />
+                        </svg>
+                        <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 0 1 11.21 3 7 7 0 1 0 21 12.79z" />
+                        </svg>
+                    </span>
+                </label>
+
+                <!-- Variant Toggle -->
+                <label class="control-chip control-chip--variant" title="Variante A/B umschalten">
+                    <input type="checkbox" id="variant-switch" aria-label="Variante A/B umschalten">
+                    <span class="chip-pair" aria-hidden="true">
+                        <span id="variante-a-label" class="chip-state chip-state--active">A</span>
+                        <span id="variante-b-label" class="chip-state">B</span>
+                    </span>
+                </label>
+
+                <!-- Consultation Toggle -->
+                <div class="control-chip control-chip--consultation" title="Beratung">
+                    <button id="consult-toggle-btn" class="chip-button" type="button" aria-label="Beratung starten">
+                        <svg class="icon icon-mlp" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="10" cy="12" r="5.5" stroke="currentColor" stroke-width="1.6" fill="none" />
+                            <path d="M10 8.5v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                            <path d="M18 7h3v10h-3z" fill="currentColor" />
+                        </svg>
+                    </button>
+                    <button id="consult-next-btn" class="chip-button hidden" type="button" aria-label="Weiter zur naechsten Beratungsphase" title="Weiter zur naechsten Beratungsphase">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" />
+                            <path d="M13 6l6 6-6 6" />
+                        </svg>
+                    </button>
                 </div>
-            </aside>
-            <div id="flow-container" class="w-full lg:flex-grow relative min-h-[1150px]">
+            </div>
+
+            <!-- v1.4.0: Hidden input fields for global inputs reference -->
+            <div style="display: none;">
+                <input type="number" id="income" value="3000">
+                <input type="number" id="konsumMin" value="100">
+                <input type="number" id="konsumLeftover" value="250">
+                <input type="number" id="tagesgeldCurrent" value="4800">
+                <input type="number" id="tagesgeldLimit" value="5000">
+                <input type="number" id="depotCurrent" value="0">
+                <input type="number" id="anlagezeitraum" value="15" min="1" max="40">
+                <input type="number" id="rendite" value="7.0" step="0.1">
+            </div>
+
+            <div id="flow-container" class="w-full relative min-h-[1150px]">
                 <!-- Mobile Warning Overlay -->
-                <div id="mobile-warning">
+                <div id="mobile-warning" class="no-print">
                     <div class="warning-content">
                         <div class="warning-icon">📱</div>
                         <h3>Desktop empfohlen</h3>
@@ -1128,11 +1625,11 @@
                 <div id="gradient-zone-3" class="gradient-zone gradient-zone-3" style="top: 720px; height: 240px;"></div>
                 <div id="gradient-zone-4" class="gradient-zone gradient-zone-4" style="top: 960px; height: 300px;"></div>
 
-                <div id="einkommen-basin" class="account-basin"></div>
+                <div id="einkommen-basin" class="account-basin account-basin--editable"></div>
                 <button id="fixkosten-basin" class="account-basin cursor-pointer hover:border-indigo-500" type="button" aria-controls="fixkosten-modal" aria-haspopup="dialog" onclick="openFixkostenModal()"></button>
-                <div id="konsum-basin" class="account-basin"></div>
-                <div id="tagesgeld-basin" class="account-basin"></div>
-                <button id="depot-basin" class="account-basin cursor-pointer hover:border-purple-500" type="button" aria-controls="depot-modal" aria-haspopup="dialog" onclick="openModal('depot-modal')"></button>
+                <div id="konsum-basin" class="account-basin account-basin--editable"></div>
+                <div id="tagesgeld-basin" class="account-basin account-basin--editable"></div>
+                <button id="depot-basin" class="account-basin cursor-pointer hover:border-purple-500" type="button" aria-controls="depot-modal" aria-haspopup="dialog" onclick="updateRenditeSuggestions(parseInt(document.getElementById('anlagezeitraum').value, 10)); openModal('depot-modal');"></button>
                 <button id="vermieterkonto-basin" class="account-basin cursor-pointer hover:border-blue-500" type="button" aria-controls="vermieterkonto-modal" aria-haspopup="dialog" onclick="loadVermieterkontoData(); openModal('vermieterkonto-modal')" style="height: 100px;"></button>
                 <button id="immobilien-basin" class="account-basin cursor-pointer hover:border-amber-500" type="button" aria-controls="immobilien-modal" aria-haspopup="dialog" onclick="openModal('immobilien-modal')"></button>
             </div>
@@ -1143,7 +1640,7 @@
 
     <!-- Modals -->
 
-    <div id="prognose-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="prognose-modal-title" aria-describedby="prognose-summary">
+    <div id="prognose-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="prognose-modal-title" aria-describedby="prognose-summary">
         <div class="bg-gray-800 w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('prognose-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Prognose schließen">&times;</button>
             <h3 id="prognose-modal-title" class="text-xl font-bold mb-4">Prognose: Vermögensentwicklung</h3>
@@ -1183,6 +1680,51 @@
                 <p id="depot-total" class="text-2xl font-bold">100 %</p>
             </div>
             <p id="depot-warning" class="text-center text-yellow-400 mt-2 h-6"></p>
+
+            <!-- Prognose Section (v1.4.0) -->
+            <hr class="border-gray-600 my-6">
+            <h4 class="text-lg font-bold mb-4">Prognose-Einstellungen</h4>
+
+            <div class="space-y-4">
+                <!-- Aktueller Depotstand -->
+                <div>
+                    <label for="depotCurrent" class="text-sm text-gray-400 block mb-2">Aktueller Depotstand</label>
+                    <div class="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
+                        <span class="text-gray-400">€</span>
+                        <input type="number" id="depotCurrent" value="25000" class="flex-1 bg-transparent text-white outline-none" inputmode="decimal" placeholder="Aktueller Depotstand">
+                    </div>
+                </div>
+
+                <!-- Anlagezeitraum Slider -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="anlagezeitraum" class="text-sm text-gray-400">Anlagezeitraum</label>
+                        <span id="anlagezeitraum-label" class="text-sm font-bold text-white">15 Jahre</span>
+                    </div>
+                    <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="mlp-range">
+                </div>
+
+                <!-- Erwartete Rendite -->
+                <div>
+                    <label for="rendite" class="text-sm text-gray-400 block mb-2">Erwartete Rendite p.a.</label>
+                    <div class="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
+                        <input type="number" id="rendite" step="0.1" value="7" class="flex-1 bg-transparent text-white outline-none" inputmode="decimal" placeholder="Rendite p.a.">
+                        <span class="text-gray-400">%</span>
+                    </div>
+                    <div id="rendite-info" class="text-xs text-gray-300 mt-2 p-2 bg-gray-900 rounded-lg"></div>
+                </div>
+
+                <!-- Prognose Button -->
+                <button type="button" onclick="showProjection();" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                    </svg>
+                    Prognose anzeigen
+                </button>
+            </div>
+
+            <hr class="border-gray-600 my-6">
+
             <button id="depot-save-button" type="button" onclick="saveDepot()" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern &amp; Schließen</button>
             <button type="button" onclick="openMsciRenditedreieck()" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1818,14 +2360,14 @@
         }
 
         // Collect all data
-        const income = parseFloat(inputs.income.value) || 0;
-        const konsumMin = parseFloat(inputs.konsumMin.value) || 0;
-        const konsumLeftover = parseFloat(inputs.konsumLeftover.value) || 0;
-        const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent.value) || 0;
-        const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit.value) || 0;
-        const depotCurrent = parseFloat(inputs.depotCurrent.value) || 0;
-        const anlagezeitraum = parseInt(inputs.anlagezeitraum.value, 10);
-        const rendite = parseFloat(inputs.rendite.value) || 0;
+        const income = parseFloat(inputs.income?.value) || 0;
+        const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
+        const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
+        const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent?.value) || 0;
+        const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit?.value) || 0;
+        const depotCurrent = parseFloat(inputs.depotCurrent?.value) || 0;
+        const anlagezeitraum = parseInt(inputs.anlagezeitraum?.value, 10) || 15;
+        const rendite = parseFloat(inputs.rendite?.value) || 0;
 
         // Build CSV content
         const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
@@ -2007,15 +2549,24 @@
     }
 
     // Verify permission for directory handle
-    async function verifyHandlePermission(handle) {
+    async function verifyHandlePermission(handle, requestIfNeeded = false) {
         const permission = await handle.queryPermission({ mode: 'readwrite' });
         if (permission === 'granted') {
             return true;
         }
 
-        // Try to request permission
-        const requestResult = await handle.requestPermission({ mode: 'readwrite' });
-        return requestResult === 'granted';
+        // Only request permission if explicitly requested (requires user gesture)
+        if (requestIfNeeded) {
+            try {
+                const requestResult = await handle.requestPermission({ mode: 'readwrite' });
+                return requestResult === 'granted';
+            } catch (err) {
+                // Permission request failed (likely no user gesture)
+                return false;
+            }
+        }
+
+        return false;
     }
 
     // Check if File System Access API is available
@@ -2293,14 +2844,14 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
 
             // All financial input data
             inputs: {
-                income: parseFloat(inputs.income.value) || 0,
-                konsumMin: parseFloat(inputs.konsumMin.value) || 0,
-                konsumLeftover: parseFloat(inputs.konsumLeftover.value) || 0,
-                tagesgeldCurrent: parseFloat(inputs.tagesgeldCurrent.value) || 0,
-                tagesgeldLimit: parseFloat(inputs.tagesgeldLimit.value) || 0,
-                depotCurrent: parseFloat(inputs.depotCurrent.value) || 0,
-                anlagezeitraum: parseInt(inputs.anlagezeitraum.value, 10),
-                rendite: parseFloat(inputs.rendite.value) || 0
+                income: parseFloat(inputs.income?.value) || 0,
+                konsumMin: parseFloat(inputs.konsumMin?.value) || 0,
+                konsumLeftover: parseFloat(inputs.konsumLeftover?.value) || 0,
+                tagesgeldCurrent: parseFloat(inputs.tagesgeldCurrent?.value) || 0,
+                tagesgeldLimit: parseFloat(inputs.tagesgeldLimit?.value) || 0,
+                depotCurrent: parseFloat(inputs.depotCurrent?.value) || 0,
+                anlagezeitraum: parseInt(inputs.anlagezeitraum?.value, 10) || 15,
+                rendite: parseFloat(inputs.rendite?.value) || 0
             },
 
             // Structured data arrays
@@ -2799,7 +3350,8 @@ const bookingTypeLookup = {};
             const iconMarkup = getActiveBookingIcon(type);
             const activeLabel = getActiveBookingLabel(type);
             const activeDesc = getActiveBookingDescription(type);
-            btn.innerHTML = `${iconMarkup}<span class="sr-only">${activeLabel || ''}</span>`;
+            // Icon-only, compact and clean
+            btn.innerHTML = iconMarkup;
             const tooltip = activeDesc || activeLabel || type.id;
             btn.title = tooltip;
             btn.setAttribute('aria-label', tooltip);
@@ -3021,12 +3573,35 @@ const bookingTypeLookup = {};
     let consultationStep = 0;          // 0..6 per variant (Step 6: Immobilien)
     let allowDepotStream = true;       // normal mode shows depot stream
 
+    // ===== DEBOUNCE UTILITY (v1.4.0) =====
+    /**
+     * Debounce function - delays execution until after wait time
+     * @param {Function} func - Function to debounce
+     * @param {number} wait - Wait time in ms
+     */
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Debounced calculateProjection (v1.4.0 - Auto-Prognose)
+    const debouncedProjection = debounce(calculateProjection, 300);
+
     function setConsultationMode(on) {
       consultationMode = !!on;
       consultationStep = on ? 1 : 0;
       allowDepotStream = !on; // only enable depot stream at step 5 in consultation
       applyConsultationVisibility();
       calculateAndUpdate();
+
+      // Update old sidebar buttons
       const nextBtn = getEl('consult-next-btn');
       const toggleBtn = getEl('consult-toggle-btn');
       const consultChip = toggleBtn ? toggleBtn.closest('.control-chip--consultation') : null;
@@ -3038,6 +3613,20 @@ const bookingTypeLookup = {};
         if (nextBtn) nextBtn.classList.add('hidden');
         if (toggleBtn) { toggleBtn.setAttribute('aria-label', 'Beratung starten'); toggleBtn.setAttribute('title', 'Beratung starten'); }
         if (consultChip) consultChip.classList.remove('is-active');
+      }
+
+      // Update Control Bar buttons (v1.4.0)
+      const nextBtnBar = getEl('consult-next-btn-bar');
+      const toggleBtnBar = getEl('consult-toggle-btn-bar');
+      const consultBarItem = toggleBtnBar ? toggleBtnBar.closest('.control-bar-item--consultation') : null;
+      if (on) {
+        if (nextBtnBar) nextBtnBar.classList.remove('hidden');
+        if (toggleBtnBar) { toggleBtnBar.setAttribute('aria-label', 'Beratung beenden'); toggleBtnBar.setAttribute('title', 'Beratung beenden'); }
+        if (consultBarItem) consultBarItem.classList.add('is-active');
+      } else {
+        if (nextBtnBar) nextBtnBar.classList.add('hidden');
+        if (toggleBtnBar) { toggleBtnBar.setAttribute('aria-label', 'Beratung starten'); toggleBtnBar.setAttribute('title', 'Beratung starten'); }
+        if (consultBarItem) consultBarItem.classList.remove('is-active');
       }
     }
 
@@ -3257,11 +3846,24 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
       ? minScaleBase
       : ((limit > 0 && limit !== Infinity) ? limit : null);
     const minPercent = baseForMin ? Math.min(100, (min / baseForMin) * 100) : 0;
+
+    // Check if element is editable (v1.4.0)
+    const isEditable = element.classList.contains('account-basin--editable');
+    const editIcon = isEditable ? `
+        <div class="basin-edit-indicator">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+        </div>
+    ` : '';
+
     element.innerHTML = `
         <div class="absolute inset-0 bg-sky-500/30 rounded-lg transition-all duration-500" style="height: ${fillPercent}%; top: auto; bottom: 0;"></div>
         ${min > 0 ? `<div class="limit-line bg-yellow-500/70 border-t-2 border-dashed border-yellow-400" style="bottom: ${minPercent}%;"><span class="text-yellow-300">Min</span></div>` : ''}
         ${limit > 0 && limit !== Infinity ? `<div class="limit-line bg-green-500/70" style="bottom: 100%;"><span class="text-green-300">Max</span></div>` : ''}
         ${limit > 0 && limit !== Infinity && /Tagesgeldkonto/i.test(title) ? `<div class="absolute top-1 right-2 text-xs text-gray-400">Sparziel: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(limit)}</div>` : ''}
+        ${editIcon}
         <div class="relative z-10 flex flex-col items-center justify-center h-full">
           ${specialContent || icon}
           <p class="font-bold">${title}</p>
@@ -3737,7 +4339,301 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const pathData = `M ${toLeftX}, ${toY} Q ${controlX}, ${controlY} ${toRightX}, ${toY}`;
         path.setAttribute('d', pathData);
     }
-    
+
+    // ===== INLINE EDITOR FUNCTIONS (v1.4.0) =====
+
+    /**
+     * Open inline editor for a specific basin
+     * @param {Event} event - Click event (to stop propagation)
+     * @param {string} basinType - 'einkommen', 'konsum', 'tagesgeld'
+     */
+    function openInlineEditor(event, basinType) {
+        // Stop event propagation to prevent immediate close
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+
+        const basin = basins[basinType];
+        if (!basin) return;
+
+        // Prevent opening if already editing
+        if (basin.querySelector('.basin-inline-editor')) return;
+
+        let editorHTML = '';
+
+        switch (basinType) {
+            case 'einkommen':
+                editorHTML = `
+                    <div class="basin-inline-editor">
+                        <div class="basin-inline-label">Nettoeinkommen</div>
+                        <input type="number"
+                               class="basin-inline-input"
+                               id="inline-income"
+                               value="${inputs.income ? inputs.income.value : 3000}"
+                               placeholder="3000"
+                               inputmode="decimal"
+                               step="100"
+                               min="0">
+                        <div class="basin-inline-hint">Enter zum Speichern • Esc zum Abbrechen</div>
+                        <div class="basin-inline-buttons">
+                            <button class="basin-inline-btn" onclick="closeInlineEditor('${basinType}')">Abbrechen</button>
+                            <button class="basin-inline-btn basin-inline-btn--primary" onclick="saveInlineEditor('${basinType}')">Speichern</button>
+                        </div>
+                    </div>
+                `;
+                break;
+
+            case 'konsum':
+                editorHTML = `
+                    <div class="basin-inline-editor">
+                        <div class="basin-inline-label">Konsumkonto</div>
+                        <div class="basin-inline-grid">
+                            <div class="basin-inline-field">
+                                <label class="basin-inline-label" style="font-size: 0.75rem;">Mindestbestand</label>
+                                <input type="number"
+                                       class="basin-inline-input"
+                                       id="inline-konsum-min"
+                                       value="${inputs.konsumMin ? inputs.konsumMin.value : 100}"
+                                       placeholder="100"
+                                       inputmode="decimal"
+                                       step="50"
+                                       min="0">
+                            </div>
+                            <div class="basin-inline-field">
+                                <label class="basin-inline-label" style="font-size: 0.75rem;">Überschuss</label>
+                                <input type="number"
+                                       class="basin-inline-input"
+                                       id="inline-konsum-leftover"
+                                       value="${inputs.konsumLeftover ? inputs.konsumLeftover.value : 250}"
+                                       placeholder="250"
+                                       inputmode="decimal"
+                                       step="50"
+                                       min="0">
+                            </div>
+                        </div>
+                        <div class="basin-inline-hint">Enter zum Speichern • Esc zum Abbrechen</div>
+                        <div class="basin-inline-buttons">
+                            <button class="basin-inline-btn" onclick="closeInlineEditor('${basinType}')">Abbrechen</button>
+                            <button class="basin-inline-btn basin-inline-btn--primary" onclick="saveInlineEditor('${basinType}')">Speichern</button>
+                        </div>
+                    </div>
+                `;
+                break;
+
+            case 'tagesgeld':
+                editorHTML = `
+                    <div class="basin-inline-editor">
+                        <div class="basin-inline-label">Tagesgeldkonto</div>
+                        <div class="basin-inline-grid">
+                            <div class="basin-inline-field">
+                                <label class="basin-inline-label" style="font-size: 0.75rem;">Aktueller Stand</label>
+                                <input type="number"
+                                       class="basin-inline-input"
+                                       id="inline-tagesgeld-current"
+                                       value="${inputs.tagesgeldCurrent ? inputs.tagesgeldCurrent.value : 4800}"
+                                       placeholder="4800"
+                                       inputmode="decimal"
+                                       step="100"
+                                       min="0">
+                            </div>
+                            <div class="basin-inline-field">
+                                <label class="basin-inline-label" style="font-size: 0.75rem;">Sparziel</label>
+                                <input type="number"
+                                       class="basin-inline-input"
+                                       id="inline-tagesgeld-limit"
+                                       value="${inputs.tagesgeldLimit ? inputs.tagesgeldLimit.value : 5000}"
+                                       placeholder="5000"
+                                       inputmode="decimal"
+                                       step="100"
+                                       min="0">
+                            </div>
+                        </div>
+                        <div class="basin-inline-hint">Enter zum Speichern • Esc zum Abbrechen</div>
+                        <div class="basin-inline-buttons">
+                            <button class="basin-inline-btn" onclick="closeInlineEditor('${basinType}')">Abbrechen</button>
+                            <button class="basin-inline-btn basin-inline-btn--primary" onclick="saveInlineEditor('${basinType}')">Speichern</button>
+                        </div>
+                    </div>
+                `;
+                break;
+        }
+
+        // Create backdrop
+        const backdrop = document.createElement('div');
+        backdrop.className = 'basin-inline-backdrop';
+        backdrop.dataset.basinType = basinType;
+        backdrop.addEventListener('click', () => closeInlineEditor(basinType));
+        document.body.appendChild(backdrop);
+
+        // Insert editor overlay into body (not basin)
+        document.body.insertAdjacentHTML('beforeend', editorHTML);
+
+        // Get editor element
+        const editor = document.body.querySelector('.basin-inline-editor:last-child');
+        if (!editor) return;
+
+        // Store basin type on editor for cleanup
+        editor.dataset.basinType = basinType;
+
+        // Prevent clicks inside editor from closing it
+        editor.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Focus first input
+        const firstInput = editor.querySelector('.basin-inline-input');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 100);
+        }
+
+        // Add keyboard handlers
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveInlineEditor(basinType);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeInlineEditor(basinType);
+            }
+        });
+    }
+
+    /**
+     * Close inline editor without saving
+     */
+    function closeInlineEditor(basinType) {
+        // Find editor and backdrop by data attribute
+        const editor = document.querySelector(`.basin-inline-editor[data-basin-type="${basinType}"]`);
+        const backdrop = document.querySelector(`.basin-inline-backdrop[data-basin-type="${basinType}"]`);
+
+        if (editor) {
+            editor.style.animation = 'smoothFadeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+            setTimeout(() => editor.remove(), 250);
+        }
+
+        if (backdrop) {
+            backdrop.style.animation = 'backdropFadeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+            setTimeout(() => backdrop.remove(), 250);
+        }
+    }
+
+    /**
+     * Save inline editor values and update
+     */
+    function saveInlineEditor(basinType) {
+        const basin = basins[basinType];
+        if (!basin) return;
+
+        switch (basinType) {
+            case 'einkommen':
+                const incomeInput = getEl('inline-income');
+                if (incomeInput && inputs.income) {
+                    inputs.income.value = parseFloat(incomeInput.value) || 3000;
+                }
+                break;
+
+            case 'konsum':
+                const konsumMinInput = getEl('inline-konsum-min');
+                const konsumLeftoverInput = getEl('inline-konsum-leftover');
+                if (konsumMinInput && inputs.konsumMin) {
+                    inputs.konsumMin.value = parseFloat(konsumMinInput.value) || 100;
+                }
+                if (konsumLeftoverInput && inputs.konsumLeftover) {
+                    inputs.konsumLeftover.value = parseFloat(konsumLeftoverInput.value) || 250;
+                }
+                break;
+
+            case 'tagesgeld':
+                const tagesgeldCurrentInput = getEl('inline-tagesgeld-current');
+                const tagesgeldLimitInput = getEl('inline-tagesgeld-limit');
+                if (tagesgeldCurrentInput && inputs.tagesgeldCurrent) {
+                    inputs.tagesgeldCurrent.value = parseFloat(tagesgeldCurrentInput.value) || 4800;
+                }
+                if (tagesgeldLimitInput && inputs.tagesgeldLimit) {
+                    inputs.tagesgeldLimit.value = parseFloat(tagesgeldLimitInput.value) || 5000;
+                }
+                break;
+        }
+
+        // Close editor and recalculate
+        closeInlineEditor(basinType);
+        calculateAndUpdate();
+    }
+
+    // Add fadeOut animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeOutScale {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // ===== END INLINE EDITOR =====
+
+    // ===== BOOKING MODAL (v1.4.0) =====
+
+    /**
+     * Open booking modal
+     */
+    function openBookingModal() {
+        const modal = getEl('booking-modal');
+        const modalBody = getEl('booking-modal-body');
+
+        if (!modal || !modalBody) {
+            console.error('❌ Modal or modalBody not found');
+            return;
+        }
+
+        // Generate booking content directly in modal (v1.4.0: no sidebar)
+        modalBody.innerHTML = `
+            <div class="booking-section">
+                <div style="margin-bottom: 32px;">
+                    <h3 style="font-size: 0.875rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Buchungstyp wählen</h3>
+                    <div class="booking-types" id="booking-type-buttons"></div>
+                </div>
+                <div class="booking-calendar" id="booking-calendar"></div>
+                <div class="booking-hint" id="booking-hint" style="margin-top: 16px;"></div>
+            </div>
+        `;
+
+        // Re-initialize booking planner with new modal elements
+        setupBookingPlanner();
+
+        // Show modal
+        modal.classList.add('active');
+
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+    }
+
+    /**
+     * Close booking modal
+     */
+    function closeBookingModal() {
+        const modal = getEl('booking-modal');
+        const modalBody = getEl('booking-modal-body');
+        const bookingSection = getEl('sec-booking-plan');
+        const sidebarContainer = document.querySelector('.panel-body'); // Original location
+
+        if (!modal) return;
+
+        // Move content back to sidebar (if needed for future use)
+        if (bookingSection && sidebarContainer) {
+            // Keep in modal for now, can be moved back if sidebar is restored
+        }
+
+        // Hide modal
+        modal.classList.remove('active');
+
+        // Restore body scroll
+        document.body.style.overflow = '';
+    }
+
+    // ===== END BOOKING MODAL =====
+
     function calculateAndUpdate() {
         requestAnimationFrame(() => {
             positionCascade();
@@ -3747,11 +4643,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const cashflowIntegrated = vermieterkontoData.cashflowIntegration || false;
 
             // Basiswerte
-            let income = parseFloat(inputs.income.value) || 0;
-            const konsumMin = parseFloat(inputs.konsumMin.value) || 0;
-            const konsumLeftover = parseFloat(inputs.konsumLeftover.value) || 0;
-            const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent.value) || 0;
-            const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit.value) || 0;
+            let income = parseFloat(inputs.income?.value) || 0;
+            const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
+            const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
+            const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent?.value) || 0;
+            const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit?.value) || 0;
 
             // Vermieterkonto-Integration wird jetzt direkt in Fixkosten/Konsum gerechnet
             // (nicht mehr über Einkommen)
@@ -4009,6 +4905,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             <p>Deine erwartete Prognose liegt bei <span class="font-bold text-blue-400 text-lg">${formatCurrency(dataAvg.totalCapital)}</span>, basierend auf ${formatCurrency(dataAvg.totalContributions)} Einzahlungen.</p>
         `;
         }
+        // NICHT automatisch Modal öffnen (v1.4.0) - nur bei explizitem Button-Klick
+    }
+
+    // v1.4.0: Separate Funktion um Prognose zu berechnen UND Modal zu öffnen
+    function showProjection() {
+        calculateProjection();
         openModal('prognose-modal');
     }
 
@@ -4151,7 +5053,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
     function openModal(modalId) {
         const modal = getEl(modalId);
-        if (!modal) return;
+        if (!modal) {
+            console.error('Modal not found:', modalId);
+            return;
+        }
+
+        console.log('Opening modal:', modalId);
 
         const activeElement = document.activeElement;
         modalFocusState.lastFocusedElement = (activeElement && typeof activeElement.focus === 'function') ? activeElement : null;
@@ -4421,23 +5328,13 @@ function updateFixkostenItem(index, key, value) {
     };
 
     function openMsciRenditedreieck() {
-        const modal = getEl('msci-modal');
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            modal.setAttribute('aria-hidden', 'false');
-            resetMsciZoom();
-        }
+        resetMsciZoom();
+        openModal('msci-modal');
     }
 
     function closeMsciRenditedreieck() {
-        const modal = getEl('msci-modal');
-        if (modal) {
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
-            modal.setAttribute('aria-hidden', 'true');
-            resetMsciZoom();
-        }
+        closeModal('msci-modal');
+        resetMsciZoom();
     }
 
     function resetMsciZoom() {
@@ -5278,9 +6175,17 @@ function updateFixkostenItem(index, key, value) {
         const prevTheme = loadTheme();           // 'dark' | 'light'
         applyTheme('light');                     // switch UI tokens
         saveTheme('light');
+
+        // --- v1.4.0: Temporarily constrain flow-container for PDF export ---
+        const container = flowContainer;
+        const originalWidth = container.style.width;
+        const originalMaxWidth = container.style.maxWidth;
+        container.style.width = '650px';         // Compact width for single-page A4 PDF
+        container.style.maxWidth = '650px';
+
         // Re-render flows so computed styles & erase strokes match light mode
         calculateAndUpdate();
-        await waitFrames(2);                     // let DOM/layout settle
+        await waitFrames(3);                     // let DOM/layout settle with new width
 
         const themeNote = 'MLP Hell';
 
@@ -5495,6 +6400,10 @@ function updateFixkostenItem(index, key, value) {
 
         // 5) Print
         const restoreTheme = () => {
+          // Restore original width
+          container.style.width = originalWidth;
+          container.style.maxWidth = originalMaxWidth;
+          // Restore theme
           applyTheme(prevTheme || 'dark');
           saveTheme(prevTheme || 'dark');
           calculateAndUpdate();
@@ -5726,12 +6635,12 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                 variantSwitch.checked = (currentVariant === 'B');
             }
             if (currentVariant === 'A') {
-                varianteALabel.classList.add('chip-state--active');
-                varianteBLabel.classList.remove('chip-state--active');
+                if (varianteALabel) varianteALabel.classList.add('chip-state--active');
+                if (varianteBLabel) varianteBLabel.classList.remove('chip-state--active');
                 if (variantInfo) variantInfo.textContent = 'Variante A: Einkommen geht auf das Fixkostenkonto.';
             } else {
-                varianteBLabel.classList.add('chip-state--active');
-                varianteALabel.classList.remove('chip-state--active');
+                if (varianteBLabel) varianteBLabel.classList.add('chip-state--active');
+                if (varianteALabel) varianteALabel.classList.remove('chip-state--active');
                 if (variantInfo) variantInfo.textContent = 'Variante B: Einkommen geht auf das Konsumkonto.';
             }
             renderBookingTypeButtons();
@@ -5742,17 +6651,13 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             calculateAndUpdate();
         }
 
-        variantSwitch.addEventListener('change', (e) => {
-            currentVariant = e.target.checked ? 'B' : 'A';
-            setVariantUI();
-        });
+        if (variantSwitch) {
+            variantSwitch.addEventListener('change', (e) => {
+                currentVariant = e.target.checked ? 'B' : 'A';
+                setVariantUI();
+            });
+        }
 
-        inputs.anlagezeitraum.addEventListener('input', (e) => {
-            const jahre = parseInt(e.target.value, 10);
-            anlagezeitraumLabel.textContent = `${jahre} Jahre`;
-            updateRenditeSuggestions(jahre);
-        });
-        
         const observer = new ResizeObserver(() => calculateAndUpdate());
         observer.observe(flowContainer);
         
@@ -5776,13 +6681,135 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                 const label = getEl('anlagezeitraum-label');
                 if (label) label.textContent = `${jahre} Jahre`;
                 updateRenditeSuggestions(jahre);
+                // Auto-Prognose (v1.4.0)
+                debouncedProjection();
             });
 
-            // Beratungsansicht Buttons
+            // ===== AUTO-PROGNOSE (v1.4.0) =====
+            // Auto-calculate projection on depot input changes
+            if (inputs.depotCurrent) {
+                inputs.depotCurrent.addEventListener('input', () => {
+                    debouncedProjection();
+                });
+            }
+            if (inputs.rendite) {
+                inputs.rendite.addEventListener('input', () => {
+                    debouncedProjection();
+                });
+            }
+
+            // Beratungsansicht Buttons (Old - Sidebar)
             const consultToggle = getEl('consult-toggle-btn');
             const consultNext   = getEl('consult-next-btn');
             if (consultToggle) consultToggle.addEventListener('click', () => setConsultationMode(!consultationMode));
             if (consultNext)   consultNext.addEventListener('click', () => nextConsultationStep());
+
+            // ===== INLINE EDITOR EVENT LISTENERS (v1.4.0) =====
+            // Add click listeners to editable basins
+            if (basins.einkommen) {
+                basins.einkommen.addEventListener('click', (e) => {
+                    // Only open if not already editing
+                    if (!basins.einkommen.querySelector('.basin-inline-editor')) {
+                        openInlineEditor(e, 'einkommen');
+                    }
+                });
+            }
+            if (basins.konsum) {
+                basins.konsum.addEventListener('click', (e) => {
+                    if (!basins.konsum.querySelector('.basin-inline-editor')) {
+                        openInlineEditor(e, 'konsum');
+                    }
+                });
+            }
+            if (basins.tagesgeld) {
+                basins.tagesgeld.addEventListener('click', (e) => {
+                    if (!basins.tagesgeld.querySelector('.basin-inline-editor')) {
+                        openInlineEditor(e, 'tagesgeld');
+                    }
+                });
+            }
+
+            // ===== CONTROL BAR EVENT LISTENERS (v1.4.0) =====
+            // Theme Toggle
+            const themeSwitchBar = getEl('theme-switch-bar');
+            if (themeSwitchBar) {
+                themeSwitchBar.checked = (initialTheme === 'dark');
+                themeSwitchBar.addEventListener('change', (e) => {
+                    const t = e.target.checked ? 'dark' : 'light';
+                    applyTheme(t);
+                    saveTheme(t);
+                    calculateAndUpdate();
+                    // Sync with old sidebar switch
+                    if (themeSwitch) themeSwitch.checked = e.target.checked;
+                });
+            }
+
+            // Variant Toggle
+            const variantSwitchBar = getEl('variant-switch-bar');
+            const varianteALabelBar = getEl('variante-a-label-bar');
+            const varianteBLabelBar = getEl('variante-b-label-bar');
+            if (variantSwitchBar) {
+                variantSwitchBar.addEventListener('change', (e) => {
+                    currentVariant = e.target.checked ? 'B' : 'A';
+                    // Update Control Bar UI
+                    if (varianteALabelBar && varianteBLabelBar) {
+                        if (currentVariant === 'A') {
+                            varianteALabelBar.classList.add('bar-state--active');
+                            varianteBLabelBar.classList.remove('bar-state--active');
+                        } else {
+                            varianteBLabelBar.classList.add('bar-state--active');
+                            varianteALabelBar.classList.remove('bar-state--active');
+                        }
+                    }
+                    // Update old sidebar UI
+                    setVariantUI();
+                    // Sync with old sidebar switch
+                    if (variantSwitch) variantSwitch.checked = e.target.checked;
+                });
+            }
+
+            // Consultation Buttons
+            const consultToggleBar = getEl('consult-toggle-btn-bar');
+            const consultNextBar = getEl('consult-next-btn-bar');
+            if (consultToggleBar) {
+                consultToggleBar.addEventListener('click', () => {
+                    setConsultationMode(!consultationMode);
+                });
+            }
+            if (consultNextBar) {
+                consultNextBar.addEventListener('click', () => {
+                    nextConsultationStep();
+                });
+            }
+
+            // ===== BOOKING FAB (v1.4.0) =====
+            const bookingFab = getEl('booking-fab');
+            const bookingModal = getEl('booking-modal');
+
+            if (bookingFab) {
+                bookingFab.addEventListener('click', () => {
+                    console.log('📅 Booking FAB clicked');
+                    openBookingModal();
+                });
+            } else {
+                console.error('❌ Booking FAB not found!');
+            }
+
+            // Close modal on backdrop click
+            if (bookingModal) {
+                bookingModal.addEventListener('click', (e) => {
+                    if (e.target === bookingModal) {
+                        closeBookingModal();
+                    }
+                });
+            }
+
+            // Close modal on Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && bookingModal && bookingModal.classList.contains('active')) {
+                    closeBookingModal();
+                }
+            });
         }, 100);
     });
     </script>
@@ -5899,6 +6926,85 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                 <div class="text-xs text-gray-600 text-center mt-1">
                     Notfall: <kbd class="text-xs">Ctrl+Shift+E</kbd>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CONTROL BAR (v1.4.0) ===== -->
+    <div id="control-bar">
+        <!-- Theme Toggle -->
+        <label class="control-bar-item control-bar-item--theme" title="Darstellung wechseln">
+            <input type="checkbox" id="theme-switch-bar" aria-label="Theme umschalten (Hell/Dunkel)">
+            <span class="bar-icon" aria-hidden="true">
+                <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="M4.93 4.93l1.42 1.42" />
+                    <path d="M17.65 17.65l1.42 1.42" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="M4.93 19.07l1.42-1.42" />
+                    <path d="M17.65 6.35l1.42-1.42" />
+                </svg>
+                <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 0 1 11.21 3 7 7 0 1 0 21 12.79z" />
+                </svg>
+            </span>
+        </label>
+
+        <!-- Variant Toggle (A/B) -->
+        <label class="control-bar-item control-bar-item--variant" title="Variante A/B umschalten">
+            <input type="checkbox" id="variant-switch-bar" aria-label="Variante A/B umschalten">
+            <span class="bar-pair" aria-hidden="true">
+                <span id="variante-a-label-bar" class="bar-state bar-state--active">A</span>
+                <span id="variante-b-label-bar" class="bar-state">B</span>
+            </span>
+        </label>
+
+        <!-- Consultation Button -->
+        <div class="control-bar-item control-bar-item--consultation" title="Beratung">
+            <button id="consult-toggle-btn-bar" class="bar-button" type="button" aria-label="Beratung starten">
+                <svg class="icon icon-mlp" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="10" cy="12" r="5.5" stroke="currentColor" stroke-width="1.6" fill="none" />
+                    <path d="M10 8.5v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                    <path d="M18 7h3v10h-3z" fill="currentColor" />
+                </svg>
+            </button>
+            <button id="consult-next-btn-bar" class="bar-button hidden" type="button" aria-label="Weiter zur naechsten Beratungsphase" title="Weiter zur naechsten Beratungsphase">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="M13 6l6 6-6 6" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== BOOKING FAB (v1.4.0) ===== -->
+    <button id="booking-fab" aria-label="Buchungskalender öffnen">
+        <span class="fab-label">Buchungskalender</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+    </button>
+
+    <!-- Booking Modal -->
+    <div id="booking-modal">
+        <div class="booking-modal-content">
+            <div class="booking-modal-header">
+                <h2>Buchungskalender</h2>
+                <button class="booking-modal-close" onclick="closeBookingModal()" aria-label="Schließen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="booking-modal-body" id="booking-modal-body">
+                <!-- Content will be moved here from sidebar -->
             </div>
         </div>
     </div>
