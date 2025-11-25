@@ -3583,6 +3583,24 @@ const bookingTypeLookup = {};
     // Debounced calculateProjection (v1.4.0 - Auto-Prognose)
     const debouncedProjection = debounce(calculateProjection, 300);
 
+    // Debounced calculateAndUpdate (v1.5.0 - Performance Optimization)
+    const debouncedCalculateAndUpdate = debounce(calculateAndUpdate, 150);
+
+    // Debounced renderFixkostenList (v1.5.0 - Performance Optimization)
+    const debouncedRenderFixkostenList = debounce(function() {
+        // Will be defined after renderFixkostenList is available
+        if (typeof renderFixkostenList === 'function') {
+            renderFixkostenList();
+        }
+    }, 150);
+
+    // Debounced renderDepotList (v1.5.0 - Performance Optimization)
+    const debouncedRenderDepotList = debounce(function() {
+        if (typeof renderDepotList === 'function') {
+            renderDepotList();
+        }
+    }, 150);
+
     function setConsultationMode(on) {
       consultationMode = !!on;
       consultationStep = on ? 1 : 0;
@@ -5323,15 +5341,15 @@ function updateFixkostenItem(index, key, value) {
   if (fixkostenItems[index]) {
     fixkostenItems[index][key] = value;
   }
-  // Re-render modal list & totals immediately
-  renderFixkostenList();
+  // Re-render modal list & totals (debounced for performance)
+  debouncedRenderFixkostenList();
 }
     function addFixkostenItem() { fixkostenItems.push({ name: '', amount: 0, interval: 'monthly', target: 'fixkosten' }); renderFixkostenList(); }
     function removeFixkostenItem(index) { fixkostenItems.splice(index, 1); renderFixkostenList(); }
     const depotModal = { list: getEl('depot-list'), total: getEl('depot-total'), warning: getEl('depot-warning'), saveButton: getEl('depot-save-button') };
     function saveDepot() { if(checkDepotTotal()) { calculateAndUpdate(); closeModal('depot-modal'); } }
     function renderDepotList() { depotModal.list.innerHTML = ''; let total = 0; depotItems.forEach((item, index) => { total += item.allocation; const itemEl = document.createElement('div'); itemEl.className = 'grid grid-cols-12 gap-2 items-center'; itemEl.innerHTML = `<input type="color" value="${item.color}" onchange="updateDepotItem(${index}, 'color', this.value)" class="col-span-1 h-8 bg-gray-700 p-0 rounded"><input type="text" value="${item.name}" onchange="updateDepotItem(${index}, 'name', this.value)" placeholder="Fonds / ETF Name" class="col-span-7 bg-gray-700 p-1 rounded"><div class="relative col-span-3"><input type="number" value="${item.allocation}" onchange="updateDepotItem(${index}, 'allocation', this.value)" class="w-full text-right pr-6 bg-gray-700 p-1 rounded"><span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">%</span></div><button onclick="removeDepotItem(${index})" class="col-span-1 text-red-400 hover:text-red-300 text-xl">&times;</button>`; depotModal.list.appendChild(itemEl); }); checkDepotTotal(); }
-    function updateDepotItem(index, key, value) { if (key === 'allocation') value = parseInt(value, 10) || 0; depotItems[index][key] = value; renderDepotList(); }
+    function updateDepotItem(index, key, value) { if (key === 'allocation') value = parseInt(value, 10) || 0; depotItems[index][key] = value; debouncedRenderDepotList(); }
     function addDepotItem() { depotItems.push({ name: '', allocation: 0, color: '#'+Math.floor(Math.random()*16777215).toString(16) }); renderDepotList(); }
     function removeDepotItem(index) { depotItems.splice(index, 1); renderDepotList(); }
     function checkDepotTotal() { const total = depotItems.reduce((sum, i) => sum + i.allocation, 0); depotModal.total.textContent = `${total} %`; if (total === 100) { depotModal.total.className = "text-2xl font-bold text-green-400"; depotModal.warning.textContent = ""; depotModal.saveButton.disabled = false; depotModal.saveButton.classList.remove('opacity-50', 'cursor-not-allowed'); return true; } else { depotModal.total.className = "text-2xl font-bold text-red-400"; depotModal.warning.textContent = "Die Summe der Verteilung muss 100% ergeben."; depotModal.saveButton.disabled = true; depotModal.saveButton.classList.add('opacity-50', 'cursor-not-allowed'); return false; } }
