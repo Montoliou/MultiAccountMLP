@@ -826,13 +826,13 @@
             padding: 8px 10px;
         }
 
-        /* Edit Indicator (Pencil Icon) */
+        /* Edit Indicator (Pencil Icon) - v1.5.3: 44px minimum touch target (WCAG 2.1 AA) */
         .basin-edit-indicator {
             position: absolute;
             top: 8px;
             right: 8px;
-            width: 32px;
-            height: 32px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1000,9 +1000,10 @@
             }
         }
 
-        .btn{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border-radius:999px;font-weight:600;transition:all .25s ease;cursor:pointer;border:none;}
-        .btn-sm{font-size:.85rem;padding:.45rem .95rem;}
-        .btn-lg{font-size:.95rem;padding:.75rem 1.4rem;}
+        /* v1.5.3: Button minimum heights aligned to 44px touch target (WCAG 2.1 AA) */
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border-radius:999px;font-weight:600;transition:all .25s ease;cursor:pointer;border:none;min-height:44px;}
+        .btn-sm{font-size:.85rem;padding:.55rem 1rem;}
+        .btn-lg{font-size:.95rem;padding:.85rem 1.5rem;min-height:48px;}
         .btn-block{width:100%;}
         .btn-primary{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;}
         .btn-primary:hover{filter:brightness(1.05);box-shadow:0 18px 32px -18px rgba(0,47,108,0.65);}
