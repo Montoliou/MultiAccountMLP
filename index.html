@@ -6806,24 +6806,26 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                 slider.style.background = `linear-gradient(to right, ${color1} 0%, ${color1} ${percentage}%, ${color2} ${percentage}%, ${color2} 100%)`;
             }
 
-            // Keep info live while sliding
-            inputs.anlagezeitraum.addEventListener('input', () => {
-                const jahre = parseInt(inputs.anlagezeitraum.value, 10);
-                const label = getEl('anlagezeitraum-label');
-                if (label) label.textContent = `${jahre} Jahre`;
-                updateRenditeSuggestions(jahre);
-                // Update slider fill dynamically
-                updateRangeSliderFill(inputs.anlagezeitraum);
-                // Auto-Prognose (v1.4.0)
-                debouncedProjection();
-            });
-
-            // Initialize slider fill AND label on load (v1.5.0 fix)
+            // Keep info live while sliding (v1.5.0 - with null-check)
             if (inputs.anlagezeitraum) {
+                inputs.anlagezeitraum.addEventListener('input', () => {
+                    const jahre = parseInt(inputs.anlagezeitraum.value, 10);
+                    const label = getEl('anlagezeitraum-label');
+                    if (label) label.textContent = `${jahre} Jahre`;
+                    updateRenditeSuggestions(jahre);
+                    // Update slider fill dynamically
+                    updateRangeSliderFill(inputs.anlagezeitraum);
+                    // Auto-Prognose (v1.4.0)
+                    debouncedProjection();
+                });
+
+                // Initialize slider fill AND label on load (v1.5.0 fix)
                 const currentValue = parseInt(inputs.anlagezeitraum.value, 10);
                 const label = getEl('anlagezeitraum-label');
                 if (label) label.textContent = `${currentValue} Jahre`;
                 updateRangeSliderFill(inputs.anlagezeitraum);
+            } else {
+                console.error('[MLP ERROR] Anlagezeitraum slider not found!');
             }
 
             // ===== AUTO-PROGNOSE (v1.4.0) =====
