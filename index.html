@@ -1002,6 +1002,8 @@
 
         /* v1.5.3: Button minimum heights aligned to 44px touch target (WCAG 2.1 AA) */
         .btn{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border-radius:999px;font-weight:600;transition:all .25s ease;cursor:pointer;border:none;min-height:44px;}
+        .btn:focus{outline:none;}
+        .btn:focus-visible{outline:3px solid var(--accent1);outline-offset:4px;}
         .btn-sm{font-size:.85rem;padding:.55rem 1rem;}
         .btn-lg{font-size:.95rem;padding:.85rem 1.5rem;min-height:48px;}
         .btn-block{width:100%;}
@@ -1217,6 +1219,13 @@
 
         input[type="range"]:hover {
             opacity: 0.9;
+        }
+
+        /* v1.5.3: Focus indicator for keyboard navigation */
+        input[type="range"]:focus-visible {
+            outline: 3px solid var(--accent1, #3b82f6);
+            outline-offset: 4px;
+            border-radius: 6px;
         }
 
         /* Webkit (Chrome, Safari, Edge) - Thumb */
