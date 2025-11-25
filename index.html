@@ -1196,10 +1196,101 @@
         /* Light theme info badges and pills with MLP tint */
         .theme-light .flow-value { border-color: #d5e0ee !important; }
 
-        /* Inputs range track for light in subtle grey with MLP thumb */
-        .theme-light input[type="range"] { background: #e5e7eb !important; }
-        .theme-light input[type="range"]::-webkit-slider-thumb { background: var(--mlp-blue); }
-        .theme-light input[type="range"]::-moz-range-thumb { background: var(--mlp-blue); }
+        /* ===== MODERN RANGE SLIDER (v1.5.0) ===== */
+        input[type="range"],
+        .mlp-range {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right,
+                var(--mlp-blue, #002f6c) 0%,
+                var(--mlp-blue, #002f6c) 50%,
+                rgba(100, 116, 139, 0.3) 50%,
+                rgba(100, 116, 139, 0.3) 100%);
+            outline: none;
+            transition: opacity 0.2s;
+            cursor: pointer;
+        }
+
+        input[type="range"]:hover {
+            opacity: 0.9;
+        }
+
+        /* Webkit (Chrome, Safari, Edge) - Thumb */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--mlp-blue, #002f6c);
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            margin-top: -7px; /* Centers thumb on track (20px thumb - 6px track)/2 */
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(0, 47, 108, 0.4);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:active {
+            transform: scale(1.05);
+        }
+
+        /* Firefox - Thumb */
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--mlp-blue, #002f6c);
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(0, 47, 108, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb:active {
+            transform: scale(1.05);
+        }
+
+        /* Firefox - Track */
+        input[type="range"]::-moz-range-track {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: transparent;
+        }
+
+        /* Light Theme Overrides */
+        .theme-light input[type="range"] {
+            background: linear-gradient(to right,
+                var(--mlp-blue) 0%,
+                var(--mlp-blue) 50%,
+                #e5e7eb 50%,
+                #e5e7eb 100%) !important;
+        }
+
+        .theme-light input[type="range"]::-webkit-slider-thumb {
+            background: var(--mlp-blue);
+            border-color: #f8fafc;
+        }
+
+        .theme-light input[type="range"]::-moz-range-thumb {
+            background: var(--mlp-blue);
+            border-color: #f8fafc;
+        }
+
         #rendite-info .text-xs { font-size: 0.7rem; }
     /* --- Print helpers for embedded images --- */
     #printable-report img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
@@ -6701,15 +6792,36 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             // Load fine-grained min/max ranges from TXT (MLP-Dreieck)
             loadRenditeExtremes();
 
+            // Helper function to update range slider fill (v1.5.0)
+            function updateRangeSliderFill(slider) {
+                if (!slider) return;
+                const min = parseInt(slider.min) || 0;
+                const max = parseInt(slider.max) || 100;
+                const value = parseInt(slider.value) || 0;
+                const percentage = ((value - min) / (max - min)) * 100;
+
+                const color1 = getComputedStyle(document.documentElement).getPropertyValue('--mlp-blue').trim() || '#002f6c';
+                const color2 = document.body.classList.contains('theme-light') ? '#e5e7eb' : 'rgba(100, 116, 139, 0.3)';
+
+                slider.style.background = `linear-gradient(to right, ${color1} 0%, ${color1} ${percentage}%, ${color2} ${percentage}%, ${color2} 100%)`;
+            }
+
             // Keep info live while sliding
             inputs.anlagezeitraum.addEventListener('input', () => {
                 const jahre = parseInt(inputs.anlagezeitraum.value, 10);
                 const label = getEl('anlagezeitraum-label');
                 if (label) label.textContent = `${jahre} Jahre`;
                 updateRenditeSuggestions(jahre);
+                // Update slider fill dynamically
+                updateRangeSliderFill(inputs.anlagezeitraum);
                 // Auto-Prognose (v1.4.0)
                 debouncedProjection();
             });
+
+            // Initialize slider fill on load
+            if (inputs.anlagezeitraum) {
+                updateRangeSliderFill(inputs.anlagezeitraum);
+            }
 
             // ===== AUTO-PROGNOSE (v1.4.0) =====
             // Auto-calculate projection on depot input changes
