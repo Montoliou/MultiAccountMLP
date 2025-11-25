@@ -3825,6 +3825,16 @@ const bookingTypeLookup = {};
     const GAUSSIAN_LOWER_Q = 0.05;
     const GAUSSIAN_UPPER_Q = 0.9;
 
+    // v1.5.4: Layout Constants (extracted from magic numbers for maintainability)
+    const LAYOUT = {
+        HORIZONTAL_GAP: 100,      // Abstand zwischen Basins horizontal (px)
+        VERTICAL_GAP: 240,        // Abstand zwischen Ebenen (px)
+        DEPOT_WIDTH: 440,         // Breite Depot-Basin (px)
+        VERMIETERKONTO_HEIGHT: 100, // Höhe Vermieterkonto-Basin (px)
+        MIN_FLOW_WIDTH: 10,       // Minimale Flow-Breite (px)
+        MAX_FLOW_WIDTH: 45        // Maximale Flow-Breite (px)
+    };
+
     const roundToDecimal = (value, digits = 1) => {
         const factor = Math.pow(10, digits);
         return Math.round((Number(value) || 0) * factor) / factor;
@@ -3984,9 +3994,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     function positionCascade() {
         if (!flowContainer) return;
         const containerWidth = flowContainer.clientWidth;
-        const h_gap_side = 100;  // Reduziert von 120 auf 100 für kompaktere Flows
-        const v_gap = 240;
-        const depotWidth = 440;
+        const h_gap_side = LAYOUT.HORIZONTAL_GAP;  // v1.5.4: Use named constant
+        const v_gap = LAYOUT.VERTICAL_GAP;
+        const depotWidth = LAYOUT.DEPOT_WIDTH;
         const immoWidth = 220;
         const gapBetweenDepotImmo = 50; // Erhöht von 30 auf 50 für klarere Trennung
 
@@ -4031,7 +4041,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         // Höhen-Differenz: Vermieterkonto ist 100px, normale Basins sind größer (~150px?)
         // Um Untergrenze anzugleichen: Vermieterkonto muss TIEFER positioniert werden
         const normalBasinHeight = basins.konsum ? basins.konsum.offsetHeight : 150;
-        const vermieterkontoHeight = 100;
+        const vermieterkontoHeight = LAYOUT.VERMIETERKONTO_HEIGHT;  // v1.5.4: Use named constant
         const heightDiff = normalBasinHeight - vermieterkontoHeight; // Differenz ausgleichen
 
         let positions;
@@ -4106,7 +4116,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         let fromY = fromRect.bottom - containerRect.top;
         const toX = toRect.left - containerRect.left + toRect.width / 2;
         const toY = toRect.top - containerRect.top;
-        const minWidth = 10, maxWidth = 45;
+        const minWidth = LAYOUT.MIN_FLOW_WIDTH, maxWidth = LAYOUT.MAX_FLOW_WIDTH;  // v1.5.4: Use named constants
         const normalizedValue = Math.max(0, value) / maxFlowValue;
         const strokeWidth = minWidth + normalizedValue * (maxWidth - minWidth);
         path.style.strokeWidth = `${value > 0 ? Math.max(minWidth, strokeWidth) : 0}px`;
