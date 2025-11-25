@@ -5315,7 +5315,8 @@ function updateFixkostenItem(index, key, value) {
   if (key === 'amount') {
     value = parseFloat(value);
     if (!Number.isFinite(value)) value = 0;
-    if (value < 0) value = 0; // no negative amounts
+    // Allow negative values (for additional income items)
+    if (value < -1000000) value = -1000000; // min realistic amount (-1M EUR)
     if (value > 1000000) value = 1000000; // max realistic amount (1M EUR)
   }
   // Persist change in model
