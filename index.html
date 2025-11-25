@@ -4363,7 +4363,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                                placeholder="3000"
                                inputmode="decimal"
                                step="100"
-                               min="0">
+                               min="0"
+                               max="1000000">
                         <div class="basin-inline-hint">Enter zum Speichern • Esc zum Abbrechen</div>
                         <div class="basin-inline-buttons">
                             <button class="basin-inline-btn" onclick="closeInlineEditor('${basinType}')">Abbrechen</button>
@@ -4489,6 +4490,15 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     }
 
     /**
+     * Validate and clamp numeric input to safe ranges
+     */
+    function validateAmount(value, min = 0, max = 1000000) {
+        let num = parseFloat(value);
+        if (!Number.isFinite(num)) return min;
+        return Math.max(min, Math.min(max, num));
+    }
+
+    /**
      * Close inline editor without saving
      */
     function closeInlineEditor(basinType) {
@@ -4518,7 +4528,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             case 'einkommen':
                 const incomeInput = getEl('inline-income');
                 if (incomeInput && inputs.income) {
-                    inputs.income.value = parseFloat(incomeInput.value) || 3000;
+                    inputs.income.value = validateAmount(incomeInput.value, 0, 1000000);
                 }
                 break;
 
@@ -4526,10 +4536,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 const konsumMinInput = getEl('inline-konsum-min');
                 const konsumLeftoverInput = getEl('inline-konsum-leftover');
                 if (konsumMinInput && inputs.konsumMin) {
-                    inputs.konsumMin.value = parseFloat(konsumMinInput.value) || 100;
+                    inputs.konsumMin.value = validateAmount(konsumMinInput.value, 0, 500000);
                 }
                 if (konsumLeftoverInput && inputs.konsumLeftover) {
-                    inputs.konsumLeftover.value = parseFloat(konsumLeftoverInput.value) || 250;
+                    inputs.konsumLeftover.value = validateAmount(konsumLeftoverInput.value, 0, 100000);
                 }
                 break;
 
@@ -4537,10 +4547,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 const tagesgeldCurrentInput = getEl('inline-tagesgeld-current');
                 const tagesgeldLimitInput = getEl('inline-tagesgeld-limit');
                 if (tagesgeldCurrentInput && inputs.tagesgeldCurrent) {
-                    inputs.tagesgeldCurrent.value = parseFloat(tagesgeldCurrentInput.value) || 4800;
+                    inputs.tagesgeldCurrent.value = validateAmount(tagesgeldCurrentInput.value, 0, 1000000);
                 }
                 if (tagesgeldLimitInput && inputs.tagesgeldLimit) {
-                    inputs.tagesgeldLimit.value = parseFloat(tagesgeldLimitInput.value) || 5000;
+                    inputs.tagesgeldLimit.value = validateAmount(tagesgeldLimitInput.value, 0, 1000000);
                 }
                 break;
         }
@@ -4626,6 +4636,13 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     function calculateAndUpdate() {
         requestAnimationFrame(() => {
             positionCascade();
+
+            // Safety: Check if all required basin elements exist
+            if (!basins.einkommen || !basins.fixkosten || !basins.konsum ||
+                !basins.tagesgeld || !basins.depot || !basins.vermieterkonto || !basins.immobilien) {
+                console.error('[MLP ERROR] Basin elements not found. Cannot update visualization.');
+                return;
+            }
 
             // Vermieterkonto-Daten holen
             const vermieterData = getVermieterkontoData();
@@ -4924,8 +4941,17 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     }
 
     function displayProjectionChart({labels, datasets}) {
-        const ctx = getEl('prognose-chart').getContext('2d');
-        if (prognoseChartInstance) { prognoseChartInstance.destroy(); }
+        const ctx = getEl('prognose-chart')?.getContext('2d');
+        if (!ctx) {
+            console.error('[MLP ERROR] Chart canvas not found');
+            return;
+        }
+
+        // Safety: Check before destroying chart instance
+        if (prognoseChartInstance) {
+            prognoseChartInstance.destroy();
+            prognoseChartInstance = null;
+        }
         
         const chartDatasets = datasets.map(ds => {
             // Custom styling for pessimistic and optimistic
@@ -5290,6 +5316,7 @@ function updateFixkostenItem(index, key, value) {
     value = parseFloat(value);
     if (!Number.isFinite(value)) value = 0;
     if (value < 0) value = 0; // no negative amounts
+    if (value > 1000000) value = 1000000; // max realistic amount (1M EUR)
   }
   // Persist change in model
   if (fixkostenItems[index]) {
