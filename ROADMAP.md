@@ -1,6 +1,7 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
 **Aktuelle Version:** 1.4.0
+**Nächste Version:** 1.5.0 (Code Hardening)
 **Ziel-Version:** 2.0.0
 **Datum:** November 2024
 
@@ -238,6 +239,170 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 - ✅ Subtle shadows and clean borders
 - ✅ Backdrop blur effects
 - ✅ Professional typography hierarchy
+
+---
+
+### 🔄 Version 1.5.0: Code Hardening & Performance Optimization (GEPLANT)
+
+**Status:** 📋 Geplant (Dezember 2024)
+**Fokus:** Robustheit, Performance, Code-Qualität & Accessibility
+
+#### Ziele
+
+Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
+- **Code Health aktuell:** 7.5/10
+- **Ziel:** 9.0/10
+- **Datei-Größe:** 327KB → <300KB (durch Dead-Code-Removal)
+
+---
+
+#### 1.5.1: Robustheit & Fehlerbehandlung (CRITICAL)
+
+**Null-Safety & Error Boundaries:**
+- ⏳ **Basin Element Safety**: Null-checks für alle `basins.*` Zugriffe (Lines 4628-4848)
+  - Verhindert Runtime-Crashes bei fehlenden DOM-Elementen
+  - Add defensive checks: `if (!basins.einkommen) return;`
+- ⏳ **JSON Parse Error Handling**: Granulare Error-Messages für Import-Fehler (Lines 1990-1997)
+  - Bessere User-Feedback bei ungültigen Backup-Dateien
+  - Recovery-Pfade für korrupte SessionStorage-Daten
+- ⏳ **Input Validation Ranges**: Min/Max-Constraints für Zahlen-Inputs (Lines 5287-5300)
+  - Verhindert Infinity/Overflow bei extremen Werten
+  - Max: 1.000.000€ für realistische Szenarien
+- ⏳ **Chart Destruction Safety**: Null-check vor `prognoseChartInstance.destroy()` (Line 4928)
+- ⏳ **SessionStorage Quota Check**: 5-10MB Limit-Checking vor Save-Operationen
+  - Warnung bei fast vollem Storage
+  - Auto-Cleanup alter Sessions
+
+---
+
+#### 1.5.2: Performance-Optimierungen (HIGH)
+
+**Rendering & Calculation:**
+- ⏳ **Universal Input Debouncing**: Alle Input-Handler mit 150ms Debounce
+  - Aktuell: Nur `anlagezeitraum` debounced (Line 6659)
+  - Ziel: `income`, `konsumMin`, `konsumLeftover`, `tagesgeldCurrent`, `tagesgeldLimit`
+  - Reduziert unnötige Recalculations um ~80%
+- ⏳ **Virtual DOM für Listen**: Optimiere `renderFixkostenList()` (Lines 5232-5286)
+  - Aktuell: Kompletter Rebuild bei jeder Änderung
+  - Ziel: Update nur geänderter Elemente
+  - Reduziert DOM-Thrashing
+- ⏳ **Smart Variant Switch**: Nur relevante Render-Calls bei Varianten-Wechsel (Lines 6613-6632)
+  - Verhindert unnötige Booking-Calendar-Rebuilds
+- ⏳ **Array Filter Optimization**: Single-Pass-Reduce statt mehrfacher Filter (Line 4644)
+  ```javascript
+  // Vorher: 2 Filter-Pässe
+  fixkostenItems.filter(i => i.target === 'fixkosten')...
+  fixkostenItems.filter(i => i.target === 'depot')...
+
+  // Nachher: 1 Reduce-Pass
+  const {fixkosten, depot} = fixkostenItems.reduce((acc, i) => {
+    acc[i.target].push(i);
+    return acc;
+  }, {fixkosten: [], depot: []});
+  ```
+
+---
+
+#### 1.5.3: Accessibility Hardening (HIGH)
+
+**WCAG 2.1 AA Compliance:**
+- ⏳ **Touch Target Size**: Basin-Edit-Indicator 32×32px → 44×44px (Line 832)
+  - Aktuell: 32px (unter Minimum)
+  - Ziel: 44px (iOS/Android Standard)
+- ⏳ **Focus Indicators**: Ersetze `outline:none` durch sichtbare Custom-Indicators (Lines 20-22)
+  - Keyboard-Navigation muss visuell erkennbar sein
+  - Stärker sichtbare `:focus-visible` States
+- ⏳ **Contrast Check**: Light-Theme Flow-Values auf WCAG AA testen (Lines 1073-1074)
+  - `rgba(255,255,255,0.85)` → ggf. Opacity auf 0.95
+- ⏳ **Modal Focus Trap**: Shift+Tab auf erstem Element korrigieren (Lines 5091-5123)
+  - Vollständiger Tab-Cycle in Modals
+
+---
+
+#### 1.5.4: Code-Qualität & Wartbarkeit (HIGH)
+
+**Refactoring & Documentation:**
+- ⏳ **Function Decomposition**: `calculateAndUpdate()` aufteilen (Lines 4626-4849, 223 Zeilen!)
+  ```javascript
+  // Split in:
+  calculateAndUpdate() {
+    const data = calculateFinancialData();
+    renderBasins(data);
+    updateFlows(data);
+  }
+  ```
+  - Bessere Testbarkeit
+  - Reduzierte Komplexität
+- ⏳ **Named Constants**: Magic Numbers eliminieren (Lines 3869-3872, 4990-4993)
+  ```javascript
+  const LAYOUT = {
+    HORIZONTAL_GAP: 100,    // Abstand zwischen Basins horizontal
+    VERTICAL_GAP: 240,      // Abstand zwischen Ebenen
+    DEPOT_WIDTH: 440,       // Breite Depot-Basin
+    MAX_FLOW_WIDTH: 45      // Maximale Flow-Breite
+  };
+  ```
+- ⏳ **JSDoc Comments**: Dokumentation für alle Public Functions
+  - Parameter-Typen und Beschreibungen
+  - Rückgabewerte und Side-Effects
+  - Beispiel für `drawFlow(pathId, fromBasin, toBasin, value, maxFlowValue, labelText, flowOpacity)`
+- ⏳ **Consistent Naming**: Standardisierung auf camelCase (aktuell: Mix aus camelCase/snake_case)
+- ⏳ **Error Logging Utility**: Einheitliches Logging-System
+  ```javascript
+  const logger = {
+    error: (msg, data) => console.error(`[MLP ERROR] ${msg}`, data),
+    warn: (msg, data) => console.warn(`[MLP WARN] ${msg}`, data),
+    info: (msg, data) => console.log(`[MLP INFO] ${msg}`, data)
+  };
+  ```
+
+---
+
+#### 1.5.5: Dead Code Removal (MEDIUM)
+
+**Cleanup & File Size Reduction:**
+- ⏳ **MSCI Animation System**: 221 Zeilen auskommentierter Code entfernen (Lines 5380-5601)
+  - Reduziert File-Size um ~6KB
+  - Entferne Stubs: `toggleMsciBeratung`, `stopMsciBeratung`, `updateMsciAnlagedauerDisplay`, `drawMsciBand`
+- ⏳ **Unused Functions**: Dead Code identifiziert und entfernen
+  - `drawDeficitLine()` (Line 4227) - nie aufgerufen
+  - `hideDeficitLine()` (Line 4268) - nie aufgerufen
+  - `drawMeanderingDeficitLine()` (Line 4273) - nie aufgerufen
+- ⏳ **Duplicate Control Bar CSS**: Old `.panel-controls` entfernen (Lines 407-432)
+  - Aktuell: `display:none` - komplett entfernen
+
+---
+
+#### 1.5.6: Design Polish (MEDIUM)
+
+**Visual Consistency:**
+- ⏳ **8px Grid Audit**: Alle Spacing-Values gegen Design-Guide prüfen
+  - Control-Bar Padding: 8px → 16px für größere Touch-Targets
+- ⏳ **CSS Variable Consistency**: Hardcoded Colors (#3b82f6) → CSS Custom Properties
+  - Bessere Theme-Konsistenz
+  - Einfachere Wartung
+- ⏳ **Inline Editor UX**: Escape-Key Propagation stoppen (Lines 4480-4488)
+  - Verhindert doppeltes Modal-Close
+
+---
+
+#### Technische Metriken
+
+**Performance-Ziele:**
+- Debouncing reduziert Recalculations um ~80%
+- Virtual DOM reduziert DOM-Operations um ~60%
+- Array-Optimization: ~20% schnellere List-Operations
+
+**Code-Metriken:**
+- File-Size: 327KB → <300KB (-27KB durch Dead-Code-Removal)
+- Komplexität: `calculateAndUpdate` von 223 Zeilen → 3×<80 Zeilen
+- Null-Safety: 0% → 100% Coverage für kritische Pfade
+- JSDoc Coverage: 0% → 100% für Public Functions
+
+**Accessibility:**
+- WCAG 2.1 AA Full Compliance
+- Keyboard Navigation: 100% Coverage
+- Touch Targets: 100% ≥44px
 
 ---
 
