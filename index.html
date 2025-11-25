@@ -4767,8 +4767,19 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             // Vermieterkonto-Integration wird jetzt direkt in Fixkosten/Konsum gerechnet
             // (nicht mehr über Einkommen)
 
-            let fixkostenOnlyTotal = fixkostenItems.filter(i => i.target === 'fixkosten').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
-            const depotSparplanTotal = fixkostenItems.filter(i => i.target === 'depot').reduce((sum, i) => sum + getMonthlyAmount(i), 0);
+            // v1.5.2: Single-pass reduce for fixkostenItems (optimized from 2 filter passes)
+            const { fixkostenTotal, depotTotal } = fixkostenItems.reduce((acc, item) => {
+                const amount = getMonthlyAmount(item);
+                if (item.target === 'fixkosten') {
+                    acc.fixkostenTotal += amount;
+                } else if (item.target === 'depot') {
+                    acc.depotTotal += amount;
+                }
+                return acc;
+            }, { fixkostenTotal: 0, depotTotal: 0 });
+
+            let fixkostenOnlyTotal = fixkostenTotal;
+            const depotSparplanTotal = depotTotal;
 
             // Vermieterkonto-Integration Variante A:
             // - Negativer Saldo: erhöht Fixkosten (Deckung)
