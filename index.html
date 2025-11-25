@@ -6818,8 +6818,11 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                 debouncedProjection();
             });
 
-            // Initialize slider fill on load
+            // Initialize slider fill AND label on load (v1.5.0 fix)
             if (inputs.anlagezeitraum) {
+                const currentValue = parseInt(inputs.anlagezeitraum.value, 10);
+                const label = getEl('anlagezeitraum-label');
+                if (label) label.textContent = `${currentValue} Jahre`;
                 updateRangeSliderFill(inputs.anlagezeitraum);
             }
 
