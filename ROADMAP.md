@@ -3,7 +3,7 @@
 **Aktuelle Version:** 1.5.1
 **Nächste Version:** 1.6.0 (Berater-Tools & Optimierungsvorschläge)
 **Ziel-Version:** 2.0.0
-**Datum:** Dezember 2024
+**Datum:** Dezember 2025
 
 ---
 
@@ -259,7 +259,7 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 
 ### ✅ Version 1.5.1: PDF Export Critical Fixes (ABGESCHLOSSEN)
 
-**Status:** ✅ Released (Dezember 18, 2024)
+**Status:** ✅ Released (Dezember 18, 2025)
 **Fokus:** Kritische Bugfixes für PDF-Export-Funktionalität
 
 #### Erreichte Ziele
