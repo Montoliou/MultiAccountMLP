@@ -5064,7 +5064,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const stats = source.mean === undefined ? buildRenditeStat(source.min, source.max) : source;
         const infoEl = getEl('rendite-info');
         const mostLikely = roundToDecimal(stats.mean);
-        inputs.rendite.value = mostLikely.toFixed(1);
+        // BUGFIX (PDF): Do NOT overwrite user's manually entered rendite value
+        // Only set if field is empty or at default value
+        if (!inputs.rendite.value || inputs.rendite.value === '7' || inputs.rendite.value === '7.0') {
+            inputs.rendite.value = mostLikely.toFixed(1);
+        }
 
         const colorClass = (v) => (v < 0 ? 'text-red-400' : (v < 3 ? 'text-yellow-400' : 'text-green-400'));
         const minSpan = `<span class="font-bold ${colorClass(stats.min)}">${stats.min}%</span>`;
