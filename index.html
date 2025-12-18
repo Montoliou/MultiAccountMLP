@@ -6202,29 +6202,12 @@ function updateFixkostenItem(index, key, value) {
         // Fallbacks für Browser, die die CSS-Regel ignorieren
         section.style.breakBefore = 'page';
         section.style.pageBreakBefore = 'always';
-        section.innerHTML = `<h2>Dein Finanzfluss (aktueller Stand)</h2>`;
-
-        // Live-DOM klonen: Ströme + Konten + Werte
-        const live = getEl('flow-container');
-        if (live) {
-          const clone = live.cloneNode(true);
-          clone.id = 'flow-container-print';
-
-          // Interaktivität entfernen (keine Modals im Print)
-          clone.querySelectorAll('[onclick]').forEach(n => n.removeAttribute('onclick'));
-
-          // Deterministische Größe wie im Live-UI (DO NOT CHANGE - flowchart layout depends on it!)
-          const cs = getComputedStyle(live);
-          clone.style.position = 'relative';
-          clone.style.minHeight = cs.minHeight || '1150px';
-          clone.style.height    = cs.height || '1150px';
-          clone.style.width     = '100%';
-
-          const holder = document.createElement('div');
-          holder.style.marginTop = '8px';
-          holder.appendChild(clone);
-          section.appendChild(holder);
-        }
+        section.innerHTML = `
+          <h2>Dein Finanzfluss (aktueller Stand)</h2>
+          <div style="text-align: center; margin-top: 16px;">
+            <img src="${flowImg}" alt="Finanzfluss-Visualisierung" style="max-width: 100%;">
+          </div>
+        `;
 
         // Abschnitt (eigene Seite) anhängen
         report.appendChild(section);
