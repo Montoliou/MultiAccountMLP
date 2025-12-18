@@ -196,10 +196,11 @@
           #flow-container-print {
             break-inside: avoid;
             page-break-inside: avoid;
-            margin-left: -10mm !important;
-            margin-right: -10mm !important;
-            width: calc(100% + 20mm) !important;
-            max-width: calc(100% + 20mm) !important;
+            transform: scale(0.55) !important;
+            transform-origin: top center !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            margin-bottom: -300px !important;
           }
         }
 
@@ -6023,16 +6024,9 @@ function updateFixkostenItem(index, key, value) {
         applyTheme('light');                     // switch UI tokens
         saveTheme('light');
 
-        // --- v1.4.0: Temporarily constrain flow-container for PDF export ---
-        const container = flowContainer;
-        const originalWidth = container.style.width;
-        const originalMaxWidth = container.style.maxWidth;
-        container.style.width = '600px';         // Compact width for single-page A4 PDF
-        container.style.maxWidth = '600px';
-
         // Re-render flows so computed styles & erase strokes match light mode
         calculateAndUpdate();
-        await waitFrames(3);                     // let DOM/layout settle with new width
+        await waitFrames(3);                     // let DOM/layout settle
 
         const themeNote = 'MLP Hell';
 
@@ -6214,12 +6208,29 @@ function updateFixkostenItem(index, key, value) {
         // Fallbacks für Browser, die die CSS-Regel ignorieren
         section.style.breakBefore = 'page';
         section.style.pageBreakBefore = 'always';
-        section.innerHTML = `
-          <h2>Dein Finanzfluss (aktueller Stand)</h2>
-          <div style="text-align: center; margin-top: 16px;">
-            <img src="${flowImg}" alt="Finanzfluss-Visualisierung" style="max-width: 100%;">
-          </div>
-        `;
+        section.innerHTML = `<h2>Dein Finanzfluss (aktueller Stand)</h2>`;
+
+        // Live-DOM klonen: Ströme + Konten + Werte
+        const live = getEl('flow-container');
+        if (live) {
+          const clone = live.cloneNode(true);
+          clone.id = 'flow-container-print';
+
+          // Interaktivität entfernen (keine Modals im Print)
+          clone.querySelectorAll('[onclick]').forEach(n => n.removeAttribute('onclick'));
+
+          // Deterministische Größe wie im Live-UI
+          const cs = getComputedStyle(live);
+          clone.style.position = 'relative';
+          clone.style.minHeight = cs.minHeight || '1150px';
+          clone.style.height    = cs.height || '1150px';
+          clone.style.width     = cs.width;
+
+          const holder = document.createElement('div');
+          holder.style.marginTop = '8px';
+          holder.appendChild(clone);
+          section.appendChild(holder);
+        }
 
         // Abschnitt (eigene Seite) anhängen
         report.appendChild(section);
@@ -6230,9 +6241,6 @@ function updateFixkostenItem(index, key, value) {
 
         // 5) Print
         const restoreTheme = () => {
-          // Restore original width
-          container.style.width = originalWidth;
-          container.style.maxWidth = originalMaxWidth;
           // Restore theme
           applyTheme(prevTheme || 'dark');
           saveTheme(prevTheme || 'dark');
