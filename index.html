@@ -5826,12 +5826,24 @@ function updateFixkostenItem(index, key, value) {
     async function svgToPngDataUrl(svgElement, scale = 2, bg = '#ffffff') {
       const rect = svgElement.getBoundingClientRect();
 
+      // Get actual viewBox or use bounding box to ensure complete SVG capture
+      const viewBox = svgElement.getAttribute('viewBox');
+      let width = rect.width;
+      let height = rect.height;
+
+      if (viewBox) {
+        const parts = viewBox.split(/\s+|,/);
+        width = parseFloat(parts[2]) || rect.width;
+        height = parseFloat(parts[3]) || rect.height;
+      }
+
       // 1) Clone the on-screen SVG so we can preprocess without affecting UI
       const clone = svgElement.cloneNode(true);
       clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-      clone.setAttribute('width', rect.width);
-      clone.setAttribute('height', rect.height);
+      clone.setAttribute('width', width);
+      clone.setAttribute('height', height);
+      if (viewBox) clone.setAttribute('viewBox', viewBox);
       clone.removeAttribute('style');
 
       // 2) Remove mask for export (avoids black rectangle in rasterization)
@@ -5867,8 +5879,8 @@ function updateFixkostenItem(index, key, value) {
 
       const img = new Image();
       const canvas = document.createElement('canvas');
-      canvas.width = Math.max(800, Math.floor(rect.width * scale));
-      canvas.height = Math.max(600, Math.floor(rect.height * scale));
+      canvas.width = Math.max(800, Math.floor(width * scale));
+      canvas.height = Math.max(600, Math.floor(height * scale));
 
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = bg;
@@ -5884,7 +5896,7 @@ function updateFixkostenItem(index, key, value) {
         img.src = url;
       });
 
-      return canvas.toDataURL('image/png');
+      return canvas.toDataURL('image/jpeg', 0.95);
     }
     function getFlowSnapshotDataUrl() {
       const svg = document.getElementById('flow-svg');
