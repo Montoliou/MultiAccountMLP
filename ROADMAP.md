@@ -1,9 +1,9 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.5.0
+**Aktuelle Version:** 1.5.1
 **Nächste Version:** 1.6.0 (Berater-Tools & Optimierungsvorschläge)
 **Ziel-Version:** 2.0.0
-**Datum:** November 2024
+**Datum:** Dezember 2024
 
 ---
 
@@ -257,7 +257,46 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 
 ---
 
-#### 1.5.1: Robustheit & Fehlerbehandlung (CRITICAL)
+### ✅ Version 1.5.1: PDF Export Critical Fixes (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Dezember 18, 2024)
+**Fokus:** Kritische Bugfixes für PDF-Export-Funktionalität
+
+#### Erreichte Ziele
+
+**Behobene Bugs:**
+- ✅ **Duplicate ID Bugs behoben** (3 kritische Bugs)
+  - `rendite`: Line 1655 (hidden input) vs Line 1812 (modal input)
+  - `depotCurrent`: Line 1653 (hidden input) vs Line 1795 (modal input)
+  - `anlagezeitraum`: Line 1654 (hidden input) vs Line 1806 (range slider)
+  - **Impact:** PDF exportierte falsche Werte (hidden inputs statt User-Eingaben)
+  - **Fix:** Renamed hidden inputs mit `-hidden` suffix
+
+- ✅ **Rendite Auto-Fill entfernt**
+  - `updateRenditeSuggestions()` überschrieb User-Input mit berechnetem Wert
+  - **Fix:** Auto-Fill komplett entfernt, nur noch Empfehlung anzeigen
+  - UI-Text: "Wahrscheinlichste Rendite" → "Empfohlen (Normal)" (blau)
+
+- ✅ **Flow-Visualisierung auf A4-Seite**
+  - PNG-Export zeigte nur SVG-Pfade, keine Basin-DIVs
+  - 600px Container-Constraint schnitt Layout ab (benötigt mind. 710px)
+  - **Fix:** Zurück zu DOM-Clone-Approach, Scale via CSS
+  - Print CSS: `transform: scale(0.75)`, width: 1150px, margin-left: -728px
+  - **Result:** Komplett sichtbarer Flow, zentriert auf A4
+
+**Commits:**
+- 15 Commits von d187bcf → 6faee39
+- Commit 3c7cfd1: fix(pdf): prevent rendite input from being overwritten
+- Commit bf35675: fix(pdf): resolve duplicate depotCurrent ID
+- Commit d187bcf: fix(pdf): resolve duplicate rendite ID (third bug)
+- Commit 4702b66: fix(pdf): revert to DOM clone approach
+- Commit 6faee39: fix(pdf): fine-tune flow layout with manual adjustments
+
+**Backward Compatible:** 100% ✅
+
+---
+
+#### 1.5.1: Robustheit & Fehlerbehandlung (ARCHIV)
 
 **Null-Safety & Error Boundaries:**
 - ✅ **Basin Element Safety**: Null-checks für alle `basins.*` Zugriffe (Lines 4630-4635)
