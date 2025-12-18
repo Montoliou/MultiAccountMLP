@@ -104,7 +104,7 @@
             max-width: none !important;
             width: auto !important;
             height: auto !important;
-            transform: scale(0.6) !important;
+            transform: scale(0.45) !important;
             transform-origin: center top !important;
             display: block !important;
             margin: 0 auto !important;
@@ -6015,8 +6015,8 @@ function updateFixkostenItem(index, key, value) {
         const container = flowContainer;
         const originalWidth = container.style.width;
         const originalMaxWidth = container.style.maxWidth;
-        container.style.width = '650px';         // Compact width for single-page A4 PDF
-        container.style.maxWidth = '650px';
+        container.style.width = '700px';         // Compact width for single-page A4 PDF
+        container.style.maxWidth = '700px';
 
         // Re-render flows so computed styles & erase strokes match light mode
         calculateAndUpdate();
