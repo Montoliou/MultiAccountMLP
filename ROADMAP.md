@@ -880,7 +880,60 @@ git log --oneline --decorate  # See all tagged versions
 
 #### Features
 
-**1.6.1: Presenter-Mode** (Woche 1)
+**1.6.1: Tagesgeld-Schutzschild-Visualisierung** ⭐⭐⭐ (Woche 1-2)
+
+**Problem:** Kunde versteht nicht, dass Tagesgeld das Depot vor Panikverkäufen schützt.
+
+**Lösung - Kombination aus visueller Animation + Szenario-Vergleich:**
+
+- [ ] **Idee 1: Schutzschild-Animation mit Puls-Effekt**
+  - Schild über Depot pulsiert sanft und zeigt visuelle Verbindung zum Tagesgeldkonto
+  - Animierte gepunktete Linie vom Tagesgeldkonto zum Schild zeigt "Energie-Fluss"
+  - Tooltip beim Hover: "Dein Tagesgeld schützt dein Depot vor Panikverkäufen in Krisenzeiten"
+  - **Farbcodierung basierend auf Tagesgeld-Füllstand:**
+    - Schild leuchtet stark (grün) wenn Tagesgeld ≥ Ziel
+    - Schild wird schwächer (gelb/orange) wenn Tagesgeld < 50% vom Ziel
+    - Schild verblasst (grau) wenn Tagesgeld = 0
+  - Emotional und intuitiv: "Tagesgeld = Schutz"
+
+- [ ] **Idee 2: Krisenszenario-Vergleich bei Klick auf Schild**
+  - **Klick auf Schild** öffnet Modal mit konkreter Vergleichsrechnung
+  - **Szenario-Vergleich:**
+    ```
+    📊 Krisenszenario (z.B. 2008, 2020, 2022)
+
+    ❌ OHNE Tagesgeld-Puffer:
+    • Depot: 25.000 € → Crash -30% → 17.500 €
+    • Liquiditätsnot → Notverkauf bei Tiefststand
+    • Verlust realisiert: -7.500 €
+    • Rendite über 15 Jahre: 4,2% p.a.
+
+    ✅ MIT Tagesgeld-Puffer (5.000 €):
+    • Depot: 25.000 € → Crash -30% → 17.500 €
+    • Liquidität aus Tagesgeld → Kein Verkauf nötig
+    • Depot erholt sich → 25.000 € + Wachstum
+    • Rendite über 15 Jahre: 7,0% p.a.
+
+    💰 Mehrertrag: +47.000 € über 15 Jahre
+    ```
+  - **Grafik**: Zwei Liniendiagramme nebeneinander (mit/ohne Tagesgeld)
+  - **Fazit**: "Dein Tagesgeld sichert dir bis zu 67% mehr Rendite!"
+  - Konkret, messbar, überzeugend durch echte Zahlen
+
+**Technische Umsetzung:**
+- CSS Pulse-Animation für Schild (3s ease-in-out)
+- SVG-Path für gepunktete Verbindungslinie (stroke-dasharray)
+- Modal mit Chart.js für Szenario-Vergleich
+- Farbinterpolation basierend auf (TagesgeldIST / TagesgeldZIEL)
+- Interaktiver Hover-State mit Tooltip-System
+
+**Vorteil für Beratung:**
+- Kunde **SIEHT** sofort: Tagesgeld = Schutz
+- Zahlen-basierte Argumentation (nicht nur Theorie)
+- Emotionale Verstärkung durch visuelle Animation
+- Export-fähig: Schutzschild-Logik in PDF-Infobox
+
+**1.6.2: Presenter-Mode** (Woche 2-3)
 
 - [ ] **Vollbild-Modus**
   - F11-ähnlich, aber mit Controls
@@ -893,7 +946,7 @@ git log --oneline --decorate  # See all tagged versions
   - Temporäres Dimmen anderer Elemente
   - "Kunde fokussiert auf dieses Basin"
 
-**1.6.2: Animierte Transitionen** ⭐ (Woche 2)
+**1.6.3: Animierte Transitionen** ⭐ (Woche 3)
 
 - [ ] **Smooth Beratungsmodus-Steps**
   - Fade-In/Out statt hartes Show/Hide
@@ -905,7 +958,7 @@ git log --oneline --decorate  # See all tagged versions
   - Zeigt "Geld fließt automatisch"
   - Dezent, nicht ablenkend
 
-**1.6.3: Kunden-Verständnis-Features** ⭐⭐ (Woche 3-4)
+**1.6.4: Kunden-Verständnis-Features** ⭐⭐ (Woche 4-5)
 
 - [ ] **Tooltip-System**
   - Hover auf Basin: Kurze Erklärung
