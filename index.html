@@ -5064,18 +5064,18 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const stats = source.mean === undefined ? buildRenditeStat(source.min, source.max) : source;
         const infoEl = getEl('rendite-info');
         const mostLikely = roundToDecimal(stats.mean);
-        // BUGFIX (PDF): Do NOT overwrite user's manually entered rendite value
-        // Only set if field is empty or at default value
-        if (!inputs.rendite.value || inputs.rendite.value === '7' || inputs.rendite.value === '7.0') {
-            inputs.rendite.value = mostLikely.toFixed(1);
-        }
+
+        // BUGFIX (PDF): NEVER overwrite user's input - only show suggestion
+        // User must manually copy suggestion if they want it
+        // Old behavior: inputs.rendite.value = mostLikely.toFixed(1); // ❌ REMOVED
 
         const colorClass = (v) => (v < 0 ? 'text-red-400' : (v < 3 ? 'text-yellow-400' : 'text-green-400'));
         const minSpan = `<span class="font-bold ${colorClass(stats.min)}">${stats.min}%</span>`;
         const maxSpan = `<span class="font-bold ${colorClass(stats.max)}">${stats.max}%</span>`;
 
         if (infoEl) {
-            infoEl.innerHTML = `Historische Spanne p.a.: ${minSpan} bis ${maxSpan}<br><span class="font-bold">Wahrscheinlichste Rendite (Normal): ${mostLikely.toFixed(1)}%</span>`;
+            // Show suggestion with "empfohlen" hint, but don't auto-fill
+            infoEl.innerHTML = `Historische Spanne p.a.: ${minSpan} bis ${maxSpan}<br><span class="font-bold text-blue-400">Empfohlen (Normal): ${mostLikely.toFixed(1)}%</span>`;
         }
     }
 
