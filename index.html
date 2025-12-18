@@ -1374,15 +1374,38 @@
         }
 
         .fund-block {
-            height: 24px;
-            border-radius: 4px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            /* Dynamic squares: width = height, set inline based on allocation */
+            border-radius: 8px;
             cursor: help;
+            animation: fundPulse 3s ease-in-out infinite;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
         }
 
-        .fund-block:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        @keyframes fundPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.15);
+            }
+        }
+
+        .fund-block:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .fund-block:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        .fund-block:nth-child(4) {
+            animation-delay: 1.5s;
+        }
+
+        .fund-block:nth-child(5) {
+            animation-delay: 2s;
         }
 
         .depot-info {
@@ -5503,14 +5526,12 @@ function updateFixkostenItem(index, key, value) {
                 </div>
                 <div class="col-span-3 risk-toggle">
                     <button type="button" class="risk-btn ${item.risk === 'conservative' ? 'active' : ''}"
-                            onclick="updateDepotItem(${index}, 'risk', 'conservative')">
+                            onclick="updateDepotItem(${index}, 'risk', 'conservative')" title="Konservativ">
                         <span class="risk-dot conservative"></span>
-                        <span class="hidden sm:inline">Konservativ</span>
                     </button>
                     <button type="button" class="risk-btn ${item.risk === 'aggressive' ? 'active' : ''}"
-                            onclick="updateDepotItem(${index}, 'risk', 'aggressive')">
+                            onclick="updateDepotItem(${index}, 'risk', 'aggressive')" title="Chancenreich">
                         <span class="risk-dot aggressive"></span>
-                        <span class="hidden sm:inline">Chancen</span>
                     </button>
                 </div>
                 <button type="button" onclick="removeDepotItem(${index})"
@@ -5564,18 +5585,40 @@ function updateFixkostenItem(index, key, value) {
     function renderDepotBasin() {
         if (!basins.depot) return;
 
+        // MLP Design Palette (neutral grays + single accent per risk type)
+        const mlpColors = {
+            conservative: [
+                '#adb5bd', // gray-400
+                '#ced4da', // gray-300
+                '#dee2e6', // gray-200
+                '#e9ecef', // gray-100
+                '#f8f9fa'  // gray-50
+            ],
+            aggressive: [
+                '#002f6c', // MLP Blue (primary accent)
+                '#0047a0', // MLP Blue lighter
+                '#3b82f6', // Blue-500
+                '#60a5fa', // Blue-400
+                '#93c5fd'  // Blue-300
+            ]
+        };
+
         // Filter active funds (allocation > 0)
         const conservative = depotItems.filter(i => i.risk === 'conservative' && i.allocation > 0);
         const aggressive = depotItems.filter(i => i.risk === 'aggressive' && i.allocation > 0);
 
-        // Generate fund blocks HTML
-        const leftBlocks = conservative.map(item =>
-            `<div class="fund-block" style="background: ${item.color}; width: ${Math.max(10, item.allocation / 3)}px" title="${item.name} (${item.allocation}%)"></div>`
-        ).join('');
+        // Generate fund blocks HTML - SQUARES (width = height)
+        const leftBlocks = conservative.map((item, index) => {
+            const size = Math.max(24, Math.min(48, item.allocation * 0.8)); // Min 24px, max 48px
+            const color = mlpColors.conservative[index % mlpColors.conservative.length];
+            return `<div class="fund-block" style="background: ${color}; width: ${size}px; height: ${size}px" title="${item.name} (${item.allocation}%)"></div>`;
+        }).join('');
 
-        const rightBlocks = aggressive.map(item =>
-            `<div class="fund-block" style="background: ${item.color}; width: ${Math.max(10, item.allocation / 3)}px" title="${item.name} (${item.allocation}%)"></div>`
-        ).join('');
+        const rightBlocks = aggressive.map((item, index) => {
+            const size = Math.max(24, Math.min(48, item.allocation * 0.8)); // Min 24px, max 48px
+            const color = mlpColors.aggressive[index % mlpColors.aggressive.length];
+            return `<div class="fund-block" style="background: ${color}; width: ${size}px; height: ${size}px" title="${item.name} (${item.allocation}%)"></div>`;
+        }).join('');
 
         // Render basin with fund blocks
         basins.depot.innerHTML = `
