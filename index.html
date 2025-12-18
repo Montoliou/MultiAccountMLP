@@ -196,10 +196,13 @@
           #flow-container-print {
             break-inside: avoid;
             page-break-inside: avoid;
-            transform: scale(0.75) !important;
-            transform-origin: center center !important;
-            margin: -150px auto -400px auto !important;
-            width: 100% !important;
+            transform: scale(0.7) !important;
+            transform-origin: top center !important;
+            width: 1200px !important;
+            margin: 0 auto -350px auto !important;
+            position: relative !important;
+            left: 50% !important;
+            margin-left: -600px !important;
           }
         }
 
@@ -6223,7 +6226,7 @@ function updateFixkostenItem(index, key, value) {
           clone.style.position = 'relative';
           clone.style.minHeight = cs.minHeight || '1150px';
           clone.style.height    = cs.height || '1150px';
-          clone.style.width     = cs.width;
+          // NO width constraint - let print CSS handle scaling
 
           const holder = document.createElement('div');
           holder.style.marginTop = '8px';
