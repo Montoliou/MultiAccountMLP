@@ -5608,17 +5608,27 @@ function updateFixkostenItem(index, key, value) {
         const aggressive = depotItems.filter(i => i.risk === 'aggressive' && i.allocation > 0);
 
         // Generate fund blocks HTML - SQUARES (width = height)
+        // Better scaling: 10% → 24px, 50% → 40px, 100% → 56px
+        const calculateSize = (allocation) => {
+            const baseSize = 24; // Minimum size
+            const scaleFactor = 0.32; // Better visibility of differences
+            return Math.round(baseSize + (allocation * scaleFactor));
+        };
+
         const leftBlocks = conservative.map((item, index) => {
-            const size = Math.max(24, Math.min(48, item.allocation * 0.8)); // Min 24px, max 48px
+            const size = calculateSize(item.allocation);
             const color = mlpColors.conservative[index % mlpColors.conservative.length];
             return `<div class="fund-block" style="background: ${color}; width: ${size}px; height: ${size}px" title="${item.name} (${item.allocation}%)"></div>`;
         }).join('');
 
         const rightBlocks = aggressive.map((item, index) => {
-            const size = Math.max(24, Math.min(48, item.allocation * 0.8)); // Min 24px, max 48px
+            const size = calculateSize(item.allocation);
             const color = mlpColors.aggressive[index % mlpColors.aggressive.length];
             return `<div class="fund-block" style="background: ${color}; width: ${size}px; height: ${size}px" title="${item.name} (${item.allocation}%)"></div>`;
         }).join('');
+
+        console.log('Fund block sizes:', conservative.map(i => `${i.name}: ${i.allocation}% → ${calculateSize(i.allocation)}px`));
+        console.log('Fund block sizes:', aggressive.map(i => `${i.name}: ${i.allocation}% → ${calculateSize(i.allocation)}px`));
 
         // Render basin with fund blocks
         basins.depot.innerHTML = `
