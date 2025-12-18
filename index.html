@@ -198,11 +198,11 @@
             page-break-inside: avoid;
             transform: scale(0.75) !important;
             transform-origin: top center !important;
-            width: 1150px !important;
+            width: 1100px !important;
             margin: 0 auto -380px auto !important;
             position: relative !important;
             left: 50% !important;
-            margin-left: -728px !important;
+            margin-left: -720px !important;
           }
         }
 
@@ -1297,6 +1297,102 @@
         .theme-light input[type="range"]::-webkit-slider-thumb {
             background: var(--mlp-blue);
             border-color: #f8fafc;
+        }
+
+        /* ===== RISK TOGGLE & FUND BLOCKS (v1.5.1+) ===== */
+
+        /* Risk Toggle Component */
+        .risk-toggle {
+            display: flex;
+            gap: 4px;
+            background: #1f2937;
+            padding: 2px;
+            border-radius: 8px;
+        }
+
+        .risk-btn {
+            flex: 1;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            border: none;
+            color: #9ca3af;
+            background: transparent;
+        }
+
+        .risk-btn:hover {
+            background: #2d3748;
+            color: #d1d5db;
+        }
+
+        .risk-btn.active {
+            background: #374151;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .risk-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .risk-btn.active .risk-dot {
+            transform: scale(1.2);
+        }
+
+        .risk-dot.conservative {
+            background: #3b82f6;
+        }
+
+        .risk-dot.aggressive {
+            background: #ef4444;
+        }
+
+        /* Fund Blocks in Depot Basin */
+        .depot-basin-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 8px;
+        }
+
+        .fund-blocks {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            min-width: 40px;
+        }
+
+        .fund-block {
+            height: 24px;
+            border-radius: 4px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: help;
+        }
+
+        .fund-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .depot-info {
+            text-align: center;
+            flex: 1;
+        }
+
+        /* Light theme overrides */
+        .theme-light .risk-toggle {
+            background: #e5e7eb;
         }
 
         .theme-light input[type="range"]::-moz-range-thumb {
@@ -4759,7 +4855,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
               { current: konsumValue, min: konsumMin, limit: Infinity, minScaleBase: konsumInflow }
             );
             renderBasin(basins.tagesgeld, 'Tagesgeldkonto', formatCurrency(finalTagesgeld), '<svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', `Zufluss: ${formatCurrency(tagesgeldInflow)}`, { current: finalTagesgeld, min: 0, limit: tagesgeldLimit });
-            renderBasin(basins.depot, 'Vermögensaufbau', `+ ${formatCurrency(totalDepotInflow)}`, '', '(Klick zum Bearbeiten)', {}, createGrowthChartSVG());
+
+            // Use custom renderDepotBasin instead of renderBasin for fund blocks visualization
+            renderDepotBasin();
 
             // Vermieterkonto-Basin rendern (über Immobilien) - vermieterData wurde bereits oben berechnet
             renderBasin(
@@ -5383,11 +5481,115 @@ function updateFixkostenItem(index, key, value) {
     function removeFixkostenItem(index) { fixkostenItems.splice(index, 1); renderFixkostenList(); }
     const depotModal = { list: getEl('depot-list'), total: getEl('depot-total'), warning: getEl('depot-warning'), saveButton: getEl('depot-save-button') };
     function saveDepot() { if(checkDepotTotal()) { calculateAndUpdate(); closeModal('depot-modal'); } }
-    function renderDepotList() { depotModal.list.innerHTML = ''; let total = 0; depotItems.forEach((item, index) => { total += item.allocation; const itemEl = document.createElement('div'); itemEl.className = 'grid grid-cols-12 gap-2 items-center'; itemEl.innerHTML = `<input type="color" value="${item.color}" onchange="updateDepotItem(${index}, 'color', this.value)" class="col-span-1 h-8 bg-gray-700 p-0 rounded"><input type="text" value="${item.name}" onchange="updateDepotItem(${index}, 'name', this.value)" placeholder="Fonds / ETF Name" class="col-span-7 bg-gray-700 p-1 rounded"><div class="relative col-span-3"><input type="number" value="${item.allocation}" onchange="updateDepotItem(${index}, 'allocation', this.value)" class="w-full text-right pr-6 bg-gray-700 p-1 rounded"><span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">%</span></div><button onclick="removeDepotItem(${index})" class="col-span-1 text-red-400 hover:text-red-300 text-xl">&times;</button>`; depotModal.list.appendChild(itemEl); }); checkDepotTotal(); }
-    function updateDepotItem(index, key, value) { if (key === 'allocation') value = parseInt(value, 10) || 0; depotItems[index][key] = value; debouncedRenderDepotList(); }
-    function addDepotItem() { depotItems.push({ name: '', allocation: 0, color: '#'+Math.floor(Math.random()*16777215).toString(16) }); renderDepotList(); }
-    function removeDepotItem(index) { depotItems.splice(index, 1); renderDepotList(); }
-    function checkDepotTotal() { const total = depotItems.reduce((sum, i) => sum + i.allocation, 0); depotModal.total.textContent = `${total} %`; if (total === 100) { depotModal.total.className = "text-2xl font-bold text-green-400"; depotModal.warning.textContent = ""; depotModal.saveButton.disabled = false; depotModal.saveButton.classList.remove('opacity-50', 'cursor-not-allowed'); return true; } else { depotModal.total.className = "text-2xl font-bold text-red-400"; depotModal.warning.textContent = "Die Summe der Verteilung muss 100% ergeben."; depotModal.saveButton.disabled = true; depotModal.saveButton.classList.add('opacity-50', 'cursor-not-allowed'); return false; } }
+    function renderDepotList() {
+        depotModal.list.innerHTML = '';
+        let total = 0;
+        depotItems.forEach((item, index) => {
+            total += item.allocation;
+            // Ensure risk property exists (backward compatibility)
+            if (!item.risk) item.risk = 'conservative';
+
+            const itemEl = document.createElement('div');
+            itemEl.className = 'grid grid-cols-12 gap-2 items-center mb-2';
+            itemEl.innerHTML = `
+                <input type="color" value="${item.color}" onchange="updateDepotItem(${index}, 'color', this.value)"
+                       class="col-span-1 h-8 bg-gray-700 p-0 rounded" title="Fonds-Farbe">
+                <input type="text" value="${item.name}" onchange="updateDepotItem(${index}, 'name', this.value)"
+                       placeholder="Fonds / ETF Name" class="col-span-5 bg-gray-700 p-1 rounded text-sm">
+                <div class="relative col-span-2">
+                    <input type="number" value="${item.allocation}" onchange="updateDepotItem(${index}, 'allocation', this.value)"
+                           class="w-full text-right pr-6 bg-gray-700 p-1 rounded text-sm">
+                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+                </div>
+                <div class="col-span-3 risk-toggle">
+                    <button type="button" class="risk-btn ${item.risk === 'conservative' ? 'active' : ''}"
+                            onclick="updateDepotItem(${index}, 'risk', 'conservative')">
+                        <span class="risk-dot conservative"></span>
+                        <span class="hidden sm:inline">Konservativ</span>
+                    </button>
+                    <button type="button" class="risk-btn ${item.risk === 'aggressive' ? 'active' : ''}"
+                            onclick="updateDepotItem(${index}, 'risk', 'aggressive')">
+                        <span class="risk-dot aggressive"></span>
+                        <span class="hidden sm:inline">Chancen</span>
+                    </button>
+                </div>
+                <button type="button" onclick="removeDepotItem(${index})"
+                        class="col-span-1 text-red-400 hover:text-red-300 text-xl" title="Entfernen">&times;</button>
+            `;
+            depotModal.list.appendChild(itemEl);
+        });
+        checkDepotTotal();
+    }
+
+    function updateDepotItem(index, key, value) {
+        if (key === 'allocation') value = parseInt(value, 10) || 0;
+        depotItems[index][key] = value;
+        debouncedRenderDepotList();
+        renderDepotBasin(); // Update basin visualization
+    }
+
+    function addDepotItem() {
+        depotItems.push({
+            name: '',
+            allocation: 0,
+            color: '#' + Math.floor(Math.random() * 16777215).toString(16),
+            risk: 'conservative'
+        });
+        renderDepotList();
+    }
+    function removeDepotItem(index) {
+        depotItems.splice(index, 1);
+        renderDepotList();
+        renderDepotBasin(); // Update basin visualization
+    }
+
+    function checkDepotTotal() {
+        const total = depotItems.reduce((sum, i) => sum + i.allocation, 0);
+        depotModal.total.textContent = `${total} %`;
+        if (total === 100) {
+            depotModal.total.className = "text-2xl font-bold text-green-400";
+            depotModal.warning.textContent = "";
+            depotModal.saveButton.disabled = false;
+            depotModal.saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            return true;
+        } else {
+            depotModal.total.className = "text-2xl font-bold text-red-400";
+            depotModal.warning.textContent = "Die Summe der Verteilung muss 100% ergeben.";
+            depotModal.saveButton.disabled = true;
+            depotModal.saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+            return false;
+        }
+    }
+
+    function renderDepotBasin() {
+        if (!basins.depot) return;
+
+        // Filter active funds (allocation > 0)
+        const conservative = depotItems.filter(i => i.risk === 'conservative' && i.allocation > 0);
+        const aggressive = depotItems.filter(i => i.risk === 'aggressive' && i.allocation > 0);
+
+        // Generate fund blocks HTML
+        const leftBlocks = conservative.map(item =>
+            `<div class="fund-block" style="background: ${item.color}; width: ${Math.max(10, item.allocation / 3)}px" title="${item.name} (${item.allocation}%)"></div>`
+        ).join('');
+
+        const rightBlocks = aggressive.map(item =>
+            `<div class="fund-block" style="background: ${item.color}; width: ${Math.max(10, item.allocation / 3)}px" title="${item.name} (${item.allocation}%)"></div>`
+        ).join('');
+
+        // Render basin with fund blocks
+        basins.depot.innerHTML = `
+            <div class="depot-basin-content">
+                <div class="fund-blocks left">${leftBlocks || '<div style="width: 8px"></div>'}</div>
+                <div class="depot-info">
+                    <div class="text-sm font-semibold">Vermögensaufbau</div>
+                    <div class="text-2xl font-bold">${formatCurrency(inputs.depotCurrent.value)}</div>
+                    <div class="text-xs text-gray-400">(Klick zum Bearbeiten)</div>
+                </div>
+                <div class="fund-blocks right">${rightBlocks || '<div style="width: 8px"></div>'}</div>
+            </div>
+        `;
+    }
 
     // === MSCI RENDITEDREIECK FUNCTIONS ===
     let msciZoomState = {
