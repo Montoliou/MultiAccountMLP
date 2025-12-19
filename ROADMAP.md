@@ -1,9 +1,10 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
 **Aktuelle Version:** 1.5.1
-**Nächste Version:** 1.6.0 (Berater-Tools & Optimierungsvorschläge)
+**Nächste Version:** 1.5.2 (Cleanup offener v1.5.0 Tasks) → dann 1.6.0 (UX-Polish & Kunden-Verständnis)
 **Ziel-Version:** 2.0.0
 **Datum:** Dezember 2025
+**Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
 
 ---
 
@@ -296,93 +297,19 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 
 ---
 
-#### 1.5.1: Robustheit & Fehlerbehandlung (ARCHIV)
+### ⏳ Version 1.5.2: Cleanup & Finalisierung offener v1.5.0 Tasks ⭐
 
-**Null-Safety & Error Boundaries:**
-- ✅ **Basin Element Safety**: Null-checks für alle `basins.*` Zugriffe (Lines 4630-4635)
-  - Verhindert Runtime-Crashes bei fehlenden DOM-Elementen
-  - Defensive checks: `if (!basins.einkommen) return;`
-- ✅ **Input Validation Ranges**: Min/Max-Constraints für Zahlen-Inputs (Lines 4495-4499, 5309)
-  - Verhindert Infinity/Overflow bei extremen Werten
-  - Range: [-1M, 1M] für realistische Szenarien
-  - **NEW:** Negative fixkosten support für Einnahmen
-- ✅ **Chart Destruction Safety**: Null-check vor `prognoseChartInstance.destroy()` (Lines 4934-4944)
-- ⏳ **JSON Parse Error Handling**: Granulare Error-Messages für Import-Fehler (Lines 1990-1997)
-  - Bessere User-Feedback bei ungültigen Backup-Dateien
-  - Recovery-Pfade für korrupte SessionStorage-Daten
-- ⏳ **SessionStorage Quota Check**: 5-10MB Limit-Checking vor Save-Operationen
-  - Warnung bei fast vollem Storage
-  - Auto-Cleanup alter Sessions
+**Status:** NEXT UP 📍
+**Priorität:** ⭐ MEDIUM-HIGH (Schnell abschließen vor v1.6.0)
+**ETA:** 1 Woche (Januar 2026)
+**Fokus:** Offene Punkte aus v1.5.0 konsolidieren und abschließen
 
----
+**Hintergrund:** Die ursprünglichen Versionen 1.5.2-1.5.6 waren Unterabschnitte von v1.5.0, keine eigenständigen Releases. Hier werden alle noch offenen Tasks zusammengefasst.
 
-#### 1.5.2: Performance-Optimierungen (HIGH)
+#### Offene Tasks
 
-**Rendering & Calculation:**
-- ✅ **Universal Input Debouncing**: Alle Input-Handler mit 150ms Debounce (Lines 3587-3602)
-  - `calculateAndUpdate()`, `renderFixkostenList()`, `renderDepotList()`
-  - Applied to: `updateFixkostenItem()`, `updateDepotItem()`
-  - **Result:** ~80% reduction in unnecessary recalculations
-- ✅ **Array Filter Optimization**: Single-Pass-Reduce statt mehrfacher Filter (Lines 4770-4782)
-  - Replaced 2 filter passes with single reduce
-  - `fixkostenItems` now processed in one iteration
-  - **Result:** ~50% faster array operations
-- ⏳ **Virtual DOM für Listen**: Optimiere `renderFixkostenList()` (Lines 5232-5286)
-  - Aktuell: Kompletter Rebuild bei jeder Änderung
-  - Ziel: Update nur geänderter Elemente
-  - Reduziert DOM-Thrashing
-- ⏳ **Smart Variant Switch**: Nur relevante Render-Calls bei Varianten-Wechsel (Lines 6613-6632)
-  - Verhindert unnötige Booking-Calendar-Rebuilds
-  ```javascript
-  // Vorher: 2 Filter-Pässe
-  fixkostenItems.filter(i => i.target === 'fixkosten')...
-  fixkostenItems.filter(i => i.target === 'depot')...
-
-  // Nachher: 1 Reduce-Pass
-  const {fixkosten, depot} = fixkostenItems.reduce((acc, i) => {
-    acc[i.target].push(i);
-    return acc;
-  }, {fixkosten: [], depot: []});
-  ```
-
----
-
-#### 1.5.3: Accessibility Hardening (HIGH)
-
-**WCAG 2.1 AA Compliance:**
-- ✅ **Touch Target Size**: Basin-Edit-Indicator & Buttons → 44×44px (Lines 834-835, 1004-1006)
-  - Basin Edit Indicator: 32px → 44px
-  - Button System: min-height 44px für alle Buttons
-  - Control Chips: bereits 44px ✓
-  - FAB: bereits 56px ✓
-- ✅ **Focus Indicators**: Sichtbare `:focus-visible` für Keyboard-Navigation (Lines 1005-1006, 1222-1227)
-  - Range Slider: 3px outline + 4px offset
-  - Buttons: 3px outline für keyboard users
-  - Konsistent über alle interaktiven Elemente
-- ⏳ **Contrast Check**: Light-Theme Flow-Values auf WCAG AA testen (Lines 1073-1074)
-  - `rgba(255,255,255,0.85)` → ggf. Opacity auf 0.95
-- ⏳ **Modal Focus Trap**: Shift+Tab auf erstem Element korrigieren (Lines 5091-5123)
-  - Vollständiger Tab-Cycle in Modals
-
----
-
-#### 1.5.4: Code-Qualität & Wartbarkeit (HIGH)
-
-**Refactoring & Documentation:**
-- ✅ **Named Constants**: Magic Numbers eliminiert (Lines 3828-3836)
-  ```javascript
-  const LAYOUT = {
-    HORIZONTAL_GAP: 100,          // Basin horizontal spacing (px)
-    VERTICAL_GAP: 240,            // Level vertical spacing (px)
-    DEPOT_WIDTH: 440,             // Depot basin width (px)
-    VERMIETERKONTO_HEIGHT: 100,   // Landlord account height (px)
-    MIN_FLOW_WIDTH: 10,           // Minimum flow line width (px)
-    MAX_FLOW_WIDTH: 45            // Maximum flow line width (px)
-  };
-  ```
-  - Replaced magic numbers in Lines 3997-3999, 4044, 4119
-  - Single source of truth for layout dimensions
-- ⏳ **Function Decomposition**: `calculateAndUpdate()` aufteilen (Lines 4626-4849, 223 Zeilen!)
+**Code-Qualität (HIGH Priority):**
+- [ ] **Function Decomposition**: `calculateAndUpdate()` aufteilen (Lines 4626-4849, 223 Zeilen!)
   ```javascript
   // Split in:
   calculateAndUpdate() {
@@ -391,51 +318,36 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
     updateFlows(data);
   }
   ```
-  - Bessere Testbarkeit
-  - Reduzierte Komplexität
-- ⏳ **JSDoc Comments**: Dokumentation für alle Public Functions
-  - Parameter-Typen und Beschreibungen
-  - Rückgabewerte und Side-Effects
-  - Beispiel für `drawFlow(pathId, fromBasin, toBasin, value, maxFlowValue, labelText, flowOpacity)`
-- ⏳ **Consistent Naming**: Standardisierung auf camelCase (aktuell: Mix aus camelCase/snake_case)
-- ⏳ **Error Logging Utility**: Einheitliches Logging-System
-  ```javascript
-  const logger = {
-    error: (msg, data) => console.error(`[MLP ERROR] ${msg}`, data),
-    warn: (msg, data) => console.warn(`[MLP WARN] ${msg}`, data),
-    info: (msg, data) => console.log(`[MLP INFO] ${msg}`, data)
-  };
-  ```
+  - Bessere Testbarkeit, reduzierte Komplexität
 
----
-
-#### 1.5.5: Dead Code Removal (MEDIUM)
-
-**Cleanup & File Size Reduction:**
-- ✅ **MSCI Animation System**: 223 Zeilen auskommentierter Code entfernt (Lines 5548-5769)
-  - File-Size Reduktion: ~6.7KB
-  - Removed Stubs: `toggleMsciBeratung`, `stopMsciBeratung`, `animateMsciBeratung`, `updateMsciAnlagedauerDisplay`, `drawMsciBand`
-  - Kept: MSCI Renditedreieck zoom functionality (active feature)
-- ✅ **Unused Functions**: Dead Code entfernt (94 lines, Lines 4356-4449)
-  - `drawDeficitLine()` - 40 lines (never called)
-  - `hideDeficitLine()` - 4 lines (never called)
-  - `drawMeanderingDeficitLine()` - 47 lines (never called)
-  - **Total removed:** 317 lines (~9.5KB)
-- ⏳ **Duplicate Control Bar CSS**: Old `.panel-controls` entfernen (Lines 407-432)
-  - Aktuell: `display:none` - komplett entfernen
-
----
-
-#### 1.5.6: Design Polish (MEDIUM)
-
-**Visual Consistency:**
-- ⏳ **8px Grid Audit**: Alle Spacing-Values gegen Design-Guide prüfen
-  - Control-Bar Padding: 8px → 16px für größere Touch-Targets
-- ⏳ **CSS Variable Consistency**: Hardcoded Colors (#3b82f6) → CSS Custom Properties
+- [ ] **CSS Variable Consistency**: Hardcoded Colors (#3b82f6) → CSS Custom Properties
   - Bessere Theme-Konsistenz
   - Einfachere Wartung
-- ⏳ **Inline Editor UX**: Escape-Key Propagation stoppen (Lines 4480-4488)
-  - Verhindert doppeltes Modal-Close
+
+**Accessibility (MEDIUM Priority):**
+- [ ] **Modal Focus Trap**: Shift+Tab auf erstem Element korrigieren (Lines 5091-5123)
+  - Vollständiger Tab-Cycle in Modals
+
+**Cleanup (MEDIUM Priority):**
+- [ ] **Duplicate Control Bar CSS**: Old `.panel-controls` entfernen (Lines 407-432)
+  - Aktuell: `display:none` - komplett entfernen
+
+**LOW Priority (Optional):**
+- [ ] Virtual DOM für Listen (nur bei Performance-Problemen)
+- [ ] Smart Variant Switch Optimization
+- [ ] JSDoc Comments (nice-to-have)
+- [ ] 8px Grid Audit (Design-Polish)
+- [ ] Contrast Check Light-Theme (bereits sehr gut)
+
+**Archivierte Informationen (bereits in v1.5.0/v1.5.1 implementiert):**
+- ✅ Basin Element Null-Safety
+- ✅ Input Validation Ranges
+- ✅ Universal Input Debouncing
+- ✅ Array Filter Optimization
+- ✅ Touch Target Size (44px)
+- ✅ Focus Indicators
+- ✅ Named Constants (LAYOUT object)
+- ✅ Dead Code Removal (317 lines)
 
 ---
 
@@ -678,9 +590,9 @@ function exportToCSV() {
 
 ---
 
-### Version 1.3.0: Export-Erweiterung & Immobilien-Integration (IN PROGRESS)
+### ✅ Version 1.3.0: Export-Erweiterung & Immobilien-Integration (ABGESCHLOSSEN)
 
-**ETA:** Q4 2025 / Q1 2026 (4-6 Wochen)
+**Status:** ✅ Released (Oktober 2025)
 **Fokus:** Strukturierte Daten-Exports & erweiterte Immobilien-Szenarien
 
 #### Features
@@ -747,17 +659,9 @@ function exportToCSV() {
   - Harmonische Abstände in Variante A und B
   - Konsumkonto bleibt zentral in der Kaskade
 
-**1.3.3: Beratungs-Szenarien** (Woche 3-4)
+**1.3.3: Beratungs-Szenarien** ⏳ (verschoben zu v1.9.0)
 
-- [ ] **Szenario-Vergleich**
-  - Button: "Was wäre wenn... Immobilie abbezahlt?"
-  - Side-by-Side: Aktuell vs. Szenario
-  - Highlight: Unterschiede in Cashflow/Sparrate
-
-- [ ] **Quick-Szenarien**
-  - "Immobilie verkaufen" (Einmalzahlung ins Depot)
-  - "Immobilie vermieten statt selbst nutzen"
-  - "Zweite Immobilie kaufen"
+- [ ] Siehe Version 1.9.0 für Details
 
 **1.3.4: Datenschutz-Compliance** (Woche 4) ✅ **LIVE: v1.3.4 (bbdcd96)**
 
@@ -797,48 +701,20 @@ git log --oneline --decorate  # See all tagged versions
 
 ---
 
-### Version 1.4.0: Session-Historie & Templates
+### ⏳ Version 1.7.0: Berater-Notizen & Annotations ⭐⭐
 
-**ETA:** Q2 2026 (2-3 Wochen)
-**Fokus:** Session-Management & Berater-Produktivität
-
-#### Features
-
-**1.4.1: Session-Historie** (Woche 1)
-
-- [ ] **Letzte 10 Sessions**
-  - Gespeicherte JSON-Sessions anzeigen
-  - Liste: Session-ID, Kundenkürzel, Datum, Status
-  - Quick-Reload: "Letzte Session fortsetzen"
-  - Session löschen / umbenennen
-
-**1.4.2: Template-System** (Woche 2)
-
-- [ ] **Beratungs-Templates**
-  - Vordefinierte Szenarien: "Gutverdiener", "Familie", "Rentner"
-  - Schnellstart mit typischen Werten
-  - Anpassbar im Gespräch
-
-- [ ] **Template-Export**
-  - Erfolgreiche Beratung als Template speichern
-  - Wiederverwendbar für ähnliche Kunden
-  - Anonymisiert (nur Struktur, keine echten Daten)
-
----
-
-### Version 1.5.0: Berater-Notizen & Excel-Export ⭐⭐
-
+**Status:** Geplant
+**Priorität:** ⭐⭐ MEDIUM (Nach v1.6.0)
 **ETA:** Q2 2026 (3-4 Wochen)
-**Fokus:** Nachvollziehbarkeit für Kunden & erweiterte Export-Formate
+**Fokus:** Nachvollziehbarkeit für Kunden - Kunde kann Beratung später besser verstehen!
 
-**Warum wichtig:** Berater-Notizen helfen Kunde die Beratung später besser nachzuvollziehen!
+**Warum wichtig:** Berater-Notizen helfen dem Kunden die Beratung später nachzuvollziehen. Erscheinen im PDF-Export!
 
 #### Features
 
-**1.5.1: Berater-Notizen & Annotations** ⭐⭐ (Woche 1-2)
+**1.7.1: Notizen-Feld pro Basin** ⭐⭐ (Woche 1-2)
 
-- [ ] **Notizen-Feld pro Basin**
-  - Freitext-Notizen zu jedem Basin
+- [ ] **Freitext-Notizen zu jedem Basin**
   - **Erscheint im PDF-Export** → Kunde kann später nachlesen!
   - Toggle: "Notizen für Kunde sichtbar" vs. "Nur intern"
   - Markdown-Support für Formatierung
@@ -855,16 +731,101 @@ git log --oneline --decorate  # See all tagged versions
   - Erscheint im PDF als farbige Callouts
   - Beispiel: "💡 Tipp: Hier können Sie 50€ mehr sparen!"
 
-**1.5.2: Excel-Export mit Formeln** (Woche 3-4)
+---
 
-- [ ] **Multi-Sheet-Workbook**
+### ⏳ Version 1.8.0: Session-Historie & Templates ⭐
+
+**Status:** Geplant
+**Priorität:** ⭐ LOW (Produktivitäts-Feature)
+**ETA:** Q2 2026 (2-3 Wochen)
+**Fokus:** Berater-Produktivität & Zeitersparnis
+
+**Bewertung:**
+- **Notwendigkeit:** 🟢 LOW - Nice-to-have, kein Muss
+- **Komplexität:** 🟡 MEDIUM - IndexedDB-Integration nötig
+- **ROI für Beratung:** 🟡 MEDIUM - Zeitsparend, aber nicht essentiell
+
+#### Features
+
+**1.8.1: Session-Historie** (Woche 1)
+
+- [ ] **Letzte 10 Sessions**
+  - Gespeicherte JSON-Sessions anzeigen
+  - Liste: Session-ID, Kundenkürzel, Datum, Status
+  - Quick-Reload: "Letzte Session fortsetzen"
+  - Session löschen / umbenennen
+
+**1.8.2: Template-System** (Woche 2)
+
+- [ ] **Beratungs-Templates**
+  - Vordefinierte Szenarien: "Gutverdiener", "Familie", "Rentner"
+  - Schnellstart mit typischen Werten
+  - Anpassbar im Gespräch
+
+- [ ] **Template-Export**
+  - Erfolgreiche Beratung als Template speichern
+  - Wiederverwendbar für ähnliche Kunden
+  - Anonymisiert (nur Struktur, keine echten Daten)
+
+---
+
+### ⏳ Version 1.9.0: Beratungs-Szenarien ⭐⭐
+
+**Status:** Geplant
+**Priorität:** ⭐⭐ MEDIUM (Q3 2026)
+**ETA:** Q3 2026 (2 Wochen)
+**Fokus:** "Was-wäre-wenn"-Szenarien für Beratungsgespräche
+
+**Bewertung:**
+- **Notwendigkeit:** 🟡 MEDIUM - Nice-to-have, aber nicht kritisch
+- **Komplexität:** 🔴 HIGH - Braucht State-Management für Szenarien
+- **ROI für Beratung:** 🟢 HIGH - Sehr wertvoll für "Was-wäre-wenn"-Gespräche
+
+#### Features
+
+**1.9.1: Szenario-Vergleich** (Woche 1)
+
+- [ ] **"Was wäre wenn..."-Vergleiche**
+  - Button: "Was wäre wenn... Immobilie abbezahlt?"
+  - Side-by-Side: Aktuell vs. Szenario
+  - Highlight: Unterschiede in Cashflow/Sparrate
+
+**1.9.2: Quick-Szenarien** (Woche 2)
+
+- [ ] **Vordefinierte Szenarien**
+  - "Immobilie verkaufen" (Einmalzahlung ins Depot)
+  - "Immobilie vermieten statt selbst nutzen"
+  - "Zweite Immobilie kaufen"
+  - "Abbezahlt - wie ändert sich mein Cashflow?"
+
+---
+
+### ⏳ Version 1.10.0: Excel-Export & Advanced Export ⭐
+
+**Status:** Geplant
+**Priorität:** ⭐ LOW (Q3 2026)
+**ETA:** Q3 2026 (2 Wochen)
+**Fokus:** Excel-Export mit Live-Formeln
+
+**Bewertung:**
+- **Notwendigkeit:** 🟢 LOW - Excel-Power-Users profitieren
+- **Komplexität:** 🔴 HIGH - Excel-Export technisch aufwendig
+- **ROI für Beratung:** 🟡 MEDIUM - Nützlich, aber nicht essentiell
+
+#### Features
+
+**1.10.1: Multi-Sheet-Workbook** (Woche 1)
+
+- [ ] **Excel-Export mit mehreren Sheets**
   - Sheet 1: Übersicht (Dashboard)
   - Sheet 2: Einnahmen & Ausgaben (Detailliert)
   - Sheet 3: Immobilien-Analyse (falls vorhanden)
   - Sheet 4: Depot-Aufteilung
   - Sheet 5: Prognose (10 Jahre)
 
-- [ ] **Live-Formeln**
+**1.10.2: Live-Formeln** (Woche 2)
+
+- [ ] **Interaktive Excel-Formeln**
   - Excel-Formeln statt statische Werte
   - Kunde kann später selbst anpassen
   - Conditional Formatting für Warnungen (rot bei Engpässen)
@@ -1051,122 +1012,6 @@ git log --oneline --decorate  # See all tagged versions
   - "Ihr Geld fließt automatisch in dieser Reihenfolge..."
   - Zeigt Priorisierung visuell
 
----
-
-### Version 1.7.0: Verständnis-Features - Schutzschild & Automatik ⭐⭐⭐
-
-**ETA:** Q4 2026 (3-4 Wochen)
-**Fokus:** Kunde soll SEHEN & VERSTEHEN wie das System ihn schützt
-
-**Mission-Critical:** Tagesgeld = Schutzschild vor Depot-Entnahmen visuell zeigen!
-
-#### Features
-
-**1.7.1: Schutzschild-Visualisierung** ⭐⭐⭐ (Woche 1-2)
-
-- [ ] **Visueller Schutz-Effekt**
-  - Tagesgeld zeigt "🛡️ Schutzschild aktiv" wenn Limit erreicht
-  - Animation: Bei Engpass → Tagesgeld springt ein (leuchtet kurz auf)
-  - Depot zeigt "Geschützt durch Tagesgeld"
-  - Kunde **SIEHT** wie Schutz funktioniert!
-
-- [ ] **Depot-Schutz-Indikator**
-  - Visuelles Schild-Icon zwischen Tagesgeld und Depot
-  - Zeigt: "Depot vor Entnahmen geschützt"
-  - Bei Tagesgeld < Limit: Icon wird orange/rot
-  - Kunde versteht sofort den Zusammenhang
-
-**1.7.2: Automatik-Indicator** ⭐⭐ (Woche 2)
-
-- [ ] **"🤖 Automatik aktiv"-Badge**
-  - Kleine Animation/Icon bei jedem Basin
-  - Zeigt: "System reagiert automatisch"
-  - Bei Änderungen: Kurz aufleuchten "Auto-Anpassung erfolgt"
-  - Verstärkt Gefühl: "Eine KI managed das für mich"
-
-- [ ] **Priorisierungs-Animation**
-  - Visuell zeigen: "1. Tagesgeld auffüllen → 2. Depot"
-  - Zahlen-Badges an Flows: "Priorität 1", "Priorität 2"
-  - Bei Überschuss: Animation zeigt Reihenfolge
-
-**1.7.3: Liquiditäts-Ampel** ⭐⭐ (Woche 3)
-
-- [ ] **Status-Ampel am Tagesgeld**
-  - 🟢 Grün: Tagesgeld > Limit → "Alles sicher!"
-  - 🟡 Gelb: Tagesgeld < Limit → "Depot geschützt, aber knapp"
-  - 🔴 Rot: Tagesgeld fast leer → "Nur noch X€ bis Notfall"
-  - Kunde **versteht sofort** seinen Liquiditäts-Status
-
-- [ ] **Puffer-Anzeige**
-  - "Ihr Puffer: 3 Monate abgesichert"
-  - Berechnung: Tagesgeld / monatliche Fixkosten
-  - Visueller Balken zeigt Puffer-Monate
-
----
-
-### Version 1.8.0: Flow-Animationen & Interaktive Erklärungen ⭐⭐
-
-**ETA:** Q1 2027 (3-4 Wochen)
-**Fokus:** Geld-Fluss wird "lebendig" - Kunde sieht die Automatik in Aktion
-
-#### Features
-
-**1.8.1: Animierte Geld-Flows** ⭐⭐ (Woche 1-2)
-
-- [ ] **Flow-Partikel-System**
-  - Kleine "Geld-Partikel" (💶) fließen entlang der Flows
-  - Geschwindigkeit proportional zur Höhe des Betrags
-  - Dezent, aber sichtbar → "Geld fließt automatisch"
-
-- [ ] **Hover-Effekte auf Flows**
-  - Hover: Flow wird heller, zeigt Details
-  - Tooltip: "Dieser Flow transportiert monatlich X€"
-  - Click: Detaillierte Aufschlüsselung
-
-**1.8.2: Szenario-Simulation** ⭐ (Woche 2-3)
-
-- [ ] **"Was passiert wenn..."-Modus**
-  - Slider: "Einkommen -500€ diesen Monat"
-  - Live-Animation: System reagiert automatisch
-  - Zeigt: Tagesgeld wird angezapft, Depot bleibt unangetastet
-  - Kunde **SIEHT** die Flexibilität
-
-- [ ] **Engpass-Simulation**
-  - Button: "Zeig mir einen schwierigen Monat"
-  - Animation: Konsumkonto wird knapp → Tagesgeld springt ein
-  - Text: "So reagiert Ihr System automatisch auf Engpässe"
-
----
-
-### Version 1.9.0: Dual-Monitor-Support ⭐
-
-**ETA:** Q1 2027 (2-3 Wochen)
-**Fokus:** Berater-Monitor (mit Menü) + Kunden-Monitor (clean)
-
-**Warum jetzt:** Kurz vor v2.0, für beste Präsentation
-
-#### Features
-
-**1.9.1: Presenter-View-Synchronisation** (Woche 1-2)
-
-- [ ] **Dual-Monitor-Mode**
-  - Button: "Presenter-View öffnen"
-  - Monitor 1 (Berater): Alle Tools, Menü, Notizen sichtbar
-  - Monitor 2 (Kunde): Clean View, nur Visualisierung
-  - Live-Synchronisation: Änderungen sofort auf beiden Screens
-
-- [ ] **Kunden-View-Optimierung**
-  - Versteckt: Menü, Export-Buttons, Berater-Notizen
-  - Zeigt: Nur Flows, Basins, Werte
-  - Größere Schrift für bessere Lesbarkeit
-  - Perfekt für Beamer/großen Monitor
-
-**1.9.2: Synchronisations-Kontrolle** (Woche 2)
-
-- [ ] **Lock/Unlock-Modus**
-  - Berater kann Kunden-View "einfrieren"
-  - Nützlich für Fotos/Screenshots
-  - "Sync pausiert" - Indikator
 
 ---
 
@@ -1594,8 +1439,32 @@ Tab-Close → sessionStorage.clear()
 
 ---
 
+---
+
+## 📋 Prioritäten-Übersicht (Q1-Q3 2026)
+
+| Version | Feature | Priorität | ETA | ROI Beratung |
+|---------|---------|-----------|-----|--------------|
+| **v1.5.2** | **Cleanup offener v1.5.0 Tasks** | ⭐ MEDIUM-HIGH | 1 Woche | 🟡 MEDIUM |
+| **v1.6.0** | **UX-Polish & Schutzschild-Visualisierung** | ⭐⭐⭐ **HIGHEST** | 4-5 Wochen | 🟢 **HIGHEST** |
+| **v1.7.0** | **Berater-Notizen & Annotations** | ⭐⭐ MEDIUM | 3-4 Wochen | 🟢 HIGH |
+| **v1.8.0** | **Session-Historie & Templates** | ⭐ LOW | 2-3 Wochen | 🟡 MEDIUM |
+| **v1.9.0** | **Beratungs-Szenarien** | ⭐⭐ MEDIUM | 2 Wochen | 🟢 HIGH |
+| **v1.10.0** | **Excel-Export mit Formeln** | ⭐ LOW | 2 Wochen | 🟡 MEDIUM |
+
+**Empfohlener Entwicklungspfad:**
+1. ✅ **Jetzt:** v1.5.2 abschließen (1 Woche)
+2. ✅ **Dann:** v1.6.0 starten (Schutzschild-Feature = höchste Priorität!)
+3. ⏳ Q2 2026: v1.7.0 (Berater-Notizen)
+4. ⏳ Q2 2026: v1.8.0 (Session-Historie)
+5. ⏳ Q3 2026: v1.9.0 + v1.10.0 (optional)
+
+---
+
+## 🎯 Roadmap-Ziele
+
 **🎯 Ziel: Version 2.0.0 (Vermögensverzehr-Modus) bis Q1-Q2 2027**
-**📅 Nächster Meilenstein: v1.3.0 (Export-Erweiterung) - Q4 2025 / Q1 2026**
+**📅 Nächster Meilenstein: v1.5.2 (Cleanup) → v1.6.0 (UX-Polish) - Q1 2026**
 
 **Langfristige Vision:**
 - v1.x: Vermögensaufbau-Fokus (Erwerbstätige)
@@ -1604,5 +1473,6 @@ Tab-Close → sessionStorage.clear()
 
 ---
 
-*Letzte Aktualisierung: 23. Oktober 2025*
-*Version: 2.2 (Roadmap - v2.0 Konzept: Vermögensverzehr-Modus)*
+*Letzte Aktualisierung: 19. Dezember 2025*
+*Version: 3.0 (Roadmap konsolidiert nach ROADMAP_ANALYSIS.md)*
+*Nächste Version: v1.5.2 (NEXT UP) → v1.6.0 (HIGHEST PRIORITY)*
