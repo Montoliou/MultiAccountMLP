@@ -884,21 +884,72 @@ git log --oneline --decorate  # See all tagged versions
 
 **Problem:** Kunde versteht nicht, dass Tagesgeld das Depot vor Panikverkäufen schützt.
 
-**Lösung - Kombination aus visueller Animation + Szenario-Vergleich:**
+**Lösung - 4-Stufen-Interaktionskonzept (kombiniert alle besten Ideen):**
 
-- [ ] **Idee 1: Schutzschild-Animation mit Puls-Effekt**
-  - Schild über Depot pulsiert sanft und zeigt visuelle Verbindung zum Tagesgeldkonto
-  - Animierte gepunktete Linie vom Tagesgeldkonto zum Schild zeigt "Energie-Fluss"
-  - Tooltip beim Hover: "Dein Tagesgeld schützt dein Depot vor Panikverkäufen in Krisenzeiten"
-  - **Farbcodierung basierend auf Tagesgeld-Füllstand:**
-    - Schild leuchtet stark (grün) wenn Tagesgeld ≥ Ziel
-    - Schild wird schwächer (gelb/orange) wenn Tagesgeld < 50% vom Ziel
-    - Schild verblasst (grau) wenn Tagesgeld = 0
-  - Emotional und intuitiv: "Tagesgeld = Schutz"
+**Level 1: Permanentes Info-Badge am Schild** ⭐⭐⭐
+- [ ] **Schild zeigt konkrete Puffer-Daten**
+  ```
+  ┌─────────────────────┐
+  │  🛡️ Geschützt       │
+  │  Puffer: 3 Monate   │ ← Berechnung: Tagesgeld / monatl. Fixkosten
+  │  (4.500 €)          │
+  └─────────────────────┘
+  ```
+  - **Berechnung:** `Puffer-Monate = Math.floor(tagesgeldCurrent / fixkostenMonatlich)`
+  - **Dynamische Anzeige:** Aktualisiert sich live bei Änderungen
+  - **Farbcodierung des Schilds:**
+    - 🟢 Grün: Puffer ≥ 3 Monate → "Sicher"
+    - 🟡 Gelb: Puffer 1-3 Monate → "Knapp"
+    - 🔴 Rot: Puffer < 1 Monat → "Kritisch"
+  - Dezent, immer sichtbar, konkret statt abstrakt
 
-- [ ] **Idee 2: Krisenszenario-Vergleich bei Klick auf Schild**
-  - **Klick auf Schild** öffnet Modal mit konkreter Vergleichsrechnung
-  - **Szenario-Vergleich:**
+**Level 2: Hover-Tooltip mit Erklärung** ⭐⭐
+- [ ] **Erweiterte Info bei Mouse-Over**
+  ```
+  Tooltip beim Hover:
+  ┌────────────────────────────────────────┐
+  │ 💡 Dein Tagesgeld schützt dein Depot   │
+  │                                        │
+  │ ✓ Puffer: 3 Monate Fixkosten (4.500 €)│
+  │ ✓ Bei Krise: Keine Panikverkäufe      │
+  │ ✓ Depot kann sich erholen             │
+  │ ✓ Langfristig höhere Rendite          │
+  │                                        │
+  │ 🎬 Klick für Demo & Vergleich          │
+  └────────────────────────────────────────┘
+  ```
+  - Gepunktete Linie vom Tagesgeldkonto zum Schild pulsiert beim Hover
+  - Call-to-Action: "Klick für Demo"
+  - Schnell verständlich, nicht aufdringlich
+
+**Level 3: 5-Sekunden-Demo-Animation** ⭐⭐⭐ (neu!)
+- [ ] **Klick startet automatische Demo-Sequenz**
+  ```
+  Sequenz (5 Sekunden):
+
+  [0-2s] "Was passiert OHNE Puffer?"
+    → Schild verblasst zu grau (opacity: 0.2)
+    → Depot-Basin wackelt leicht (shake animation)
+    → Warnung erscheint: "⚠️ Panikverkauf-Risiko!"
+    → Depot bekommt roten Glow
+
+  [2-3s] Übergangs-Animation
+    → Schild kehrt zurück (opacity: 0.2 → 1.0)
+    → Gepunktete Linie vom Tagesgeld pulsiert stärker
+
+  [3-5s] "Mit Puffer bist du geschützt!"
+    → Schild leuchtet grün (glow effect)
+    → ✅ "Depot bleibt investiert"
+    → Ruhige, stabile Darstellung
+  ```
+  - **Nicht als dauerhafter Toggle** (verhindert Verwirrung)
+  - **Automatisches Reset** nach 5 Sekunden
+  - **Emotional überzeugend** durch direkten Vorher/Nachher-Vergleich
+  - Inspiriert von ChatGPT Idee 2 ("Szenario-Schalter"), aber als Demo statt Toggle
+
+**Level 4: Modal mit Zahlen-Vergleich** ⭐⭐⭐
+- [ ] **Nach Demo-Animation öffnet sich automatisch Modal**
+  - **Szenario-Vergleich mit echten Zahlen:**
     ```
     📊 Krisenszenario (z.B. 2008, 2020, 2022)
 
@@ -916,22 +967,43 @@ git log --oneline --decorate  # See all tagged versions
 
     💰 Mehrertrag: +47.000 € über 15 Jahre
     ```
-  - **Grafik**: Zwei Liniendiagramme nebeneinander (mit/ohne Tagesgeld)
-  - **Fazit**: "Dein Tagesgeld sichert dir bis zu 67% mehr Rendite!"
-  - Konkret, messbar, überzeugend durch echte Zahlen
+  - **Chart.js Visualisierung:** Zwei Liniendiagramme Side-by-Side
+  - **Stress-Test-Stats** (ChatGPT Idee 3):
+    - "In 87% der letzten Krisen hätte dein Puffer gereicht"
+    - Basierend auf historischen Daten (2000, 2008, 2020, 2022)
+  - **Fazit:** "Dein Tagesgeld sichert dir bis zu 67% mehr Rendite!"
 
 **Technische Umsetzung:**
-- CSS Pulse-Animation für Schild (3s ease-in-out)
-- SVG-Path für gepunktete Verbindungslinie (stroke-dasharray)
-- Modal mit Chart.js für Szenario-Vergleich
-- Farbinterpolation basierend auf (TagesgeldIST / TagesgeldZIEL)
-- Interaktiver Hover-State mit Tooltip-System
+- **CSS Animations:**
+  - Pulse-Animation für Schild (3s ease-in-out, kontinuierlich)
+  - Shake-Animation für Demo (0.3s cubic-bezier)
+  - Glow-Effekt via box-shadow (smooth transition)
+  - Fade-Animations für Warnungen (opacity transitions)
+- **SVG:**
+  - Gepunktete Verbindungslinie (stroke-dasharray: 5 5)
+  - Path-Animation via stroke-dashoffset
+- **JavaScript:**
+  - Demo-Sequenz mit async/await + setTimeout
+  - Farbinterpolation basierend auf `(tagesgeldCurrent / fixkostenTotal) / 3` (3 Monate Target)
+  - Chart.js für Vergleichs-Grafik
+  - Automatisches Modal-Opening nach Demo
+- **Tooltip-System:**
+  - Bestehende Tooltip-Infrastruktur erweitern
+  - Positionierung relativ zum Schild
 
 **Vorteil für Beratung:**
-- Kunde **SIEHT** sofort: Tagesgeld = Schutz
-- Zahlen-basierte Argumentation (nicht nur Theorie)
-- Emotionale Verstärkung durch visuelle Animation
-- Export-fähig: Schutzschild-Logik in PDF-Infobox
+- ✅ **Sofort sichtbar** (Badge mit Zahlen)
+- ✅ **Schnell verständlich** (Hover-Tooltip)
+- ✅ **Emotional überzeugend** (5-Sek-Demo zeigt Gefahr ohne Puffer)
+- ✅ **Rational überzeugend** (Modal mit konkreten Rendite-Zahlen)
+- ✅ **Keine Überladung** (progressive Disclosure - nur bei Interesse)
+- ✅ **Export-fähig** (Schutzschild-Logik + Puffer-Berechnung im PDF)
+
+**Inspiration:**
+- Eigene Ideen 1+2: Visuelle Animation + Zahlen-Modal
+- ChatGPT Idee 1: Stoßdämpfer-Metapher (subtil in Wackel-Animation)
+- ChatGPT Idee 2: Szenario-Toggle (umgesetzt als temporäre Demo)
+- ChatGPT Idee 3: Konkrete Zeit/Betrags-Story (permanentes Badge)
 
 **1.6.2: Presenter-Mode** (Woche 2-3)
 
