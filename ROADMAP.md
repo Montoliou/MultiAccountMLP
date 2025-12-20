@@ -330,6 +330,18 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
   - Obsolete CSS-Regeln aus v1.4.0 gelöscht
   - **Commit:** 0849689 - Sauberes CSS ohne tote Regeln
 
+**Bug Fixes (Post-Refactoring):**
+- ✅ **Income Flow Width Not Scaling**: `maxFlow` Berechnung korrigiert
+  - **Problem:** Income Flow hatte immer 100% Breite (normalisiert zu 1.0)
+  - **Ursache:** `maxFlow = income` → normalisierter Wert = `income/income = 1.0`
+  - **Fix:** `maxFlow = Math.max()` über ALLE Flows (income, totalAbgang, konsumLeftover, etc.)
+  - **Ergebnis:** Flows skalieren jetzt proportional zum größten Wert im System
+  - **Commit:** f266bae - Kritischer Fix für Flow-Visualisierung
+
+- ✅ **Console Log Spam**: Debug-Logs aus `renderDepotBasin()` entfernt
+  - Entfernt: "Fund block sizes" Logs (Lines 5779-5780)
+  - **Commit:** f266bae - Verhindert Browser-Slowdown
+
 **Nicht umgesetzt (LOW Priority):**
 - ⏸️ Virtual DOM für Listen (nur bei Performance-Problemen nötig)
 - ⏸️ Smart Variant Switch Optimization (bereits gut performant)
