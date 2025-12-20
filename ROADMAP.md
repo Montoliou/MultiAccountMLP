@@ -976,7 +976,71 @@ git log --oneline --decorate  # See all tagged versions
 - ChatGPT Idee 2: Szenario-Toggle (umgesetzt als temporäre Demo)
 - ChatGPT Idee 3: Konkrete Zeit/Betrags-Story (permanentes Badge)
 
-**1.6.2: Presenter-Mode** (Woche 2-3)
+**1.6.2: Cost-Average-Effekt Erklärer** ⭐⭐⭐ (Woche 2-3)
+
+**Warum wichtig:** Erklärt dem Kunden, WARUM Einmalanlagen in stabile Fonds (blau) und Sparraten in volatile Fonds (rot) gehen sollten.
+
+- [ ] **Interaktive Kurssimulation**
+  - Kurs A (MLP Blau): Stabil steigend (10 → 19)
+  - Kurs B (Error Red): Volatil schwankend (2 → 10)
+  - Frage: "Bei welcher Kursentwicklung möchten Sie investieren?"
+  - Button: "Kurs A wählen" vs "Kurs B wählen"
+
+- [ ] **Cost-Average Animation**
+  - 10 monatliche Raten à 1.200€ "fließen" zum Chart
+  - Bei niedrigen Kursen: VIELE Anteile gekauft (visuell gestapelt)
+  - Bei hohen Kursen: WENIGE Anteile gekauft
+  - Counter: "23.733 Anteile" vs "7.856 Anteile"
+
+- [ ] **Überraschungs-Ergebnis**
+  - Kurs A (stabil): 28.495€ Gewinn (3,8%)
+  - Kurs B (volatil): 129.200€ Gewinn (13,0%) ✅
+  - **Insight:** "Bei Sparraten ist Volatilität ein VORTEIL!"
+  - Dezente Animation am Ende (kein Confetti)
+
+- [ ] **Integration im Depot-Modal**
+  - Button: "💡 Warum welcher Fonds?" im Depot-Modal
+  - Vollbild-Overlay öffnet Erklärer
+  - Zurück zum Depot nach Abschluss
+
+**Design:**
+- MLP Blau Dark `#033D5D` für stabilen Kurs A
+- Error Red `#C1293D` für volatilen Kurs B (passt zur Fonds-Kategorisierung)
+- 8px Grid Spacing (24px, 32px, 48px)
+- Chart.js für Kursverläufe
+- Vanilla JS für Counter-Animation
+
+**1.6.3: Tagesgeld-Kriegskasse Erklärer** ⭐⭐⭐ (Woche 3-4)
+
+**Warum wichtig:** Erklärt dem Kunden, warum eine Investitionsrücklage (Tagesgeld/Geldmarkt) wichtig ist, um in Crashzeiten günstig nachzukaufen.
+
+- [ ] **Szenario-Vergleich**
+  - OHNE Tagesgeld-Puffer:
+    - Crash -30% → Notverkauf im Tief → Verluste realisiert
+    - Rendite: 4,2% p.a.
+  - MIT Tagesgeld-Puffer (5.000€):
+    - Crash -30% → Liquidität aus Tagesgeld → Kein Verkauf
+    - Depot erholt sich → Rendite: 7,0% p.a.
+    - **Mehrertrag: +47.000€ über 15 Jahre**
+
+- [ ] **Interaktive Crash-Simulation**
+  - Chart zeigt Portfolio-Entwicklung
+  - Button: "Crash simulieren"
+  - Animation: Depot-Kurve stürzt ab
+  - OHNE Puffer: Rote Verkaufs-Marker im Tief
+  - MIT Puffer: Grüne "Gehalten"-Marker
+
+- [ ] **Stress-Test Stats**
+  - "In 87% der letzten Krisen hätte dein Puffer gereicht"
+  - Historische Daten: 2000, 2008, 2020, 2022
+  - Konkrete Zahlen statt Theorie
+
+- [ ] **Integration**
+  - Button im Tagesgeld-Basin: "🛡️ Warum ist Tagesgeld wichtig?"
+  - Vollbild-Overlay
+  - Chart.js für Vergleichs-Grafik
+
+**1.6.4: Presenter-Mode** (Woche 4-5)
 
 - [ ] **Vollbild-Modus**
   - F11-ähnlich, aber mit Controls
@@ -989,7 +1053,7 @@ git log --oneline --decorate  # See all tagged versions
   - Temporäres Dimmen anderer Elemente
   - "Kunde fokussiert auf dieses Basin"
 
-**1.6.3: Animierte Transitionen** ⭐ (Woche 3)
+**1.6.5: Animierte Transitionen** ⭐ (Woche 5)
 
 - [ ] **Smooth Beratungsmodus-Steps**
   - Fade-In/Out statt hartes Show/Hide
@@ -1001,7 +1065,7 @@ git log --oneline --decorate  # See all tagged versions
   - Zeigt "Geld fließt automatisch"
   - Dezent, nicht ablenkend
 
-**1.6.4: Kunden-Verständnis-Features** ⭐⭐ (Woche 4-5)
+**1.6.6: Kunden-Verständnis-Features** ⭐⭐ (Woche 6)
 
 - [ ] **Tooltip-System**
   - Hover auf Basin: Kurze Erklärung
