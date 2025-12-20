@@ -16,6 +16,11 @@
             --mlp-blue-light: #60a5fa;
             --mlp-platin: #cbd5f5;
 
+            /* v1.6.2: MLP Corporate Design (Official) */
+            --mlp-corporate-blue: #033D5D;  /* MLP Blau Dark - Logo, Headings, Primary Buttons */
+            --mlp-titanium: #BEB6AA;         /* Titanium - Dividers, Borders, Secondary */
+            --mlp-turkis: #47A190;           /* Türkis - Backgrounds, Highlights */
+
             /* Status Colors */
             --color-success: #10b981;
             --color-warning: #fbbf24;
@@ -1972,6 +1977,14 @@
             <button type="button" onclick="closeModal('depot-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Depotfenster schließen">&times;</button>
             <h3 id="depot-modal-title" class="text-xl font-bold mb-4">Depot-Aufteilung</h3>
             <p id="depot-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Lege fest, wie neue Investments verteilt werden.</p>
+
+            <!-- v1.6.2: Cost-Average Erklärer Button -->
+            <button type="button" onclick="openCostAverageModal()" class="mb-4 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                <span class="text-xl">💡</span>
+                <span>Warum welcher Fonds?</span>
+                <span class="text-sm opacity-75">(Cost-Average-Effekt)</span>
+            </button>
+
             <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
             <button type="button" onclick="addDepotItem()" class="mt-4 text-sm bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-md">+ Fonds hinzufügen</button>
             <hr class="border-gray-600 my-4">
@@ -2047,6 +2060,118 @@
                 <img id="msci-image" src="assets/msci_renditedreieck.png" alt="MSCI World Renditedreieck" class="w-full h-full object-contain transition-transform duration-300">
             </div>
             <p class="text-sm text-gray-400 text-center mt-3">Klicke auf das Bild zum Zoomen</p>
+        </div>
+    </div>
+
+    <!-- v1.6.2: Cost-Average-Effekt Erklärer Modal -->
+    <div id="cost-average-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="cost-average-title">
+        <div class="bg-white w-full max-w-5xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
+            <button type="button" onclick="closeCostAverageModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl" aria-label="Cost-Average Erklärer schließen">&times;</button>
+
+            <!-- Phase 1: Die Frage -->
+            <div id="ca-phase-1">
+                <h2 id="cost-average-title" class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">Bei welcher Kursentwicklung möchten Sie investieren?</h2>
+                <p class="text-lg text-gray-700 mb-8">Hier sehen Sie zwei unterschiedliche Kursverläufe über 10 Monate. Wählen Sie, bei welchem Kurs Sie lieber mit monatlichen Sparraten investieren möchten.</p>
+
+                <!-- Chart Container -->
+                <div class="bg-gray-50 p-6 rounded-lg mb-8" style="border: 2px solid var(--mlp-titanium);">
+                    <canvas id="ca-chart" style="max-height: 400px;"></canvas>
+                </div>
+
+                <!-- Kurs-Legende -->
+                <div class="grid grid-cols-2 gap-6 mb-8">
+                    <div class="p-6 rounded-lg" style="background: rgba(3, 61, 93, 0.1); border: 2px solid var(--mlp-corporate-blue);">
+                        <h3 class="text-xl font-bold mb-2" style="color: var(--mlp-corporate-blue);">📈 Kurs A: Stabil steigend</h3>
+                        <p class="text-gray-700">Kontinuierlicher Aufwärtstrend von 10,00 € auf 18,90 €</p>
+                        <p class="text-sm text-gray-600 mt-2">Geringe Schwankungen, vorhersehbar</p>
+                    </div>
+                    <div class="p-6 rounded-lg" style="background: rgba(193, 41, 61, 0.1); border: 2px solid #C1293D;">
+                        <h3 class="text-xl font-bold mb-2" style="color: #C1293D;">📉📈 Kurs B: Volatil schwankend</h3>
+                        <p class="text-gray-700">Starke Schwankungen zwischen 2,00 € und 10,50 €</p>
+                        <p class="text-sm text-gray-600 mt-2">Hohe Volatilität, unberechenbar</p>
+                    </div>
+                </div>
+
+                <!-- Auswahl-Buttons -->
+                <div class="grid grid-cols-2 gap-6">
+                    <button onclick="selectCourse('A')" class="py-6 px-8 rounded-lg font-bold text-xl text-white transition-all hover:scale-105 shadow-lg" style="background: var(--mlp-corporate-blue);">
+                        Kurs A wählen
+                    </button>
+                    <button onclick="selectCourse('B')" class="py-6 px-8 rounded-lg font-bold text-xl text-white transition-all hover:scale-105 shadow-lg" style="background: #C1293D;">
+                        Kurs B wählen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Phase 2: Animation (initially hidden) -->
+            <div id="ca-phase-2" style="display: none;">
+                <h2 class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">Cost-Average-Effekt in Aktion</h2>
+                <p class="text-lg text-gray-700 mb-8">Beobachten Sie, wie 10 monatliche Raten à 1.200 € investiert werden...</p>
+
+                <div class="bg-gray-50 p-6 rounded-lg mb-6" style="border: 2px solid var(--mlp-titanium);">
+                    <canvas id="ca-chart-animated" style="max-height: 400px;"></canvas>
+                </div>
+
+                <!-- Counter Display -->
+                <div class="grid grid-cols-3 gap-6 mb-6">
+                    <div class="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg text-center" style="border: 2px solid var(--mlp-titanium);">
+                        <p class="text-sm text-gray-600 mb-2">Monat</p>
+                        <p id="ca-month-counter" class="text-4xl font-bold" style="color: var(--mlp-corporate-blue);">0 / 10</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg text-center" style="border: 2px solid var(--mlp-titanium);">
+                        <p class="text-sm text-gray-600 mb-2">Investiert</p>
+                        <p id="ca-invested-counter" class="text-4xl font-bold" style="color: var(--color-success);">0 €</p>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg text-center" style="border: 2px solid var(--mlp-titanium);">
+                        <p class="text-sm text-gray-600 mb-2">Anteile gekauft</p>
+                        <p id="ca-shares-counter" class="text-4xl font-bold" style="color: var(--mlp-corporate-blue);">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 3: Ergebnis (initially hidden) -->
+            <div id="ca-phase-3" style="display: none;">
+                <h2 class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">⚡ Überraschendes Ergebnis!</h2>
+
+                <div class="grid grid-cols-2 gap-8 mb-8">
+                    <!-- Kurs A Ergebnis -->
+                    <div class="p-8 rounded-lg" style="background: rgba(3, 61, 93, 0.1); border: 2px solid var(--mlp-corporate-blue);">
+                        <h3 class="text-2xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">Kurs A (stabil)</h3>
+                        <div class="space-y-3">
+                            <p class="text-gray-700"><span class="font-semibold">Investiert:</span> 12.000 €</p>
+                            <p class="text-gray-700"><span class="font-semibold">Anteile:</span> <span id="ca-result-shares-a">7.856,90</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Endwert:</span> <span id="ca-result-value-a">148.495,35 €</span></p>
+                            <hr style="border-color: var(--mlp-titanium);">
+                            <p class="text-2xl font-bold" style="color: var(--color-success);">Gewinn: <span id="ca-result-profit-a">28.495,35 €</span></p>
+                            <p class="text-lg text-gray-600">Rendite: <span id="ca-result-return-a">3,8%</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Kurs B Ergebnis -->
+                    <div class="p-8 rounded-lg" style="background: rgba(193, 41, 61, 0.1); border: 2px solid #C1293D;">
+                        <h3 class="text-2xl font-bold mb-4" style="color: #C1293D;">Kurs B (volatil) ✅</h3>
+                        <div class="space-y-3">
+                            <p class="text-gray-700"><span class="font-semibold">Investiert:</span> 12.000 €</p>
+                            <p class="text-gray-700"><span class="font-semibold">Anteile:</span> <span id="ca-result-shares-b">23.733,33</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Endwert:</span> <span id="ca-result-value-b">249.200,00 €</span></p>
+                            <hr style="border-color: var(--mlp-titanium);">
+                            <p class="text-2xl font-bold" style="color: var(--color-success);">Gewinn: <span id="ca-result-profit-b">129.200,00 €</span></p>
+                            <p class="text-lg text-gray-600">Rendite: <span id="ca-result-return-b">13,0%</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insight Box -->
+                <div class="p-8 rounded-lg mb-8" style="background: linear-gradient(135deg, #033D5D 0%, #47A190 100%); color: white;">
+                    <h3 class="text-2xl font-bold mb-4">💡 Die Erkenntnis:</h3>
+                    <p class="text-xl leading-relaxed">Bei <strong>monatlichen Sparraten</strong> ist Volatilität ein <strong>VORTEIL</strong>! Der Cost-Average-Effekt sorgt dafür, dass Sie bei niedrigen Kursen automatisch <strong>mehr Anteile</strong> kaufen und bei hohen Kursen <strong>weniger Anteile</strong>. So profitieren Sie langfristig von Schwankungen.</p>
+                    <p class="text-lg mt-4 opacity-90"><strong>Daher:</strong> Einmalanlagen → stabile Fonds (blau) | Sparraten → volatile Fonds (rot)</p>
+                </div>
+
+                <button onclick="closeCostAverageModal()" class="w-full py-4 rounded-lg font-bold text-xl text-white transition-all hover:scale-105 shadow-lg" style="background: var(--mlp-corporate-blue);">
+                    Verstanden, zurück zum Depot
+                </button>
+            </div>
         </div>
     </div>
 
@@ -5499,6 +5624,207 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if (el.getAttribute('aria-hidden') === 'true') return false;
         return isVisible(el);
     }
+
+    // ===== v1.6.2: COST-AVERAGE-EFFEKT ERKLÄRER =====
+
+    // Kursdaten (aus Excel-Tool)
+    const courseData = {
+        A: [10.0, 13.0, 13.5, 16.0, 17.0, 16.0, 17.0, 16.5, 18.0, 18.9], // Stabil steigend
+        B: [10.0, 2.0, 4.0, 8.0, 4.0, 6.0, 9.0, 4.0, 8.0, 10.5]  // Volatil schwankend
+    };
+
+    let caChart = null;
+    let caChartAnimated = null;
+    let selectedCourse = null;
+
+    function openCostAverageModal() {
+        // Reset to Phase 1
+        document.getElementById('ca-phase-1').style.display = 'block';
+        document.getElementById('ca-phase-2').style.display = 'none';
+        document.getElementById('ca-phase-3').style.display = 'none';
+
+        // Initialize chart
+        initCostAverageChart();
+
+        // Open modal
+        openModal('cost-average-modal');
+    }
+
+    function closeCostAverageModal() {
+        closeModal('cost-average-modal');
+        // Destroy charts to free memory
+        if (caChart) { caChart.destroy(); caChart = null; }
+        if (caChartAnimated) { caChartAnimated.destroy(); caChartAnimated = null; }
+    }
+
+    function initCostAverageChart() {
+        const ctx = document.getElementById('ca-chart');
+        if (!ctx) return;
+
+        if (caChart) caChart.destroy();
+
+        caChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                datasets: [
+                    {
+                        label: 'Kurs A (stabil)',
+                        data: courseData.A,
+                        borderColor: '#033D5D',
+                        backgroundColor: 'rgba(3, 61, 93, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.2,
+                        fill: true
+                    },
+                    {
+                        label: 'Kurs B (volatil)',
+                        data: courseData.B,
+                        borderColor: '#C1293D',
+                        backgroundColor: 'rgba(193, 41, 61, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.2,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 0,
+                        max: 20,
+                        title: { display: true, text: 'Kurs in €' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Monat' }
+                    }
+                }
+            }
+        });
+    }
+
+    async function selectCourse(course) {
+        selectedCourse = course;
+
+        // Transition to Phase 2
+        document.getElementById('ca-phase-1').style.display = 'none';
+        document.getElementById('ca-phase-2').style.display = 'block';
+
+        // Initialize animated chart
+        initAnimatedChart(course);
+
+        // Start animation
+        await animateCostAverage(course);
+
+        // Show Phase 3
+        document.getElementById('ca-phase-2').style.display = 'none';
+        document.getElementById('ca-phase-3').style.display = 'block';
+
+        // Calculate and display results
+        showResults();
+    }
+
+    function initAnimatedChart(course) {
+        const ctx = document.getElementById('ca-chart-animated');
+        if (!ctx) return;
+
+        if (caChartAnimated) caChartAnimated.destroy();
+
+        caChartAnimated = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                datasets: [
+                    {
+                        label: `Kurs ${course}`,
+                        data: courseData[course],
+                        borderColor: course === 'A' ? '#033D5D' : '#C1293D',
+                        backgroundColor: course === 'A' ? 'rgba(3, 61, 93, 0.2)' : 'rgba(193, 41, 61, 0.2)',
+                        borderWidth: 4,
+                        tension: 0.2,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: false, min: 0, max: 20 },
+                    x: { title: { display: true, text: 'Monat' } }
+                }
+            }
+        });
+    }
+
+    async function animateCostAverage(course) {
+        const monthlyRate = 1200;
+        const courseValues = courseData[course];
+        let totalInvested = 0;
+        let totalShares = 0;
+
+        for (let month = 1; month <= 10; month++) {
+            await new Promise(resolve => setTimeout(resolve, 800)); // 800ms delay
+
+            const currentPrice = courseValues[month - 1];
+            const sharesBought = monthlyRate / currentPrice;
+            totalInvested += monthlyRate;
+            totalShares += sharesBought;
+
+            // Update counters
+            document.getElementById('ca-month-counter').textContent = `${month} / 10`;
+            document.getElementById('ca-invested-counter').textContent = `${totalInvested.toLocaleString('de-DE')} €`;
+            document.getElementById('ca-shares-counter').textContent = totalShares.toFixed(2);
+        }
+    }
+
+    function showResults() {
+        // Calculate results for both courses
+        const results = {};
+        ['A', 'B'].forEach(course => {
+            const monthlyRate = 1200;
+            const courseValues = courseData[course];
+            const finalPrice = courseValues[courseValues.length - 1];
+            let totalShares = 0;
+
+            courseValues.forEach(price => {
+                totalShares += monthlyRate / price;
+            });
+
+            const totalInvested = 12000;
+            const endValue = totalShares * finalPrice;
+            const profit = endValue - totalInvested;
+            const returnPercent = ((profit / totalInvested) * 100).toFixed(1);
+
+            results[course] = {
+                shares: totalShares.toFixed(2),
+                endValue: endValue.toFixed(2),
+                profit: profit.toFixed(2),
+                returnPercent
+            };
+        });
+
+        // Update HTML
+        document.getElementById('ca-result-shares-a').textContent = results.A.shares;
+        document.getElementById('ca-result-value-a').textContent = `${parseFloat(results.A.endValue).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+        document.getElementById('ca-result-profit-a').textContent = `${parseFloat(results.A.profit).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+        document.getElementById('ca-result-return-a').textContent = `${results.A.returnPercent}%`;
+
+        document.getElementById('ca-result-shares-b').textContent = results.B.shares;
+        document.getElementById('ca-result-value-b').textContent = `${parseFloat(results.B.endValue).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+        document.getElementById('ca-result-profit-b').textContent = `${parseFloat(results.B.profit).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+        document.getElementById('ca-result-return-b').textContent = `${results.B.returnPercent}%`;
+    }
+
+    // ===== END COST-AVERAGE-EFFEKT ERKLÄRER =====
 
     // Toast Notification System
     function showToast(message, type = 'success', duration = 4000) {
