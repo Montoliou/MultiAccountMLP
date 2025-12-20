@@ -1474,6 +1474,18 @@
             }
         }
 
+        /* v1.6.2: Pulse animation for crash highlight */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.02);
+                opacity: 0.95;
+            }
+        }
+
         .fund-block:nth-child(2) {
             animation-delay: 0.5s;
         }
@@ -2068,68 +2080,88 @@
         <div class="bg-white w-full max-w-5xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
             <button type="button" onclick="closeCostAverageModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl" aria-label="Cost-Average Erklärer schließen">&times;</button>
 
-            <!-- Phase 1: Die Frage -->
+            <!-- Phase 1: Vergleichsansicht -->
             <div id="ca-phase-1">
-                <h2 id="cost-average-title" class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">Bei welcher Kursentwicklung möchten Sie investieren?</h2>
-                <p class="text-lg text-gray-700 mb-8">Hier sehen Sie zwei unterschiedliche Kursverläufe über 10 Monate. Wählen Sie, bei welchem Kurs Sie lieber mit monatlichen Sparraten investieren möchten.</p>
+                <h2 id="cost-average-title" class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">Warum volatile Kurse bei Sparraten BESSER sind</h2>
+                <p class="text-lg text-gray-700 mb-8">Beobachten Sie, wie 10 monatliche Raten à 1.200 € in zwei unterschiedliche Fonds investiert werden. Sie werden überrascht sein!</p>
 
-                <!-- Chart Container -->
-                <div class="bg-gray-50 p-6 rounded-lg mb-8" style="border: 2px solid var(--mlp-titanium);">
-                    <canvas id="ca-chart" style="max-height: 400px;"></canvas>
-                </div>
-
-                <!-- Kurs-Legende -->
+                <!-- Side-by-Side Comparison -->
                 <div class="grid grid-cols-2 gap-6 mb-8">
-                    <div class="p-6 rounded-lg" style="background: rgba(3, 61, 93, 0.1); border: 2px solid var(--mlp-corporate-blue);">
-                        <h3 class="text-xl font-bold mb-2" style="color: var(--mlp-corporate-blue);">📈 Kurs A: Stabil steigend</h3>
-                        <p class="text-gray-700">Kontinuierlicher Aufwärtstrend von 10,00 € auf 18,90 €</p>
-                        <p class="text-sm text-gray-600 mt-2">Geringe Schwankungen, vorhersehbar</p>
+                    <!-- Kurs A: Stabil -->
+                    <div class="p-6 rounded-lg" style="background: rgba(3, 61, 93, 0.05); border: 2px solid var(--mlp-corporate-blue);">
+                        <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">📈 Kurs A: Stabil steigend</h3>
+
+                        <!-- Chart A -->
+                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
+                            <canvas id="ca-chart-a" style="max-height: 250px;"></canvas>
+                        </div>
+
+                        <!-- Share Bars Container A -->
+                        <div id="ca-share-bars-a" class="space-y-2 mb-4" style="min-height: 200px;">
+                            <!-- Will be populated dynamically during animation -->
+                        </div>
+
+                        <!-- Counters A -->
+                        <div class="space-y-3 p-4 bg-white rounded-lg" style="border: 1px solid var(--mlp-titanium);">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Monat:</span>
+                                <span id="ca-month-a" class="text-lg font-bold" style="color: var(--mlp-corporate-blue);">0 / 10</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Investiert:</span>
+                                <span id="ca-invested-a" class="text-lg font-bold" style="color: var(--mlp-corporate-blue);">0 €</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Anteile gesamt:</span>
+                                <span id="ca-shares-a" class="text-lg font-bold" style="color: var(--mlp-corporate-blue);">0</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-6 rounded-lg" style="background: rgba(193, 41, 61, 0.1); border: 2px solid #C1293D;">
-                        <h3 class="text-xl font-bold mb-2" style="color: #C1293D;">📉📈 Kurs B: Volatil schwankend</h3>
-                        <p class="text-gray-700">Starke Schwankungen zwischen 2,00 € und 10,50 €</p>
-                        <p class="text-sm text-gray-600 mt-2">Hohe Volatilität, unberechenbar</p>
+
+                    <!-- Kurs B: Volatil -->
+                    <div class="p-6 rounded-lg" style="background: rgba(193, 41, 61, 0.05); border: 2px solid #C1293D;">
+                        <h3 class="text-xl font-bold mb-4" style="color: #C1293D;">📉📈 Kurs B: Volatil mit CRASH</h3>
+
+                        <!-- Chart B -->
+                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
+                            <canvas id="ca-chart-b" style="max-height: 250px;"></canvas>
+                        </div>
+
+                        <!-- Share Bars Container B -->
+                        <div id="ca-share-bars-b" class="space-y-2 mb-4" style="min-height: 200px;">
+                            <!-- Will be populated dynamically during animation -->
+                        </div>
+
+                        <!-- Counters B -->
+                        <div class="space-y-3 p-4 bg-white rounded-lg" style="border: 1px solid var(--mlp-titanium);">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Monat:</span>
+                                <span id="ca-month-b" class="text-lg font-bold" style="color: #C1293D;">0 / 10</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Investiert:</span>
+                                <span id="ca-invested-b" class="text-lg font-bold" style="color: #C1293D;">0 €</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Anteile gesamt:</span>
+                                <span id="ca-shares-b" class="text-lg font-bold" style="color: #C1293D;">0</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Auswahl-Buttons -->
-                <div class="grid grid-cols-2 gap-6">
-                    <button onclick="selectCourse('A')" class="py-6 px-8 rounded-lg font-bold text-xl text-white transition-all hover:scale-105 shadow-lg" style="background: var(--mlp-corporate-blue);">
-                        Kurs A wählen
-                    </button>
-                    <button onclick="selectCourse('B')" class="py-6 px-8 rounded-lg font-bold text-xl text-white transition-all hover:scale-105 shadow-lg" style="background: #C1293D;">
-                        Kurs B wählen
-                    </button>
+                <!-- Start Animation Button -->
+                <button id="ca-start-btn" onclick="startCostAverageAnimation()" class="w-full py-6 px-8 rounded-lg font-bold text-xl text-white transition-all hover:scale-105 shadow-lg mb-4" style="background: linear-gradient(135deg, #033D5D 0%, #47A190 100%);">
+                    ▶ Animation starten
+                </button>
+
+                <!-- Progress Info (initially hidden) -->
+                <div id="ca-progress-info" class="text-center text-gray-600 mb-4" style="display: none;">
+                    <p class="text-lg">Animation läuft... Bitte beobachten Sie beide Kurse gleichzeitig!</p>
                 </div>
             </div>
 
-            <!-- Phase 2: Animation (initially hidden) -->
-            <div id="ca-phase-2" style="display: none;">
-                <h2 class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">Cost-Average-Effekt in Aktion</h2>
-                <p class="text-lg text-gray-700 mb-8">Beobachten Sie, wie 10 monatliche Raten à 1.200 € investiert werden...</p>
-
-                <div class="bg-gray-50 p-6 rounded-lg mb-6" style="border: 2px solid var(--mlp-titanium);">
-                    <canvas id="ca-chart-animated" style="max-height: 400px;"></canvas>
-                </div>
-
-                <!-- Counter Display -->
-                <div class="grid grid-cols-3 gap-6 mb-6">
-                    <div class="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg text-center" style="border: 2px solid var(--mlp-titanium);">
-                        <p class="text-sm text-gray-600 mb-2">Monat</p>
-                        <p id="ca-month-counter" class="text-4xl font-bold" style="color: var(--mlp-corporate-blue);">0 / 10</p>
-                    </div>
-                    <div class="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg text-center" style="border: 2px solid var(--mlp-titanium);">
-                        <p class="text-sm text-gray-600 mb-2">Investiert</p>
-                        <p id="ca-invested-counter" class="text-4xl font-bold" style="color: var(--color-success);">0 €</p>
-                    </div>
-                    <div class="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg text-center" style="border: 2px solid var(--mlp-titanium);">
-                        <p class="text-sm text-gray-600 mb-2">Anteile gekauft</p>
-                        <p id="ca-shares-counter" class="text-4xl font-bold" style="color: var(--mlp-corporate-blue);">0</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Phase 3: Ergebnis (initially hidden) -->
+            <!-- Phase 2: Ergebnis (initially hidden) -->
             <div id="ca-phase-3" style="display: none;">
                 <h2 class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">⚡ Überraschendes Ergebnis!</h2>
 
@@ -2161,11 +2193,32 @@
                     </div>
                 </div>
 
-                <!-- Insight Box -->
+                <!-- Crash Insight Box -->
+                <div class="p-8 rounded-lg mb-6" style="background: linear-gradient(135deg, #C1293D 0%, #E3691E 100%); color: white;">
+                    <h3 class="text-2xl font-bold mb-4">💥 Der Crash-Vorteil:</h3>
+                    <p class="text-xl leading-relaxed mb-4">Haben Sie gesehen? <strong>Monat 2: Crash auf 2,00 €</strong> - und das war <strong>die beste Kaufgelegenheit</strong>!</p>
+                    <div class="bg-white bg-opacity-20 p-4 rounded-lg mb-4">
+                        <p class="text-lg">🛒 <strong>600 Anteile</strong> für 1.200 € beim Crash (Monat 2)</p>
+                        <p class="text-lg">🛒 Nur <strong>92 Anteile</strong> für 1.200 € bei Kurs A</p>
+                    </div>
+                    <p class="text-xl leading-relaxed"><strong>Bei Sparraten WOLLEN Sie Crashes</strong> - Sie kaufen dann im Ausverkauf! 🎉</p>
+                </div>
+
+                <!-- General Insight Box -->
                 <div class="p-8 rounded-lg mb-8" style="background: linear-gradient(135deg, #033D5D 0%, #47A190 100%); color: white;">
-                    <h3 class="text-2xl font-bold mb-4">💡 Die Erkenntnis:</h3>
-                    <p class="text-xl leading-relaxed">Bei <strong>monatlichen Sparraten</strong> ist Volatilität ein <strong>VORTEIL</strong>! Der Cost-Average-Effekt sorgt dafür, dass Sie bei niedrigen Kursen automatisch <strong>mehr Anteile</strong> kaufen und bei hohen Kursen <strong>weniger Anteile</strong>. So profitieren Sie langfristig von Schwankungen.</p>
-                    <p class="text-lg mt-4 opacity-90"><strong>Daher:</strong> Einmalanlagen → stabile Fonds (blau) | Sparraten → volatile Fonds (rot)</p>
+                    <h3 class="text-2xl font-bold mb-4">💡 Die Strategie:</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-lg font-bold mb-2">📈 Einmalanlagen (z.B. 50.000 € Erbe):</p>
+                            <p class="text-lg opacity-90">→ Stabile Fonds (blau) wählen</p>
+                            <p class="text-base opacity-75">Grund: Crash würde sofort viel Geld vernichten</p>
+                        </div>
+                        <div>
+                            <p class="text-lg font-bold mb-2">💰 Sparraten (z.B. monatlich 1.200 €):</p>
+                            <p class="text-lg opacity-90">→ Volatile Fonds (rot) wählen</p>
+                            <p class="text-base opacity-75">Grund: Crashes sind Chancen - Sie kaufen günstig nach!</p>
+                        </div>
+                    </div>
                 </div>
 
                 <button onclick="closeCostAverageModal()" class="w-full py-4 rounded-lg font-bold text-xl text-white transition-all hover:scale-105 shadow-lg" style="background: var(--mlp-corporate-blue);">
@@ -5625,26 +5678,34 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         return isVisible(el);
     }
 
-    // ===== v1.6.2: COST-AVERAGE-EFFEKT ERKLÄRER =====
+    // ===== v1.6.2: COST-AVERAGE-EFFEKT ERKLÄRER (REDESIGNED) =====
 
     // Kursdaten (aus Excel-Tool)
     const courseData = {
         A: [10.0, 13.0, 13.5, 16.0, 17.0, 16.0, 17.0, 16.5, 18.0, 18.9], // Stabil steigend
-        B: [10.0, 2.0, 4.0, 8.0, 4.0, 6.0, 9.0, 4.0, 8.0, 10.5]  // Volatil schwankend
+        B: [10.0, 2.0, 4.0, 8.0, 4.0, 6.0, 9.0, 4.0, 8.0, 10.5]  // Volatil schwankend mit CRASH
     };
 
-    let caChart = null;
-    let caChartAnimated = null;
-    let selectedCourse = null;
+    let caChartA = null;
+    let caChartB = null;
+    let animationRunning = false;
 
     function openCostAverageModal() {
         // Reset to Phase 1
         document.getElementById('ca-phase-1').style.display = 'block';
-        document.getElementById('ca-phase-2').style.display = 'none';
         document.getElementById('ca-phase-3').style.display = 'none';
+        document.getElementById('ca-start-btn').style.display = 'block';
+        document.getElementById('ca-progress-info').style.display = 'none';
 
-        // Initialize chart
-        initCostAverageChart();
+        // Reset counters
+        resetCounters();
+
+        // Clear share bars
+        document.getElementById('ca-share-bars-a').innerHTML = '';
+        document.getElementById('ca-share-bars-b').innerHTML = '';
+
+        // Initialize both charts
+        initSideBySideCharts();
 
         // Open modal
         openModal('cost-average-modal');
@@ -5653,137 +5714,219 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     function closeCostAverageModal() {
         closeModal('cost-average-modal');
         // Destroy charts to free memory
-        if (caChart) { caChart.destroy(); caChart = null; }
-        if (caChartAnimated) { caChartAnimated.destroy(); caChartAnimated = null; }
+        if (caChartA) { caChartA.destroy(); caChartA = null; }
+        if (caChartB) { caChartB.destroy(); caChartB = null; }
     }
 
-    function initCostAverageChart() {
-        const ctx = document.getElementById('ca-chart');
-        if (!ctx) return;
+    function resetCounters() {
+        ['a', 'b'].forEach(course => {
+            document.getElementById(`ca-month-${course}`).textContent = '0 / 10';
+            document.getElementById(`ca-invested-${course}`).textContent = '0 €';
+            document.getElementById(`ca-shares-${course}`).textContent = '0';
+        });
+    }
 
-        if (caChart) caChart.destroy();
+    function initSideBySideCharts() {
+        // Chart A (Stable)
+        const ctxA = document.getElementById('ca-chart-a');
+        if (ctxA) {
+            if (caChartA) caChartA.destroy();
 
-        caChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-                datasets: [
-                    {
-                        label: 'Kurs A (stabil)',
+            caChartA = new Chart(ctxA, {
+                type: 'line',
+                data: {
+                    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                    datasets: [{
+                        label: 'Kurs A',
                         data: courseData.A,
                         borderColor: '#033D5D',
                         backgroundColor: 'rgba(3, 61, 93, 0.1)',
                         borderWidth: 3,
-                        tension: 0.2,
-                        fill: true
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Kurs: ${context.parsed.y.toFixed(2)} €`;
+                                }
+                            }
+                        }
                     },
-                    {
-                        label: 'Kurs B (volatil)',
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 0,
+                            max: 20,
+                            title: { display: true, text: 'Kurs in €' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Monat' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart B (Volatile)
+        const ctxB = document.getElementById('ca-chart-b');
+        if (ctxB) {
+            if (caChartB) caChartB.destroy();
+
+            caChartB = new Chart(ctxB, {
+                type: 'line',
+                data: {
+                    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                    datasets: [{
+                        label: 'Kurs B',
                         data: courseData.B,
                         borderColor: '#C1293D',
                         backgroundColor: 'rgba(193, 41, 61, 0.1)',
                         borderWidth: 3,
-                        tension: 0.2,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: true, position: 'top' },
-                    tooltip: { mode: 'index', intersect: false }
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        min: 0,
-                        max: 20,
-                        title: { display: true, text: 'Kurs in €' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Kurs: ${context.parsed.y.toFixed(2)} €`;
+                                }
+                            }
+                        }
                     },
-                    x: {
-                        title: { display: true, text: 'Monat' }
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 0,
+                            max: 20,
+                            title: { display: true, text: 'Kurs in €' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Monat' }
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
-    async function selectCourse(course) {
-        selectedCourse = course;
+    async function startCostAverageAnimation() {
+        if (animationRunning) return;
+        animationRunning = true;
 
-        // Transition to Phase 2
+        // Hide start button, show progress
+        document.getElementById('ca-start-btn').style.display = 'none';
+        document.getElementById('ca-progress-info').style.display = 'block';
+
+        // Reset
+        resetCounters();
+        document.getElementById('ca-share-bars-a').innerHTML = '';
+        document.getElementById('ca-share-bars-b').innerHTML = '';
+
+        // Animate both courses simultaneously
+        await animateBothCourses();
+
+        // Show results
         document.getElementById('ca-phase-1').style.display = 'none';
-        document.getElementById('ca-phase-2').style.display = 'block';
-
-        // Initialize animated chart
-        initAnimatedChart(course);
-
-        // Start animation
-        await animateCostAverage(course);
-
-        // Show Phase 3
-        document.getElementById('ca-phase-2').style.display = 'none';
         document.getElementById('ca-phase-3').style.display = 'block';
-
-        // Calculate and display results
         showResults();
+
+        animationRunning = false;
     }
 
-    function initAnimatedChart(course) {
-        const ctx = document.getElementById('ca-chart-animated');
-        if (!ctx) return;
-
-        if (caChartAnimated) caChartAnimated.destroy();
-
-        caChartAnimated = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-                datasets: [
-                    {
-                        label: `Kurs ${course}`,
-                        data: courseData[course],
-                        borderColor: course === 'A' ? '#033D5D' : '#C1293D',
-                        backgroundColor: course === 'A' ? 'rgba(3, 61, 93, 0.2)' : 'rgba(193, 41, 61, 0.2)',
-                        borderWidth: 4,
-                        tension: 0.2,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: false, min: 0, max: 20 },
-                    x: { title: { display: true, text: 'Monat' } }
-                }
-            }
-        });
-    }
-
-    async function animateCostAverage(course) {
+    async function animateBothCourses() {
         const monthlyRate = 1200;
-        const courseValues = courseData[course];
-        let totalInvested = 0;
-        let totalShares = 0;
+        let totalInvestedA = 0, totalSharesA = 0;
+        let totalInvestedB = 0, totalSharesB = 0;
 
         for (let month = 1; month <= 10; month++) {
-            await new Promise(resolve => setTimeout(resolve, 800)); // 800ms delay
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
 
-            const currentPrice = courseValues[month - 1];
-            const sharesBought = monthlyRate / currentPrice;
-            totalInvested += monthlyRate;
-            totalShares += sharesBought;
+            // Course A
+            const priceA = courseData.A[month - 1];
+            const sharesBoughtA = monthlyRate / priceA;
+            totalInvestedA += monthlyRate;
+            totalSharesA += sharesBoughtA;
+
+            // Course B
+            const priceB = courseData.B[month - 1];
+            const sharesBoughtB = monthlyRate / priceB;
+            totalInvestedB += monthlyRate;
+            totalSharesB += sharesBoughtB;
 
             // Update counters
-            document.getElementById('ca-month-counter').textContent = `${month} / 10`;
-            document.getElementById('ca-invested-counter').textContent = `${totalInvested.toLocaleString('de-DE')} €`;
-            document.getElementById('ca-shares-counter').textContent = totalShares.toFixed(2);
+            document.getElementById('ca-month-a').textContent = `${month} / 10`;
+            document.getElementById('ca-invested-a').textContent = `${totalInvestedA.toLocaleString('de-DE')} €`;
+            document.getElementById('ca-shares-a').textContent = totalSharesA.toFixed(0);
+
+            document.getElementById('ca-month-b').textContent = `${month} / 10`;
+            document.getElementById('ca-invested-b').textContent = `${totalInvestedB.toLocaleString('de-DE')} €`;
+            document.getElementById('ca-shares-b').textContent = totalSharesB.toFixed(0);
+
+            // Add share bars
+            addShareBar('a', month, priceA, sharesBoughtA);
+            addShareBar('b', month, priceB, sharesBoughtB, month === 2); // Highlight crash month
         }
+    }
+
+    function addShareBar(course, month, price, shares, isCrash = false) {
+        const container = document.getElementById(`ca-share-bars-${course}`);
+        if (!container) return;
+
+        const bar = document.createElement('div');
+        bar.className = 'flex items-center gap-2 text-sm';
+
+        // Calculate bar width (relative to max possible shares ~600)
+        const maxWidth = 100; // percentage
+        const barWidth = Math.min((shares / 600) * maxWidth, maxWidth);
+
+        const color = course === 'a' ? '#033D5D' : '#C1293D';
+        const bgColor = course === 'a' ? 'rgba(3, 61, 93, 0.2)' : 'rgba(193, 41, 61, 0.2)';
+
+        // Special styling for crash month
+        const crashStyle = isCrash ? `
+            background: linear-gradient(135deg, #C1293D 0%, #E3691E 100%);
+            color: white;
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(193, 41, 61, 0.4);
+            animation: pulse 1s ease-in-out;
+        ` : '';
+
+        bar.innerHTML = `
+            <span class="text-gray-600 w-16">M${month}:</span>
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative overflow-hidden">
+                <div style="width: ${barWidth}%; background: ${isCrash ? 'linear-gradient(90deg, #C1293D 0%, #E3691E 100%)' : color}; height: 100%; border-radius: 9999px; transition: width 0.5s ease;"></div>
+            </div>
+            <span class="w-24 text-right font-semibold" style="color: ${color};">${shares.toFixed(0)} 🛒</span>
+            ${isCrash ? '<span class="text-lg">💥</span>' : ''}
+        `;
+
+        if (isCrash) {
+            bar.style.cssText = crashStyle;
+        }
+
+        container.appendChild(bar);
+
+        // Scroll to bottom to show newest entry
+        container.scrollTop = container.scrollHeight;
     }
 
     function showResults() {
