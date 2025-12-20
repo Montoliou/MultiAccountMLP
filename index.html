@@ -4848,132 +4848,182 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
     // ===== END BOOKING MODAL =====
 
-    function calculateAndUpdate() {
-        requestAnimationFrame(() => {
-            positionCascade();
+    /**
+     * Calculate all financial data (pure calculation, no rendering)
+     * @returns {Object} All calculated financial values
+     */
+    function calculateFinancialData() {
+        // Vermieterkonto-Daten holen
+        const vermieterData = getVermieterkontoData();
 
-            // Safety: Check if all required basin elements exist
-            if (!basins.einkommen || !basins.fixkosten || !basins.konsum ||
-                !basins.tagesgeld || !basins.depot || !basins.vermieterkonto || !basins.immobilien) {
-                console.error('[MLP ERROR] Basin elements not found. Cannot update visualization.');
-                return;
+        // Basiswerte
+        const income = parseFloat(inputs.income?.value) || 0;
+        const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
+        const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
+        const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent?.value) || 0;
+        const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit?.value) || 0;
+
+        // v1.5.2: Single-pass reduce for fixkostenItems (optimized from 2 filter passes)
+        const { fixkostenTotal, depotTotal } = fixkostenItems.reduce((acc, item) => {
+            const amount = getMonthlyAmount(item);
+            if (item.target === 'fixkosten') {
+                acc.fixkostenTotal += amount;
+            } else if (item.target === 'depot') {
+                acc.depotTotal += amount;
             }
+            return acc;
+        }, { fixkostenTotal: 0, depotTotal: 0 });
 
-            // Vermieterkonto-Daten holen
-            const vermieterData = getVermieterkontoData();
-            const cashflowIntegrated = vermieterkontoData.cashflowIntegration || false;
+        let fixkostenOnlyTotal = fixkostenTotal;
+        const depotSparplanTotal = depotTotal;
 
-            // Basiswerte
-            let income = parseFloat(inputs.income?.value) || 0;
-            const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
-            const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
-            const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent?.value) || 0;
-            const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit?.value) || 0;
-
-            // Vermieterkonto-Integration wird jetzt direkt in Fixkosten/Konsum gerechnet
-            // (nicht mehr über Einkommen)
-
-            // v1.5.2: Single-pass reduce for fixkostenItems (optimized from 2 filter passes)
-            const { fixkostenTotal, depotTotal } = fixkostenItems.reduce((acc, item) => {
-                const amount = getMonthlyAmount(item);
-                if (item.target === 'fixkosten') {
-                    acc.fixkostenTotal += amount;
-                } else if (item.target === 'depot') {
-                    acc.depotTotal += amount;
-                }
-                return acc;
-            }, { fixkostenTotal: 0, depotTotal: 0 });
-
-            let fixkostenOnlyTotal = fixkostenTotal;
-            const depotSparplanTotal = depotTotal;
-
-            // Vermieterkonto-Integration Variante A:
-            // - Negativer Saldo: erhöht Fixkosten (Deckung)
-            // - Positiver Saldo: reduziert Fixkosten (Miete senkt Abgänge)
-            if (currentVariant === 'A') {
-                if (vermieterData.saldo < 0) {
-                    fixkostenOnlyTotal += Math.abs(vermieterData.saldo);
-                } else {
-                    fixkostenOnlyTotal = Math.max(0, fixkostenOnlyTotal - vermieterData.saldo);
-                }
+        // Vermieterkonto-Integration Variante A:
+        // - Negativer Saldo: erhöht Fixkosten (Deckung)
+        // - Positiver Saldo: reduziert Fixkosten (Miete senkt Abgänge)
+        if (currentVariant === 'A') {
+            if (vermieterData.saldo < 0) {
+                fixkostenOnlyTotal += Math.abs(vermieterData.saldo);
             } else {
-                // Variante B: Negativer Saldo erhöht Fixkosten
-                if (vermieterData.saldo < 0) {
-                    fixkostenOnlyTotal += Math.abs(vermieterData.saldo);
-                }
+                fixkostenOnlyTotal = Math.max(0, fixkostenOnlyTotal - vermieterData.saldo);
             }
-
-            const totalAbgang = fixkostenOnlyTotal + depotSparplanTotal;
-            // Zufluss (Inflow) in das Konsumkonto zur Skalierung der Min-Linie
-            const konsumInflow = (currentVariant === 'A')
-              ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
-              : Math.max(0, income);                // Variante B: Einkommen geht direkt auf Konsum
-
-            const { tagesgeldInflow, depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
-            const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow;
-            const totalDepotInflow = depotSparplanTotal + depotOverflow;
-            
-            let konsumValue;
-            if(currentVariant === 'A') {
-                konsumValue = income - totalAbgang;
-            } else {
-                // Variante B: Konsum wird bei positivem Vermieterkonto-Saldo erhöht
-                konsumValue = income - totalAbgang;
-                if (vermieterData.saldo > 0) {
-                    konsumValue += vermieterData.saldo;
-                }
+        } else {
+            // Variante B: Negativer Saldo erhöht Fixkosten
+            if (vermieterData.saldo < 0) {
+                fixkostenOnlyTotal += Math.abs(vermieterData.saldo);
             }
-            
-            renderBasin(basins.einkommen, 'Einkommen', formatCurrency(income), '<svg class="w-7 h-7 mb-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>');
-            renderBasin(basins.fixkosten, 'Fixkostenkonto', formatCurrency(totalAbgang), '<svg class="w-7 h-7 mb-1 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>', '(Klick zum Bearbeiten)');
-            // Scale the yellow min line relative to the available monthly surplus (Überschuss).
-            renderBasin(
-              basins.konsum,
-              'Konsumkonto',
-              formatCurrency(konsumValue),
-              '<svg class="w-7 h-7 mb-1 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>',
-              `Überschuss: ${formatCurrency(konsumLeftover)}`,
-              { current: konsumValue, min: konsumMin, limit: Infinity, minScaleBase: konsumInflow }
-            );
-            renderBasin(basins.tagesgeld, 'Tagesgeldkonto', formatCurrency(finalTagesgeld), '<svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', `Zufluss: ${formatCurrency(tagesgeldInflow)}`, { current: finalTagesgeld, min: 0, limit: tagesgeldLimit });
+        }
 
-            // Use custom renderDepotBasin instead of renderBasin for fund blocks visualization
-            renderDepotBasin();
+        const totalAbgang = fixkostenOnlyTotal + depotSparplanTotal;
+        // Zufluss (Inflow) in das Konsumkonto zur Skalierung der Min-Linie
+        const konsumInflow = (currentVariant === 'A')
+          ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
+          : Math.max(0, income);                // Variante B: Einkommen geht direkt auf Konsum
 
-            // Vermieterkonto-Basin rendern (über Immobilien) - vermieterData wurde bereits oben berechnet
-            renderBasin(
-                basins.vermieterkonto,
-                'Vermieterkonto',
-                formatCurrency(vermieterData.saldo),
-                '',
-                `Ein: ${formatCurrency(vermieterData.einnahmen)} | Aus: ${formatCurrency(vermieterData.ausgaben)}`,
-                {},
-                createAccountSVG()
-            );
+        const { tagesgeldInflow, depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
+        const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow;
+        const totalDepotInflow = depotSparplanTotal + depotOverflow;
 
-            // Immobilien-Basin rendern (Summe aller Immobilien)
-            const gesamtwert = immobilienData.reduce((sum, immo) => sum + (immo.wert || 0), 0);
-            const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
-            const immoNettovermoegen = gesamtwert - gesamtdarlehen;
-            const anzahlImmobilien = immobilienData.length;
+        let konsumValue;
+        if(currentVariant === 'A') {
+            konsumValue = income - totalAbgang;
+        } else {
+            // Variante B: Konsum wird bei positivem Vermieterkonto-Saldo erhöht
+            konsumValue = income - totalAbgang;
+            if (vermieterData.saldo > 0) {
+                konsumValue += vermieterData.saldo;
+            }
+        }
 
-            renderBasin(
-                basins.immobilien,
-                'Immobilien',
-                formatCurrency(immoNettovermoegen),
-                '',
-                anzahlImmobilien > 0 ? `${anzahlImmobilien} Immobilie${anzahlImmobilien > 1 ? 'n' : ''}` : '(Klick zum Bearbeiten)',
-                {},
-                createHouseSVG()
-            );
+        // Immobilien-Daten berechnen
+        const gesamtwert = immobilienData.reduce((sum, immo) => sum + (immo.wert || 0), 0);
+        const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
+        const immoNettovermoegen = gesamtwert - gesamtdarlehen;
+        const anzahlImmobilien = immobilienData.length;
 
-            // === BEGIN: Flow visibility control (consultation-aware) ===
-            const bothVisible = (a, b) => isVisible(a) && isVisible(b);
-            const maxFlow = income || 1;
+        return {
+            income,
+            konsumMin,
+            konsumLeftover,
+            konsumInflow,
+            konsumValue,
+            tagesgeldCurrent,
+            tagesgeldLimit,
+            tagesgeldInflow,
+            finalTagesgeld,
+            fixkostenOnlyTotal,
+            totalAbgang,
+            depotSparplanTotal,
+            depotOverflow,
+            totalDepotInflow,
+            vermieterData,
+            immoNettovermoegen,
+            anzahlImmobilien
+        };
+    }
 
-            let show1 = false, show2 = false, showKTG = false, showTGDepot = false, showFixDepot = false;
+    /**
+     * Render all basin elements with calculated data
+     * @param {Object} data - Financial data from calculateFinancialData()
+     */
+    function renderAllBasins(data) {
+        const {
+            income,
+            konsumMin,
+            konsumLeftover,
+            konsumInflow,
+            konsumValue,
+            finalTagesgeld,
+            tagesgeldLimit,
+            tagesgeldInflow,
+            totalAbgang,
+            vermieterData,
+            immoNettovermoegen,
+            anzahlImmobilien
+        } = data;
 
-            if (currentVariant === 'A') {
+        renderBasin(basins.einkommen, 'Einkommen', formatCurrency(income), '<svg class="w-7 h-7 mb-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>');
+        renderBasin(basins.fixkosten, 'Fixkostenkonto', formatCurrency(totalAbgang), '<svg class="w-7 h-7 mb-1 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>', '(Klick zum Bearbeiten)');
+
+        // Scale the yellow min line relative to the available monthly surplus (Überschuss).
+        renderBasin(
+            basins.konsum,
+            'Konsumkonto',
+            formatCurrency(konsumValue),
+            '<svg class="w-7 h-7 mb-1 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>',
+            `Überschuss: ${formatCurrency(konsumLeftover)}`,
+            { current: konsumValue, min: konsumMin, limit: Infinity, minScaleBase: konsumInflow }
+        );
+
+        renderBasin(basins.tagesgeld, 'Tagesgeldkonto', formatCurrency(finalTagesgeld), '<svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', `Zufluss: ${formatCurrency(tagesgeldInflow)}`, { current: finalTagesgeld, min: 0, limit: tagesgeldLimit });
+
+        // Use custom renderDepotBasin instead of renderBasin for fund blocks visualization
+        renderDepotBasin();
+
+        // Vermieterkonto-Basin rendern
+        renderBasin(
+            basins.vermieterkonto,
+            'Vermieterkonto',
+            formatCurrency(vermieterData.saldo),
+            '',
+            `Ein: ${formatCurrency(vermieterData.einnahmen)} | Aus: ${formatCurrency(vermieterData.ausgaben)}`,
+            {},
+            createAccountSVG()
+        );
+
+        // Immobilien-Basin rendern
+        renderBasin(
+            basins.immobilien,
+            'Immobilien',
+            formatCurrency(immoNettovermoegen),
+            '',
+            anzahlImmobilien > 0 ? `${anzahlImmobilien} Immobilie${anzahlImmobilien > 1 ? 'n' : ''}` : '(Klick zum Bearbeiten)',
+            {},
+            createHouseSVG()
+        );
+    }
+
+    /**
+     * Update all flow visualizations based on calculated data
+     * @param {Object} data - Financial data from calculateFinancialData()
+     */
+    function updateAllFlows(data) {
+        const {
+            income,
+            konsumLeftover,
+            totalAbgang,
+            depotSparplanTotal,
+            depotOverflow,
+            vermieterData,
+            finalTagesgeld,
+            tagesgeldLimit
+        } = data;
+
+        const bothVisible = (a, b) => isVisible(a) && isVisible(b);
+        const maxFlow = income || 1;
+        let show1 = false, show2 = false, showKTG = false, showTGDepot = false, showFixDepot = false;
+
+        // === Flow visibility control (consultation-aware) ===
+        if (currentVariant === 'A') {
                 // A: Einkommen -> Fixkosten -> Konsum -> Tagesgeld -> Depot; Sparrate erst Step 5
                 show1       = bothVisible(basins.einkommen,   basins.fixkosten);                                      // Step 1+
                 show2       = bothVisible(basins.fixkosten, basins.konsum)   && (!consultationMode || consultationStep >= 2);
@@ -5016,80 +5066,95 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 if (showTGDepot) drawFlow('tagesgeld-depot-flow', basins.tagesgeld, basins.depot, depotOverflow, maxFlow);
                 else             hideFlow('tagesgeld-depot-flow');
 
-                if (showFixDepot)drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
-                else             hideFlow('fixkosten-depot-flow');
-            }
-            // === END: Flow visibility control ===
+            if (showFixDepot)drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+            else             hideFlow('fixkosten-depot-flow');
+        }
 
-            // === Vermieterkonto Flows ===
-            const hasVermieterkontoCashflow = Math.abs(vermieterData.saldo) > 0;
+        // === Vermieterkonto Flows ===
+        const hasVermieterkontoCashflow = Math.abs(vermieterData.saldo) > 0;
 
-            if (hasVermieterkontoCashflow) {
-                if (vermieterData.saldo > 0) {
-                    // Positiv: Vermieterkonto → Fixkosten (Variante A) oder Konsum (Variante B)
-                    hideFlow('vermieterkonto-einkommen-flow'); // Alten Flow ausblenden
+        if (hasVermieterkontoCashflow) {
+            if (vermieterData.saldo > 0) {
+                // Positiv: Vermieterkonto → Fixkosten (Variante A) oder Konsum (Variante B)
+                hideFlow('vermieterkonto-einkommen-flow');
 
-                    if (currentVariant === 'A') {
-                        // Variante A: Vermieterkonto → Fixkosten (linke Seite Mitte)
-                        if (bothVisible(basins.vermieterkonto, basins.fixkosten)) {
-                            drawFlow('fixkosten-vermieterkonto-flow', basins.vermieterkonto, basins.fixkosten, vermieterData.saldo, maxFlow, 'Miete', 0.3);
-                        } else {
-                            hideFlow('fixkosten-vermieterkonto-flow');
-                        }
+                if (currentVariant === 'A') {
+                    if (bothVisible(basins.vermieterkonto, basins.fixkosten)) {
+                        drawFlow('fixkosten-vermieterkonto-flow', basins.vermieterkonto, basins.fixkosten, vermieterData.saldo, maxFlow, 'Miete', 0.3);
                     } else {
-                        // Variante B: Vermieterkonto → Konsum (linke Seite Mitte)
-                        if (bothVisible(basins.vermieterkonto, basins.konsum)) {
-                            drawFlow('fixkosten-vermieterkonto-flow', basins.vermieterkonto, basins.konsum, vermieterData.saldo, maxFlow, 'Miete', 0.3);
-                        } else {
-                            hideFlow('fixkosten-vermieterkonto-flow');
-                        }
+                        hideFlow('fixkosten-vermieterkonto-flow');
                     }
                 } else {
-                    // Negativ: Fixkosten → Vermieterkonto (Deckung der negativen Kosten)
-                    hideFlow('vermieterkonto-einkommen-flow'); // Alten Flow ausblenden
-                    if (bothVisible(basins.fixkosten, basins.vermieterkonto)) {
-                        drawFlow('fixkosten-vermieterkonto-flow', basins.fixkosten, basins.vermieterkonto, Math.abs(vermieterData.saldo), maxFlow, 'Deckung', 1.0);
-                        // Deficitline transparent machen - höhere Opacity für sichtbare Gradient-Farben
-                        const deficitPath = getEl('fixkosten-vermieterkonto-flow');
-                        if (deficitPath) deficitPath.style.filter = 'opacity(0.5)';
+                    if (bothVisible(basins.vermieterkonto, basins.konsum)) {
+                        drawFlow('fixkosten-vermieterkonto-flow', basins.vermieterkonto, basins.konsum, vermieterData.saldo, maxFlow, 'Miete', 0.3);
                     } else {
                         hideFlow('fixkosten-vermieterkonto-flow');
                     }
                 }
             } else {
+                // Negativ: Fixkosten → Vermieterkonto (Deckung)
                 hideFlow('vermieterkonto-einkommen-flow');
-                hideFlow('fixkosten-vermieterkonto-flow');
+                if (bothVisible(basins.fixkosten, basins.vermieterkonto)) {
+                    drawFlow('fixkosten-vermieterkonto-flow', basins.fixkosten, basins.vermieterkonto, Math.abs(vermieterData.saldo), maxFlow, 'Deckung', 1.0);
+                    const deficitPath = getEl('fixkosten-vermieterkonto-flow');
+                    if (deficitPath) deficitPath.style.filter = 'opacity(0.5)';
+                } else {
+                    hideFlow('fixkosten-vermieterkonto-flow');
+                }
             }
+        } else {
+            hideFlow('vermieterkonto-einkommen-flow');
+            hideFlow('fixkosten-vermieterkonto-flow');
+        }
 
-            // Visuelle Verbindung: Immobilien <-> Vermieterkonto (gestrichelte Linie, immer sichtbar)
-            const showImmoVermieterbindung = bothVisible(basins.immobilien, basins.vermieterkonto);
-            if (showImmoVermieterbindung) {
-                drawConnectionLine('immobilien-vermieterkonto-connection', basins.immobilien, basins.vermieterkonto);
+        // Visuelle Verbindung: Immobilien <-> Vermieterkonto
+        const showImmoVermieterbindung = bothVisible(basins.immobilien, basins.vermieterkonto);
+        if (showImmoVermieterbindung) {
+            drawConnectionLine('immobilien-vermieterkonto-connection', basins.immobilien, basins.vermieterkonto);
+        } else {
+            hideFlow('immobilien-vermieterkonto-connection');
+        }
+
+        // Schutzschirm visualization
+        drawSchutzschirm(basins.tagesgeld, basins.depot);
+        const shield = getEl('schutzschirm-path');
+        if (shield) {
+            const liquidity = Math.max(0, finalTagesgeld);
+            let strength = 0;
+            if (isFinite(tagesgeldLimit) && tagesgeldLimit > 0) {
+                strength = Math.min(1, liquidity / tagesgeldLimit);
             } else {
-                hideFlow('immobilien-vermieterkonto-connection');
+                strength = liquidity > 0 ? 1 : 0;
+            }
+            if (strength > 0) {
+                const opacity = Math.max(0.25, 0.15 + 0.85 * strength);
+                shield.style.opacity = String(opacity);
+                shield.style.strokeWidth = `${2 + 2 * strength}px`;
+            } else {
+                shield.style.opacity = '0';
+            }
+        }
+    }
+
+    /**
+     * Main update function - orchestrates calculation and rendering
+     * v1.5.2: Refactored from monolithic calculateAndUpdate()
+     */
+    function calculateAndUpdate() {
+        requestAnimationFrame(() => {
+            positionCascade();
+
+            // Safety: Check if all required basin elements exist
+            if (!basins.einkommen || !basins.fixkosten || !basins.konsum ||
+                !basins.tagesgeld || !basins.depot || !basins.vermieterkonto || !basins.immobilien) {
+                console.error('[MLP ERROR] Basin elements not found. Cannot update visualization.');
+                return;
             }
 
-            drawSchutzschirm(basins.tagesgeld, basins.depot);
-            // --- Shield visibility based on available liquidity on Tagesgeld, scaled by liquidity level ---
-            const shield = getEl('schutzschirm-path');
-            if (shield) {
-                // Sichtbarkeit des Schutzschirms: sobald im Tagesgeld verwertbare Liquidität vorhanden ist
-                const liquidity = Math.max(0, finalTagesgeld); // verfügbare Liquidität auf TG
-                let strength = 0;
-                if (isFinite(tagesgeldLimit) && tagesgeldLimit > 0) {
-                    strength = Math.min(1, liquidity / tagesgeldLimit); // skaliert relativ zum Ziel
-                } else {
-                    strength = liquidity > 0 ? 1 : 0; // ohne Ziel: binär
-                }
-                if (strength > 0) {
-                    // weiche Skalierung für Sichtbarkeit/Strichstärke
-                    const opacity = Math.max(0.25, 0.15 + 0.85 * strength);
-                    shield.style.opacity = String(opacity);
-                    shield.style.strokeWidth = `${2 + 2 * strength}px`;
-                } else {
-                    shield.style.opacity = '0';
-                }
-            }
+            // v1.5.2: Decomposed into three focused functions
+            const data = calculateFinancialData();
+            renderAllBasins(data);
+            updateAllFlows(data);
         });
     }
     
