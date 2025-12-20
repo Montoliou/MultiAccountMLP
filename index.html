@@ -5051,7 +5051,18 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         } = data;
 
         const bothVisible = (a, b) => isVisible(a) && isVisible(b);
-        const maxFlow = income || 1;
+
+        // v1.5.2 FIX: Calculate actual maxFlow across all potential flows for proper scaling
+        const maxFlow = Math.max(
+            income || 0,
+            Math.abs(income - totalAbgang) || 0,
+            konsumLeftover || 0,
+            depotSparplanTotal || 0,
+            depotOverflow || 0,
+            totalAbgang || 0,
+            Math.abs(vermieterData?.saldo || 0),
+            1 // Minimum to prevent division by zero
+        );
         let show1 = false, show2 = false, showKTG = false, showTGDepot = false, showFixDepot = false;
 
         // === Flow visibility control (consultation-aware) ===
@@ -5776,8 +5787,7 @@ function updateFixkostenItem(index, key, value) {
             return `<div class="fund-block" style="background: ${color}; width: ${size}px; height: ${size}px" title="${item.name} (${item.allocation}%)"></div>`;
         }).join('');
 
-        console.log('Fund block sizes:', conservative.map(i => `${i.name}: ${i.allocation}% → ${calculateSize(i.allocation)}px`));
-        console.log('Fund block sizes:', aggressive.map(i => `${i.name}: ${i.allocation}% → ${calculateSize(i.allocation)}px`));
+        // Debug logs removed in v1.5.2
 
         // Render basin with fund blocks
         basins.depot.innerHTML = `
