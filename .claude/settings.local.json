@@ -19,7 +19,20 @@
       "Bash(curl:*)",
       "Read(//c/Users/monto/.ssh/**)",
       "Bash(git tag:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(python -m http.server:*)",
+      "Bash(start http://localhost:8000)",
+      "Bash(start https://montolio.de)",
+      "Bash(node -c:*)",
+      "Bash(git push)",
+      "Bash(git push:*)",
+      "Bash(gh release create:*)",
+      "Bash(start https://github.com/Montoliou/MultiAccountMLP/releases/new?tag=v1.4.0)",
+      "Bash(index.html)",
+      "Bash(echo:*)",
+      "Bash(start https://github.com/Montoliou/MultiAccountMLP/releases/new?tag=v1.5.0)",
+      "Bash(ls:*)",
+      "Skill(design-guide)"
     ],
     "deny": [],
     "ask": []
