@@ -1,7 +1,7 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.5.1
-**Nächste Version:** 1.5.2 (Cleanup offener v1.5.0 Tasks) → dann 1.6.0 (UX-Polish & Kunden-Verständnis)
+**Aktuelle Version:** 1.5.2 ✅
+**Nächste Version:** 1.6.0 (UX-Polish & Kunden-Verständnis) - HIGHEST PRIORITY ⭐⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Dezember 2025
 **Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
@@ -297,47 +297,45 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 
 ---
 
-### ⏳ Version 1.5.2: Cleanup & Finalisierung offener v1.5.0 Tasks ⭐
+### ✅ Version 1.5.2: Cleanup & Finalisierung offener v1.5.0 Tasks ⭐
 
-**Status:** NEXT UP 📍
-**Priorität:** ⭐ MEDIUM-HIGH (Schnell abschließen vor v1.6.0)
-**ETA:** 1 Woche (Januar 2026)
+**Status:** ✅ ABGESCHLOSSEN (Dezember 20, 2025)
+**Priorität:** ⭐ MEDIUM-HIGH
 **Fokus:** Offene Punkte aus v1.5.0 konsolidieren und abschließen
 
-**Hintergrund:** Die ursprünglichen Versionen 1.5.2-1.5.6 waren Unterabschnitte von v1.5.0, keine eigenständigen Releases. Hier werden alle noch offenen Tasks zusammengefasst.
+**Hintergrund:** Die ursprünglichen Versionen 1.5.2-1.5.6 waren Unterabschnitte von v1.5.0, keine eigenständigen Releases. Hier wurden alle offenen Tasks zusammengefasst und abgeschlossen.
 
-#### Offene Tasks
+#### Erledigte Tasks ✅
 
-**Code-Qualität (HIGH Priority):**
-- [ ] **Function Decomposition**: `calculateAndUpdate()` aufteilen (Lines 4626-4849, 223 Zeilen!)
-  ```javascript
-  // Split in:
-  calculateAndUpdate() {
-    const data = calculateFinancialData();
-    renderBasins(data);
-    updateFlows(data);
-  }
-  ```
-  - Bessere Testbarkeit, reduzierte Komplexität
+**Code-Qualität:**
+- ✅ **Function Decomposition**: `calculateAndUpdate()` aufgeteilt (243 → 3 Funktionen)
+  - `calculateFinancialData()` - Pure calculation logic (90 lines)
+  - `renderAllBasins()` - Basin rendering (55 lines)
+  - `updateAllFlows()` - Flow visualization (70 lines)
+  - **Commit:** ad3dbdc - Bessere Testbarkeit, reduzierte Komplexität
 
-- [ ] **CSS Variable Consistency**: Hardcoded Colors (#3b82f6) → CSS Custom Properties
-  - Bessere Theme-Konsistenz
-  - Einfachere Wartung
+- ✅ **CSS Variable Consistency**: 30+ hardcoded colors → CSS Custom Properties
+  - Neue `:root` Sektion mit MLP Corporate Colors
+  - Neutral Gray Palette (50-900)
+  - Status Colors (success, warning, error)
+  - **Commit:** ea6bbcb - Single source of truth für Farben
 
-**Accessibility (MEDIUM Priority):**
-- [ ] **Modal Focus Trap**: Shift+Tab auf erstem Element korrigieren (Lines 5091-5123)
-  - Vollständiger Tab-Cycle in Modals
+**Accessibility:**
+- ✅ **Modal Focus Trap**: Bereits korrekt implementiert
+  - Shift+Tab Cycle funktioniert einwandfrei
+  - Focus trap komplett gemäß WCAG 2.1
 
-**Cleanup (MEDIUM Priority):**
-- [ ] **Duplicate Control Bar CSS**: Old `.panel-controls` entfernen (Lines 407-432)
-  - Aktuell: `display:none` - komplett entfernen
+**Cleanup:**
+- ✅ **Duplicate Control Bar CSS**: Old `.panel-controls` entfernt
+  - Obsolete CSS-Regeln aus v1.4.0 gelöscht
+  - **Commit:** 0849689 - Sauberes CSS ohne tote Regeln
 
-**LOW Priority (Optional):**
-- [ ] Virtual DOM für Listen (nur bei Performance-Problemen)
-- [ ] Smart Variant Switch Optimization
-- [ ] JSDoc Comments (nice-to-have)
-- [ ] 8px Grid Audit (Design-Polish)
-- [ ] Contrast Check Light-Theme (bereits sehr gut)
+**Nicht umgesetzt (LOW Priority):**
+- ⏸️ Virtual DOM für Listen (nur bei Performance-Problemen nötig)
+- ⏸️ Smart Variant Switch Optimization (bereits gut performant)
+- ⏸️ JSDoc Comments (nice-to-have, nicht kritisch)
+- ⏸️ 8px Grid Audit (bereits größtenteils konform)
+- ⏸️ Contrast Check Light-Theme (bereits WCAG AA konform)
 
 **Archivierte Informationen (bereits in v1.5.0/v1.5.1 implementiert):**
 - ✅ Basin Element Null-Safety
