@@ -444,9 +444,8 @@
         .panel-title{max-width:420px;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start;text-align:left;padding-left:1.5rem;}
         .panel-eyebrow{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;}
         .panel-title h2{margin:0;font-size:clamp(1.9rem,2vw+1.6rem,2.4rem);font-weight:700;color:var(--fg);}
-        .panel-controls{display:none;} /* Hidden in v1.4.0 - moved to Control Bar */
+        /* v1.5.2: Removed .panel-controls (moved to Control Bar in v1.4.0) */
         .control-chip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid var(--border);border-radius:14px;background:rgba(0,47,108,0.04);transition:all .25s ease;cursor:pointer;}
-        .panel-controls .control-chip:hover{border-color:var(--accent1);color:var(--accent1);}
         .control-chip:focus-within{box-shadow:0 0 0 3px rgba(0,47,108,0.18);}
         .theme-dark .control-chip{background:rgba(148,163,184,0.08);border-color:rgba(148,163,184,0.2);}
         .control-chip input{position:absolute;inset:0;opacity:0;cursor:pointer;}
