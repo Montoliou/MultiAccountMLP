@@ -100,10 +100,84 @@
             fill: rgba(59, 130, 246, 0.15);
             stroke: rgba(96, 165, 250, 0.4);
             stroke-width: 2px;
-            transition: opacity 0.5s;
+            transition: opacity 0.5s, fill 0.5s, stroke 0.5s;
             animation: pulse-shield 4s infinite ease-in-out;
             pointer-events: none;
         }
+
+        /* v1.6.1: Schutzschild Info-Badge */
+        .schutzschild-badge {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 2px solid var(--mlp-corporate-blue);
+            border-radius: 8px;
+            padding: 8px 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .schutzschild-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .schutzschild-badge-icon {
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .schutzschild-badge-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .schutzschild-badge-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--mlp-corporate-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .schutzschild-badge-puffer {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .schutzschild-badge-amount {
+            font-size: 11px;
+            color: var(--gray-600);
+        }
+
+        /* Color states for badge */
+        .schutzschild-badge--green {
+            border-color: var(--color-success);
+        }
+        .schutzschild-badge--green .schutzschild-badge-title {
+            color: var(--color-success);
+        }
+
+        .schutzschild-badge--yellow {
+            border-color: var(--color-warning);
+        }
+        .schutzschild-badge--yellow .schutzschild-badge-title {
+            color: var(--color-warning);
+        }
+
+        .schutzschild-badge--red {
+            border-color: var(--color-error);
+        }
+        .schutzschild-badge--red .schutzschild-badge-title {
+            color: var(--color-error);
+        }
+
         /* Toggle Switch */
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -1935,6 +2009,16 @@
                     </g>
                     <path id="schutzschirm-path" class="schutzschirm"></path>
                 </svg>
+
+                <!-- v1.6.1: Schutzschild Info-Badge -->
+                <div id="schutzschild-badge" class="schutzschild-badge" style="display: none;">
+                    <div class="schutzschild-badge-icon">🛡️</div>
+                    <div class="schutzschild-badge-content">
+                        <div class="schutzschild-badge-title">Geschützt</div>
+                        <div class="schutzschild-badge-puffer" id="schutzschild-puffer-months">Puffer: 0 Monate</div>
+                        <div class="schutzschild-badge-amount" id="schutzschild-puffer-amount">(0 €)</div>
+                    </div>
+                </div>
 
                 <!-- Horizontal Gradient Zones für visuelle Ebenen-Trennung -->
                 <div id="gradient-zone-1" class="gradient-zone gradient-zone-1" style="top: 0; height: 240px;"></div>
@@ -4754,6 +4838,89 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         path.setAttribute('d', pathData);
     }
 
+    // ===== v1.6.1: SCHUTZSCHILD INFO-BADGE FUNCTIONS =====
+
+    /**
+     * Update Schutzschild Info-Badge with current buffer data
+     * @param {number} tagesgeldAmount - Current Tagesgeld balance
+     * @param {number} monthlyFixedCosts - Monthly fixed costs (Fixkosten)
+     */
+    function updateSchutzschildBadge(tagesgeldAmount, monthlyFixedCosts) {
+        const badge = getEl('schutzschild-badge');
+        const depotBasin = basins.depot;
+
+        if (!badge || !depotBasin) return;
+
+        // Calculate buffer in months
+        const pufferMonths = monthlyFixedCosts > 0
+            ? Math.floor(tagesgeldAmount / monthlyFixedCosts)
+            : 0;
+
+        // Show badge only if there's some Tagesgeld
+        if (tagesgeldAmount > 0 && pufferMonths >= 0) {
+            badge.style.display = 'flex';
+
+            // Update content
+            const monthsEl = getEl('schutzschild-puffer-months');
+            const amountEl = getEl('schutzschild-puffer-amount');
+
+            if (monthsEl) {
+                monthsEl.textContent = `Puffer: ${pufferMonths} ${pufferMonths === 1 ? 'Monat' : 'Monate'}`;
+            }
+            if (amountEl) {
+                amountEl.textContent = `(${formatCurrency(tagesgeldAmount)})`;
+            }
+
+            // Remove all color classes
+            badge.classList.remove('schutzschild-badge--green', 'schutzschild-badge--yellow', 'schutzschild-badge--red');
+
+            // Apply color coding based on buffer months
+            let colorClass = '';
+            let shieldColor = '';
+            let shieldStroke = '';
+
+            if (pufferMonths >= 3) {
+                // Green: Safe (≥ 3 months)
+                colorClass = 'schutzschild-badge--green';
+                shieldColor = 'rgba(16, 185, 129, 0.15)'; // Success green
+                shieldStroke = 'rgba(16, 185, 129, 0.4)';
+            } else if (pufferMonths >= 1) {
+                // Yellow: Warning (1-3 months)
+                colorClass = 'schutzschild-badge--yellow';
+                shieldColor = 'rgba(251, 191, 36, 0.15)'; // Warning yellow
+                shieldStroke = 'rgba(251, 191, 36, 0.4)';
+            } else {
+                // Red: Critical (< 1 month)
+                colorClass = 'schutzschild-badge--red';
+                shieldColor = 'rgba(239, 68, 68, 0.15)'; // Error red
+                shieldStroke = 'rgba(239, 68, 68, 0.4)';
+            }
+
+            badge.classList.add(colorClass);
+
+            // Update shield SVG colors
+            const shield = getEl('schutzschirm-path');
+            if (shield && shield.style.opacity !== '0') {
+                shield.style.fill = shieldColor;
+                shield.style.stroke = shieldStroke;
+            }
+
+            // Position badge above depot basin (center of shield arc)
+            const depotRect = depotBasin.getBoundingClientRect();
+            const containerRect = flowContainer.getBoundingClientRect();
+
+            const badgeX = (depotRect.left - containerRect.left) + (depotRect.width / 2) - 80; // Center, offset by badge width/2
+            const badgeY = (depotRect.top - containerRect.top) - 100; // Above the shield arc
+
+            badge.style.left = `${badgeX}px`;
+            badge.style.top = `${badgeY}px`;
+
+        } else {
+            // Hide badge if no Tagesgeld
+            badge.style.display = 'none';
+        }
+    }
+
     // ===== INLINE EDITOR FUNCTIONS (v1.4.0) =====
 
     /**
@@ -5355,6 +5522,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 shield.style.opacity = '0';
             }
         }
+
+        // v1.6.1: Update Schutzschild Info-Badge
+        updateSchutzschildBadge(finalTagesgeld, totalAbgang);
     }
 
     /**
