@@ -1,7 +1,7 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.6.1 ✅
-**Nächste Version:** 1.6.2 (Cost-Average-Effekt Erklärer) - HIGH PRIORITY ⭐⭐⭐
+**Aktuelle Version:** 1.6.2 ✅
+**Nächste Version:** 1.6.3 (Tagesgeld-Kriegskasse Erklärer) - HIGH PRIORITY ⭐⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Dezember 2025
 **Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
@@ -884,48 +884,73 @@ git log --oneline --decorate  # See all tagged versions
 
 ---
 
+### ✅ Version 1.6.2: Cost-Average-Effekt Erklärer (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Dezember 22, 2025)
+**Fokus:** Interaktiver Erklärer für Cost-Average-Effekt bei Sparraten
+
+#### Implementierte Features
+
+**Side-by-Side Kursvergleich** ✅
+- ✅ **Zwei Kursverläufe über 10 Jahre**
+  - Kurs A (MLP Blau): Stabil steigend (10 → 18,9 €)
+  - Kurs B (Error Red): Volatil mit Crash (10 → 2 → 10,5 €)
+  - Chart.js Visualisierung mit Jahr-Labels (J1-J10)
+
+**Click-by-Click Animation** ✅
+- ✅ **User-gesteuerte Fortschritt**
+  - Klick auf Kurs-Box startet nächstes Jahr
+  - Keine automatische Animation mehr
+  - Volle Kontrolle über Tempo
+  - Share-Bars bleiben auf fixer Position (kein Scrollen)
+
+**Live-Berechnung & Visualisierung** ✅
+- ✅ **Dynamische Anteils-Berechnung**
+  - 1.200 € pro Jahr investiert
+  - Live-Counter: Jahr, Investiert, Anteile gesamt
+  - Share-Bars zeigen gekaufte Anteile pro Jahr
+  - Jahr 2 (Crash) mit 💥 Emoji markiert
+
+**Chart-Month-Highlighting** ✅
+- ✅ **Aktuelles Jahr im Chart hervorgehoben**
+  - Größerer Punkt (radius 10) in MLP Green (#47A190)
+  - Crash-Jahr (J2) extra Betonung (radius 12, orange)
+  - Beide Charts synchron aktualisiert
+
+**Ergebnis-Vergleich** ✅
+- ✅ **Überraschende Zahlen**
+  - Kurs A (stabil): 7.857 Anteile, 28.495 € Gewinn (3,8%)
+  - Kurs B (volatil): 23.733 Anteile, 129.200 € Gewinn (13,0%) ✅
+  - **Endkurs angezeigt:** "Kurs im Jahr 10: 18,90 €" / "10,50 €"
+  - Crash-Vorteil erklärt: "600 Anteile für 1.200 € beim Crash!"
+
+**UX-Optimierungen** ✅
+- ✅ **Vereinfachter Text:** "Vergleich zweier Kursverläufe - Einzahlung: 1.200 € pro Jahr!"
+- ✅ **Monate → Jahre** (aussagekräftiger für 1.200 € Jahresrate)
+- ✅ **Kein Button mehr:** Klick auf Box startet Animation
+- ✅ **Crash-Hintergrund entfernt:** Nur 💥 Emoji (vorher rot-auf-rot Problem)
+- ✅ **Click-to-Close:** Klick irgendwo auf Ergebnis schließt Modal
+
+**Integration** ✅
+- ✅ **Button im Depot-Modal:** "💡 Warum welcher Fonds?" (Cost-Average-Effekt)
+- ✅ **Vollbild-Overlay** mit Side-by-Side Vergleich
+- ✅ **Zurück zum Depot** via Click-anywhere
+
+**Commits:**
+- 7765474: feat(v1.6.2): redesign Cost-Average Modal with crash-highlight concept
+- d1a4873: refactor(v1.6.2): redesign Cost-Average animation - click-by-click control
+- 2a15e1f: refactor(v1.6.2): UX improvements - simplified Cost-Average animation
+
+---
+
 ### Version 1.6.0: UX-Polish & Kunden-Verständnis ⭐⭐⭐
 
-**ETA:** Q1 2026 (3-4 Wochen)
+**ETA:** Q1 2026 (2-3 Wochen verbleibend)
 **Fokus:** Kunden-Verständnis durch interaktive Erklärer
 
 **Mission:** Kunde soll verstehen wie sein Geld "automatisch fließt" und WARUM bestimmte Strategien funktionieren
 
 #### Features
-
-**1.6.2: Cost-Average-Effekt Erklärer** ⭐⭐⭐ (Woche 2-3)
-
-**Warum wichtig:** Erklärt dem Kunden, WARUM Einmalanlagen in stabile Fonds (blau) und Sparraten in volatile Fonds (rot) gehen sollten.
-
-- [ ] **Interaktive Kurssimulation**
-  - Kurs A (MLP Blau): Stabil steigend (10 → 19)
-  - Kurs B (Error Red): Volatil schwankend (2 → 10)
-  - Frage: "Bei welcher Kursentwicklung möchten Sie investieren?"
-  - Button: "Kurs A wählen" vs "Kurs B wählen"
-
-- [ ] **Cost-Average Animation**
-  - 10 monatliche Raten à 1.200€ "fließen" zum Chart
-  - Bei niedrigen Kursen: VIELE Anteile gekauft (visuell gestapelt)
-  - Bei hohen Kursen: WENIGE Anteile gekauft
-  - Counter: "23.733 Anteile" vs "7.856 Anteile"
-
-- [ ] **Überraschungs-Ergebnis**
-  - Kurs A (stabil): 28.495€ Gewinn (3,8%)
-  - Kurs B (volatil): 129.200€ Gewinn (13,0%) ✅
-  - **Insight:** "Bei Sparraten ist Volatilität ein VORTEIL!"
-  - Dezente Animation am Ende (kein Confetti)
-
-- [ ] **Integration im Depot-Modal**
-  - Button: "💡 Warum welcher Fonds?" im Depot-Modal
-  - Vollbild-Overlay öffnet Erklärer
-  - Zurück zum Depot nach Abschluss
-
-**Design:**
-- MLP Blau Dark `#033D5D` für stabilen Kurs A
-- Error Red `#C1293D` für volatilen Kurs B (passt zur Fonds-Kategorisierung)
-- 8px Grid Spacing (24px, 32px, 48px)
-- Chart.js für Kursverläufe
-- Vanilla JS für Counter-Animation
 
 **1.6.3: Tagesgeld-Kriegskasse Erklärer** ⭐⭐⭐ (Woche 3-4)
 
@@ -1437,8 +1462,8 @@ Tab-Close → sessionStorage.clear()
 | Version | Feature | Priorität | ETA | ROI Beratung |
 |---------|---------|-----------|-----|--------------|
 | **v1.6.1** | **Tagesgeld-Schutzschild-Visualisierung** | ⭐⭐⭐ HIGH | ✅ DONE | 🟢 HIGH |
-| **v1.6.2** | **Cost-Average-Effekt Erklärer** | ⭐⭐⭐ **HIGHEST** | 1-2 Wochen | 🟢 **HIGHEST** |
-| **v1.6.3** | **Tagesgeld-Kriegskasse Erklärer** | ⭐⭐⭐ HIGH | 1-2 Wochen | 🟢 HIGH |
+| **v1.6.2** | **Cost-Average-Effekt Erklärer** | ⭐⭐⭐ HIGH | ✅ DONE | 🟢 HIGH |
+| **v1.6.3** | **Tagesgeld-Kriegskasse Erklärer** | ⭐⭐⭐ **HIGHEST** | 1-2 Wochen | 🟢 **HIGHEST** |
 | **v1.6.4** | **Presenter-Mode** | ⭐⭐ MEDIUM | 1 Woche | 🟡 MEDIUM |
 | **v1.7.0** | **Berater-Notizen & Annotations** | ⭐⭐ MEDIUM | 3-4 Wochen | 🟢 HIGH |
 | **v1.8.0** | **Session-Historie & Templates** | ⭐ LOW | 2-3 Wochen | 🟡 MEDIUM |
@@ -1447,18 +1472,19 @@ Tab-Close → sessionStorage.clear()
 
 **Empfohlener Entwicklungspfad:**
 1. ✅ **Abgeschlossen:** v1.6.1 (Schutzschild-Visualisierung)
-2. ⏳ **Jetzt:** v1.6.2 (Cost-Average-Effekt Erklärer = höchste Priorität!)
-3. ⏳ Q1 2026: v1.6.3, v1.6.4 (UX-Polish finalisieren)
-4. ⏳ Q2 2026: v1.7.0 (Berater-Notizen)
-5. ⏳ Q2 2026: v1.8.0 (Session-Historie)
-6. ⏳ Q3 2026: v1.9.0 + v1.10.0 (optional)
+2. ✅ **Abgeschlossen:** v1.6.2 (Cost-Average-Effekt Erklärer)
+3. ⏳ **Jetzt:** v1.6.3 (Tagesgeld-Kriegskasse Erklärer = höchste Priorität!)
+4. ⏳ Q1 2026: v1.6.4 (Presenter-Mode)
+5. ⏳ Q2 2026: v1.7.0 (Berater-Notizen)
+6. ⏳ Q2 2026: v1.8.0 (Session-Historie)
+7. ⏳ Q3 2026: v1.9.0 + v1.10.0 (optional)
 
 ---
 
 ## 🎯 Roadmap-Ziele
 
 **🎯 Ziel: Version 2.0.0 (Vermögensverzehr-Modus) bis Q1-Q2 2027**
-**📅 Nächster Meilenstein: v1.6.2 (Cost-Average Erklärer) - Q1 2026**
+**📅 Nächster Meilenstein: v1.6.3 (Tagesgeld-Kriegskasse Erklärer) - Q1 2026**
 
 **Langfristige Vision:**
 - v1.x: Vermögensaufbau-Fokus (Erwerbstätige)
@@ -1468,6 +1494,6 @@ Tab-Close → sessionStorage.clear()
 ---
 
 *Letzte Aktualisierung: 22. Dezember 2025*
-*Version: 3.1 (v1.6.1 abgeschlossen)*
-*Aktuelle Version: v1.6.1 ✅*
-*Nächste Version: v1.6.2 (Cost-Average-Effekt Erklärer) - HIGHEST PRIORITY ⭐⭐⭐*
+*Version: 3.2 (v1.6.2 abgeschlossen)*
+*Aktuelle Version: v1.6.2 ✅*
+*Nächste Version: v1.6.3 (Tagesgeld-Kriegskasse Erklärer) - HIGHEST PRIORITY ⭐⭐⭐*
