@@ -2197,13 +2197,6 @@
                 <button id="fixkosten-basin" class="account-basin cursor-pointer hover:border-indigo-500" type="button" aria-controls="fixkosten-modal" aria-haspopup="dialog" onclick="openFixkostenModal()"></button>
                 <div id="konsum-basin" class="account-basin account-basin--editable"></div>
                 <div id="tagesgeld-basin" class="account-basin account-basin--editable"></div>
-
-                <!-- v1.6.3: Kriegskasse Info-Button (positioned near Tagesgeld) -->
-                <button id="kriegskasse-info-btn" class="absolute bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg shadow-lg transition-all hover:scale-105 text-sm font-semibold z-[15] flex items-center gap-2" onclick="openKriegskasseModal()" style="top: 760px; left: 50%; transform: translateX(-50%);" title="Warum ist eine Investitionsreserve wichtig?">
-                    <span>💰</span>
-                    <span>Warum Tagesgeld?</span>
-                </button>
-
                 <button id="depot-basin" class="account-basin cursor-pointer hover:border-purple-500" type="button" aria-controls="depot-modal" aria-haspopup="dialog" onclick="updateRenditeSuggestions(parseInt(document.getElementById('anlagezeitraum').value, 10)); openModal('depot-modal');"></button>
                 <button id="vermieterkonto-basin" class="account-basin cursor-pointer hover:border-blue-500" type="button" aria-controls="vermieterkonto-modal" aria-haspopup="dialog" onclick="loadVermieterkontoData(); openModal('vermieterkonto-modal')" style="height: 100px;"></button>
                 <button id="immobilien-basin" class="account-basin cursor-pointer hover:border-amber-500" type="button" aria-controls="immobilien-modal" aria-haspopup="dialog" onclick="openModal('immobilien-modal')"></button>
@@ -5942,7 +5935,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             { current: konsumValue, min: konsumMin, limit: Infinity, minScaleBase: konsumInflow }
         );
 
-        renderBasin(basins.tagesgeld, 'Tagesgeldkonto', formatCurrency(finalTagesgeld), '<svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', `Zufluss: ${formatCurrency(tagesgeldInflow)}`, { current: finalTagesgeld, min: 0, limit: tagesgeldLimit });
+        // v1.6.3: Custom Tagesgeld rendering with Kriegskasse button
+        renderTagesgeldBasin(finalTagesgeld, tagesgeldInflow, tagesgeldLimit);
 
         // Use custom renderDepotBasin instead of renderBasin for fund blocks visualization
         renderDepotBasin();
@@ -7382,6 +7376,43 @@ function updateFixkostenItem(index, key, value) {
                     <div class="text-xs text-gray-400">(Klick zum Bearbeiten)</div>
                 </div>
                 <div class="fund-blocks right">${rightBlocks || '<div style="width: 8px"></div>'}</div>
+            </div>
+        `;
+    }
+
+    // === v1.6.3: CUSTOM TAGESGELD BASIN RENDERING WITH KRIEGSKASSE BUTTON ===
+    function renderTagesgeldBasin(finalTagesgeld, tagesgeldInflow, tagesgeldLimit) {
+        if (!basins.tagesgeld) return;
+
+        // Calculate fill percentage
+        const fillPercent = (tagesgeldLimit > 0 && tagesgeldLimit !== Infinity)
+            ? Math.min(100, (finalTagesgeld / tagesgeldLimit) * 100)
+            : 0;
+
+        // Render basin with embedded Kriegskasse button
+        basins.tagesgeld.innerHTML = `
+            <div class="absolute inset-0 bg-sky-500/30 rounded-lg transition-all duration-500" style="height: ${fillPercent}%; top: auto; bottom: 0;"></div>
+            ${tagesgeldLimit > 0 && tagesgeldLimit !== Infinity ? `<div class="limit-line bg-green-500/70" style="bottom: 100%;"><span class="text-green-300">Max</span></div>` : ''}
+            ${tagesgeldLimit > 0 && tagesgeldLimit !== Infinity ? `<div class="absolute top-1 right-2 text-xs text-gray-400">Sparziel: ${formatCurrency(tagesgeldLimit)}</div>` : ''}
+            <div class="basin-edit-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+            </div>
+            <div class="relative z-10 flex flex-col items-center justify-center h-full">
+                <svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                <p class="font-bold">Tagesgeldkonto</p>
+                <p class="text-lg font-mono">${formatCurrency(finalTagesgeld)}</p>
+                <p class="text-xs text-gray-400 mt-1">Zufluss: ${formatCurrency(tagesgeldInflow)}</p>
+
+                <!-- v1.6.3: Kriegskasse Button -->
+                <button onclick="openKriegskasseModal(); event.stopPropagation();" class="mt-3 px-3 py-1.5 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs font-semibold rounded-md shadow-md transition-all hover:scale-105 flex items-center gap-1.5" title="Warum ist eine Investitionsreserve wichtig?">
+                    <span>💰</span>
+                    <span>Warum Tagesgeld?</span>
+                </button>
             </div>
         `;
     }
