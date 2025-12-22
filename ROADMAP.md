@@ -1,7 +1,7 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.6.2 ✅
-**Nächste Version:** 1.6.3 (Tagesgeld-Kriegskasse Erklärer) - HIGH PRIORITY ⭐⭐⭐
+**Aktuelle Version:** 1.6.3 ✅
+**Nächste Version:** 1.6.4 (Presenter-Mode) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Dezember 2025
 **Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
@@ -943,6 +943,79 @@ git log --oneline --decorate  # See all tagged versions
 
 ---
 
+### ✅ Version 1.6.3: Tagesgeld-Kriegskasse Erklärer (ABGESCHLOSSEN)
+
+**Status:** ✅ Implementiert (22. Dezember 2025)
+**Fokus:** Visualisierung der Wichtigkeit einer Investitionsreserve (Tagesgeld)
+
+#### Implementierte Features
+
+**Kriegskasse-Modal (Investitionsreserve Erklärer)** ✅
+
+- ✅ **Side-by-Side Animation**
+  - Szenario A: OHNE Tagesgeld (Panikverkauf im Crash)
+  - Szenario B: MIT Tagesgeld (Durchhalten mit Puffer)
+
+- ✅ **Click-by-Click Animation** (10 Jahre Marktverlauf)
+  - Wiederverwendung von courseData.B (volatiler Kurs mit Crash)
+  - Jahr 2: Crash von 10€ → 2€ (-80%)
+  - Szenario A: Verkauf bei 2€, Wiedereinstieg bei 10.5€ (Jahr 5)
+  - Szenario B: Durchhalten, volle Erholung profitieren
+
+- ✅ **Interaktive Charts mit Chart.js**
+  - Portfolio-Wert-Verlauf über 10 Jahre
+  - Crash-Punkt extra hervorgehoben (größerer Punkt, orange)
+  - Live-Update bei jedem Klick
+
+- ✅ **Timeline-Display**
+  - Live-Events für beide Szenarien
+  - Letzte 5 Events sichtbar
+  - Emoji-basierte visuelle Indikatoren
+
+- ✅ **Ergebnis-Vergleich**
+  - Szenario A: Endwert, Verlust, Details zum Panikverkauf
+  - Szenario B: Endwert, Gewinn, Durchhalten-Strategie
+  - Differenz-Berechnung zeigt konkreten Mehrwert der Kriegskasse
+
+- ✅ **Insight-Box**
+  - Erklärt psychologischen Aspekt (Panik vs. Ruhe)
+  - Zeigt konkrete Zahlen des Unterschieds
+  - Betont Schutzfunktion der Tagesgeld-Reserve
+
+**Integration** ✅
+
+- ✅ **Info-Button bei Tagesgeld-Basin**
+  - Button: "💰 Warum Tagesgeld?"
+  - Positioniert zwischen Tagesgeld und Depot
+  - Grüner Gradient (emerald) passend zu Tagesgeld-Thema
+  - Hover-Effekt mit scale-transform
+
+- ✅ **Vollbild-Modal** mit Side-by-Side Vergleich
+  - Klick auf Szenarien startet Animation
+  - Klick auf Ergebnis schließt Modal
+  - Konsistentes UX-Pattern wie Cost-Average Erklärer
+
+**Technische Implementierung** ✅
+
+- ✅ **Scenario-basierte State-Verwaltung**
+  - scenarioA: Portfolio-Wert, Verkaufspunkt, Wiedereinstieg, Shares
+  - scenarioB: Portfolio-Wert, kontinuierliche Berechnung
+
+- ✅ **Marktdaten-Wiederverwendung**
+  - courseData.B von Cost-Average wiederverwendet
+  - Crash-Szenario bereits vorhanden (Jahr 2: 10 → 2)
+  - Erholung bis Jahr 10: 10.5€
+
+- ✅ **Chart-Management**
+  - Separate Charts für Szenario A und B
+  - Dynamische Point-Highlighting
+  - Memory-Cleanup bei Modal-Close
+
+**Commits:**
+- (Wird beim nächsten Commit hinzugefügt)
+
+---
+
 ### Version 1.6.0: UX-Polish & Kunden-Verständnis ⭐⭐⭐
 
 **ETA:** Q1 2026 (2-3 Wochen verbleibend)
@@ -1463,7 +1536,7 @@ Tab-Close → sessionStorage.clear()
 |---------|---------|-----------|-----|--------------|
 | **v1.6.1** | **Tagesgeld-Schutzschild-Visualisierung** | ⭐⭐⭐ HIGH | ✅ DONE | 🟢 HIGH |
 | **v1.6.2** | **Cost-Average-Effekt Erklärer** | ⭐⭐⭐ HIGH | ✅ DONE | 🟢 HIGH |
-| **v1.6.3** | **Tagesgeld-Kriegskasse Erklärer** | ⭐⭐⭐ **HIGHEST** | 1-2 Wochen | 🟢 **HIGHEST** |
+| **v1.6.3** | **Tagesgeld-Kriegskasse Erklärer** | ⭐⭐⭐ HIGHEST | ✅ DONE | 🟢 HIGHEST |
 | **v1.6.4** | **Presenter-Mode** | ⭐⭐ MEDIUM | 1 Woche | 🟡 MEDIUM |
 | **v1.7.0** | **Berater-Notizen & Annotations** | ⭐⭐ MEDIUM | 3-4 Wochen | 🟢 HIGH |
 | **v1.8.0** | **Session-Historie & Templates** | ⭐ LOW | 2-3 Wochen | 🟡 MEDIUM |
@@ -1473,8 +1546,8 @@ Tab-Close → sessionStorage.clear()
 **Empfohlener Entwicklungspfad:**
 1. ✅ **Abgeschlossen:** v1.6.1 (Schutzschild-Visualisierung)
 2. ✅ **Abgeschlossen:** v1.6.2 (Cost-Average-Effekt Erklärer)
-3. ⏳ **Jetzt:** v1.6.3 (Tagesgeld-Kriegskasse Erklärer = höchste Priorität!)
-4. ⏳ Q1 2026: v1.6.4 (Presenter-Mode)
+3. ✅ **Abgeschlossen:** v1.6.3 (Tagesgeld-Kriegskasse Erklärer)
+4. ⏳ **Jetzt:** v1.6.4 (Presenter-Mode)
 5. ⏳ Q2 2026: v1.7.0 (Berater-Notizen)
 6. ⏳ Q2 2026: v1.8.0 (Session-Historie)
 7. ⏳ Q3 2026: v1.9.0 + v1.10.0 (optional)
@@ -1484,7 +1557,7 @@ Tab-Close → sessionStorage.clear()
 ## 🎯 Roadmap-Ziele
 
 **🎯 Ziel: Version 2.0.0 (Vermögensverzehr-Modus) bis Q1-Q2 2027**
-**📅 Nächster Meilenstein: v1.6.3 (Tagesgeld-Kriegskasse Erklärer) - Q1 2026**
+**📅 Nächster Meilenstein: v1.6.4 (Presenter-Mode) - Q1 2026**
 
 **Langfristige Vision:**
 - v1.x: Vermögensaufbau-Fokus (Erwerbstätige)
@@ -1494,6 +1567,6 @@ Tab-Close → sessionStorage.clear()
 ---
 
 *Letzte Aktualisierung: 22. Dezember 2025*
-*Version: 3.2 (v1.6.2 abgeschlossen)*
-*Aktuelle Version: v1.6.2 ✅*
-*Nächste Version: v1.6.3 (Tagesgeld-Kriegskasse Erklärer) - HIGHEST PRIORITY ⭐⭐⭐*
+*Version: 3.3 (v1.6.3 abgeschlossen)*
+*Aktuelle Version: v1.6.3 ✅*
+*Nächste Version: v1.6.4 (Presenter-Mode) - MEDIUM PRIORITY ⭐⭐*
