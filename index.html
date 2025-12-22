@@ -6330,13 +6330,27 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     let caChartA = null;
     let caChartB = null;
     let animationRunning = false;
+    let currentMonth = 0; // Track current animation step
+    let totalSharesA = 0;
+    let totalSharesB = 0;
+    let totalInvestedA = 0;
+    let totalInvestedB = 0;
 
     function openCostAverageModal() {
         // Reset to Phase 1
         document.getElementById('ca-phase-1').style.display = 'block';
         document.getElementById('ca-phase-3').style.display = 'none';
         document.getElementById('ca-start-btn').style.display = 'block';
+        document.getElementById('ca-start-btn').textContent = '▶ Monat 1 starten';
         document.getElementById('ca-progress-info').style.display = 'none';
+
+        // Reset animation state
+        currentMonth = 0;
+        totalSharesA = 0;
+        totalSharesB = 0;
+        totalInvestedA = 0;
+        totalInvestedB = 0;
+        animationRunning = false;
 
         // Reset counters
         resetCounters();
@@ -6467,107 +6481,143 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         }
     }
 
-    async function startCostAverageAnimation() {
-        if (animationRunning) return;
-        animationRunning = true;
+    function startCostAverageAnimation() {
+        // NEW: Click-by-click animation instead of automatic
+        if (currentMonth >= 10) {
+            // All months done, show results
+            document.getElementById('ca-phase-1').style.display = 'none';
+            document.getElementById('ca-phase-3').style.display = 'block';
+            showResults();
+            return;
+        }
 
-        // Hide start button, show progress
-        document.getElementById('ca-start-btn').style.display = 'none';
-        document.getElementById('ca-progress-info').style.display = 'block';
+        currentMonth++;
+        animateNextMonth(currentMonth);
 
-        // Reset
-        resetCounters();
-        document.getElementById('ca-share-bars-a').innerHTML = '';
-        document.getElementById('ca-share-bars-b').innerHTML = '';
-
-        // Animate both courses simultaneously
-        await animateBothCourses();
-
-        // Show results
-        document.getElementById('ca-phase-1').style.display = 'none';
-        document.getElementById('ca-phase-3').style.display = 'block';
-        showResults();
-
-        animationRunning = false;
-    }
-
-    async function animateBothCourses() {
-        const monthlyRate = 1200;
-        let totalInvestedA = 0, totalSharesA = 0;
-        let totalInvestedB = 0, totalSharesB = 0;
-
-        for (let month = 1; month <= 10; month++) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
-
-            // Course A
-            const priceA = courseData.A[month - 1];
-            const sharesBoughtA = monthlyRate / priceA;
-            totalInvestedA += monthlyRate;
-            totalSharesA += sharesBoughtA;
-
-            // Course B
-            const priceB = courseData.B[month - 1];
-            const sharesBoughtB = monthlyRate / priceB;
-            totalInvestedB += monthlyRate;
-            totalSharesB += sharesBoughtB;
-
-            // Update counters
-            document.getElementById('ca-month-a').textContent = `${month} / 10`;
-            document.getElementById('ca-invested-a').textContent = `${totalInvestedA.toLocaleString('de-DE')} €`;
-            document.getElementById('ca-shares-a').textContent = totalSharesA.toFixed(0);
-
-            document.getElementById('ca-month-b').textContent = `${month} / 10`;
-            document.getElementById('ca-invested-b').textContent = `${totalInvestedB.toLocaleString('de-DE')} €`;
-            document.getElementById('ca-shares-b').textContent = totalSharesB.toFixed(0);
-
-            // Add share bars
-            addShareBar('a', month, priceA, sharesBoughtA);
-            addShareBar('b', month, priceB, sharesBoughtB, month === 2); // Highlight crash month
+        // Update button text
+        const btn = document.getElementById('ca-start-btn');
+        if (currentMonth < 10) {
+            btn.textContent = `▶ Monat ${currentMonth + 1} starten`;
+        } else {
+            btn.textContent = '✅ Ergebnis anzeigen';
         }
     }
 
-    function addShareBar(course, month, price, shares, isCrash = false) {
+    function animateNextMonth(month) {
+        const monthlyRate = 1200;
+
+        // Course A
+        const priceA = courseData.A[month - 1];
+        const sharesBoughtA = monthlyRate / priceA;
+        totalInvestedA += monthlyRate;
+        totalSharesA += sharesBoughtA;
+
+        // Course B
+        const priceB = courseData.B[month - 1];
+        const sharesBoughtB = monthlyRate / priceB;
+        totalInvestedB += monthlyRate;
+        totalSharesB += sharesBoughtB;
+
+        // Update counters
+        document.getElementById('ca-month-a').textContent = `${month} / 10`;
+        document.getElementById('ca-invested-a').textContent = `${totalInvestedA.toLocaleString('de-DE')} €`;
+        document.getElementById('ca-shares-a').textContent = totalSharesA.toFixed(0);
+
+        document.getElementById('ca-month-b').textContent = `${month} / 10`;
+        document.getElementById('ca-invested-b').textContent = `${totalInvestedB.toLocaleString('de-DE')} €`;
+        document.getElementById('ca-shares-b').textContent = totalSharesB.toFixed(0);
+
+        // Update share bars (fixed positions, not scrolling)
+        updateShareBar('a', month, priceA, sharesBoughtA);
+        updateShareBar('b', month, priceB, sharesBoughtB, month === 2); // Highlight crash month
+
+        // Highlight current month in charts
+        highlightMonthInCharts(month);
+    }
+
+    function updateShareBar(course, month, price, shares, isCrash = false) {
         const container = document.getElementById(`ca-share-bars-${course}`);
         if (!container) return;
 
-        const bar = document.createElement('div');
-        bar.className = 'flex items-center gap-2 text-sm';
+        // Check if bar for this month already exists
+        let bar = container.querySelector(`[data-month="${month}"]`);
+        if (!bar) {
+            // Create placeholder bars for all 10 months on first call
+            if (container.children.length === 0) {
+                for (let m = 1; m <= 10; m++) {
+                    const placeholderBar = document.createElement('div');
+                    placeholderBar.setAttribute('data-month', m);
+                    placeholderBar.className = 'flex items-center gap-2 text-sm';
+                    placeholderBar.style.opacity = '0.3';
+                    placeholderBar.style.minHeight = '32px';
+
+                    const color = course === 'a' ? '#033D5D' : '#C1293D';
+                    placeholderBar.innerHTML = `
+                        <span class="text-gray-400 w-16">M${m}:</span>
+                        <div class="flex-1 bg-gray-100 rounded-full h-6"></div>
+                        <span class="w-24 text-right text-gray-400">— 🛒</span>
+                    `;
+                    container.appendChild(placeholderBar);
+                }
+            }
+            bar = container.querySelector(`[data-month="${month}"]`);
+        }
 
         // Calculate bar width (relative to max possible shares ~600)
-        const maxWidth = 100; // percentage
+        const maxWidth = 100;
         const barWidth = Math.min((shares / 600) * maxWidth, maxWidth);
 
         const color = course === 'a' ? '#033D5D' : '#C1293D';
-        const bgColor = course === 'a' ? 'rgba(3, 61, 93, 0.2)' : 'rgba(193, 41, 61, 0.2)';
 
-        // Special styling for crash month
-        const crashStyle = isCrash ? `
-            background: linear-gradient(135deg, #C1293D 0%, #E3691E 100%);
-            color: white;
-            font-weight: bold;
-            padding: 8px;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(193, 41, 61, 0.4);
-            animation: pulse 1s ease-in-out;
-        ` : '';
+        // Update bar with actual data
+        bar.style.opacity = '1';
+        bar.style.minHeight = '32px';
+
+        // FIX: White text on crash background (red-on-red problem)
+        const crashTextColor = isCrash ? '#FFFFFF' : color;
 
         bar.innerHTML = `
-            <span class="text-gray-600 w-16">M${month}:</span>
+            <span class="${isCrash ? 'text-white font-bold' : 'text-gray-600'} w-16">M${month}:</span>
             <div class="flex-1 bg-gray-200 rounded-full h-6 relative overflow-hidden">
                 <div style="width: ${barWidth}%; background: ${isCrash ? 'linear-gradient(90deg, #C1293D 0%, #E3691E 100%)' : color}; height: 100%; border-radius: 9999px; transition: width 0.5s ease;"></div>
             </div>
-            <span class="w-24 text-right font-semibold" style="color: ${color};">${shares.toFixed(0)} 🛒</span>
+            <span class="w-24 text-right font-bold" style="color: ${crashTextColor};">${shares.toFixed(0)} 🛒</span>
             ${isCrash ? '<span class="text-lg">💥</span>' : ''}
         `;
 
+        // Crash month styling (background + white text)
         if (isCrash) {
-            bar.style.cssText = crashStyle;
+            bar.style.background = 'linear-gradient(135deg, #C1293D 0%, #E3691E 100%)';
+            bar.style.color = '#FFFFFF';
+            bar.style.padding = '8px';
+            bar.style.borderRadius = '8px';
+            bar.style.boxShadow = '0 4px 12px rgba(193, 41, 61, 0.4)';
+        }
+    }
+
+    function highlightMonthInCharts(month) {
+        // Highlight current month point in both charts
+        if (caChartA && caChartA.data.datasets[0]) {
+            // Reset all point radii
+            caChartA.data.datasets[0].pointRadius = new Array(10).fill(4);
+            caChartA.data.datasets[0].pointBackgroundColor = new Array(10).fill('#033D5D');
+
+            // Highlight current month
+            caChartA.data.datasets[0].pointRadius[month - 1] = 10;
+            caChartA.data.datasets[0].pointBackgroundColor[month - 1] = '#47A190';
+            caChartA.update();
         }
 
-        container.appendChild(bar);
+        if (caChartB && caChartB.data.datasets[0]) {
+            // Reset all point radii
+            caChartB.data.datasets[0].pointRadius = new Array(10).fill(4);
+            caChartB.data.datasets[0].pointBackgroundColor = new Array(10).fill('#C1293D');
 
-        // Scroll to bottom to show newest entry
-        container.scrollTop = container.scrollHeight;
+            // Highlight current month (extra emphasis on crash month)
+            caChartB.data.datasets[0].pointRadius[month - 1] = month === 2 ? 12 : 10;
+            caChartB.data.datasets[0].pointBackgroundColor[month - 1] = month === 2 ? '#E3691E' : '#47A190';
+            caChartB.update();
+        }
     }
 
     function showResults() {
