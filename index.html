@@ -166,6 +166,182 @@
         .schutzschild-badge--red { border-color: var(--color-error); }
         .schutzschild-badge--red .schutzschild-badge-title { color: var(--color-error); }
 
+        /* Animations */
+        @keyframes fadeInBadge {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulseShield {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 0 transparent);
+            }
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 8px currentColor);
+            }
+        }
+
+        .schutzschild-badge--fade-in {
+            animation: fadeInBadge 0.4s ease-out;
+        }
+
+        .basin--pulse-green {
+            animation: pulseShield 0.6s ease-in-out;
+            color: rgba(16, 185, 129, 0.6);
+        }
+
+        .basin--pulse-yellow {
+            animation: pulseShield 0.6s ease-in-out;
+            color: rgba(251, 191, 36, 0.6);
+        }
+
+        .basin--pulse-red {
+            animation: pulseShield 0.6s ease-in-out;
+            color: rgba(239, 68, 68, 0.6);
+        }
+
+        .shield--pulse-green {
+            animation: pulseShield 0.6s ease-in-out;
+            filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));
+        }
+
+        .shield--pulse-yellow {
+            animation: pulseShield 0.6s ease-in-out;
+            filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+        }
+
+        .shield--pulse-red {
+            animation: pulseShield 0.6s ease-in-out;
+            filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6));
+        }
+
+        /* v1.6.1 Level 2: Enterprise-Style Shield Impact Flash (on tooltip hover) */
+        .shield--impact-green {
+            animation: shieldImpact 1.5s ease-out infinite;
+            filter: drop-shadow(0 0 20px rgba(16, 185, 129, 1));
+        }
+
+        .shield--impact-yellow {
+            animation: shieldImpact 1s ease-out infinite;
+            filter: drop-shadow(0 0 20px rgba(251, 191, 36, 1));
+        }
+
+        .shield--impact-red {
+            animation: shieldImpact 0.6s ease-out infinite;
+            filter: drop-shadow(0 0 20px rgba(239, 68, 68, 1));
+        }
+
+        @keyframes shieldImpact {
+            0% {
+                opacity: 1;
+                filter: brightness(3) drop-shadow(0 0 30px currentColor);
+            }
+            10% {
+                opacity: 0.9;
+                filter: brightness(2) drop-shadow(0 0 25px currentColor);
+            }
+            30% {
+                opacity: 0.7;
+                filter: brightness(1.2) drop-shadow(0 0 15px currentColor);
+            }
+            100% {
+                opacity: 0.5;
+                filter: brightness(1) drop-shadow(0 0 8px currentColor);
+            }
+        }
+
+        /* v1.6.1 Level 2: Hover-Tooltip (compact, basin-style) */
+        .schutzschild-tooltip {
+            position: absolute;
+            display: none;
+            flex-direction: column;
+            background: rgba(14, 40, 61, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            z-index: 110;
+            width: 200px;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .schutzschild-tooltip--visible {
+            display: flex;
+        }
+
+        .schutzschild-tooltip-puffer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .schutzschild-tooltip-icon {
+            font-size: 16px;
+            filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6));
+        }
+
+        .schutzschild-tooltip-puffer-text {
+            flex: 1;
+        }
+
+        .schutzschild-tooltip-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 8px 0;
+        }
+
+        .schutzschild-tooltip-benefit {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        /* Color states for tooltip */
+        .schutzschild-tooltip--green {
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .schutzschild-tooltip--green .schutzschild-tooltip-icon {
+            filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.8));
+        }
+
+        .schutzschild-tooltip--yellow {
+            border-color: rgba(251, 191, 36, 0.4);
+        }
+
+        .schutzschild-tooltip--yellow .schutzschild-tooltip-icon {
+            filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.8));
+        }
+
+        .schutzschild-tooltip--red {
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .schutzschild-tooltip--red .schutzschild-tooltip-icon {
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8));
+        }
+
+        /* v1.6.1 Level 2: Tooltip Connection Line Animation */
+        .tooltip-connection-line {
+            stroke-width: 2.5px;
+            stroke-dasharray: 10 15;
+            animation: flow 2s linear infinite;
+            opacity: 0.8;
+        }
+
         /* Toggle Switch */
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -1998,13 +2174,18 @@
                     <path id="schutzschirm-path" class="schutzschirm"></path>
                 </svg>
 
-                <!-- v1.6.1: Schutzschild Info-Badge (Dezent, Click-triggered) -->
-                <div id="schutzschild-badge" class="schutzschild-badge">
-                    <div class="schutzschild-badge-icon">🛡️</div>
-                    <div class="schutzschild-badge-title">Geschützt</div>
-                    <div class="schutzschild-badge-puffer" id="schutzschild-puffer-months">Puffer: 0 M</div>
-                    <div class="schutzschild-badge-amount" id="schutzschild-puffer-amount">(0 €)</div>
+                <!-- v1.6.1 Level 2: Hover-Tooltip (compact, visual connection) -->
+                <div id="schutzschild-tooltip" class="schutzschild-tooltip">
+                    <div class="schutzschild-tooltip-puffer">
+                        <span class="schutzschild-tooltip-icon">🛡️</span>
+                        <span id="tooltip-puffer-text" class="schutzschild-tooltip-puffer-text">Puffer: 4 M</span>
+                    </div>
                 </div>
+
+                <!-- SVG connection line: Tagesgeld → THROUGH Tooltip → Shield (line goes OVER tooltip, making it look like it passes through) -->
+                <svg id="tooltip-connection-svg" style="position: absolute; pointer-events: none; z-index: 115; display: none;">
+                    <path id="tagesgeld-tooltip-line" class="tooltip-connection-line" stroke="rgba(16, 185, 129, 0.9)" fill="none" />
+                </svg>
 
                 <!-- Horizontal Gradient Zones für visuelle Ebenen-Trennung -->
                 <div id="gradient-zone-1" class="gradient-zone gradient-zone-1" style="top: 0; height: 240px;"></div>
@@ -4828,23 +5009,22 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
     /**
      * Update Schutzschild Info-Badge (v1.6.1 Redesigned)
-     * NEW Calculation: (Income + Vermieterkonto) - Sparraten
+     * Calculation: Tagesgeld / (Einkommen - Alle Sparraten)
      */
     function updateSchutzschildBadge(tagesgeldAmount, data) {
         const badge = getEl('schutzschild-badge');
         if (!badge) return;
 
-        // NEW Calculation: Monthly cash flow surplus
+        // Calculate: Einkommen - Alle Sparraten
         const income = inputs.income ? parseFloat(inputs.income.value) || 0 : 0;
-        const vermieterSaldo = data && data.vermieterkonto ? data.vermieterkonto.saldo : 0;
         const depotSparplanTotal = data && data.depotSparplanTotal ? data.depotSparplanTotal : 0;
 
-        // Monthly surplus = (Income + Vermieterkonto) - Sparraten
-        const monthlySurplus = income + vermieterSaldo - depotSparplanTotal;
+        // Monthly available = Einkommen - Sparraten
+        const monthlyAvailable = income - depotSparplanTotal;
 
-        // Calculate buffer in months
-        const pufferMonths = monthlySurplus > 0
-            ? Math.floor(tagesgeldAmount / monthlySurplus)
+        // Calculate buffer in months: Tagesgeld / (Einkommen - Sparraten)
+        const pufferMonths = monthlyAvailable > 0 && tagesgeldAmount > 0
+            ? Math.floor(tagesgeldAmount / monthlyAvailable)
             : 0;
 
         // Update content
@@ -4891,39 +5071,321 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             shield.style.stroke = shieldStroke;
         }
 
-        // Position badge on the RIGHT side, outside flow
+        // Position badge on the RIGHT side, next to shield (higher)
         const depotBasin = basins.depot;
         if (depotBasin) {
             const depotRect = depotBasin.getBoundingClientRect();
             const containerRect = flowContainer.getBoundingClientRect();
 
             const badgeX = (depotRect.right - containerRect.left) + 16; // 16px right of depot
-            const badgeY = (depotRect.top - containerRect.top) + 60; // Aligned with shield arc
+            const badgeY = (depotRect.top - containerRect.top) - 40; // Higher - next to shield arc
 
             badge.style.left = `${badgeX}px`;
             badge.style.top = `${badgeY}px`;
         }
+
+        // v1.6.1 Level 2: Update tooltip content
+        updateTooltipContent(tagesgeldAmount, pufferMonths);
     }
 
-    // Click handler for shield to toggle badge
+    // Click handler for shield - will trigger Level 3 Demo later
     function initSchutzschildClickHandler() {
         const shield = getEl('schutzschirm-path');
-        const badge = getEl('schutzschild-badge');
 
-        if (shield && badge) {
+        if (shield) {
             shield.style.pointerEvents = 'auto'; // Enable clicks
             shield.style.cursor = 'pointer';
 
-            shield.addEventListener('click', function() {
-                badge.classList.toggle('schutzschild-badge--visible');
+            shield.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // TODO: Level 3 - Start 5-second demo animation
+                console.log('Shield clicked - Level 3 Demo will go here');
+            });
+        }
+    }
+
+    // v1.6.1 Level 2: Hover-Tooltip functionality with visual connections
+    function initSchutzschildTooltip() {
+        const shield = getEl('schutzschirm-path');
+        const tooltip = getEl('schutzschild-tooltip');
+        const connectionSvg = getEl('tooltip-connection-svg');
+
+        if (shield && tooltip && connectionSvg) {
+            // Show tooltip and connections on hover + start shield pulsing
+            shield.addEventListener('mouseenter', function() {
+                // Update tooltip content FIRST
+                updateTooltipOnHover();
+
+                tooltip.classList.add('schutzschild-tooltip--visible');
+                connectionSvg.style.display = 'block';
+                positionTooltip();
+                startShieldPulsing(); // Start continuous pulsing
             });
 
-            // Close badge when clicking outside
-            document.addEventListener('click', function(e) {
-                if (e.target !== shield && !badge.contains(e.target)) {
-                    badge.classList.remove('schutzschild-badge--visible');
-                }
+            // Hide tooltip on mouse leave + stop shield pulsing
+            shield.addEventListener('mouseleave', function() {
+                tooltip.classList.remove('schutzschild-tooltip--visible');
+                connectionSvg.style.display = 'none';
+                stopShieldPulsing(); // Stop pulsing
             });
+
+            // Keep visible when hovering over tooltip
+            tooltip.addEventListener('mouseenter', function() {
+                tooltip.classList.add('schutzschild-tooltip--visible');
+                connectionSvg.style.display = 'block';
+                startShieldPulsing(); // Keep pulsing
+            });
+
+            // Hide when leaving tooltip
+            tooltip.addEventListener('mouseleave', function() {
+                tooltip.classList.remove('schutzschild-tooltip--visible');
+                connectionSvg.style.display = 'none';
+                stopShieldPulsing(); // Stop pulsing
+            });
+        }
+    }
+
+    function updateTooltipOnHover() {
+        const pufferMonths = calculatePufferMonths();
+        const tooltipText = getEl('tooltip-puffer-text');
+        const tooltip = getEl('schutzschild-tooltip');
+
+        console.log('Puffer Monate berechnet:', pufferMonths); // Debug
+
+        if (tooltipText) {
+            const monthsText = pufferMonths >= 1 ? `${pufferMonths} M` : '<1 M';
+            tooltipText.textContent = `Puffer: ${monthsText}`;
+        }
+
+        // Update tooltip color
+        if (tooltip) {
+            tooltip.classList.remove('schutzschild-tooltip--green', 'schutzschild-tooltip--yellow', 'schutzschild-tooltip--red');
+
+            if (pufferMonths >= 3) {
+                tooltip.classList.add('schutzschild-tooltip--green');
+            } else if (pufferMonths >= 1) {
+                tooltip.classList.add('schutzschild-tooltip--yellow');
+            } else {
+                tooltip.classList.add('schutzschild-tooltip--red');
+            }
+        }
+
+        // Update connection line color
+        const tagesgeldLine = getEl('tagesgeld-tooltip-line');
+        if (tagesgeldLine) {
+            let lineColor = '';
+            if (pufferMonths >= 3) {
+                lineColor = 'rgba(16, 185, 129, 0.9)';
+            } else if (pufferMonths >= 1) {
+                lineColor = 'rgba(251, 191, 36, 0.9)';
+            } else {
+                lineColor = 'rgba(239, 68, 68, 0.9)';
+            }
+            tagesgeldLine.setAttribute('stroke', lineColor);
+        }
+    }
+
+    function startShieldPulsing() {
+        const shield = getEl('schutzschirm-path');
+        if (!shield) return;
+
+        // Get current puffer months from tooltip
+        const pufferMonths = calculatePufferMonths();
+
+        // Remove any existing impact classes
+        shield.classList.remove('shield--impact-green', 'shield--impact-yellow', 'shield--impact-red');
+
+        // Add appropriate impact flash based on puffer months (Enterprise-style)
+        if (pufferMonths >= 3) {
+            shield.classList.add('shield--impact-green'); // Slow green flash
+        } else if (pufferMonths >= 1) {
+            shield.classList.add('shield--impact-yellow'); // Medium yellow flash
+        } else {
+            shield.classList.add('shield--impact-red'); // Fast red flash (warning)
+        }
+    }
+
+    function stopShieldPulsing() {
+        const shield = getEl('schutzschirm-path');
+        if (!shield) return;
+
+        shield.classList.remove('shield--impact-green', 'shield--impact-yellow', 'shield--impact-red');
+    }
+
+    function calculatePufferMonths() {
+        // Get values from input fields in modals (NOT from basins!)
+        // 1. Tagesgeld: "Aktueller Stand" from Tagesgeld modal
+        const tagesgeldAmount = inputs.tagesgeldCurrent ? parseFloat(inputs.tagesgeldCurrent.value) || 0 : 0;
+
+        // 2. Einkommen from Einkommen field
+        const einkommen = inputs.income ? parseFloat(inputs.income.value) || 0 : 0;
+
+        // 3. Depot Sparrate from Fixkosten modal (items with target='depot')
+        const depotSparrate = fixkostenItems
+            .filter(i => i.target === 'depot')
+            .reduce((sum, i) => sum + getMonthlyAmount(i), 0);
+
+        console.log('Tagesgeld:', tagesgeldAmount, 'Einkommen:', einkommen, 'Sparrate:', depotSparrate); // Debug
+
+        // Calculation: Einkommen - Alle Sparraten
+        const monthlyAvailable = einkommen - depotSparrate;
+
+        if (monthlyAvailable <= 0 || tagesgeldAmount <= 0) {
+            console.log('Ungültige Werte - monthlyAvailable:', monthlyAvailable, 'tagesgeld:', tagesgeldAmount);
+            return 0; // Kein verfügbares Einkommen oder kein Tagesgeld
+        }
+
+        // Puffer in Monaten = Tagesgeld / (Einkommen - Sparraten)
+        const months = Math.floor(tagesgeldAmount / monthlyAvailable);
+        console.log('Berechnete Monate:', months);
+        return months;
+    }
+
+    function positionTooltip() {
+        const tooltip = getEl('schutzschild-tooltip');
+        const tagesgeldBasin = basins.tagesgeld;
+        const depotBasin = basins.depot;
+
+        if (tooltip && tagesgeldBasin && depotBasin) {
+            const tagesgeldRect = tagesgeldBasin.getBoundingClientRect();
+            const depotRect = depotBasin.getBoundingClientRect();
+            const containerRect = flowContainer.getBoundingClientRect();
+
+            // Position tooltip HIGHER - between Tagesgeld and Shield (clear of depot)
+            const tooltipX = (tagesgeldRect.right - containerRect.left) + 24; // 24px right of tagesgeld
+            const tooltipY = (depotRect.top - containerRect.top) - 110; // Higher position, clear of depot
+
+            tooltip.style.left = `${tooltipX}px`;
+            tooltip.style.top = `${tooltipY}px`;
+
+            // Draw connection lines
+            drawTooltipConnections();
+        }
+    }
+
+    // ===== FLOW-LINE HELPER (v1.6.1) =====
+    // Einfache Syntax: "element-id.position -> element-id.position"
+    // Positionen: top, bottom, left, right, center, top-left, top-right, bottom-left, bottom-right
+
+    function getElementPosition(elementId, position) {
+        const element = getEl(elementId) || basins[elementId.replace('-basin', '')];
+        if (!element) {
+            console.error(`Element nicht gefunden: ${elementId}`);
+            return null;
+        }
+
+        const rect = element.getBoundingClientRect();
+        const containerRect = flowContainer.getBoundingClientRect();
+
+        // Relative coordinates zum Flow-Container
+        const x = rect.left - containerRect.left;
+        const y = rect.top - containerRect.top;
+        const w = rect.width;
+        const h = rect.height;
+
+        const positions = {
+            'center': { x: x + w / 2, y: y + h / 2 },
+            'top': { x: x + w / 2, y: y },
+            'bottom': { x: x + w / 2, y: y + h },
+            'left': { x: x, y: y + h / 2 },
+            'right': { x: x + w, y: y + h / 2 },
+            'top-left': { x: x, y: y },
+            'top-right': { x: x + w, y: y },
+            'bottom-left': { x: x, y: y + h },
+            'bottom-right': { x: x + w, y: y + h }
+        };
+
+        return positions[position] || positions['center'];
+    }
+
+    function drawFlowLine(pathElement, fromSpec, toSpec) {
+        // Parse: "element-id.position -> element-id.position"
+        const [fromPart, toPart] = fromSpec.includes('->')
+            ? fromSpec.split('->').map(s => s.trim())
+            : [fromSpec, toSpec];
+
+        const [fromElement, fromPos] = fromPart.split('.');
+        const [toElement, toPos] = toPart.split('.');
+
+        const start = getElementPosition(fromElement.trim(), fromPos.trim());
+        const end = getElementPosition(toElement.trim(), toPos.trim());
+
+        if (!start || !end) {
+            console.error(`Flow-Line konnte nicht gezeichnet werden: ${fromSpec} -> ${toSpec}`);
+            return;
+        }
+
+        pathElement.setAttribute('d', `M ${start.x} ${start.y} L ${end.x} ${end.y}`);
+    }
+
+    function drawTooltipConnections() {
+        const connectionSvg = getEl('tooltip-connection-svg');
+        const tooltip = getEl('schutzschild-tooltip');
+
+        if (!connectionSvg || !tooltip) return;
+
+        const containerRect = flowContainer.getBoundingClientRect();
+
+        // Set SVG size to cover the whole container
+        connectionSvg.setAttribute('width', containerRect.width);
+        connectionSvg.setAttribute('height', containerRect.height);
+        connectionSvg.style.left = '0';
+        connectionSvg.style.top = '0';
+
+        // Draw Flow-Line using new syntax: Tagesgeld rechts -> Tooltip top-left
+        const tagesgeldLine = getEl('tagesgeld-tooltip-line');
+        if (tagesgeldLine) {
+            drawFlowLine(tagesgeldLine, "tagesgeld-basin.right", "schutzschild-tooltip.top-left");
+        }
+
+        // Hide the second line (not needed anymore)
+        const shieldLine = getEl('tooltip-shield-line');
+        if (shieldLine) {
+            shieldLine.setAttribute('d', '');
+        }
+    }
+
+    function updateTooltipContent(tagesgeldAmount, pufferMonths) {
+        const tooltip = getEl('schutzschild-tooltip');
+        const tooltipText = getEl('tooltip-puffer-text');
+
+        if (tooltipText) {
+            const monthsText = pufferMonths >= 1
+                ? `${pufferMonths} M`
+                : '<1 M';
+            tooltipText.textContent = `Puffer: ${monthsText}`;
+        }
+
+        // Apply color coding to tooltip and connection lines
+        if (tooltip) {
+            tooltip.classList.remove('schutzschild-tooltip--green', 'schutzschild-tooltip--yellow', 'schutzschild-tooltip--red');
+
+            let colorClass = '';
+            let lineColor = '';
+
+            if (pufferMonths >= 3) {
+                colorClass = 'schutzschild-tooltip--green';
+                lineColor = 'rgba(16, 185, 129, 0.9)';
+            } else if (pufferMonths >= 1) {
+                colorClass = 'schutzschild-tooltip--yellow';
+                lineColor = 'rgba(251, 191, 36, 0.9)';
+            } else {
+                colorClass = 'schutzschild-tooltip--red';
+                lineColor = 'rgba(239, 68, 68, 0.9)';
+            }
+
+            tooltip.classList.add(colorClass);
+
+            // Update connection line colors (both dashed, organic style)
+            const tagesgeldLine = getEl('tagesgeld-tooltip-line');
+            const shieldLine = getEl('tooltip-shield-line');
+
+            if (tagesgeldLine) {
+                tagesgeldLine.setAttribute('stroke', lineColor);
+            }
+            if (shieldLine) {
+                shieldLine.setAttribute('stroke', lineColor);
+            }
         }
     }
 
@@ -7509,6 +7971,9 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
         // v1.6.1: Initialize Schutzschild click handler
         initSchutzschildClickHandler();
 
+        // v1.6.1 Level 2: Initialize Schutzschild hover tooltip
+        initSchutzschildTooltip();
+
         // THEME init
         const themeSwitch = getEl('theme-switch');
         const initialTheme = loadTheme(); // 'dark' | 'light'
@@ -7751,6 +8216,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             });
         }, 100);
     });
+
     </script>
 
     <!-- ===== SESSION UI ELEMENTS (v1.2.0) ===== -->

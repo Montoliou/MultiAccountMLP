@@ -1,7 +1,7 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.5.2 ✅
-**Nächste Version:** 1.6.0 (UX-Polish & Kunden-Verständnis) - HIGHEST PRIORITY ⭐⭐⭐
+**Aktuelle Version:** 1.6.1 ✅
+**Nächste Version:** 1.6.2 (Cost-Average-Effekt Erklärer) - HIGH PRIORITY ⭐⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Dezember 2025
 **Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
@@ -842,139 +842,56 @@ git log --oneline --decorate  # See all tagged versions
 
 ---
 
+### ✅ Version 1.6.1: Tagesgeld-Schutzschild-Visualisierung (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Dezember 22, 2025)
+**Fokus:** Visualisierung des Schutzschild-Konzepts mit interaktiven Elementen
+
+#### Implementierte Features
+
+**Level 1: Click-Triggered Info-Badge** ✅
+- ✅ **Dezentes Badge außerhalb des Flows**
+  - Klick auf Schutzschild zeigt Badge (kein Permanent-Display)
+  - Positioniert außerhalb der Flow-Geometrie
+  - Geometrisch ausgerichtet mit Flow-Container
+  - Badge schließt sich bei Klick außerhalb
+
+**Level 2: Hover-Tooltip mit Live-Berechnung** ✅
+- ✅ **Puffer-Berechnung beim Hover**
+  - Formel: `Tagesgeld / (Einkommen - Sparraten)`
+  - Werte aus Input-Feldern (nicht aus Basin-Display)
+  - Farbcodierung:
+    - 🟢 Grün: Puffer ≥ 3 Monate → Slow flash (1.5s)
+    - 🟡 Gelb: Puffer 1-3 Monate → Medium flash (1s)
+    - 🔴 Rot: Puffer < 1 Monat → Fast flash (0.6s)
+  - Flow-Line: Tagesgeld → Tooltip (oberhalb z-index)
+  - Enterprise-Style Shield Animation (brightness-based impact flash)
+
+**Design-Entscheidungen:**
+- ✅ Simple Flow-Line Syntax: `"element-id.position -> element-id.position"`
+- ✅ Position-Mapping: top, bottom, left, right, center, corners
+- ✅ Z-Index Layering für "through tooltip" Effekt
+- ✅ Korrekte Datenquellen (inputs statt basins)
+
+**Level 3 & 4: NICHT implementiert** ⏸️
+- ⏸️ 5-Sekunden-Demo-Animation (User: "lassen wir einfach weg")
+- ⏸️ Modal mit Zahlen-Vergleich (zu komplex für aktuellen Bedarf)
+
+**Commits:**
+- 466f06c: fix(v1.6.1): redesign badge - dezent, click-triggered, outside flow
+- c261078: feat(v1.6.1): implement Level 1 - Schutzschild Info-Badge
+- [Current]: feat(v1.6.1): complete Level 2 - Hover-Tooltip with shield animation
+
+---
+
 ### Version 1.6.0: UX-Polish & Kunden-Verständnis ⭐⭐⭐
 
-**ETA:** Q3 2026 (4-5 Wochen)
-**Fokus:** MEGA! Je schöner für Kunden, desto einfacher zu verstehen
+**ETA:** Q1 2026 (3-4 Wochen)
+**Fokus:** Kunden-Verständnis durch interaktive Erklärer
 
-**Mission:** Kunde soll auf einen Blick verstehen wie sein Geld "automatisch fließt"
+**Mission:** Kunde soll verstehen wie sein Geld "automatisch fließt" und WARUM bestimmte Strategien funktionieren
 
 #### Features
-
-**1.6.1: Tagesgeld-Schutzschild-Visualisierung** ⭐⭐⭐ (Woche 1-2)
-
-**Problem:** Kunde versteht nicht, dass Tagesgeld das Depot vor Panikverkäufen schützt.
-
-**Lösung - 4-Stufen-Interaktionskonzept (kombiniert alle besten Ideen):**
-
-**Level 1: Permanentes Info-Badge am Schild** ⭐⭐⭐
-- [ ] **Schild zeigt konkrete Puffer-Daten**
-  ```
-  ┌─────────────────────┐
-  │  🛡️ Geschützt       │
-  │  Puffer: 3 Monate   │ ← Berechnung: Tagesgeld / monatl. Fixkosten
-  │  (4.500 €)          │
-  └─────────────────────┘
-  ```
-  - **Berechnung:** `Puffer-Monate = Math.floor(tagesgeldCurrent / fixkostenMonatlich)`
-  - **Dynamische Anzeige:** Aktualisiert sich live bei Änderungen
-  - **Farbcodierung des Schilds:**
-    - 🟢 Grün: Puffer ≥ 3 Monate → "Sicher"
-    - 🟡 Gelb: Puffer 1-3 Monate → "Knapp"
-    - 🔴 Rot: Puffer < 1 Monat → "Kritisch"
-  - Dezent, immer sichtbar, konkret statt abstrakt
-
-**Level 2: Hover-Tooltip mit Erklärung** ⭐⭐
-- [ ] **Erweiterte Info bei Mouse-Over**
-  ```
-  Tooltip beim Hover:
-  ┌────────────────────────────────────────┐
-  │ 💡 Dein Tagesgeld schützt dein Depot   │
-  │                                        │
-  │ ✓ Puffer: 3 Monate Fixkosten (4.500 €)│
-  │ ✓ Bei Krise: Keine Panikverkäufe      │
-  │ ✓ Depot kann sich erholen             │
-  │ ✓ Langfristig höhere Rendite          │
-  │                                        │
-  │ 🎬 Klick für Demo & Vergleich          │
-  └────────────────────────────────────────┘
-  ```
-  - Gepunktete Linie vom Tagesgeldkonto zum Schild pulsiert beim Hover
-  - Call-to-Action: "Klick für Demo"
-  - Schnell verständlich, nicht aufdringlich
-
-**Level 3: 5-Sekunden-Demo-Animation** ⭐⭐⭐ (neu!)
-- [ ] **Klick startet automatische Demo-Sequenz**
-  ```
-  Sequenz (5 Sekunden):
-
-  [0-2s] "Was passiert OHNE Puffer?"
-    → Schild verblasst zu grau (opacity: 0.2)
-    → Depot-Basin wackelt leicht (shake animation)
-    → Warnung erscheint: "⚠️ Panikverkauf-Risiko!"
-    → Depot bekommt roten Glow
-
-  [2-3s] Übergangs-Animation
-    → Schild kehrt zurück (opacity: 0.2 → 1.0)
-    → Gepunktete Linie vom Tagesgeld pulsiert stärker
-
-  [3-5s] "Mit Puffer bist du geschützt!"
-    → Schild leuchtet grün (glow effect)
-    → ✅ "Depot bleibt investiert"
-    → Ruhige, stabile Darstellung
-  ```
-  - **Nicht als dauerhafter Toggle** (verhindert Verwirrung)
-  - **Automatisches Reset** nach 5 Sekunden
-  - **Emotional überzeugend** durch direkten Vorher/Nachher-Vergleich
-  - Inspiriert von ChatGPT Idee 2 ("Szenario-Schalter"), aber als Demo statt Toggle
-
-**Level 4: Modal mit Zahlen-Vergleich** ⭐⭐⭐
-- [ ] **Nach Demo-Animation öffnet sich automatisch Modal**
-  - **Szenario-Vergleich mit echten Zahlen:**
-    ```
-    📊 Krisenszenario (z.B. 2008, 2020, 2022)
-
-    ❌ OHNE Tagesgeld-Puffer:
-    • Depot: 25.000 € → Crash -30% → 17.500 €
-    • Liquiditätsnot → Notverkauf bei Tiefststand
-    • Verlust realisiert: -7.500 €
-    • Rendite über 15 Jahre: 4,2% p.a.
-
-    ✅ MIT Tagesgeld-Puffer (5.000 €):
-    • Depot: 25.000 € → Crash -30% → 17.500 €
-    • Liquidität aus Tagesgeld → Kein Verkauf nötig
-    • Depot erholt sich → 25.000 € + Wachstum
-    • Rendite über 15 Jahre: 7,0% p.a.
-
-    💰 Mehrertrag: +47.000 € über 15 Jahre
-    ```
-  - **Chart.js Visualisierung:** Zwei Liniendiagramme Side-by-Side
-  - **Stress-Test-Stats** (ChatGPT Idee 3):
-    - "In 87% der letzten Krisen hätte dein Puffer gereicht"
-    - Basierend auf historischen Daten (2000, 2008, 2020, 2022)
-  - **Fazit:** "Dein Tagesgeld sichert dir bis zu 67% mehr Rendite!"
-
-**Technische Umsetzung:**
-- **CSS Animations:**
-  - Pulse-Animation für Schild (3s ease-in-out, kontinuierlich)
-  - Shake-Animation für Demo (0.3s cubic-bezier)
-  - Glow-Effekt via box-shadow (smooth transition)
-  - Fade-Animations für Warnungen (opacity transitions)
-- **SVG:**
-  - Gepunktete Verbindungslinie (stroke-dasharray: 5 5)
-  - Path-Animation via stroke-dashoffset
-- **JavaScript:**
-  - Demo-Sequenz mit async/await + setTimeout
-  - Farbinterpolation basierend auf `(tagesgeldCurrent / fixkostenTotal) / 3` (3 Monate Target)
-  - Chart.js für Vergleichs-Grafik
-  - Automatisches Modal-Opening nach Demo
-- **Tooltip-System:**
-  - Bestehende Tooltip-Infrastruktur erweitern
-  - Positionierung relativ zum Schild
-
-**Vorteil für Beratung:**
-- ✅ **Sofort sichtbar** (Badge mit Zahlen)
-- ✅ **Schnell verständlich** (Hover-Tooltip)
-- ✅ **Emotional überzeugend** (5-Sek-Demo zeigt Gefahr ohne Puffer)
-- ✅ **Rational überzeugend** (Modal mit konkreten Rendite-Zahlen)
-- ✅ **Keine Überladung** (progressive Disclosure - nur bei Interesse)
-- ✅ **Export-fähig** (Schutzschild-Logik + Puffer-Berechnung im PDF)
-
-**Inspiration:**
-- Eigene Ideen 1+2: Visuelle Animation + Zahlen-Modal
-- ChatGPT Idee 1: Stoßdämpfer-Metapher (subtil in Wackel-Animation)
-- ChatGPT Idee 2: Szenario-Toggle (umgesetzt als temporäre Demo)
-- ChatGPT Idee 3: Konkrete Zeit/Betrags-Story (permanentes Badge)
 
 **1.6.2: Cost-Average-Effekt Erklärer** ⭐⭐⭐ (Woche 2-3)
 
@@ -1519,26 +1436,29 @@ Tab-Close → sessionStorage.clear()
 
 | Version | Feature | Priorität | ETA | ROI Beratung |
 |---------|---------|-----------|-----|--------------|
-| **v1.5.2** | **Cleanup offener v1.5.0 Tasks** | ⭐ MEDIUM-HIGH | 1 Woche | 🟡 MEDIUM |
-| **v1.6.0** | **UX-Polish & Schutzschild-Visualisierung** | ⭐⭐⭐ **HIGHEST** | 4-5 Wochen | 🟢 **HIGHEST** |
+| **v1.6.1** | **Tagesgeld-Schutzschild-Visualisierung** | ⭐⭐⭐ HIGH | ✅ DONE | 🟢 HIGH |
+| **v1.6.2** | **Cost-Average-Effekt Erklärer** | ⭐⭐⭐ **HIGHEST** | 1-2 Wochen | 🟢 **HIGHEST** |
+| **v1.6.3** | **Tagesgeld-Kriegskasse Erklärer** | ⭐⭐⭐ HIGH | 1-2 Wochen | 🟢 HIGH |
+| **v1.6.4** | **Presenter-Mode** | ⭐⭐ MEDIUM | 1 Woche | 🟡 MEDIUM |
 | **v1.7.0** | **Berater-Notizen & Annotations** | ⭐⭐ MEDIUM | 3-4 Wochen | 🟢 HIGH |
 | **v1.8.0** | **Session-Historie & Templates** | ⭐ LOW | 2-3 Wochen | 🟡 MEDIUM |
 | **v1.9.0** | **Beratungs-Szenarien** | ⭐⭐ MEDIUM | 2 Wochen | 🟢 HIGH |
 | **v1.10.0** | **Excel-Export mit Formeln** | ⭐ LOW | 2 Wochen | 🟡 MEDIUM |
 
 **Empfohlener Entwicklungspfad:**
-1. ✅ **Jetzt:** v1.5.2 abschließen (1 Woche)
-2. ✅ **Dann:** v1.6.0 starten (Schutzschild-Feature = höchste Priorität!)
-3. ⏳ Q2 2026: v1.7.0 (Berater-Notizen)
-4. ⏳ Q2 2026: v1.8.0 (Session-Historie)
-5. ⏳ Q3 2026: v1.9.0 + v1.10.0 (optional)
+1. ✅ **Abgeschlossen:** v1.6.1 (Schutzschild-Visualisierung)
+2. ⏳ **Jetzt:** v1.6.2 (Cost-Average-Effekt Erklärer = höchste Priorität!)
+3. ⏳ Q1 2026: v1.6.3, v1.6.4 (UX-Polish finalisieren)
+4. ⏳ Q2 2026: v1.7.0 (Berater-Notizen)
+5. ⏳ Q2 2026: v1.8.0 (Session-Historie)
+6. ⏳ Q3 2026: v1.9.0 + v1.10.0 (optional)
 
 ---
 
 ## 🎯 Roadmap-Ziele
 
 **🎯 Ziel: Version 2.0.0 (Vermögensverzehr-Modus) bis Q1-Q2 2027**
-**📅 Nächster Meilenstein: v1.5.2 (Cleanup) → v1.6.0 (UX-Polish) - Q1 2026**
+**📅 Nächster Meilenstein: v1.6.2 (Cost-Average Erklärer) - Q1 2026**
 
 **Langfristige Vision:**
 - v1.x: Vermögensaufbau-Fokus (Erwerbstätige)
@@ -1547,6 +1467,7 @@ Tab-Close → sessionStorage.clear()
 
 ---
 
-*Letzte Aktualisierung: 19. Dezember 2025*
-*Version: 3.0 (Roadmap konsolidiert nach ROADMAP_ANALYSIS.md)*
-*Nächste Version: v1.5.2 (NEXT UP) → v1.6.0 (HIGHEST PRIORITY)*
+*Letzte Aktualisierung: 22. Dezember 2025*
+*Version: 3.1 (v1.6.1 abgeschlossen)*
+*Aktuelle Version: v1.6.1 ✅*
+*Nächste Version: v1.6.2 (Cost-Average-Effekt Erklärer) - HIGHEST PRIORITY ⭐⭐⭐*
