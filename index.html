@@ -2334,12 +2334,12 @@
             <!-- Phase 1: Vergleichsansicht -->
             <div id="ca-phase-1">
                 <h2 id="cost-average-title" class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">Warum volatile Kurse bei Sparraten BESSER sind</h2>
-                <p class="text-lg text-gray-700 mb-8">Beobachten Sie, wie 10 monatliche Raten à 1.200 € in zwei unterschiedliche Fonds investiert werden. Sie werden überrascht sein!</p>
+                <p class="text-lg text-gray-700 mb-8">Vergleich zweier Kursverläufe - Einzahlung: 1.200 € pro Jahr!</p>
 
                 <!-- Side-by-Side Comparison -->
                 <div class="grid grid-cols-2 gap-6 mb-8">
                     <!-- Kurs A: Stabil -->
-                    <div class="p-6 rounded-lg" style="background: rgba(3, 61, 93, 0.05); border: 2px solid var(--mlp-corporate-blue);">
+                    <div id="ca-box-a" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(3, 61, 93, 0.05); border: 2px solid var(--mlp-corporate-blue);">
                         <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">📈 Kurs A: Stabil steigend</h3>
 
                         <!-- Chart A -->
@@ -2355,7 +2355,7 @@
                         <!-- Counters A -->
                         <div class="space-y-3 p-4 bg-white rounded-lg" style="border: 1px solid var(--mlp-titanium);">
                             <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Monat:</span>
+                                <span class="text-sm text-gray-600">Jahr:</span>
                                 <span id="ca-month-a" class="text-lg font-bold" style="color: var(--mlp-corporate-blue);">0 / 10</span>
                             </div>
                             <div class="flex justify-between items-center">
@@ -2370,7 +2370,7 @@
                     </div>
 
                     <!-- Kurs B: Volatil -->
-                    <div class="p-6 rounded-lg" style="background: rgba(193, 41, 61, 0.05); border: 2px solid #C1293D;">
+                    <div id="ca-box-b" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(193, 41, 61, 0.05); border: 2px solid #C1293D;">
                         <h3 class="text-xl font-bold mb-4" style="color: #C1293D;">📉📈 Kurs B: Volatil mit CRASH</h3>
 
                         <!-- Chart B -->
@@ -2386,7 +2386,7 @@
                         <!-- Counters B -->
                         <div class="space-y-3 p-4 bg-white rounded-lg" style="border: 1px solid var(--mlp-titanium);">
                             <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">Monat:</span>
+                                <span class="text-sm text-gray-600">Jahr:</span>
                                 <span id="ca-month-b" class="text-lg font-bold" style="color: #C1293D;">0 / 10</span>
                             </div>
                             <div class="flex justify-between items-center">
@@ -2401,19 +2401,14 @@
                     </div>
                 </div>
 
-                <!-- Start Animation Button -->
-                <button id="ca-start-btn" onclick="startCostAverageAnimation()" class="w-full py-6 px-8 rounded-lg font-bold text-xl text-white transition-all hover:scale-105 shadow-lg mb-4" style="background: linear-gradient(135deg, #033D5D 0%, #47A190 100%);">
-                    ▶ Animation starten
-                </button>
-
-                <!-- Progress Info (initially hidden) -->
-                <div id="ca-progress-info" class="text-center text-gray-600 mb-4" style="display: none;">
-                    <p class="text-lg">Animation läuft... Bitte beobachten Sie beide Kurse gleichzeitig!</p>
+                <!-- Instruction Text (replaces button) -->
+                <div class="text-center text-gray-600 mb-4">
+                    <p class="text-lg">👆 <strong>Klicken Sie auf einen der beiden Kurse</strong>, um die Animation zu starten</p>
                 </div>
             </div>
 
-            <!-- Phase 2: Ergebnis (initially hidden) -->
-            <div id="ca-phase-3" style="display: none;">
+            <!-- Phase 2: Ergebnis (initially hidden, click anywhere to close) -->
+            <div id="ca-phase-3" class="cursor-pointer" style="display: none;" onclick="closeCostAverageModal()">
                 <h2 class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">⚡ Überraschendes Ergebnis!</h2>
 
                 <div class="grid grid-cols-2 gap-8 mb-8">
@@ -2423,6 +2418,7 @@
                         <div class="space-y-3">
                             <p class="text-gray-700"><span class="font-semibold">Investiert:</span> 12.000 €</p>
                             <p class="text-gray-700"><span class="font-semibold">Anteile:</span> <span id="ca-result-shares-a">7.856,90</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Kurs im Jahr 10:</span> <span id="ca-result-endprice-a">18,90 €</span></p>
                             <p class="text-gray-700"><span class="font-semibold">Endwert:</span> <span id="ca-result-value-a">148.495,35 €</span></p>
                             <hr style="border-color: var(--mlp-titanium);">
                             <p class="text-2xl font-bold" style="color: var(--color-success);">Gewinn: <span id="ca-result-profit-a">28.495,35 €</span></p>
@@ -2436,6 +2432,7 @@
                         <div class="space-y-3">
                             <p class="text-gray-700"><span class="font-semibold">Investiert:</span> 12.000 €</p>
                             <p class="text-gray-700"><span class="font-semibold">Anteile:</span> <span id="ca-result-shares-b">23.733,33</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Kurs im Jahr 10:</span> <span id="ca-result-endprice-b">10,50 €</span></p>
                             <p class="text-gray-700"><span class="font-semibold">Endwert:</span> <span id="ca-result-value-b">249.200,00 €</span></p>
                             <hr style="border-color: var(--mlp-titanium);">
                             <p class="text-2xl font-bold" style="color: var(--color-success);">Gewinn: <span id="ca-result-profit-b">129.200,00 €</span></p>
@@ -2447,9 +2444,9 @@
                 <!-- Crash Insight Box -->
                 <div class="p-8 rounded-lg mb-6" style="background: linear-gradient(135deg, #C1293D 0%, #E3691E 100%); color: white;">
                     <h3 class="text-2xl font-bold mb-4">💥 Der Crash-Vorteil:</h3>
-                    <p class="text-xl leading-relaxed mb-4">Haben Sie gesehen? <strong>Monat 2: Crash auf 2,00 €</strong> - und das war <strong>die beste Kaufgelegenheit</strong>!</p>
+                    <p class="text-xl leading-relaxed mb-4">Haben Sie gesehen? <strong>Jahr 2: Crash auf 2,00 €</strong> - und das war <strong>die beste Kaufgelegenheit</strong>!</p>
                     <div class="bg-white bg-opacity-20 p-4 rounded-lg mb-4">
-                        <p class="text-lg">🛒 <strong>600 Anteile</strong> für 1.200 € beim Crash (Monat 2)</p>
+                        <p class="text-lg">🛒 <strong>600 Anteile</strong> für 1.200 € beim Crash (Jahr 2)</p>
                         <p class="text-lg">🛒 Nur <strong>92 Anteile</strong> für 1.200 € bei Kurs A</p>
                     </div>
                     <p class="text-xl leading-relaxed"><strong>Bei Sparraten WOLLEN Sie Crashes</strong> - Sie kaufen dann im Ausverkauf! 🎉</p>
@@ -2472,9 +2469,10 @@
                     </div>
                 </div>
 
-                <button onclick="closeCostAverageModal()" class="w-full py-4 rounded-lg font-bold text-xl text-white transition-all hover:scale-105 shadow-lg" style="background: var(--mlp-corporate-blue);">
-                    Verstanden, zurück zum Depot
-                </button>
+                <!-- Instruction to close -->
+                <div class="text-center text-gray-600 py-4">
+                    <p class="text-lg">👆 <strong>Klicken Sie irgendwo, um zurückzukehren</strong></p>
+                </div>
             </div>
         </div>
     </div>
@@ -6340,9 +6338,6 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         // Reset to Phase 1
         document.getElementById('ca-phase-1').style.display = 'block';
         document.getElementById('ca-phase-3').style.display = 'none';
-        document.getElementById('ca-start-btn').style.display = 'block';
-        document.getElementById('ca-start-btn').textContent = '▶ Monat 1 starten';
-        document.getElementById('ca-progress-info').style.display = 'none';
 
         // Reset animation state
         currentMonth = 0;
@@ -6361,6 +6356,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
         // Initialize both charts
         initSideBySideCharts();
+
+        // Add click handlers to boxes (instead of button)
+        const boxA = document.getElementById('ca-box-a');
+        const boxB = document.getElementById('ca-box-b');
+        if (boxA) boxA.onclick = startCostAverageAnimation;
+        if (boxB) boxB.onclick = startCostAverageAnimation;
 
         // Open modal
         openModal('cost-average-modal');
@@ -6390,7 +6391,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             caChartA = new Chart(ctxA, {
                 type: 'line',
                 data: {
-                    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                    labels: ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
                     datasets: [{
                         label: 'Kurs A',
                         data: courseData.A,
@@ -6424,7 +6425,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                             title: { display: true, text: 'Kurs in €' }
                         },
                         x: {
-                            title: { display: true, text: 'Monat' }
+                            title: { display: true, text: 'Jahr' }
                         }
                     }
                 }
@@ -6439,7 +6440,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             caChartB = new Chart(ctxB, {
                 type: 'line',
                 data: {
-                    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                    labels: ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
                     datasets: [{
                         label: 'Kurs B',
                         data: courseData.B,
@@ -6473,7 +6474,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                             title: { display: true, text: 'Kurs in €' }
                         },
                         x: {
-                            title: { display: true, text: 'Monat' }
+                            title: { display: true, text: 'Jahr' }
                         }
                     }
                 }
@@ -6542,7 +6543,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         // Check if bar for this month already exists
         let bar = container.querySelector(`[data-month="${month}"]`);
         if (!bar) {
-            // Create placeholder bars for all 10 months on first call
+            // Create placeholder bars for all 10 years on first call
             if (container.children.length === 0) {
                 for (let m = 1; m <= 10; m++) {
                     const placeholderBar = document.createElement('div');
@@ -6553,7 +6554,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
                     const color = course === 'a' ? '#033D5D' : '#C1293D';
                     placeholderBar.innerHTML = `
-                        <span class="text-gray-400 w-16">M${m}:</span>
+                        <span class="text-gray-400 w-16">J${m}:</span>
                         <div class="flex-1 bg-gray-100 rounded-full h-6"></div>
                         <span class="w-24 text-right text-gray-400">— 🛒</span>
                     `;
@@ -6573,26 +6574,15 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         bar.style.opacity = '1';
         bar.style.minHeight = '32px';
 
-        // FIX: White text on crash background (red-on-red problem)
-        const crashTextColor = isCrash ? '#FFFFFF' : color;
-
+        // Update bar HTML (NO crash background, just emoji highlight)
         bar.innerHTML = `
-            <span class="${isCrash ? 'text-white font-bold' : 'text-gray-600'} w-16">M${month}:</span>
+            <span class="text-gray-600 w-16">J${month}:</span>
             <div class="flex-1 bg-gray-200 rounded-full h-6 relative overflow-hidden">
-                <div style="width: ${barWidth}%; background: ${isCrash ? 'linear-gradient(90deg, #C1293D 0%, #E3691E 100%)' : color}; height: 100%; border-radius: 9999px; transition: width 0.5s ease;"></div>
+                <div style="width: ${barWidth}%; background: ${color}; height: 100%; border-radius: 9999px; transition: width 0.5s ease;"></div>
             </div>
-            <span class="w-24 text-right font-bold" style="color: ${crashTextColor};">${shares.toFixed(0)} 🛒</span>
+            <span class="w-24 text-right font-bold" style="color: ${color};">${shares.toFixed(0)} 🛒</span>
             ${isCrash ? '<span class="text-lg">💥</span>' : ''}
         `;
-
-        // Crash month styling (background + white text)
-        if (isCrash) {
-            bar.style.background = 'linear-gradient(135deg, #C1293D 0%, #E3691E 100%)';
-            bar.style.color = '#FFFFFF';
-            bar.style.padding = '8px';
-            bar.style.borderRadius = '8px';
-            bar.style.boxShadow = '0 4px 12px rgba(193, 41, 61, 0.4)';
-        }
     }
 
     function highlightMonthInCharts(month) {
@@ -6640,6 +6630,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
             results[course] = {
                 shares: totalShares.toFixed(2),
+                endPrice: finalPrice.toFixed(2),
                 endValue: endValue.toFixed(2),
                 profit: profit.toFixed(2),
                 returnPercent
@@ -6648,11 +6639,13 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
         // Update HTML
         document.getElementById('ca-result-shares-a').textContent = results.A.shares;
+        document.getElementById('ca-result-endprice-a').textContent = `${results.A.endPrice} €`;
         document.getElementById('ca-result-value-a').textContent = `${parseFloat(results.A.endValue).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
         document.getElementById('ca-result-profit-a').textContent = `${parseFloat(results.A.profit).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
         document.getElementById('ca-result-return-a').textContent = `${results.A.returnPercent}%`;
 
         document.getElementById('ca-result-shares-b').textContent = results.B.shares;
+        document.getElementById('ca-result-endprice-b').textContent = `${results.B.endPrice} €`;
         document.getElementById('ca-result-value-b').textContent = `${parseFloat(results.B.endValue).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
         document.getElementById('ca-result-profit-b').textContent = `${parseFloat(results.B.profit).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
         document.getElementById('ca-result-return-b').textContent = `${results.B.returnPercent}%`;
