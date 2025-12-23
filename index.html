@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <style>
         /* v1.5.2: CSS Custom Properties for theme consistency */
         :root {
@@ -2120,7 +2121,7 @@
                             <br><br>
                             <strong>Verfügbar auf Mobile:</strong><br>
                             ✓ Eingaben & Berechnungen<br>
-                            ✓ Export-Funktionen (PDF, CSV, JSON)<br>
+                            ✓ Export-Funktionen (PDF, CSV, JSON, Excel)<br>
                             ✓ Session-Verwaltung
                         </p>
                         <button onclick="document.getElementById('mobile-warning').style.display='none'" class="btn-mobile">
@@ -3348,6 +3349,301 @@
         downloadFile(blob, filename);
 
         console.log('📄 CSV-Export erstellt:', filename);
+    }
+
+    // ===== EXCEL EXPORT (v1.7.0) =====
+    function exportAsExcel() {
+        const session = getCurrentSession();
+        if (!session) {
+            alert('Keine Session gefunden!');
+            return;
+        }
+
+        // Check if inputs are initialized
+        if (typeof inputs === 'undefined') {
+            console.error('Export failed: inputs not initialized');
+            alert('Export-Fehler: Bitte warten Sie, bis die Seite vollständig geladen ist.');
+            return;
+        }
+
+        try {
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: Übersicht (Session-Daten)
+            const overviewData = createOverviewSheet(session);
+            const ws1 = XLSX.utils.aoa_to_sheet(overviewData);
+            applyOverviewFormatting(ws1, overviewData);
+            XLSX.utils.book_append_sheet(wb, ws1, "Übersicht");
+
+            // Sheet 2: Cashflow-Analyse
+            const cashflowData = createCashflowSheet();
+            const ws2 = XLSX.utils.aoa_to_sheet(cashflowData);
+            applyCashflowFormatting(ws2, cashflowData);
+            XLSX.utils.book_append_sheet(wb, ws2, "Cashflow");
+
+            // Sheet 3: Immobilien (if exists)
+            if (immobilienData && immobilienData.length > 0) {
+                const immobilienSheet = createImmobilienSheet();
+                const ws3 = XLSX.utils.aoa_to_sheet(immobilienSheet);
+                applyImmobilienFormatting(ws3, immobilienSheet);
+                XLSX.utils.book_append_sheet(wb, ws3, "Immobilien");
+            }
+
+            // Sheet 4: Depot-Allocation
+            if (depotItems && depotItems.length > 0) {
+                const depotData = createDepotSheet();
+                const ws4 = XLSX.utils.aoa_to_sheet(depotData);
+                applyDepotFormatting(ws4, depotData);
+                XLSX.utils.book_append_sheet(wb, ws4, "Depot");
+            }
+
+            // Generate Excel file
+            const filename = `Beratung_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            XLSX.writeFile(wb, filename);
+
+            console.log('📊 Excel-Export erstellt:', filename);
+        } catch (error) {
+            console.error('Excel-Export Fehler:', error);
+            alert('Fehler beim Excel-Export: ' + error.message);
+        }
+    }
+
+    // Create Overview Sheet Data
+    function createOverviewSheet(session) {
+        const income = parseFloat(inputs.income?.value) || 0;
+        const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
+        const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
+        const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent?.value) || 0;
+        const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit?.value) || 0;
+        const depotCurrent = parseFloat(inputs.depotCurrent?.value) || 0;
+        const anlagezeitraum = parseInt(inputs.anlagezeitraum?.value, 10) || 15;
+        const rendite = parseFloat(inputs.rendite?.value) || 0;
+
+        const data = [
+            ['MLP FINANZBERATUNG SE'],
+            ['Beratungsprotokoll - Vermögensmanagement'],
+            [],
+            ['Session-Informationen'],
+            ['Session-ID', session.id],
+            ['Kunde', session.kundenKuerzel || 'N/A'],
+            ['Berater', session.berater || 'N/A'],
+            ['Datum', new Date(session.startzeit).toLocaleDateString('de-DE')],
+            ['Exportiert am', new Date().toLocaleString('de-DE')],
+            ['Variante', currentVariant],
+            [],
+            ['BASISDATEN'],
+            ['Kategorie', 'Wert', 'Einheit'],
+            ['Haupteinkommen', income, '€ / Monat'],
+            ['Konsum (Minimum)', konsumMin, '€ / Monat'],
+            ['Konsum (Überschuss)', konsumLeftover, '€ / Monat'],
+            ['Tagesgeld (aktuell)', tagesgeldCurrent, '€'],
+            ['Tagesgeld (Sparziel)', tagesgeldLimit, '€'],
+            ['Depot (aktuell)', depotCurrent, '€'],
+            ['Anlagezeitraum', anlagezeitraum, 'Jahre'],
+            ['Erwartete Rendite', rendite, '% p.a.'],
+            [],
+            ['FIXKOSTEN & SPARPLÄNE'],
+            ['Beschreibung', 'Betrag', 'Intervall', 'Ziel']
+        ];
+
+        // Add Fixkosten items
+        fixkostenItems.forEach(item => {
+            const monthlyAmount = getMonthlyAmount(item);
+            const intervall = item.interval === 'monthly' ? 'monatlich' :
+                             item.interval === 'quarterly' ? 'vierteljährlich' : 'jährlich';
+            data.push([item.name, monthlyAmount, intervall, item.target]);
+        });
+
+        return data;
+    }
+
+    // Create Cashflow Sheet
+    function createCashflowSheet() {
+        const income = parseFloat(inputs.income?.value) || 0;
+        const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
+        const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
+
+        // Calculate flows
+        let totalFixkosten = 0;
+        let totalSparplan = 0;
+
+        fixkostenItems.forEach(item => {
+            const monthlyAmount = getMonthlyAmount(item);
+            if (item.target === 'depot') {
+                totalSparplan += monthlyAmount;
+            } else {
+                totalFixkosten += monthlyAmount;
+            }
+        });
+
+        const totalKonsum = konsumMin + konsumLeftover;
+        const totalAusgaben = totalFixkosten + totalKonsum + totalSparplan;
+        const saldo = income - totalAusgaben;
+
+        const data = [
+            ['CASHFLOW-ANALYSE'],
+            ['Monatliche Ein- und Ausgaben'],
+            [],
+            ['EINNAHMEN'],
+            ['Beschreibung', 'Betrag (€)'],
+            ['Haupteinkommen', income],
+            [],
+            ['AUSGABEN'],
+            ['Kategorie', 'Betrag (€)'],
+            ['Fixkosten', totalFixkosten],
+            ['Konsum', totalKonsum],
+            ['  - Mindestbetrag', konsumMin],
+            ['  - Überschuss', konsumLeftover],
+            ['Sparpläne (Depot)', totalSparplan],
+            [],
+            ['ZUSAMMENFASSUNG'],
+            ['Position', 'Betrag (€)'],
+            ['Gesamt-Einnahmen', income],
+            ['Gesamt-Ausgaben', totalAusgaben],
+            ['Saldo', saldo]
+        ];
+
+        return data;
+    }
+
+    // Create Immobilien Sheet
+    function createImmobilienSheet() {
+        const data = [
+            ['IMMOBILIEN-ÜBERSICHT'],
+            [],
+            ['Objekt', 'Wert (€)', 'Darlehen (€)', 'Eigenkapital (€)', 'Zinssatz (%)', 'Tilgungssatz (%)', 'Mieteinnahmen (€)', 'Kosten (€)', 'Netto-Cashflow (€)']
+        ];
+
+        immobilienData.forEach(immo => {
+            const eigenkapital = (immo.wert || 0) - (immo.darlehen || 0);
+            const zinsen = (immo.darlehen || 0) * (immo.zinssatz || 0) / 100 / 12;
+            const tilgung = (immo.darlehen || 0) * (immo.tilgungssatz || 0) / 100 / 12;
+            const nettoCashflow = (immo.mieteinnahmen || 0) - (immo.kosten || 0) - zinsen - tilgung;
+
+            data.push([
+                immo.objekt || 'Immobilie',
+                immo.wert || 0,
+                immo.darlehen || 0,
+                eigenkapital,
+                immo.zinssatz || 0,
+                immo.tilgungssatz || 0,
+                immo.mieteinnahmen || 0,
+                immo.kosten || 0,
+                nettoCashflow
+            ]);
+        });
+
+        // Add Tilgungsplan section
+        data.push([]);
+        data.push(['TILGUNGSPLAN']);
+        data.push(['Jahr', 'Restschuld (€)', 'Zinsen (€)', 'Tilgung (€)', 'Rate (€)', 'Wertsteigerung (€)', 'Eigenkapital (€)']);
+
+        // Calculate for first property (example)
+        if (immobilienData.length > 0) {
+            const immo = immobilienData[0];
+            let restschuld = immo.darlehen || 0;
+            const wertsteigerungRate = (immo.wertsteigerung || 0) / 100;
+            let immobilienwert = immo.wert || 0;
+
+            for (let jahr = 1; jahr <= 30 && restschuld > 0; jahr++) {
+                const jahresZinsen = restschuld * (immo.zinssatz || 0) / 100;
+                const jahresTilgung = restschuld * (immo.tilgungssatz || 0) / 100;
+                const jahresRate = jahresZinsen + jahresTilgung;
+
+                immobilienwert *= (1 + wertsteigerungRate);
+                const eigenkapital = immobilienwert - restschuld;
+
+                data.push([
+                    jahr,
+                    Math.round(restschuld),
+                    Math.round(jahresZinsen),
+                    Math.round(jahresTilgung),
+                    Math.round(jahresRate),
+                    Math.round(immobilienwert),
+                    Math.round(eigenkapital)
+                ]);
+
+                restschuld -= jahresTilgung;
+                if (restschuld < 0) restschuld = 0;
+            }
+        }
+
+        return data;
+    }
+
+    // Create Depot Sheet
+    function createDepotSheet() {
+        const data = [
+            ['DEPOT-ALLOKATION'],
+            [],
+            ['Fonds/ETF', 'Allocation (%)']
+        ];
+
+        depotItems.forEach(item => {
+            data.push([item.name, item.allocation]);
+        });
+
+        // Add total check
+        const totalAllocation = depotItems.reduce((sum, item) => sum + item.allocation, 0);
+        data.push([]);
+        data.push(['GESAMT', totalAllocation]);
+
+        return data;
+    }
+
+    // Apply formatting to Overview sheet
+    function applyOverviewFormatting(ws, data) {
+        const range = XLSX.utils.decode_range(ws['!ref']);
+
+        // Set column widths
+        ws['!cols'] = [
+            { wch: 30 },  // Column A
+            { wch: 20 },  // Column B
+            { wch: 15 }   // Column C
+        ];
+
+        // Apply styles (note: SheetJS community edition has limited styling)
+        // For full styling, would need SheetJS Pro
+
+        // Merge title cells
+        if (!ws['!merges']) ws['!merges'] = [];
+        ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }); // Title row
+        ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: 2 } }); // Subtitle row
+    }
+
+    // Apply formatting to Cashflow sheet
+    function applyCashflowFormatting(ws, data) {
+        ws['!cols'] = [
+            { wch: 30 },  // Column A
+            { wch: 15 }   // Column B
+        ];
+
+        if (!ws['!merges']) ws['!merges'] = [];
+        ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }); // Title
+    }
+
+    // Apply formatting to Immobilien sheet
+    function applyImmobilienFormatting(ws, data) {
+        ws['!cols'] = [
+            { wch: 20 },  // Objekt
+            { wch: 12 },  // Wert
+            { wch: 12 },  // Darlehen
+            { wch: 12 },  // Eigenkapital
+            { wch: 12 },  // Zinssatz
+            { wch: 12 },  // Tilgungssatz
+            { wch: 15 },  // Mieteinnahmen
+            { wch: 12 },  // Kosten
+            { wch: 15 }   // Netto-Cashflow
+        ];
+    }
+
+    // Apply formatting to Depot sheet
+    function applyDepotFormatting(ws, data) {
+        ws['!cols'] = [
+            { wch: 40 },  // Fonds/ETF
+            { wch: 15 }   // Allocation
+        ];
     }
 
     // ===== AUTO-EXPORT SYSTEM (v1.3.7) =====
@@ -9095,6 +9391,12 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
                     </svg>
                     Als JSON exportieren
+                </button>
+                <button onclick="exportAsExcel(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-blue-400 hover:bg-blue-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Als Excel exportieren
                 </button>
                 <button onclick="prepareAndPrint(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:bg-opacity-50 rounded transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
