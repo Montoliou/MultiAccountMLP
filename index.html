@@ -2487,18 +2487,31 @@
                 <h2 id="kriegskasse-title" class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">💰 Die Kriegskasse: Schutz UND Chance!</h2>
                 <p class="text-lg text-gray-700 mb-8">Drei Szenarien im Crash: Panikverkauf vs. Durchhalten vs. Aktiv Nachkaufen</p>
 
+                <!-- Combined Chart with Toggle -->
+                <div class="bg-white p-6 rounded-lg mb-6" style="border: 2px solid var(--mlp-titanium);">
+                    <!-- Toggle Switch -->
+                    <div class="flex justify-end mb-4">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <span class="text-sm font-semibold text-gray-700">Tagesgeld-Zufluss (6.000€/Jahr)</span>
+                            <div class="relative">
+                                <input type="checkbox" id="kriegskasse-inflow-toggle" class="sr-only peer" checked>
+                                <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                            </div>
+                        </label>
+                    </div>
+                    <div style="position: relative; height: 400px; width: 100%;">
+                        <canvas id="kriegskasse-chart-combined"></canvas>
+                    </div>
+                </div>
+
+                <!-- 3-Column Timelines & Controls -->
                 <div class="grid grid-cols-3 gap-6 mb-8">
                     <!-- Scenario A: WITHOUT Tagesgeld -->
                     <div id="kriegskasse-box-a" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(193, 41, 61, 0.05); border: 2px solid #C1293D;">
                         <h3 class="text-xl font-bold mb-4" style="color: #C1293D;">❌ Ohne Reserve</h3>
 
-                        <!-- Chart A -->
-                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
-                            <canvas id="kriegskasse-chart-a" style="max-height: 250px;"></canvas>
-                        </div>
-
                         <!-- Timeline A -->
-                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-a" style="min-height: 120px;">
+                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-a" style="min-height: 140px;">
                             <div class="text-sm text-gray-500">Klick zum Start...</div>
                         </div>
 
@@ -2513,13 +2526,8 @@
                     <div id="kriegskasse-box-b" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(3, 61, 93, 0.05); border: 2px solid var(--mlp-corporate-blue);">
                         <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">✅ Mit Reserve (Halten)</h3>
 
-                        <!-- Chart B -->
-                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
-                            <canvas id="kriegskasse-chart-b" style="max-height: 250px;"></canvas>
-                        </div>
-
                         <!-- Timeline B -->
-                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-b" style="min-height: 120px;">
+                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-b" style="min-height: 140px;">
                             <div class="text-sm text-gray-500">Klick zum Start...</div>
                         </div>
 
@@ -2534,13 +2542,8 @@
                     <div id="kriegskasse-box-c" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(166, 168, 171, 0.05); border: 2px solid var(--mlp-titanium);">
                         <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-titanium);">🚀 Mit Reserve + Nachkauf</h3>
 
-                        <!-- Chart C -->
-                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
-                            <canvas id="kriegskasse-chart-c" style="max-height: 250px;"></canvas>
-                        </div>
-
                         <!-- Timeline C -->
-                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-c" style="min-height: 120px;">
+                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-c" style="min-height: 140px;">
                             <div class="text-sm text-gray-500">Klick zum Start...</div>
                         </div>
 
@@ -6487,7 +6490,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     // Kursdaten (aus Excel-Tool)
     const courseData = {
         A: [10.0, 13.0, 13.5, 16.0, 17.0, 16.0, 17.0, 16.5, 18.0, 18.9], // Stabil steigend
-        B: [10.0, 2.0, 4.0, 8.0, 4.0, 6.0, 9.0, 4.0, 8.0, 10.5]  // Volatil schwankend mit CRASH
+        B: [9.0, 10.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]  // Volatil schwankend mit CRASH (10 Jahre: J0-J9)
     };
 
     let caChartA = null;
@@ -6824,32 +6827,34 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     // Year progression: [10, 2, 4, 6.5, 8, 10.5, 9, 11, 10, 10.5]
     // Crash at year 2: 10 → 2 (-80%), then recovery
 
-    let kriegskasseChartA = null;
-    let kriegskasseChartB = null;
-    let kriegskasseChartC = null;
+    let kriegskasseChart = null;
     let kriegskasseCurrentYear = 0;
     let kriegskasseAnimRunning = false;
+    let kriegskasseInflowEnabled = true; // Toggle for 6k/year inflow
 
-    // Scenario A: WITHOUT Tagesgeld (panic sell + late re-entry)
+    // Scenario A: WITHOUT Tagesgeld (panic sell + late re-entry) - All 40k in market
     let scenarioA = {
-        portfolio: 10000, // Start with 10k
+        portfolio: 40000, // All 40k invested (no reserve)
+        tagesgeld: 0,     // No Tagesgeld reserve
         soldAt: null,     // Price when sold
         reentryAt: null,  // Price when re-entered
         cashFromSale: 0,  // Cash after panic sell
         timeline: []
     };
 
-    // Scenario B: WITH Tagesgeld (hold through)
+    // Scenario B: WITH Tagesgeld (hold through) - 10k market + 30k reserve
     let scenarioB = {
         portfolio: 10000,
+        tagesgeld: 30000,
+        tagesgeldInflow: 6000,  // 500€/month = 6000€/year
         timeline: []
     };
 
-    // Scenario C: WITH Tagesgeld + Active buying in crash
+    // Scenario C: WITH Tagesgeld + Active buying in crash - 10k market + 30k reserve
     let scenarioC = {
         portfolio: 10000,       // Initial portfolio
         tagesgeld: 30000,       // Tagesgeld reserve
-        tagesgeldInflow: 6000,  // 500€/month = 6000€/year overflow
+        tagesgeldInflow: 6000,  // 500€/month = 6000€/year
         boughtInCrash: false,   // Track if already bought
         crashBuyAmount: 0,      // Amount bought in crash
         timeline: []
@@ -6866,7 +6871,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
         // Reset scenarios
         scenarioA = {
-            portfolio: 10000,
+            portfolio: 40000,
+            tagesgeld: 0,
             soldAt: null,
             reentryAt: null,
             cashFromSale: 0,
@@ -6874,6 +6880,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         };
         scenarioB = {
             portfolio: 10000,
+            tagesgeld: 30000,
+            tagesgeldInflow: 6000,
             timeline: []
         };
         scenarioC = {
@@ -6886,9 +6894,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         };
 
         // Reset counters
-        document.getElementById('kriegskasse-year-a').textContent = '0 / 10';
-        document.getElementById('kriegskasse-year-b').textContent = '0 / 10';
-        document.getElementById('kriegskasse-year-c').textContent = '0 / 10';
+        document.getElementById('kriegskasse-year-a').textContent = '0 / 9';
+        document.getElementById('kriegskasse-year-b').textContent = '0 / 9';
+        document.getElementById('kriegskasse-year-c').textContent = '0 / 9';
 
         // Clear timelines
         document.getElementById('kriegskasse-timeline-a').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
@@ -6906,130 +6914,221 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if (boxB) boxB.onclick = startKriegskasseAnimation;
         if (boxC) boxC.onclick = startKriegskasseAnimation;
 
+        // Add toggle handler (remove old one first to prevent duplicates)
+        const inflowToggle = document.getElementById('kriegskasse-inflow-toggle');
+        if (inflowToggle) {
+            // Remove any existing listener by cloning and replacing the element
+            const newToggle = inflowToggle.cloneNode(true);
+            inflowToggle.parentNode.replaceChild(newToggle, inflowToggle);
+
+            newToggle.addEventListener('change', function() {
+                kriegskasseInflowEnabled = this.checked;
+                // Reset animation when toggled
+                resetKriegskasseAnimation();
+            });
+        }
+
         // Open modal
         openModal('kriegskasse-modal');
     }
 
+    function resetKriegskasseAnimation() {
+        // Reset to initial state
+        kriegskasseCurrentYear = 0;
+        kriegskasseAnimRunning = false;
+
+        // Reset scenarios
+        scenarioA = {
+            portfolio: 40000,
+            tagesgeld: 0,
+            soldAt: null,
+            reentryAt: null,
+            cashFromSale: 0,
+            timeline: []
+        };
+        scenarioB = {
+            portfolio: 10000,
+            tagesgeld: 30000,
+            tagesgeldInflow: kriegskasseInflowEnabled ? 6000 : 0,
+            timeline: []
+        };
+        scenarioC = {
+            portfolio: 10000,
+            tagesgeld: 30000,
+            tagesgeldInflow: kriegskasseInflowEnabled ? 6000 : 0,
+            boughtInCrash: false,
+            crashBuyAmount: 0,
+            timeline: []
+        };
+
+        // Reset counters
+        document.getElementById('kriegskasse-year-a').textContent = '0 / 9';
+        document.getElementById('kriegskasse-year-b').textContent = '0 / 9';
+        document.getElementById('kriegskasse-year-c').textContent = '0 / 9';
+
+        // Clear timelines
+        document.getElementById('kriegskasse-timeline-a').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+        document.getElementById('kriegskasse-timeline-b').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+        document.getElementById('kriegskasse-timeline-c').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+
+        // Reinitialize chart
+        initKriegskasseCharts();
+    }
+
     function closeKriegskasseModal() {
         closeModal('kriegskasse-modal');
-        // Destroy charts to free memory
-        if (kriegskasseChartA) { kriegskasseChartA.destroy(); kriegskasseChartA = null; }
-        if (kriegskasseChartB) { kriegskasseChartB.destroy(); kriegskasseChartB = null; }
-        if (kriegskasseChartC) { kriegskasseChartC.destroy(); kriegskasseChartC = null; }
+        // Destroy chart to free memory
+        if (kriegskasseChart) { kriegskasseChart.destroy(); kriegskasseChart = null; }
     }
 
     function initKriegskasseCharts() {
-        const marketPrices = courseData.B; // [10, 2, 4, 6.5, 8, 10.5, 9, 11, 10, 10.5]
+        const ctx = document.getElementById('kriegskasse-chart-combined');
+        if (ctx) {
+            if (kriegskasseChart) kriegskasseChart.destroy();
 
-        // Chart A: WITHOUT Tagesgeld (panic sell + late re-entry)
-        const ctxA = document.getElementById('kriegskasse-chart-a');
-        if (ctxA) {
-            if (kriegskasseChartA) kriegskasseChartA.destroy();
-            kriegskasseChartA = new Chart(ctxA.getContext('2d'), {
+            kriegskasseChart = new Chart(ctx.getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: ['J0', 'J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
-                    datasets: [{
-                        label: 'Portfolio-Wert (€)',
-                        data: [10000, null, null, null, null, null, null, null, null, null, null],
-                        borderColor: '#C1293D',
-                        backgroundColor: 'rgba(193, 41, 61, 0.1)',
-                        tension: 0.3,
-                        pointRadius: Array(11).fill(4),
-                        pointBackgroundColor: Array(11).fill('#C1293D'),
-                        fill: true
-                    }]
+                    labels: ['J0', 'J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9'],
+                    datasets: [
+                        {
+                            label: 'Kursverlauf (Markt)',
+                            data: [9, 10, 2, 5, 4, 6, 8, 4, 7, 9],
+                            borderColor: 'rgba(200, 200, 200, 0.5)',
+                            backgroundColor: 'rgba(220, 220, 220, 0.15)',
+                            tension: 0.3,
+                            pointRadius: 3,
+                            pointBackgroundColor: 'rgba(150, 150, 150, 0.6)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: true,
+                            yAxisID: 'y2',
+                            order: 10
+                        },
+                        {
+                            label: 'Ohne Reserve (Panikverkauf)',
+                            data: [40000, null, null, null, null, null, null, null, null, null],
+                            borderColor: '#C1293D',
+                            backgroundColor: 'rgba(193, 41, 61, 0.1)',
+                            tension: 0.3,
+                            pointRadius: Array(10).fill(5),
+                            pointBackgroundColor: Array(10).fill('#C1293D'),
+                            borderWidth: 3,
+                            fill: false,
+                            order: 1
+                        },
+                        {
+                            label: 'Mit Reserve (Durchhalten)',
+                            data: [40000, null, null, null, null, null, null, null, null, null],
+                            borderColor: '#033D5D',
+                            backgroundColor: 'rgba(3, 61, 93, 0.1)',
+                            tension: 0.3,
+                            pointRadius: Array(10).fill(5),
+                            pointBackgroundColor: Array(10).fill('#033D5D'),
+                            borderWidth: 3,
+                            fill: false,
+                            order: 2
+                        },
+                        {
+                            label: 'Mit Reserve + Nachkauf',
+                            data: [40000, null, null, null, null, null, null, null, null, null],
+                            borderColor: '#A6A8AB',
+                            backgroundColor: 'rgba(166, 168, 171, 0.1)',
+                            tension: 0.3,
+                            pointRadius: Array(10).fill(5),
+                            pointBackgroundColor: Array(10).fill('#A6A8AB'),
+                            borderWidth: 3,
+                            fill: false,
+                            order: 3
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: true }
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: { size: 13, weight: 'bold' },
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.datasetIndex === 0) {
+                                            // Kursverlauf: Show as unit price
+                                            label += context.parsed.y.toFixed(1) + ' € (Kurs)';
+                                        } else {
+                                            // Portfolio values
+                                            label += context.parsed.y.toFixed(0) + ' €';
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
                     },
                     scales: {
-                        x: { title: { display: true, text: 'Jahr' } },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Jahr',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        },
                         y: {
-                            title: { display: true, text: 'Portfolio-Wert (€)' },
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Gesamtvermögen (€)',
+                                font: { size: 14, weight: 'bold' }
+                            },
                             min: 0,
-                            max: 12000
+                            max: 150000,
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('de-DE') + ' €';
+                                }
+                            }
+                        },
+                        y2: {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Kursverlauf (€)',
+                                font: { size: 14, weight: 'bold' }
+                            },
+                            min: 0,
+                            max: 12,
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(0) + ' €';
+                                }
+                            }
                         }
-                    }
-                }
-            });
-        }
-
-        // Chart B: WITH Tagesgeld (hold through) - MLP Corporate Blue
-        const ctxB = document.getElementById('kriegskasse-chart-b');
-        if (ctxB) {
-            if (kriegskasseChartB) kriegskasseChartB.destroy();
-            kriegskasseChartB = new Chart(ctxB.getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: ['J0', 'J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
-                    datasets: [{
-                        label: 'Portfolio-Wert (€)',
-                        data: [10000, null, null, null, null, null, null, null, null, null, null],
-                        borderColor: '#033D5D',
-                        backgroundColor: 'rgba(3, 61, 93, 0.1)',
-                        tension: 0.3,
-                        pointRadius: Array(11).fill(4),
-                        pointBackgroundColor: Array(11).fill('#033D5D'),
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: true }
                     },
-                    scales: {
-                        x: { title: { display: true, text: 'Jahr' } },
-                        y: {
-                            title: { display: true, text: 'Portfolio-Wert (€)' },
-                            min: 0,
-                            max: 20000
-                        }
-                    }
-                }
-            });
-        }
-
-        // Chart C: WITH Tagesgeld + Active buying in crash - MLP Titanium
-        const ctxC = document.getElementById('kriegskasse-chart-c');
-        if (ctxC) {
-            if (kriegskasseChartC) kriegskasseChartC.destroy();
-            kriegskasseChartC = new Chart(ctxC.getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: ['J0', 'J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
-                    datasets: [{
-                        label: 'Portfolio-Wert (€)',
-                        data: [10000, null, null, null, null, null, null, null, null, null, null],
-                        borderColor: '#A6A8AB',
-                        backgroundColor: 'rgba(166, 168, 171, 0.1)',
-                        tension: 0.3,
-                        pointRadius: Array(11).fill(4),
-                        pointBackgroundColor: Array(11).fill('#A6A8AB'),
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: true }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Jahr' } },
-                        y: {
-                            title: { display: true, text: 'Portfolio-Wert (€)' },
-                            min: 0,
-                            max: 20000
-                        }
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
                     }
                 }
             });
@@ -7037,7 +7136,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     }
 
     function startKriegskasseAnimation() {
-        if (kriegskasseCurrentYear >= 10) {
+        if (kriegskasseCurrentYear > 9) {
             // Animation done, show results
             document.getElementById('kriegskasse-phase-1').style.display = 'none';
             document.getElementById('kriegskasse-phase-2').style.display = 'block';
@@ -7045,147 +7144,206 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             return;
         }
 
-        kriegskasseCurrentYear++;
         animateKriegskasseYear(kriegskasseCurrentYear);
 
         // Update year counters
-        document.getElementById('kriegskasse-year-a').textContent = `${kriegskasseCurrentYear} / 10`;
-        document.getElementById('kriegskasse-year-b').textContent = `${kriegskasseCurrentYear} / 10`;
-        document.getElementById('kriegskasse-year-c').textContent = `${kriegskasseCurrentYear} / 10`;
+        document.getElementById('kriegskasse-year-a').textContent = `${kriegskasseCurrentYear} / 9`;
+        document.getElementById('kriegskasse-year-b').textContent = `${kriegskasseCurrentYear} / 9`;
+        document.getElementById('kriegskasse-year-c').textContent = `${kriegskasseCurrentYear} / 9`;
+
+        kriegskasseCurrentYear++;
     }
 
     function animateKriegskasseYear(year) {
-        const marketPrices = courseData.B; // [10, 2, 4, 6.5, 8, 10.5, 9, 11, 10, 10.5]
-        const currentPrice = marketPrices[year - 1];
-        const initialPrice = marketPrices[0]; // 10
+        const marketPrices = courseData.B; // [9, 10, 2, 5, 4, 6, 8, 4, 7, 9]
+        const currentPrice = marketPrices[year];
+        const initialPrice = marketPrices[0]; // 9
 
-        // === SCENARIO A: WITHOUT Tagesgeld ===
+        // === SCENARIO A: WITHOUT Tagesgeld (All 40k in market, panic sell) ===
         let portfolioValueA = 0;
+        let totalWealthA = 0;
         let eventTextA = '';
 
-        if (year === 1) {
-            // Year 1: Market at 10 (stable)
-            portfolioValueA = scenarioA.portfolio * (currentPrice / initialPrice);
-            eventTextA = `📊 Jahr ${year}: Markt stabil (${currentPrice} €)`;
+        if (year === 0) {
+            // Year 0: 40k invested, 4444 shares @ 9€
+            scenarioA.shares = scenarioA.portfolio / initialPrice;
+            portfolioValueA = scenarioA.shares * currentPrice;
+            totalWealthA = portfolioValueA + scenarioA.tagesgeld;
+            eventTextA = `📊 Jahr ${year}: Start - Alles investiert: ${totalWealthA.toFixed(0)} €`;
+            scenarioA.timeline.push(eventTextA);
+        } else if (year === 1) {
+            portfolioValueA = scenarioA.shares * currentPrice;
+            totalWealthA = portfolioValueA + scenarioA.tagesgeld;
+            eventTextA = `📊 Jahr ${year}: Markt bei ${currentPrice} € → ${totalWealthA.toFixed(0)} €`;
             scenarioA.timeline.push(eventTextA);
         } else if (year === 2) {
-            // Year 2: CRASH! Panic sell at 2 €
+            // CRASH! Panic sell
             scenarioA.soldAt = currentPrice;
-            scenarioA.cashFromSale = scenarioA.portfolio * (currentPrice / initialPrice);
-            portfolioValueA = scenarioA.cashFromSale;
-            eventTextA = `💥 Jahr ${year}: CRASH! Panik-Verkauf bei ${currentPrice} € → ${portfolioValueA.toFixed(0)} € Cash`;
+            scenarioA.cashFromSale = scenarioA.shares * currentPrice;
+            scenarioA.shares = 0;
+            totalWealthA = scenarioA.cashFromSale;
+            eventTextA = `💥 Jahr ${year}: CRASH! Panik-Verkauf bei ${currentPrice} € → ${totalWealthA.toFixed(0)} € Cash`;
             scenarioA.timeline.push(eventTextA);
-        } else if (year >= 3 && year <= 4) {
-            // Year 3-4: Out of market (cash only)
-            portfolioValueA = scenarioA.cashFromSale;
-            eventTextA = `⏸️ Jahr ${year}: Außerhalb des Markts (${portfolioValueA.toFixed(0)} € Cash)`;
+        } else if (year >= 3 && year <= 5) {
+            totalWealthA = scenarioA.cashFromSale;
+            eventTextA = `⏸️ Jahr ${year}: Außerhalb Markt → ${totalWealthA.toFixed(0)} € Cash`;
             scenarioA.timeline.push(eventTextA);
-        } else if (year === 5) {
-            // Year 5: Re-entry at 10.5 € (too late!)
-            scenarioA.reentryAt = marketPrices[5]; // 10.5
-            const shares = scenarioA.cashFromSale / scenarioA.reentryAt;
-            portfolioValueA = shares * scenarioA.reentryAt;
-            eventTextA = `🔄 Jahr ${year}: Wiedereinstieg bei ${scenarioA.reentryAt} € (zu spät!)`;
-            scenarioA.timeline.push(eventTextA);
-            // Store shares for later calculation
-            scenarioA.shares = shares;
-        } else {
-            // Year 6-10: Back in market
+        } else if (year === 6) {
+            // Re-entry too late
+            scenarioA.reentryAt = currentPrice;
+            scenarioA.shares = scenarioA.cashFromSale / currentPrice;
             portfolioValueA = scenarioA.shares * currentPrice;
-            eventTextA = `📈 Jahr ${year}: Markt bei ${currentPrice} € → ${portfolioValueA.toFixed(0)} €`;
+            totalWealthA = portfolioValueA;
+            eventTextA = `🔄 Jahr ${year}: Wiedereinstieg bei ${currentPrice} € (zu spät!)`;
+            scenarioA.timeline.push(eventTextA);
+        } else {
+            portfolioValueA = scenarioA.shares * currentPrice;
+            totalWealthA = portfolioValueA;
+            eventTextA = `📈 Jahr ${year}: Markt ${currentPrice} € → ${totalWealthA.toFixed(0)} €`;
             scenarioA.timeline.push(eventTextA);
         }
 
-        // Update Chart A
-        if (kriegskasseChartA && kriegskasseChartA.data.datasets[0]) {
-            kriegskasseChartA.data.datasets[0].data[year] = portfolioValueA;
-            // Highlight current point
-            kriegskasseChartA.data.datasets[0].pointRadius = Array(11).fill(4);
-            kriegskasseChartA.data.datasets[0].pointRadius[year] = 10;
-            if (year === 2) {
-                // Extra emphasis on crash
-                kriegskasseChartA.data.datasets[0].pointBackgroundColor[year] = '#E3691E';
-                kriegskasseChartA.data.datasets[0].pointRadius[year] = 12;
-            }
-            kriegskasseChartA.update();
-        }
-
-        // === SCENARIO B: WITH Tagesgeld ===
-        let portfolioValueB = scenarioB.portfolio * (currentPrice / initialPrice);
+        // === SCENARIO B: WITH Tagesgeld (10k market + 30k reserve, hold through) ===
+        let portfolioValueB = 0;
+        let totalWealthB = 0;
         let eventTextB = '';
 
-        if (year === 1) {
-            eventTextB = `📊 Jahr ${year}: Markt stabil (${currentPrice} €)`;
-        } else if (year === 2) {
-            eventTextB = `💥 Jahr ${year}: CRASH auf ${currentPrice} € - DURCHGEHALTEN! 🛡️`;
-        } else if (year >= 3 && year <= 5) {
-            eventTextB = `🛡️ Jahr ${year}: Tagesgeld nutzen, Depot erholt sich (${currentPrice} €)`;
+        if (year === 0) {
+            scenarioB.shares = scenarioB.portfolio / initialPrice;
+            portfolioValueB = scenarioB.shares * currentPrice;
+            totalWealthB = portfolioValueB + scenarioB.tagesgeld;
+            eventTextB = `📊 Jahr ${year}: Start - Depot: ${portfolioValueB.toFixed(0)} € | TG: ${scenarioB.tagesgeld.toFixed(0)} €`;
         } else {
-            eventTextB = `📈 Jahr ${year}: Markt bei ${currentPrice} € → ${portfolioValueB.toFixed(0)} €`;
+            // Add yearly inflow to Tagesgeld
+            scenarioB.tagesgeld += scenarioB.tagesgeldInflow;
+
+            // Check for overflow (> 30k)
+            if (scenarioB.tagesgeld > 30000) {
+                const overflow = scenarioB.tagesgeld - 30000;
+                scenarioB.tagesgeld = 30000;
+                // Buy shares with overflow
+                const newShares = overflow / currentPrice;
+                scenarioB.shares += newShares;
+            }
+
+            portfolioValueB = scenarioB.shares * currentPrice;
+            totalWealthB = portfolioValueB + scenarioB.tagesgeld;
+
+            if (year === 1) {
+                eventTextB = `📊 Jahr ${year}: +6k TG → Depot: ${portfolioValueB.toFixed(0)} € | TG: ${scenarioB.tagesgeld.toFixed(0)} €`;
+            } else if (year === 2) {
+                eventTextB = `💥 Jahr ${year}: CRASH auf ${currentPrice} € - DURCHGEHALTEN! 🛡️`;
+            } else {
+                eventTextB = `📈 Jahr ${year}: Depot: ${portfolioValueB.toFixed(0)} € | TG: ${scenarioB.tagesgeld.toFixed(0)} € | Σ: ${totalWealthB.toFixed(0)} €`;
+            }
         }
         scenarioB.timeline.push(eventTextB);
 
-        // Update Chart B
-        if (kriegskasseChartB && kriegskasseChartB.data.datasets[0]) {
-            kriegskasseChartB.data.datasets[0].data[year] = portfolioValueB;
-            // Highlight current point
-            kriegskasseChartB.data.datasets[0].pointRadius = Array(11).fill(4);
-            kriegskasseChartB.data.datasets[0].pointRadius[year] = 10;
-            if (year === 2) {
-                // Extra emphasis on crash survival
-                kriegskasseChartB.data.datasets[0].pointBackgroundColor[year] = '#E3691E';
-                kriegskasseChartB.data.datasets[0].pointRadius[year] = 12;
-            }
-            kriegskasseChartB.update();
-        }
-
-        // === SCENARIO C: WITH Tagesgeld + Active Buying in Crash ===
+        // === SCENARIO C: WITH Tagesgeld + Active crash buying ===
         let portfolioValueC = 0;
+        let totalWealthC = 0;
         let eventTextC = '';
 
-        if (year === 1) {
-            // Year 1: Normal market
-            const portfolioShares = scenarioC.portfolio / initialPrice; // 1000 shares
-            portfolioValueC = portfolioShares * currentPrice;
-            scenarioC.totalShares = portfolioShares; // Store initial shares
-            eventTextC = `📊 Jahr ${year}: Portfolio ${portfolioValueC.toFixed(0)} € | TG: 30.000 €`;
+        if (year === 0) {
+            scenarioC.shares = scenarioC.portfolio / initialPrice;
+            portfolioValueC = scenarioC.shares * currentPrice;
+            totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+            eventTextC = `📊 Jahr ${year}: Start - Depot: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} €`;
+        } else if (year === 1) {
+            scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+            if (scenarioC.tagesgeld > 30000) {
+                const overflow = scenarioC.tagesgeld - 30000;
+                scenarioC.tagesgeld = 30000;
+                scenarioC.shares += overflow / currentPrice;
+            }
+            portfolioValueC = scenarioC.shares * currentPrice;
+            totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+            eventTextC = `📊 Jahr ${year}: +6k TG → Depot: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} €`;
         } else if (year === 2) {
-            // Year 2: CRASH! Buy 12.000€ from Tagesgeld at crash price
+            // CRASH! Buy 12k from Tagesgeld
             if (!scenarioC.boughtInCrash) {
                 scenarioC.crashBuyAmount = 12000;
-                const portfolioShares = scenarioC.portfolio / initialPrice; // Original 1000 shares
-                const boughtShares = scenarioC.crashBuyAmount / currentPrice; // 12000 / 2 = 6000 shares
-                const totalShares = portfolioShares + boughtShares; // 7000 shares total
-                portfolioValueC = totalShares * currentPrice;
-                scenarioC.totalShares = totalShares;
-                scenarioC.tagesgeld -= scenarioC.crashBuyAmount; // 30000 - 12000 = 18000€
+                const boughtShares = scenarioC.crashBuyAmount / currentPrice;
+                scenarioC.shares += boughtShares;
+                scenarioC.tagesgeld -= scenarioC.crashBuyAmount;
                 scenarioC.boughtInCrash = true;
-                eventTextC = `🚀 Jahr ${year}: CRASH! Nachkauf 12.000 € bei ${currentPrice} € = ${boughtShares.toFixed(0)} Anteile! TG: ${scenarioC.tagesgeld.toFixed(0)} €`;
+                portfolioValueC = scenarioC.shares * currentPrice;
+                totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+                eventTextC = `🚀 Jahr ${year}: CRASH! Nachkauf 12k bei ${currentPrice} € = ${boughtShares.toFixed(0)} Anteile!`;
             }
         } else if (year >= 3 && year <= 4) {
-            // Year 3-4: No savings (refilling Tagesgeld with inflow)
-            portfolioValueC = scenarioC.totalShares * currentPrice;
-            scenarioC.tagesgeld += scenarioC.tagesgeldInflow; // Refill 6000€/year
-            eventTextC = `💰 Jahr ${year}: Keine Sparrate (TG auffüllen) | Portfolio: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} €`;
+            // Refill Tagesgeld
+            scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+            portfolioValueC = scenarioC.shares * currentPrice;
+            totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+            eventTextC = `💰 Jahr ${year}: TG auffüllen → TG: ${scenarioC.tagesgeld.toFixed(0)} € | Depot: ${portfolioValueC.toFixed(0)} €`;
+        } else if (year === 5 || year === 6) {
+            // Year 5-6: Normal with overflow
+            scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+            if (scenarioC.tagesgeld > 30000) {
+                const overflow = scenarioC.tagesgeld - 30000;
+                scenarioC.tagesgeld = 30000;
+                scenarioC.shares += overflow / currentPrice;
+            }
+            portfolioValueC = scenarioC.shares * currentPrice;
+            totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+            eventTextC = `📈 Jahr ${year}: Depot: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} € | Σ: ${totalWealthC.toFixed(0)} €`;
+        } else if (year === 7) {
+            // Year 7: Second crash buy opportunity!
+            scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+            const secondBuyAmount = 12000;
+            const boughtShares = secondBuyAmount / currentPrice;
+            scenarioC.shares += boughtShares;
+            scenarioC.tagesgeld -= secondBuyAmount;
+            portfolioValueC = scenarioC.shares * currentPrice;
+            totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+            eventTextC = `🚀 Jahr ${year}: Nochmal 12k nachgekauft bei ${currentPrice} € = ${boughtShares.toFixed(0)} Anteile!`;
         } else {
-            // Year 5-10: Normal, Tagesgeld full again
-            portfolioValueC = scenarioC.totalShares * currentPrice;
-            eventTextC = `📈 Jahr ${year}: Markt bei ${currentPrice} € | Portfolio: ${portfolioValueC.toFixed(0)} €`;
+            // Year 8+: Normal with overflow
+            scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+            if (scenarioC.tagesgeld > 30000) {
+                const overflow = scenarioC.tagesgeld - 30000;
+                scenarioC.tagesgeld = 30000;
+                scenarioC.shares += overflow / currentPrice;
+            }
+            portfolioValueC = scenarioC.shares * currentPrice;
+            totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+            eventTextC = `📈 Jahr ${year}: Depot: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} € | Σ: ${totalWealthC.toFixed(0)} €`;
         }
         scenarioC.timeline.push(eventTextC);
 
-        // Update Chart C
-        if (kriegskasseChartC && kriegskasseChartC.data.datasets[0]) {
-            kriegskasseChartC.data.datasets[0].data[year] = portfolioValueC;
-            // Highlight current point
-            kriegskasseChartC.data.datasets[0].pointRadius = Array(11).fill(4);
-            kriegskasseChartC.data.datasets[0].pointRadius[year] = 10;
+        // Update Combined Chart with TOTAL WEALTH (TG + Depot)
+        if (kriegskasseChart && kriegskasseChart.data.datasets) {
+            kriegskasseChart.data.datasets[1].data[year] = totalWealthA;
+            kriegskasseChart.data.datasets[2].data[year] = totalWealthB;
+            kriegskasseChart.data.datasets[3].data[year] = totalWealthC;
+
+            // Reset all point sizes
+            kriegskasseChart.data.datasets[1].pointRadius = Array(10).fill(5);
+            kriegskasseChart.data.datasets[2].pointRadius = Array(10).fill(5);
+            kriegskasseChart.data.datasets[3].pointRadius = Array(10).fill(5);
+
+            // Highlight current year
+            kriegskasseChart.data.datasets[1].pointRadius[year] = 10;
+            kriegskasseChart.data.datasets[2].pointRadius[year] = 10;
+            kriegskasseChart.data.datasets[3].pointRadius[year] = 10;
+
+            // Highlight current year on Kursverlauf
+            kriegskasseChart.data.datasets[0].pointRadius = Array(10).fill(3);
+            kriegskasseChart.data.datasets[0].pointRadius[year] = 6;
+
+            // Extra emphasis on crash year
             if (year === 2) {
-                // Extra emphasis on crash buy
-                kriegskasseChartC.data.datasets[0].pointBackgroundColor[year] = '#C1293D';
-                kriegskasseChartC.data.datasets[0].pointRadius[year] = 14;
+                kriegskasseChart.data.datasets[1].pointRadius[year] = 12;
+                kriegskasseChart.data.datasets[1].pointBackgroundColor[year] = '#E3691E';
+                kriegskasseChart.data.datasets[2].pointRadius[year] = 12;
+                kriegskasseChart.data.datasets[2].pointBackgroundColor[year] = '#E3691E';
+                kriegskasseChart.data.datasets[3].pointRadius[year] = 14;
+                kriegskasseChart.data.datasets[3].pointBackgroundColor[year] = '#47A190';
+                kriegskasseChart.data.datasets[0].pointRadius[year] = 8;
             }
-            kriegskasseChartC.update();
+
+            kriegskasseChart.update();
         }
 
         // Update timeline displays
@@ -7209,35 +7367,39 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
     function showKriegskasseResults() {
         const marketPrices = courseData.B;
-        const finalPrice = marketPrices[marketPrices.length - 1]; // 10.5
+        const finalPrice = marketPrices[marketPrices.length - 1]; // 9
+        const initialWealth = 40000; // All start with 40k
 
-        // Scenario A: Final value after panic sell + late re-entry
-        const finalValueA = scenarioA.shares * finalPrice;
-        const lossA = finalValueA - 10000;
+        // Scenario A: Final TOTAL wealth (Depot only, no Tagesgeld)
+        const finalPortfolioA = scenarioA.shares * finalPrice;
+        const finalWealthA = finalPortfolioA + scenarioA.tagesgeld; // 0 TG
+        const resultA = finalWealthA - initialWealth;
 
-        // Scenario B: Final value holding through
-        const finalValueB = scenarioB.portfolio * (finalPrice / marketPrices[0]);
-        const profitB = finalValueB - 10000;
+        // Scenario B: Final TOTAL wealth (Depot + Tagesgeld)
+        const finalPortfolioB = scenarioB.shares * finalPrice;
+        const finalWealthB = finalPortfolioB + scenarioB.tagesgeld;
+        const resultB = finalWealthB - initialWealth;
 
-        // Scenario C: Final value after crash buying
-        const finalValueC = scenarioC.totalShares * finalPrice;
-        const profitC = finalValueC - 10000;
+        // Scenario C: Final TOTAL wealth (Depot + Tagesgeld)
+        const finalPortfolioC = scenarioC.shares * finalPrice;
+        const finalWealthC = finalPortfolioC + scenarioC.tagesgeld;
+        const resultC = finalWealthC - initialWealth;
 
         // Calculate differences
-        const differenceC_vs_B = finalValueC - finalValueB;
+        const differenceC_vs_B = finalWealthC - finalWealthB;
 
         // Update HTML
         document.getElementById('kriegskasse-result-sold-a').textContent = `${scenarioA.cashFromSale.toFixed(0)} €`;
         document.getElementById('kriegskasse-result-reentry-a').textContent = `${scenarioA.reentryAt.toFixed(2)} €`;
-        document.getElementById('kriegskasse-result-value-a').textContent = `${finalValueA.toFixed(0)} €`;
-        document.getElementById('kriegskasse-result-loss-a').textContent = `${lossA.toFixed(0)} €`;
+        document.getElementById('kriegskasse-result-value-a').textContent = `${finalWealthA.toFixed(0)} €`;
+        document.getElementById('kriegskasse-result-loss-a').textContent = `${resultA.toFixed(0)} €`;
 
-        document.getElementById('kriegskasse-result-value-b').textContent = `${finalValueB.toFixed(0)} €`;
-        document.getElementById('kriegskasse-result-profit-b').textContent = `+${profitB.toFixed(0)} €`;
+        document.getElementById('kriegskasse-result-value-b').textContent = `${finalWealthB.toFixed(0)} €`;
+        document.getElementById('kriegskasse-result-profit-b').textContent = `${resultB >= 0 ? '+' : ''}${resultB.toFixed(0)} €`;
 
-        document.getElementById('kriegskasse-result-buy-c').textContent = `${scenarioC.crashBuyAmount.toFixed(0)} €`;
-        document.getElementById('kriegskasse-result-value-c').textContent = `${finalValueC.toFixed(0)} €`;
-        document.getElementById('kriegskasse-result-profit-c').textContent = `+${profitC.toFixed(0)} €`;
+        document.getElementById('kriegskasse-result-buy-c').textContent = `12000 €`;
+        document.getElementById('kriegskasse-result-value-c').textContent = `${finalWealthC.toFixed(0)} €`;
+        document.getElementById('kriegskasse-result-profit-c').textContent = `${resultC >= 0 ? '+' : ''}${resultC.toFixed(0)} €`;
         document.getElementById('kriegskasse-difference-c').textContent = `${differenceC_vs_B.toFixed(0)} € mehr`;
     }
 
