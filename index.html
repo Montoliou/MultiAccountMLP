@@ -2479,7 +2479,7 @@
 
     <!-- v1.6.3: Kriegskasse Erklärer Modal -->
     <div id="kriegskasse-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="kriegskasse-title">
-        <div class="bg-white w-full max-w-5xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
+        <div class="bg-white w-full max-w-7xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
             <button type="button" onclick="closeKriegskasseModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl" aria-label="Kriegskasse Erklärer schließen">&times;</button>
 
             <!-- Phase 1: Intro -->
@@ -2487,65 +2487,65 @@
                 <h2 id="kriegskasse-title" class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">💰 Die Kriegskasse: Schutz UND Chance!</h2>
                 <p class="text-lg text-gray-700 mb-8">Drei Szenarien im Crash: Panikverkauf vs. Durchhalten vs. Aktiv Nachkaufen</p>
 
-                <div class="grid grid-cols-3 gap-4 mb-8">
+                <div class="grid grid-cols-3 gap-6 mb-8">
                     <!-- Scenario A: WITHOUT Tagesgeld -->
-                    <div id="kriegskasse-box-a" class="p-4 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(193, 41, 61, 0.05); border: 2px solid #C1293D;">
-                        <h3 class="text-lg font-bold mb-3" style="color: #C1293D;">❌ Ohne Reserve</h3>
+                    <div id="kriegskasse-box-a" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(193, 41, 61, 0.05); border: 2px solid #C1293D;">
+                        <h3 class="text-xl font-bold mb-4" style="color: #C1293D;">❌ Ohne Reserve</h3>
 
                         <!-- Chart A -->
-                        <div class="bg-white p-3 rounded-lg mb-3" style="border: 1px solid var(--mlp-titanium);">
-                            <canvas id="kriegskasse-chart-a" style="max-height: 200px;"></canvas>
+                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
+                            <canvas id="kriegskasse-chart-a" style="max-height: 250px;"></canvas>
                         </div>
 
                         <!-- Timeline A -->
-                        <div class="space-y-1 mb-3 text-xs" id="kriegskasse-timeline-a">
-                            <div class="text-gray-500">Klick zum Start...</div>
+                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-a" style="min-height: 120px;">
+                            <div class="text-sm text-gray-500">Klick zum Start...</div>
                         </div>
 
                         <!-- Counter -->
-                        <div class="flex justify-between text-xs text-gray-600">
+                        <div class="flex justify-between text-sm text-gray-600">
                             <span>Jahr:</span>
                             <span id="kriegskasse-year-a">0 / 10</span>
                         </div>
                     </div>
 
                     <!-- Scenario B: WITH Tagesgeld (Hold) -->
-                    <div id="kriegskasse-box-b" class="p-4 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(71, 161, 144, 0.05); border: 2px solid var(--mlp-green);">
-                        <h3 class="text-lg font-bold mb-3" style="color: var(--mlp-green);">✅ Mit Reserve (Halten)</h3>
+                    <div id="kriegskasse-box-b" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(3, 61, 93, 0.05); border: 2px solid var(--mlp-corporate-blue);">
+                        <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">✅ Mit Reserve (Halten)</h3>
 
                         <!-- Chart B -->
-                        <div class="bg-white p-3 rounded-lg mb-3" style="border: 1px solid var(--mlp-titanium);">
-                            <canvas id="kriegskasse-chart-b" style="max-height: 200px;"></canvas>
+                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
+                            <canvas id="kriegskasse-chart-b" style="max-height: 250px;"></canvas>
                         </div>
 
                         <!-- Timeline B -->
-                        <div class="space-y-1 mb-3 text-xs" id="kriegskasse-timeline-b">
-                            <div class="text-gray-500">Klick zum Start...</div>
+                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-b" style="min-height: 120px;">
+                            <div class="text-sm text-gray-500">Klick zum Start...</div>
                         </div>
 
                         <!-- Counter -->
-                        <div class="flex justify-between text-xs text-gray-600">
+                        <div class="flex justify-between text-sm text-gray-600">
                             <span>Jahr:</span>
                             <span id="kriegskasse-year-b">0 / 10</span>
                         </div>
                     </div>
 
                     <!-- Scenario C: WITH Tagesgeld (Active Buy) -->
-                    <div id="kriegskasse-box-c" class="p-4 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(227, 105, 30, 0.05); border: 2px solid #E3691E;">
-                        <h3 class="text-lg font-bold mb-3" style="color: #E3691E;">🚀 Mit Reserve + Nachkauf</h3>
+                    <div id="kriegskasse-box-c" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(166, 168, 171, 0.05); border: 2px solid var(--mlp-titanium);">
+                        <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-titanium);">🚀 Mit Reserve + Nachkauf</h3>
 
                         <!-- Chart C -->
-                        <div class="bg-white p-3 rounded-lg mb-3" style="border: 1px solid var(--mlp-titanium);">
-                            <canvas id="kriegskasse-chart-c" style="max-height: 200px;"></canvas>
+                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
+                            <canvas id="kriegskasse-chart-c" style="max-height: 250px;"></canvas>
                         </div>
 
                         <!-- Timeline C -->
-                        <div class="space-y-1 mb-3 text-xs" id="kriegskasse-timeline-c">
-                            <div class="text-gray-500">Klick zum Start...</div>
+                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-c" style="min-height: 120px;">
+                            <div class="text-sm text-gray-500">Klick zum Start...</div>
                         </div>
 
                         <!-- Counter -->
-                        <div class="flex justify-between text-xs text-gray-600">
+                        <div class="flex justify-between text-sm text-gray-600">
                             <span>Jahr:</span>
                             <span id="kriegskasse-year-c">0 / 10</span>
                         </div>
@@ -2553,7 +2553,7 @@
                 </div>
 
                 <div class="text-center text-gray-600 mb-4">
-                    <p class="text-base">👆 <strong>Klicken Sie auf ein Szenario</strong>, um die Animation zu starten</p>
+                    <p class="text-lg">👆 <strong>Klicken Sie auf ein Szenario</strong>, um die Animation zu starten</p>
                 </div>
             </div>
 
@@ -2576,8 +2576,8 @@
                     </div>
 
                     <!-- Scenario B Result -->
-                    <div class="p-6 rounded-lg" style="background: rgba(71, 161, 144, 0.1); border: 2px solid var(--mlp-green);">
-                        <h3 class="text-xl font-bold mb-3" style="color: var(--mlp-green);">Mit Reserve (Halten) ✅</h3>
+                    <div class="p-6 rounded-lg" style="background: rgba(3, 61, 93, 0.1); border: 2px solid var(--mlp-corporate-blue);">
+                        <h3 class="text-xl font-bold mb-3" style="color: var(--mlp-corporate-blue);">Mit Reserve (Halten) ✅</h3>
                         <div class="space-y-2 text-sm">
                             <p class="text-gray-700"><span class="font-semibold">Start:</span> 10.000 €</p>
                             <p class="text-gray-700"><span class="font-semibold">Crash:</span> Durchgehalten! 🛡️</p>
@@ -2589,8 +2589,8 @@
                     </div>
 
                     <!-- Scenario C Result -->
-                    <div class="p-6 rounded-lg" style="background: rgba(227, 105, 30, 0.1); border: 2px solid #E3691E;">
-                        <h3 class="text-xl font-bold mb-3" style="color: #E3691E;">Mit Reserve + Nachkauf 🚀</h3>
+                    <div class="p-6 rounded-lg" style="background: rgba(166, 168, 171, 0.1); border: 2px solid var(--mlp-titanium);">
+                        <h3 class="text-xl font-bold mb-3" style="color: var(--mlp-titanium);">Mit Reserve + Nachkauf 🚀</h3>
                         <div class="space-y-2 text-sm">
                             <p class="text-gray-700"><span class="font-semibold">Start:</span> 10.000 €</p>
                             <p class="text-gray-700"><span class="font-semibold">Nachkauf (J2):</span> <span id="kriegskasse-result-buy-c">12.000 €</span></p>
@@ -6959,7 +6959,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             });
         }
 
-        // Chart B: WITH Tagesgeld (hold through)
+        // Chart B: WITH Tagesgeld (hold through) - MLP Corporate Blue
         const ctxB = document.getElementById('kriegskasse-chart-b');
         if (ctxB) {
             if (kriegskasseChartB) kriegskasseChartB.destroy();
@@ -6970,11 +6970,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                     datasets: [{
                         label: 'Portfolio-Wert (€)',
                         data: [10000, null, null, null, null, null, null, null, null, null, null],
-                        borderColor: '#47A190',
-                        backgroundColor: 'rgba(71, 161, 144, 0.1)',
+                        borderColor: '#033D5D',
+                        backgroundColor: 'rgba(3, 61, 93, 0.1)',
                         tension: 0.3,
                         pointRadius: Array(11).fill(4),
-                        pointBackgroundColor: Array(11).fill('#47A190'),
+                        pointBackgroundColor: Array(11).fill('#033D5D'),
                         fill: true
                     }]
                 },
@@ -6997,7 +6997,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             });
         }
 
-        // Chart C: WITH Tagesgeld + Active buying in crash
+        // Chart C: WITH Tagesgeld + Active buying in crash - MLP Titanium
         const ctxC = document.getElementById('kriegskasse-chart-c');
         if (ctxC) {
             if (kriegskasseChartC) kriegskasseChartC.destroy();
@@ -7008,11 +7008,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                     datasets: [{
                         label: 'Portfolio-Wert (€)',
                         data: [10000, null, null, null, null, null, null, null, null, null, null],
-                        borderColor: '#E3691E',
-                        backgroundColor: 'rgba(227, 105, 30, 0.1)',
+                        borderColor: '#A6A8AB',
+                        backgroundColor: 'rgba(166, 168, 171, 0.1)',
                         tension: 0.3,
                         pointRadius: Array(11).fill(4),
-                        pointBackgroundColor: Array(11).fill('#E3691E'),
+                        pointBackgroundColor: Array(11).fill('#A6A8AB'),
                         fill: true
                     }]
                 },
@@ -7199,9 +7199,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if (!container) return;
 
         container.innerHTML = '';
-        timeline.slice(-3).forEach(event => { // Show last 3 events (less space)
+        timeline.slice(-5).forEach(event => { // Show last 5 events
             const eventDiv = document.createElement('div');
-            eventDiv.className = 'text-xs text-gray-700 py-0.5';
+            eventDiv.className = 'text-sm text-gray-700 py-1';
             eventDiv.textContent = event;
             container.appendChild(eventDiv);
         });
