@@ -2484,55 +2484,76 @@
 
             <!-- Phase 1: Intro -->
             <div id="kriegskasse-phase-1">
-                <h2 id="kriegskasse-title" class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">💰 Warum ist eine Investitionsreserve wichtig?</h2>
-                <p class="text-lg text-gray-700 mb-8">Beobachten Sie, was passiert, wenn Sie während eines Crashs aussteigen vs. mit Tagesgeld-Puffer durchhalten</p>
+                <h2 id="kriegskasse-title" class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">💰 Die Kriegskasse: Schutz UND Chance!</h2>
+                <p class="text-lg text-gray-700 mb-8">Drei Szenarien im Crash: Panikverkauf vs. Durchhalten vs. Aktiv Nachkaufen</p>
 
-                <div class="grid grid-cols-2 gap-6 mb-8">
+                <div class="grid grid-cols-3 gap-4 mb-8">
                     <!-- Scenario A: WITHOUT Tagesgeld -->
-                    <div id="kriegskasse-box-a" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(193, 41, 61, 0.05); border: 2px solid #C1293D;">
-                        <h3 class="text-xl font-bold mb-4" style="color: #C1293D;">❌ Ohne Investitionsreserve</h3>
+                    <div id="kriegskasse-box-a" class="p-4 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(193, 41, 61, 0.05); border: 2px solid #C1293D;">
+                        <h3 class="text-lg font-bold mb-3" style="color: #C1293D;">❌ Ohne Reserve</h3>
 
                         <!-- Chart A -->
-                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
-                            <canvas id="kriegskasse-chart-a" style="max-height: 250px;"></canvas>
+                        <div class="bg-white p-3 rounded-lg mb-3" style="border: 1px solid var(--mlp-titanium);">
+                            <canvas id="kriegskasse-chart-a" style="max-height: 200px;"></canvas>
                         </div>
 
                         <!-- Timeline A -->
-                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-a">
-                            <div class="text-sm text-gray-500">Klicken Sie, um zu starten...</div>
+                        <div class="space-y-1 mb-3 text-xs" id="kriegskasse-timeline-a">
+                            <div class="text-gray-500">Klick zum Start...</div>
                         </div>
 
                         <!-- Counter -->
-                        <div class="flex justify-between text-sm text-gray-600 mb-2">
-                            <span class="text-sm text-gray-600">Jahr:</span>
+                        <div class="flex justify-between text-xs text-gray-600">
+                            <span>Jahr:</span>
                             <span id="kriegskasse-year-a">0 / 10</span>
                         </div>
                     </div>
 
-                    <!-- Scenario B: WITH Tagesgeld -->
-                    <div id="kriegskasse-box-b" class="p-6 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(71, 161, 144, 0.05); border: 2px solid var(--mlp-green);">
-                        <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-green);">✅ Mit Investitionsreserve</h3>
+                    <!-- Scenario B: WITH Tagesgeld (Hold) -->
+                    <div id="kriegskasse-box-b" class="p-4 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(71, 161, 144, 0.05); border: 2px solid var(--mlp-green);">
+                        <h3 class="text-lg font-bold mb-3" style="color: var(--mlp-green);">✅ Mit Reserve (Halten)</h3>
 
                         <!-- Chart B -->
-                        <div class="bg-white p-4 rounded-lg mb-4" style="border: 1px solid var(--mlp-titanium);">
-                            <canvas id="kriegskasse-chart-b" style="max-height: 250px;"></canvas>
+                        <div class="bg-white p-3 rounded-lg mb-3" style="border: 1px solid var(--mlp-titanium);">
+                            <canvas id="kriegskasse-chart-b" style="max-height: 200px;"></canvas>
                         </div>
 
                         <!-- Timeline B -->
-                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-b">
-                            <div class="text-sm text-gray-500">Klicken Sie, um zu starten...</div>
+                        <div class="space-y-1 mb-3 text-xs" id="kriegskasse-timeline-b">
+                            <div class="text-gray-500">Klick zum Start...</div>
                         </div>
 
                         <!-- Counter -->
-                        <div class="flex justify-between text-sm text-gray-600 mb-2">
-                            <span class="text-sm text-gray-600">Jahr:</span>
+                        <div class="flex justify-between text-xs text-gray-600">
+                            <span>Jahr:</span>
                             <span id="kriegskasse-year-b">0 / 10</span>
+                        </div>
+                    </div>
+
+                    <!-- Scenario C: WITH Tagesgeld (Active Buy) -->
+                    <div id="kriegskasse-box-c" class="p-4 rounded-lg cursor-pointer transition-all hover:shadow-xl" style="background: rgba(227, 105, 30, 0.05); border: 2px solid #E3691E;">
+                        <h3 class="text-lg font-bold mb-3" style="color: #E3691E;">🚀 Mit Reserve + Nachkauf</h3>
+
+                        <!-- Chart C -->
+                        <div class="bg-white p-3 rounded-lg mb-3" style="border: 1px solid var(--mlp-titanium);">
+                            <canvas id="kriegskasse-chart-c" style="max-height: 200px;"></canvas>
+                        </div>
+
+                        <!-- Timeline C -->
+                        <div class="space-y-1 mb-3 text-xs" id="kriegskasse-timeline-c">
+                            <div class="text-gray-500">Klick zum Start...</div>
+                        </div>
+
+                        <!-- Counter -->
+                        <div class="flex justify-between text-xs text-gray-600">
+                            <span>Jahr:</span>
+                            <span id="kriegskasse-year-c">0 / 10</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="text-center text-gray-600 mb-4">
-                    <p class="text-lg">👆 <strong>Klicken Sie auf eines der beiden Szenarien</strong>, um die Animation zu starten</p>
+                    <p class="text-base">👆 <strong>Klicken Sie auf ein Szenario</strong>, um die Animation zu starten</p>
                 </div>
             </div>
 
@@ -2540,56 +2561,76 @@
             <div id="kriegskasse-phase-2" class="cursor-pointer" style="display: none;" onclick="closeKriegskasseModal()">
                 <h2 class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">⚡ Der Kriegskasse-Effekt!</h2>
 
-                <div class="grid grid-cols-2 gap-8 mb-8">
+                <div class="grid grid-cols-3 gap-6 mb-8">
                     <!-- Scenario A Result -->
-                    <div class="p-8 rounded-lg" style="background: rgba(193, 41, 61, 0.1); border: 2px solid #C1293D;">
-                        <h3 class="text-2xl font-bold mb-4" style="color: #C1293D;">Ohne Reserve ❌</h3>
-                        <div class="space-y-3">
-                            <p class="text-gray-700"><span class="font-semibold">Startkapital:</span> 10.000 €</p>
-                            <p class="text-gray-700"><span class="font-semibold">Verkauft bei Crash (J2):</span> <span id="kriegskasse-result-sold-a">4.000 €</span></p>
-                            <p class="text-gray-700"><span class="font-semibold">Wiedereinstieg (J5):</span> <span id="kriegskasse-result-reentry-a">4.000 €</span></p>
+                    <div class="p-6 rounded-lg" style="background: rgba(193, 41, 61, 0.1); border: 2px solid #C1293D;">
+                        <h3 class="text-xl font-bold mb-3" style="color: #C1293D;">Ohne Reserve ❌</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-700"><span class="font-semibold">Start:</span> 10.000 €</p>
+                            <p class="text-gray-700"><span class="font-semibold">Verkauft (J2):</span> <span id="kriegskasse-result-sold-a">2.000 €</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Re-Entry (J5):</span> <span id="kriegskasse-result-reentry-a">10,5 €</span></p>
                             <hr style="border-color: var(--mlp-titanium);">
-                            <p class="text-2xl font-bold" style="color: #C1293D;">Endwert: <span id="kriegskasse-result-value-a">8.400 €</span></p>
-                            <p class="text-lg text-gray-600">Verlust: <span id="kriegskasse-result-loss-a">-1.600 €</span></p>
+                            <p class="text-xl font-bold" style="color: #C1293D;">Endwert: <span id="kriegskasse-result-value-a">8.400 €</span></p>
+                            <p class="text-base text-gray-600"><span id="kriegskasse-result-loss-a">-1.600 €</span></p>
                         </div>
                     </div>
 
                     <!-- Scenario B Result -->
-                    <div class="p-8 rounded-lg" style="background: rgba(71, 161, 144, 0.1); border: 2px solid var(--mlp-green);">
-                        <h3 class="text-2xl font-bold mb-4" style="color: var(--mlp-green);">Mit Reserve ✅</h3>
-                        <div class="space-y-3">
-                            <p class="text-gray-700"><span class="font-semibold">Startkapital:</span> 10.000 €</p>
-                            <p class="text-gray-700"><span class="font-semibold">Im Crash:</span> Durchgehalten! 🛡️</p>
-                            <p class="text-gray-700"><span class="font-semibold">Tagesgeld genutzt:</span> Ja, für Lebenshaltung</p>
+                    <div class="p-6 rounded-lg" style="background: rgba(71, 161, 144, 0.1); border: 2px solid var(--mlp-green);">
+                        <h3 class="text-xl font-bold mb-3" style="color: var(--mlp-green);">Mit Reserve (Halten) ✅</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-700"><span class="font-semibold">Start:</span> 10.000 €</p>
+                            <p class="text-gray-700"><span class="font-semibold">Crash:</span> Durchgehalten! 🛡️</p>
+                            <p class="text-gray-700"><span class="font-semibold">Tagesgeld:</span> Für Leben genutzt</p>
                             <hr style="border-color: var(--mlp-titanium);">
-                            <p class="text-2xl font-bold" style="color: var(--color-success);">Endwert: <span id="kriegskasse-result-value-b">10.500 €</span></p>
-                            <p class="text-lg text-gray-600">Gewinn: <span id="kriegskasse-result-profit-b">+500 €</span></p>
+                            <p class="text-xl font-bold" style="color: var(--color-success);">Endwert: <span id="kriegskasse-result-value-b">10.500 €</span></p>
+                            <p class="text-base text-gray-600"><span id="kriegskasse-result-profit-b">+500 €</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Scenario C Result -->
+                    <div class="p-6 rounded-lg" style="background: rgba(227, 105, 30, 0.1); border: 2px solid #E3691E;">
+                        <h3 class="text-xl font-bold mb-3" style="color: #E3691E;">Mit Reserve + Nachkauf 🚀</h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-gray-700"><span class="font-semibold">Start:</span> 10.000 €</p>
+                            <p class="text-gray-700"><span class="font-semibold">Nachkauf (J2):</span> <span id="kriegskasse-result-buy-c">12.000 €</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">TG wieder voll:</span> Jahr 4</p>
+                            <hr style="border-color: var(--mlp-titanium);">
+                            <p class="text-xl font-bold" style="color: var(--color-success);">Endwert: <span id="kriegskasse-result-value-c">17.325 €</span></p>
+                            <p class="text-base text-gray-600"><span id="kriegskasse-result-profit-c">+7.325 €</span></p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Insight Box -->
-                <div class="p-8 rounded-lg mb-8" style="background: linear-gradient(135deg, #033D5D 0%, #47A190 100%); color: white;">
-                    <h3 class="text-2xl font-bold mb-4">🛡️ Die Kriegskasse schützt Sie:</h3>
+                <div class="p-8 rounded-lg mb-8" style="background: linear-gradient(135deg, #E3691E 0%, #C1293D 100%); color: white;">
+                    <h3 class="text-2xl font-bold mb-4">🚀 Die Kriegskasse macht's möglich:</h3>
                     <div class="space-y-4">
                         <div>
                             <p class="text-lg font-bold mb-2">❌ Ohne Reserve:</p>
-                            <p class="text-lg opacity-90">→ Panikverkauf im Crash (-60% Verlust)</p>
-                            <p class="text-lg opacity-90">→ Zu später Wiedereinstieg (verpasste Erholung)</p>
-                            <p class="text-base opacity-75 mt-2">Ergebnis: <strong id="kriegskasse-difference">-2.100 € weniger</strong> als mit Reserve!</p>
+                            <p class="text-base opacity-90">→ Panikverkauf im Crash (-80%)</p>
+                            <p class="text-base opacity-90">→ Zu später Wiedereinstieg</p>
+                            <p class="text-base opacity-75 mt-2"><strong>Ergebnis: -1.600 € Verlust</strong></p>
                         </div>
                         <div>
-                            <p class="text-lg font-bold mb-2">✅ Mit Reserve:</p>
-                            <p class="text-lg opacity-90">→ Durchhalten dank Tagesgeld-Puffer</p>
-                            <p class="text-lg opacity-90">→ Depot erholt sich vollständig</p>
-                            <p class="text-base opacity-75 mt-2">Ergebnis: Entspannt durch die Krise und profitiert von der Erholung!</p>
+                            <p class="text-lg font-bold mb-2">✅ Mit Reserve (Halten):</p>
+                            <p class="text-base opacity-90">→ Durchhalten dank Tagesgeld</p>
+                            <p class="text-base opacity-90">→ Volle Erholung mitgenommen</p>
+                            <p class="text-base opacity-75 mt-2"><strong>Ergebnis: +500 € Gewinn</strong></p>
+                        </div>
+                        <div>
+                            <p class="text-lg font-bold mb-2">🚀 Mit Reserve + Nachkauf:</p>
+                            <p class="text-base opacity-90">→ 12.000 € aus Tagesgeld im Crash nachgekauft (Preis: 2 €)</p>
+                            <p class="text-base opacity-90">→ 2 Jahre keine Sparrate (Tagesgeld wieder auffüllen)</p>
+                            <p class="text-base opacity-90">→ Massiv mehr Anteile zu Billigpreisen</p>
+                            <p class="text-base opacity-75 mt-2"><strong>Ergebnis: +7.325 € Gewinn - <span id="kriegskasse-difference-c">6.825 € mehr</span> als Halten!</strong></p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Instruction to close -->
                 <div class="text-center text-gray-600 py-4">
-                    <p class="text-lg">👆 <strong>Klicken Sie irgendwo, um zurückzukehren</strong></p>
+                    <p class="text-base">👆 <strong>Klicken Sie irgendwo, um zurückzukehren</strong></p>
                 </div>
             </div>
         </div>
@@ -6785,6 +6826,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
     let kriegskasseChartA = null;
     let kriegskasseChartB = null;
+    let kriegskasseChartC = null;
     let kriegskasseCurrentYear = 0;
     let kriegskasseAnimRunning = false;
 
@@ -6800,6 +6842,16 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     // Scenario B: WITH Tagesgeld (hold through)
     let scenarioB = {
         portfolio: 10000,
+        timeline: []
+    };
+
+    // Scenario C: WITH Tagesgeld + Active buying in crash
+    let scenarioC = {
+        portfolio: 10000,       // Initial portfolio
+        tagesgeld: 30000,       // Tagesgeld reserve
+        tagesgeldInflow: 6000,  // 500€/month = 6000€/year overflow
+        boughtInCrash: false,   // Track if already bought
+        crashBuyAmount: 0,      // Amount bought in crash
         timeline: []
     };
 
@@ -6824,23 +6876,35 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             portfolio: 10000,
             timeline: []
         };
+        scenarioC = {
+            portfolio: 10000,
+            tagesgeld: 30000,
+            tagesgeldInflow: 6000,
+            boughtInCrash: false,
+            crashBuyAmount: 0,
+            timeline: []
+        };
 
         // Reset counters
         document.getElementById('kriegskasse-year-a').textContent = '0 / 10';
         document.getElementById('kriegskasse-year-b').textContent = '0 / 10';
+        document.getElementById('kriegskasse-year-c').textContent = '0 / 10';
 
         // Clear timelines
-        document.getElementById('kriegskasse-timeline-a').innerHTML = '<div class="text-sm text-gray-500">Klicken Sie, um zu starten...</div>';
-        document.getElementById('kriegskasse-timeline-b').innerHTML = '<div class="text-sm text-gray-500">Klicken Sie, um zu starten...</div>';
+        document.getElementById('kriegskasse-timeline-a').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+        document.getElementById('kriegskasse-timeline-b').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+        document.getElementById('kriegskasse-timeline-c').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
 
-        // Initialize both charts
+        // Initialize all three charts
         initKriegskasseCharts();
 
         // Add click handlers to boxes
         const boxA = document.getElementById('kriegskasse-box-a');
         const boxB = document.getElementById('kriegskasse-box-b');
+        const boxC = document.getElementById('kriegskasse-box-c');
         if (boxA) boxA.onclick = startKriegskasseAnimation;
         if (boxB) boxB.onclick = startKriegskasseAnimation;
+        if (boxC) boxC.onclick = startKriegskasseAnimation;
 
         // Open modal
         openModal('kriegskasse-modal');
@@ -6851,6 +6915,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         // Destroy charts to free memory
         if (kriegskasseChartA) { kriegskasseChartA.destroy(); kriegskasseChartA = null; }
         if (kriegskasseChartB) { kriegskasseChartB.destroy(); kriegskasseChartB = null; }
+        if (kriegskasseChartC) { kriegskasseChartC.destroy(); kriegskasseChartC = null; }
     }
 
     function initKriegskasseCharts() {
@@ -6925,7 +6990,45 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         y: {
                             title: { display: true, text: 'Portfolio-Wert (€)' },
                             min: 0,
-                            max: 12000
+                            max: 20000
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart C: WITH Tagesgeld + Active buying in crash
+        const ctxC = document.getElementById('kriegskasse-chart-c');
+        if (ctxC) {
+            if (kriegskasseChartC) kriegskasseChartC.destroy();
+            kriegskasseChartC = new Chart(ctxC.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['J0', 'J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
+                    datasets: [{
+                        label: 'Portfolio-Wert (€)',
+                        data: [10000, null, null, null, null, null, null, null, null, null, null],
+                        borderColor: '#E3691E',
+                        backgroundColor: 'rgba(227, 105, 30, 0.1)',
+                        tension: 0.3,
+                        pointRadius: Array(11).fill(4),
+                        pointBackgroundColor: Array(11).fill('#E3691E'),
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Jahr' } },
+                        y: {
+                            title: { display: true, text: 'Portfolio-Wert (€)' },
+                            min: 0,
+                            max: 20000
                         }
                     }
                 }
@@ -6948,6 +7051,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         // Update year counters
         document.getElementById('kriegskasse-year-a').textContent = `${kriegskasseCurrentYear} / 10`;
         document.getElementById('kriegskasse-year-b').textContent = `${kriegskasseCurrentYear} / 10`;
+        document.getElementById('kriegskasse-year-c').textContent = `${kriegskasseCurrentYear} / 10`;
     }
 
     function animateKriegskasseYear(year) {
@@ -7035,9 +7139,59 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             kriegskasseChartB.update();
         }
 
+        // === SCENARIO C: WITH Tagesgeld + Active Buying in Crash ===
+        let portfolioValueC = 0;
+        let eventTextC = '';
+
+        if (year === 1) {
+            // Year 1: Normal market
+            const portfolioShares = scenarioC.portfolio / initialPrice; // 1000 shares
+            portfolioValueC = portfolioShares * currentPrice;
+            scenarioC.totalShares = portfolioShares; // Store initial shares
+            eventTextC = `📊 Jahr ${year}: Portfolio ${portfolioValueC.toFixed(0)} € | TG: 30.000 €`;
+        } else if (year === 2) {
+            // Year 2: CRASH! Buy 12.000€ from Tagesgeld at crash price
+            if (!scenarioC.boughtInCrash) {
+                scenarioC.crashBuyAmount = 12000;
+                const portfolioShares = scenarioC.portfolio / initialPrice; // Original 1000 shares
+                const boughtShares = scenarioC.crashBuyAmount / currentPrice; // 12000 / 2 = 6000 shares
+                const totalShares = portfolioShares + boughtShares; // 7000 shares total
+                portfolioValueC = totalShares * currentPrice;
+                scenarioC.totalShares = totalShares;
+                scenarioC.tagesgeld -= scenarioC.crashBuyAmount; // 30000 - 12000 = 18000€
+                scenarioC.boughtInCrash = true;
+                eventTextC = `🚀 Jahr ${year}: CRASH! Nachkauf 12.000 € bei ${currentPrice} € = ${boughtShares.toFixed(0)} Anteile! TG: ${scenarioC.tagesgeld.toFixed(0)} €`;
+            }
+        } else if (year >= 3 && year <= 4) {
+            // Year 3-4: No savings (refilling Tagesgeld with inflow)
+            portfolioValueC = scenarioC.totalShares * currentPrice;
+            scenarioC.tagesgeld += scenarioC.tagesgeldInflow; // Refill 6000€/year
+            eventTextC = `💰 Jahr ${year}: Keine Sparrate (TG auffüllen) | Portfolio: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} €`;
+        } else {
+            // Year 5-10: Normal, Tagesgeld full again
+            portfolioValueC = scenarioC.totalShares * currentPrice;
+            eventTextC = `📈 Jahr ${year}: Markt bei ${currentPrice} € | Portfolio: ${portfolioValueC.toFixed(0)} €`;
+        }
+        scenarioC.timeline.push(eventTextC);
+
+        // Update Chart C
+        if (kriegskasseChartC && kriegskasseChartC.data.datasets[0]) {
+            kriegskasseChartC.data.datasets[0].data[year] = portfolioValueC;
+            // Highlight current point
+            kriegskasseChartC.data.datasets[0].pointRadius = Array(11).fill(4);
+            kriegskasseChartC.data.datasets[0].pointRadius[year] = 10;
+            if (year === 2) {
+                // Extra emphasis on crash buy
+                kriegskasseChartC.data.datasets[0].pointBackgroundColor[year] = '#C1293D';
+                kriegskasseChartC.data.datasets[0].pointRadius[year] = 14;
+            }
+            kriegskasseChartC.update();
+        }
+
         // Update timeline displays
         updateKriegskasseTimeline('a', scenarioA.timeline);
         updateKriegskasseTimeline('b', scenarioB.timeline);
+        updateKriegskasseTimeline('c', scenarioC.timeline);
     }
 
     function updateKriegskasseTimeline(scenario, timeline) {
@@ -7045,9 +7199,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         if (!container) return;
 
         container.innerHTML = '';
-        timeline.slice(-5).forEach(event => { // Show last 5 events
+        timeline.slice(-3).forEach(event => { // Show last 3 events (less space)
             const eventDiv = document.createElement('div');
-            eventDiv.className = 'text-sm text-gray-700 py-1';
+            eventDiv.className = 'text-xs text-gray-700 py-0.5';
             eventDiv.textContent = event;
             container.appendChild(eventDiv);
         });
@@ -7065,8 +7219,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const finalValueB = scenarioB.portfolio * (finalPrice / marketPrices[0]);
         const profitB = finalValueB - 10000;
 
-        // Calculate difference
-        const difference = finalValueB - finalValueA;
+        // Scenario C: Final value after crash buying
+        const finalValueC = scenarioC.totalShares * finalPrice;
+        const profitC = finalValueC - 10000;
+
+        // Calculate differences
+        const differenceC_vs_B = finalValueC - finalValueB;
 
         // Update HTML
         document.getElementById('kriegskasse-result-sold-a').textContent = `${scenarioA.cashFromSale.toFixed(0)} €`;
@@ -7077,7 +7235,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         document.getElementById('kriegskasse-result-value-b').textContent = `${finalValueB.toFixed(0)} €`;
         document.getElementById('kriegskasse-result-profit-b').textContent = `+${profitB.toFixed(0)} €`;
 
-        document.getElementById('kriegskasse-difference').textContent = `${difference.toFixed(0)} € weniger`;
+        document.getElementById('kriegskasse-result-buy-c').textContent = `${scenarioC.crashBuyAmount.toFixed(0)} €`;
+        document.getElementById('kriegskasse-result-value-c').textContent = `${finalValueC.toFixed(0)} €`;
+        document.getElementById('kriegskasse-result-profit-c').textContent = `+${profitC.toFixed(0)} €`;
+        document.getElementById('kriegskasse-difference-c').textContent = `${differenceC_vs_B.toFixed(0)} € mehr`;
     }
 
     // ===== END KRIEGSKASSE ERKLÄRER =====
