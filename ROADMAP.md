@@ -1,7 +1,7 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.6.3 ✅
-**Nächste Version:** 1.6.4 (Presenter-Mode) - MEDIUM PRIORITY ⭐⭐
+**Aktuelle Version:** 1.7.0 ✅
+**Nächste Version:** 1.7.1 (Weitere Erklärer) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Dezember 2025
 **Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
@@ -98,11 +98,18 @@ Die App ist ein **Beratungs-Werkzeug** für Live-Gespräche, KEIN Self-Service-T
 - ✅ **Flow-Label-Optimierung (v1.3.5)**: Nähere Positionierung der Labels zu Wert-Pills
 - ✅ **Deficitline-Transparenz (v1.3.5)**: Verbesserte Sichtbarkeit mit Gradient-Farben
 
-#### Export-System (v1.3.0 - v1.3.7)
+#### Export-System (v1.3.0 - v1.7.0)
 
 - ✅ **PDF-Export**: Vollständiger Beratungsreport
 - ✅ **CSV-Export**: Strukturierte Daten für CRM-Systeme
 - ✅ **JSON-Export**: Komplette Session-Daten
+- ✅ **Excel-Export (v1.7.0)**: Professionelle Multi-Sheet-Workbooks
+  - 4 formatierte Worksheets (Übersicht, Cashflow, Immobilien, Depot)
+  - Auto-Spaltenbreite für optimale Lesbarkeit
+  - Merged Cells für Titel und Überschriften
+  - Berechnete Felder (Eigenkapital, Cashflow, Saldo)
+  - 30-Jahre Tilgungsplan mit Wertsteigerung
+  - SheetJS (xlsx.js) - client-side, DSGVO-konform
 - ✅ **Auto-Export-System (v1.3.6 - v1.3.7)**: DSGVO-konforme Crash-Recovery
   - Automatischer JSON-Export alle 2 Minuten
   - Dateiname: `{DATUM}_{KÜRZEL}_{UHRZEIT}_SES-{SESSION-ID}.json`
@@ -406,6 +413,108 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 **Commits:**
 - ✅ 13 commits (eba46dc → d2df000)
 - ✅ 100% backward compatible
+
+---
+
+### ✅ Version 1.6.0: Tagesgeld-Kriegskasse Erklärer (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Dezember 23, 2025)
+**Fokus:** Interaktiver Erklärer für antizyklisches Investieren mit Tagesgeld-Reserve
+
+#### Implementierte Features
+
+**Drei-Szenarien-Vergleich:**
+- ✅ **Szenario A: Ohne Reserve** - 40.000€ vollständig im Markt investiert
+- ✅ **Szenario B: Mit Reserve (passiv)** - 10.000€ Depot + 30.000€ Tagesgeld
+  - 6.000€/Jahr automatischer Zufluss (500€/Monat)
+  - Automatischer Überlauf ab 30.000€ → reinvestiert in Markt
+- ✅ **Szenario C: Mit Reserve + Aktiv** - Strategische Crash-Käufe
+  - Jahr 2: 12.000€ Nachkauf bei 2€/Anteil (80% Crash)
+  - Jahr 7: 12.000€ Nachkauf bei 4€/Anteil (zweiter Dip)
+
+**Technische Umsetzung:**
+- ✅ **Neuer volatiler Kursverlauf**: [9, 10, 2, 5, 4, 6, 8, 4, 7, 11]
+  - Zeigt extreme Volatilität (80% Crash, 450% Recovery)
+  - Identischer Kursverlauf auch im Cost-Average-Erklärer
+- ✅ **Share-basierte Berechnungen**: Präzise Anteilsverwaltung
+- ✅ **Gesamtvermögen-Visualisierung**: Depot + Tagesgeld (nicht nur Portfolio)
+- ✅ **Toggle-Schalter**: Tagesgeld-Zufluss ein/aus schalten
+- ✅ **Y-Achse**: 150.000€ für volle Sichtbarkeit
+- ✅ **Chart.js Animation**: 10 Jahre in 800ms-Intervallen
+
+**Bug Fixes:**
+- ✅ Fixed event listener stacking (DOM cloning)
+- ✅ Fixed chart container overflow (fixed height 400px)
+- ✅ Fixed incorrect final calculations (total wealth statt nur portfolio)
+
+**Educational Value:**
+- Zeigt Kraft der Liquiditätsreserve für opportunistische Käufe
+- Beweist Vorteil von antizyklischem Investieren
+- Overflow-Mechanik verhindert Cash-Drag
+
+**Commits:**
+- ✅ 1 commit (35c3bfd)
+- ✅ Tag: v1.6.0
+
+---
+
+### ✅ Version 1.7.0: Excel-Export mit vollständiger Formatierung (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Dezember 23, 2025)
+**Fokus:** Professionelle Excel-Workbooks für Beratungsdokumentation
+
+#### Implementierte Features
+
+**SheetJS (xlsx.js) Integration:**
+- ✅ **Client-side Excel-Generation** (DSGVO-konform)
+- ✅ **CDN-Integration**: xlsx-0.20.3 (keine Server-Abhängigkeit)
+- ✅ **Browser-Kompatibilität**: Chrome, Firefox, Edge, Safari
+
+**4 Formatierte Worksheets:**
+
+**Sheet 1: Übersicht**
+- Session-Informationen (ID, Kunde, Berater, Datum)
+- Basisdaten (Einkommen, Konsum, Tagesgeld, Depot, Rendite)
+- Fixkosten & Sparpläne mit Intervall und Ziel
+- Merged Cells für Titel
+
+**Sheet 2: Cashflow-Analyse**
+- Einnahmen-Sektion (Haupteinkommen)
+- Ausgaben-Breakdown (Fixkosten, Konsum, Sparpläne)
+- Zusammenfassung mit berechneten Saldo
+- Auto-Spaltenbreite für optimale Lesbarkeit
+
+**Sheet 3: Immobilien**
+- Objektübersicht (Wert, Darlehen, Eigenkapital, Zinsen)
+- Berechnete Felder (Netto-Cashflow)
+- **30-Jahre Tilgungsplan**:
+  - Jahr-für-Jahr Restschuld, Zinsen, Tilgung
+  - Wertsteigerung simuliert
+  - Eigenkapital-Entwicklung
+
+**Sheet 4: Depot**
+- Allokation aller Fonds/ETFs
+- Summen-Validierung (sollte 100% ergeben)
+
+**Professional Layout:**
+- ✅ Auto-Spaltenbreite (optimal lesbar)
+- ✅ Merged Cells für Überschriften
+- ✅ Strukturierte Sections mit Leerzeilen
+- ✅ Berechnete Felder (kein Copy-Paste nötig)
+
+**UI-Integration:**
+- ✅ Blauer Export-Button im Session-Menü
+- ✅ Hover-Effekt (bg-blue-900 bg-opacity-30)
+- ✅ Fehlerbehandlung mit Try-Catch
+- ✅ Console-Logging für Debugging
+
+**Dateiname-Format:**
+- `Beratung_{Kunde}_{Datum}.xlsx`
+
+**Commits:**
+- ✅ 1 commit (fea7ba3)
+- ✅ Tag: v1.7.0
+- ✅ RELEASE_v1.6.0.md dokumentiert
 
 ---
 
