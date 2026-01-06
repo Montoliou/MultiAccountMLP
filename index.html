@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@2.2.5"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <style>
         /* v1.5.2: CSS Custom Properties for theme consistency */
@@ -2334,8 +2335,30 @@
 
             <!-- Phase 1: Vergleichsansicht -->
             <div id="ca-phase-1">
-                <h2 id="cost-average-title" class="text-3xl font-bold mb-6" style="color: var(--mlp-corporate-blue);">Warum volatile Kurse bei Sparraten BESSER sind</h2>
-                <p class="text-lg text-gray-700 mb-8">Vergleich zweier Kursverläufe - Einzahlung: 1.200 € pro Jahr!</p>
+                <h2 id="cost-average-title" class="text-3xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">Warum volatile Kurse bei Sparraten BESSER sind</h2>
+                <p class="text-lg text-gray-700 mb-4">Vergleich zweier Kursverläufe - Einzahlung: 1.200 € pro Jahr!</p>
+
+                <!-- v1.7.1: Edit-Mode Controls -->
+                <div class="flex gap-2 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <button id="edit-mode-toggle-btn" onclick="toggleEditMode()"
+                            class="px-4 py-2 rounded-lg font-semibold transition-all text-sm"
+                            style="background: var(--mlp-corporate-blue); color: white;">
+                        📝 Bearbeitungsmodus
+                    </button>
+                    <button id="save-course-btn" onclick="saveCourseData()"
+                            class="px-4 py-2 rounded-lg font-semibold transition-all text-sm"
+                            style="background: #10b981; color: white; display: none;">
+                        💾 Speichern & Neuberechnen
+                    </button>
+                    <button onclick="resetToDefaultCourse()"
+                            class="px-4 py-2 rounded-lg font-semibold transition-all text-sm"
+                            style="background: #6b7280; color: white;">
+                        🔄 Zurücksetzen
+                    </button>
+                    <span id="edit-mode-hint" class="ml-auto text-sm text-gray-500 self-center italic" style="display: none;">
+                        💡 Ziehe die Datenpunkte mit der Maus nach oben/unten
+                    </span>
+                </div>
 
                 <!-- Side-by-Side Comparison -->
                 <div class="grid grid-cols-2 gap-6 mb-8">
@@ -6789,6 +6812,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         B: [9.0, 10.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]  // Volatil schwankend mit CRASH (10 Jahre: J0-J9)
     };
 
+    // v1.7.1: Default course data for reset functionality
+    const defaultCourseData = {
+        A: [10.0, 13.0, 13.5, 16.0, 17.0, 16.0, 17.0, 16.5, 18.0, 18.9],
+        B: [9.0, 10.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]
+    };
+
     let caChartA = null;
     let caChartB = null;
     let animationRunning = false;
@@ -6797,6 +6826,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     let totalSharesB = 0;
     let totalInvestedA = 0;
     let totalInvestedB = 0;
+
+    // v1.7.1: Edit mode state
+    let editModeEnabled = false;
 
     function openCostAverageModal() {
         // Reset to Phase 1
@@ -6864,8 +6896,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         borderWidth: 3,
                         tension: 0.3,
                         fill: true,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointRadius: editModeEnabled ? 8 : 4,
+                        pointHoverRadius: editModeEnabled ? 10 : 6,
+                        // v1.7.1: dragData plugin configuration
+                        dragData: editModeEnabled
                     }]
                 },
                 options: {
@@ -6879,6 +6913,27 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                                     return `Kurs: ${context.parsed.y.toFixed(2)} €`;
                                 }
                             }
+                        },
+                        // v1.7.1: dragData plugin options
+                        dragData: {
+                            round: 2,
+                            showTooltip: true,
+                            dragX: false,
+                            onDragStart: function(e, datasetIndex, index, value) {
+                                // Show save button when drag starts
+                                document.getElementById('save-course-btn').style.display = 'inline-block';
+                            },
+                            onDrag: function(e, datasetIndex, index, value) {
+                                // Update courseData in real-time
+                                courseData.A[index] = Math.max(0, Math.min(20, value));
+                            },
+                            onDragEnd: function(e, datasetIndex, index, value) {
+                                // Clamp to 0-20 range
+                                const clampedValue = Math.max(0, Math.min(20, value));
+                                courseData.A[index] = clampedValue;
+                                caChartA.data.datasets[0].data[index] = clampedValue;
+                                caChartA.update();
+                            }
                         }
                     },
                     scales: {
@@ -6891,6 +6946,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         x: {
                             title: { display: true, text: 'Jahr' }
                         }
+                    },
+                    // v1.7.1: Change cursor when in edit mode
+                    onHover: function(event, activeElements) {
+                        event.native.target.style.cursor = editModeEnabled && activeElements.length ? 'grab' : 'pointer';
                     }
                 }
             });
@@ -6913,8 +6972,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         borderWidth: 3,
                         tension: 0.3,
                         fill: true,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointRadius: editModeEnabled ? 8 : 4,
+                        pointHoverRadius: editModeEnabled ? 10 : 6,
+                        // v1.7.1: dragData plugin configuration
+                        dragData: editModeEnabled
                     }]
                 },
                 options: {
@@ -6928,6 +6989,27 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                                     return `Kurs: ${context.parsed.y.toFixed(2)} €`;
                                 }
                             }
+                        },
+                        // v1.7.1: dragData plugin options
+                        dragData: {
+                            round: 2,
+                            showTooltip: true,
+                            dragX: false,
+                            onDragStart: function(e, datasetIndex, index, value) {
+                                // Show save button when drag starts
+                                document.getElementById('save-course-btn').style.display = 'inline-block';
+                            },
+                            onDrag: function(e, datasetIndex, index, value) {
+                                // Update courseData in real-time
+                                courseData.B[index] = Math.max(0, Math.min(20, value));
+                            },
+                            onDragEnd: function(e, datasetIndex, index, value) {
+                                // Clamp to 0-20 range
+                                const clampedValue = Math.max(0, Math.min(20, value));
+                                courseData.B[index] = clampedValue;
+                                caChartB.data.datasets[0].data[index] = clampedValue;
+                                caChartB.update();
+                            }
                         }
                     },
                     scales: {
@@ -6940,6 +7022,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         x: {
                             title: { display: true, text: 'Jahr' }
                         }
+                    },
+                    // v1.7.1: Change cursor when in edit mode
+                    onHover: function(event, activeElements) {
+                        event.native.target.style.cursor = editModeEnabled && activeElements.length ? 'grab' : 'pointer';
                     }
                 }
             });
@@ -7115,6 +7201,111 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         document.getElementById('ca-result-return-b').textContent = `${results.B.returnPercent}%`;
     }
 
+    // ===== v1.7.1: EDIT MODE FUNCTIONS =====
+
+    function toggleEditMode() {
+        editModeEnabled = !editModeEnabled;
+
+        const toggleBtn = document.getElementById('edit-mode-toggle-btn');
+        const saveBtn = document.getElementById('save-course-btn');
+        const hint = document.getElementById('edit-mode-hint');
+
+        if (editModeEnabled) {
+            // Enable edit mode
+            toggleBtn.textContent = '🔒 Bearbeitung beenden';
+            toggleBtn.style.background = '#ef4444'; // red
+            hint.style.display = 'inline';
+
+            // Reinit charts with drag enabled
+            initSideBySideCharts();
+        } else {
+            // Disable edit mode
+            toggleBtn.textContent = '📝 Bearbeitungsmodus';
+            toggleBtn.style.background = 'var(--mlp-corporate-blue)';
+            hint.style.display = 'none';
+            saveBtn.style.display = 'none';
+
+            // Reinit charts with drag disabled
+            initSideBySideCharts();
+        }
+    }
+
+    function saveCourseData() {
+        // Validate all values are within range
+        const validateRange = (arr) => arr.every(v => v >= 0 && v <= 20);
+
+        if (!validateRange(courseData.A) || !validateRange(courseData.B)) {
+            alert('Fehler: Alle Kurswerte müssen zwischen 0€ und 20€ liegen!');
+            return;
+        }
+
+        // Reset animation to start fresh with new data
+        currentMonth = 0;
+        totalSharesA = 0;
+        totalSharesB = 0;
+        totalInvestedA = 0;
+        totalInvestedB = 0;
+        animationRunning = false;
+
+        // Clear share bars
+        document.getElementById('ca-share-bars-a').innerHTML = '';
+        document.getElementById('ca-share-bars-b').innerHTML = '';
+
+        // Reset counters
+        resetCounters();
+
+        // Reinit charts with new data
+        initSideBySideCharts();
+
+        // Hide save button
+        document.getElementById('save-course-btn').style.display = 'none';
+
+        // Show success message
+        alert('✅ Kursverlauf gespeichert! Animation wurde zurückgesetzt.');
+
+        console.log('📊 Course data saved:', {
+            A: courseData.A,
+            B: courseData.B
+        });
+    }
+
+    function resetToDefaultCourse() {
+        if (!confirm('Möchten Sie die Kursverläufe wirklich zurücksetzen?')) {
+            return;
+        }
+
+        // Reset to default values
+        courseData.A = [...defaultCourseData.A];
+        courseData.B = [...defaultCourseData.B];
+
+        // Reset animation
+        currentMonth = 0;
+        totalSharesA = 0;
+        totalSharesB = 0;
+        totalInvestedA = 0;
+        totalInvestedB = 0;
+        animationRunning = false;
+
+        // Clear share bars
+        document.getElementById('ca-share-bars-a').innerHTML = '';
+        document.getElementById('ca-share-bars-b').innerHTML = '';
+
+        // Reset counters
+        resetCounters();
+
+        // Reinit charts
+        initSideBySideCharts();
+
+        // Hide save button
+        document.getElementById('save-course-btn').style.display = 'none';
+
+        alert('✅ Kursverläufe wurden zurückgesetzt!');
+
+        console.log('🔄 Course data reset to defaults');
+    }
+
+    // ===== END v1.7.1: EDIT MODE FUNCTIONS =====
+
     // ===== END COST-AVERAGE-EFFEKT ERKLÄRER =====
 
     // ===== v1.6.3: KRIEGSKASSE (INVESTITIONSRESERVE) ERKLÄRER =====
@@ -7289,7 +7480,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                     datasets: [
                         {
                             label: 'Kursverlauf (Markt)',
-                            data: [9, 10, 2, 5, 4, 6, 8, 4, 7, 9],
+                            data: [...courseData.B], // v1.7.1: Use dynamic courseData.B
                             borderColor: 'rgba(200, 200, 200, 0.5)',
                             backgroundColor: 'rgba(220, 220, 220, 0.15)',
                             tension: 0.3,
