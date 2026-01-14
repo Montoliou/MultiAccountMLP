@@ -474,6 +474,48 @@
             page-break-after: avoid;
           }
 
+          /* v1.7.2: Educational module sections in PDF */
+          .print-erklaerer {
+            break-before: page;
+            page-break-before: always;
+            padding: 20px 0;
+          }
+
+          .print-erklaerer h2 {
+            color: #002F6C;
+            margin-bottom: 10px;
+            break-after: avoid;
+            page-break-after: avoid;
+          }
+
+          .print-erklaerer h3 {
+            color: #002F6C;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+          }
+
+          .erklaerer-summary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-left: 4px solid #002F6C;
+            border-radius: 4px;
+          }
+
+          .erklaerer-summary p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+          }
+
+          .erklaerer-summary ul {
+            margin: 10px 0 10px 20px;
+            line-height: 1.8;
+          }
+
+          .erklaerer-summary li {
+            margin-bottom: 8px;
+          }
+
           /* Optimize flowchart container for print */
           #flow-container-print {
             break-inside: avoid;
@@ -2676,7 +2718,7 @@
             <button type="button" onclick="closeSoRRModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl z-10" aria-label="SoRR Simulator schließen">&times;</button>
 
             <h2 id="sorr-title" class="text-3xl font-bold mb-2" style="color: var(--mlp-corporate-blue);">
-                ⚠️ Sequence of Returns Risiko
+                ⚠️ Sequence of Returns Risk
             </h2>
             <p class="text-lg text-gray-700 mb-6">
                 Warum die Reihenfolge der Renditen in der Entnahmephase entscheidend ist.
@@ -2701,8 +2743,8 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Startkapital</label>
                                 <div class="relative">
-                                    <input type="number" id="sorr-initial-capital" value="500000"
-                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <input type="number" id="sorr-initial-capital" value="500000" oninput="updateSoRRWithdrawalRate()"
+                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900">
                                     <span class="absolute right-3 top-2 text-gray-400">€</span>
                                 </div>
                             </div>
@@ -2710,12 +2752,12 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Jährliche Entnahme (Start)</label>
                                 <div class="relative">
-                                    <input type="number" id="sorr-annual-withdrawal" value="25000"
-                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <input type="number" id="sorr-annual-withdrawal" value="20000" oninput="updateSoRRWithdrawalRate()"
+                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900">
                                     <span class="absolute right-3 top-2 text-gray-400">€</span>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    <span id="sorr-withdrawal-rate">5.0</span>% Entnahmerate
+                                    <span id="sorr-withdrawal-rate">4.0</span>% Entnahmerate
                                 </p>
                             </div>
 
@@ -2723,7 +2765,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Dynamik der Entnahme</label>
                                 <div class="relative">
                                     <input type="number" id="sorr-inflation" value="2.0" step="0.1"
-                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900">
                                     <span class="absolute right-3 top-2 text-gray-400">% p.a.</span>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">Inflationsanpassung der Entnahmen</p>
@@ -2781,7 +2823,7 @@
                     <!-- Chart Container -->
                     <div class="bg-white p-6 rounded-lg border border-gray-200">
                         <h3 class="text-lg font-semibold mb-2">Vermögensentwicklung im Vergleich</h3>
-                        <p class="text-sm text-gray-500 mb-4">
+                        <p class="text-sm text-gray-500 mb-6">
                             Drei Szenarien mit exakt identischer Durchschnittsrendite - nur die Reihenfolge unterscheidet sich!
                         </p>
                         <div style="position: relative; height: 450px;">
@@ -2794,16 +2836,19 @@
                         <div class="p-4 rounded-lg border border-green-200 bg-green-50">
                             <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Historisch (2005-2024)</h4>
                             <div id="sorr-result-history" class="text-2xl font-bold mt-1 text-green-700">500.000 €</div>
+                            <div id="sorr-duration-history" class="text-xs text-gray-600 mt-1 font-medium">Endlos</div>
                             <p class="text-xs text-gray-500 mt-2">Startet schwach (2008 Crash), endet stark.</p>
                         </div>
                         <div class="p-4 rounded-lg border border-blue-200 bg-blue-50">
-                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Umgekehrt (2024-2005)</h4>
+                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Best-First (2024-2005)</h4>
                             <div id="sorr-result-reverse" class="text-2xl font-bold mt-1 text-blue-700">500.000 €</div>
+                            <div id="sorr-duration-reverse" class="text-xs text-gray-600 mt-1 font-medium">Endlos</div>
                             <p class="text-xs text-gray-500 mt-2">Startet stark (2024, 2023...), endet schwach.</p>
                         </div>
                         <div class="p-4 rounded-lg border border-red-200 bg-red-50">
                             <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Worst-First</h4>
                             <div id="sorr-result-worst" class="text-2xl font-bold mt-1 text-red-700">500.000 €</div>
+                            <div id="sorr-duration-worst" class="text-xs text-gray-600 mt-1 font-medium">Endlos</div>
                             <p class="text-xs text-gray-500 mt-2">-40% Crash direkt im ersten Jahr!</p>
                         </div>
                     </div>
@@ -2817,7 +2862,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-sm font-bold text-yellow-800 mb-1">Die Lehre für den Kunden:</p>
+                                <p class="text-sm font-bold text-yellow-800 mb-1">Wie managed man dieses Risiko intelligent?</p>
                                 <p class="text-sm text-yellow-700">
                                     Obwohl in allen Szenarien die Summe der Renditen identisch ist, entscheidet die <strong>Reihenfolge</strong> über "Reichtum" oder "Pleite".
                                     In der Entnahmephase wiegen frühe Verluste <strong>doppelt schwer</strong>, da sich das entnommene Geld nie wieder erholen kann.
@@ -3102,7 +3147,12 @@
             berater: berater || null,
             startzeit: now,
             letzteAktivitaet: now,
-            status: 'aktiv'
+            status: 'aktiv',
+            // v1.7.2: Track which educational modules were discussed
+            erklaererBesucht: {
+                costAverage: false,
+                sorr: false
+            }
         };
 
         sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
@@ -3121,6 +3171,29 @@
 
         console.log(`📋 Session gestartet: ${sessionId}`);
         return session;
+    }
+
+    // v1.7.2: Mark educational module as visited
+    function markErklaererBesucht(module) {
+        const session = getCurrentSession();
+        if (!session) return;
+
+        if (!session.erklaererBesucht) {
+            session.erklaererBesucht = { costAverage: false, sorr: false };
+        }
+
+        session.erklaererBesucht[module] = true;
+        saveSession(session);
+        console.log(`✅ Erklärer besucht: ${module}`);
+
+        // Update UI immediately
+        updateSessionInfoBar();
+    }
+
+    // v1.7.2: Check if module was visited
+    function wasErklaererBesucht(module) {
+        const session = getCurrentSession();
+        return session?.erklaererBesucht?.[module] || false;
     }
 
     // End session and clear all data
@@ -3168,6 +3241,20 @@
         if (sessionIdEl) sessionIdEl.textContent = session.id;
         if (kundenKuerzelEl) {
             kundenKuerzelEl.textContent = session.kundenKuerzel || 'Keine Angabe';
+        }
+
+        // v1.7.2: Update educational modules status icons
+        const caIcon = getEl('erklaerer-ca-icon');
+        const sorrIcon = getEl('erklaerer-sorr-icon');
+
+        if (caIcon) {
+            caIcon.textContent = wasErklaererBesucht('costAverage') ? '✅' : '⭕';
+            caIcon.className = wasErklaererBesucht('costAverage') ? 'text-green-400' : 'text-gray-600';
+        }
+
+        if (sorrIcon) {
+            sorrIcon.textContent = wasErklaererBesucht('sorr') ? '✅' : '⭕';
+            sorrIcon.className = wasErklaererBesucht('sorr') ? 'text-green-400' : 'text-gray-600';
         }
 
         buttonContainer.style.display = 'block';
@@ -7001,6 +7088,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     let editModeEnabled = false;
 
     function openCostAverageModal() {
+        // v1.7.2: Mark as visited for PDF inclusion
+        markErklaererBesucht('costAverage');
+
         // Reset to Phase 1
         document.getElementById('ca-phase-1').style.display = 'block';
         document.getElementById('ca-phase-3').style.display = 'none';
@@ -8093,6 +8183,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     let sorrCurrentData = { history: [], reverse: [], worst: [] };
 
     function openSoRRModal() {
+        // v1.7.2: Mark as visited for PDF inclusion
+        markErklaererBesucht('sorr');
+
         openModal('sorr-modal');
 
         // Initialize table
@@ -8229,19 +8322,34 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         return history;
     }
 
-    function runSoRRSimulation() {
-        // Update withdrawal rate display
+    function calculateDuration(portfolioHistory) {
+        // Find the year when portfolio reaches zero (or return "Endlos" if it never does)
+        for (let i = 0; i < portfolioHistory.length; i++) {
+            if (portfolioHistory[i].balance <= 0) {
+                return `${i} Jahre`;
+            }
+        }
+        return 'Endlos';
+    }
+
+    function updateSoRRWithdrawalRate() {
+        // Update withdrawal rate percentage when capital or withdrawal changes
         const capital = parseFloat(document.getElementById('sorr-initial-capital').value) || 500000;
-        const withdrawal = parseFloat(document.getElementById('sorr-annual-withdrawal').value) || 25000;
+        const withdrawal = parseFloat(document.getElementById('sorr-annual-withdrawal').value) || 20000;
         const rate = (withdrawal / capital * 100).toFixed(1);
         document.getElementById('sorr-withdrawal-rate').textContent = rate;
+    }
+
+    function runSoRRSimulation() {
+        // Update withdrawal rate display
+        updateSoRRWithdrawalRate();
 
         // Run simulations
         sorrCurrentData.history = simulatePortfolio('history');
         sorrCurrentData.reverse = simulatePortfolio('reverse');
         sorrCurrentData.worst = simulatePortfolio('worst-first');
 
-        // Update result cards
+        // Update result cards - balance
         const historyEnd = sorrCurrentData.history[sorrCurrentData.history.length - 1].balance;
         const reverseEnd = sorrCurrentData.reverse[sorrCurrentData.reverse.length - 1].balance;
         const worstEnd = sorrCurrentData.worst[sorrCurrentData.worst.length - 1].balance;
@@ -8249,6 +8357,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         document.getElementById('sorr-result-history').textContent = formatMoney(historyEnd);
         document.getElementById('sorr-result-reverse').textContent = formatMoney(reverseEnd);
         document.getElementById('sorr-result-worst').textContent = formatMoney(worstEnd);
+
+        // Update result cards - duration
+        document.getElementById('sorr-duration-history').textContent = calculateDuration(sorrCurrentData.history);
+        document.getElementById('sorr-duration-reverse').textContent = calculateDuration(sorrCurrentData.reverse);
+        document.getElementById('sorr-duration-worst').textContent = calculateDuration(sorrCurrentData.worst);
 
         // Update chart
         updateSoRRChart();
@@ -8289,7 +8402,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         pointHoverRadius: 5
                     },
                     {
-                        label: 'Umgekehrter Verlauf (2024-2005)',
+                        label: 'Best-First (2024-2005)',
                         data: chartData.map(d => d.Reverse),
                         borderColor: '#2563eb',
                         backgroundColor: 'rgba(37, 99, 235, 0.1)',
@@ -8319,7 +8432,13 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 plugins: {
                     legend: {
                         display: true,
-                        position: 'top'
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
                     },
                     tooltip: {
                         callbacks: {
@@ -9527,6 +9646,77 @@ function updateFixkostenItem(index, key, value) {
         // Abschnitt (eigene Seite) anhängen
         report.appendChild(section);
 
+        // v1.7.2: Add educational modules if they were discussed
+        const currentSession = getCurrentSession();
+        if (currentSession?.erklaererBesucht) {
+            // Cost-Average-Effekt Erklärer
+            if (currentSession.erklaererBesucht.costAverage) {
+                const caSection = document.createElement('section');
+                caSection.className = 'print-erklaerer';
+                caSection.style.breakBefore = 'page';
+                caSection.style.pageBreakBefore = 'always';
+                caSection.innerHTML = `
+                    <h2>✅ Besprochenes Thema: Cost-Average-Effekt</h2>
+                    <p class="muted">Dieses Thema wurde in der Beratung erklärt und demonstriert.</p>
+                    <div class="erklaerer-summary">
+                        <h3>Kernaussage</h3>
+                        <p>Der Cost-Average-Effekt (Durchschnittskosteneffekt) zeigt, dass regelmäßiges Sparen in volatilen Märkten
+                        oft bessere Ergebnisse liefert als eine einmalige Investition. Bei fallenden Kursen kaufen Sie automatisch
+                        mehr Anteile, bei steigenden Kursen weniger - Ihr Durchschnittspreis sinkt.</p>
+
+                        <h3>Vergleich der Szenarien</h3>
+                        <ul>
+                            <li><strong>Szenario A (Konstanter Kurs):</strong> Baseline-Vergleich mit stabilem Markt</li>
+                            <li><strong>Szenario B (Volatiler Kurs):</strong> Zeigt den Vorteil bei Kursschwankungen</li>
+                        </ul>
+
+                        <h3>Praktische Anwendung</h3>
+                        <p>✓ Monatliche Sparrate ins Depot einrichten<br>
+                        ✓ Nicht bei Crashs verkaufen - weiter sparen!<br>
+                        ✓ Langfristiger Anlagehorizont (10+ Jahre)<br>
+                        ✓ Emotionen ausschalten, System beibehalten</p>
+                    </div>
+                `;
+                report.appendChild(caSection);
+            }
+
+            // Sequence of Returns Risk Erklärer
+            if (currentSession.erklaererBesucht.sorr) {
+                const sorrSection = document.createElement('section');
+                sorrSection.className = 'print-erklaerer';
+                sorrSection.style.breakBefore = 'page';
+                sorrSection.style.pageBreakBefore = 'always';
+                sorrSection.innerHTML = `
+                    <h2>✅ Besprochenes Thema: Sequence of Returns Risk</h2>
+                    <p class="muted">Dieses Thema wurde in der Beratung erklärt und demonstriert.</p>
+                    <div class="erklaerer-summary">
+                        <h3>Kernaussage</h3>
+                        <p>Das Reihenfolge-Risiko (Sequence of Returns Risk) ist eines der größten Risiken in der Entnahmephase.
+                        Selbst bei identischer Durchschnittsrendite kann die <strong>Reihenfolge</strong> der Renditen über
+                        "Reichtum" oder "Pleite" entscheiden.</p>
+
+                        <h3>Vergleich der Szenarien</h3>
+                        <ul>
+                            <li><strong>Historisch (2005-2024):</strong> Crash am Anfang (2008), starke Erholung</li>
+                            <li><strong>Best-First (2024-2005):</strong> Starke Jahre zuerst, schwache am Ende</li>
+                            <li><strong>Worst-First:</strong> Schlechteste Jahre zuerst (-40% im ersten Jahr!)</li>
+                        </ul>
+
+                        <h3>Praktische Lösung</h3>
+                        <p><strong>Liquiditätsreserve aufbauen:</strong><br>
+                        ✓ Tagesgeld/Festgeld für 2-3 Jahre Entnahmen<br>
+                        ✓ Bei Crash: Aus Reserve leben, Depot erholen lassen<br>
+                        ✓ Bei guten Jahren: Reserve wieder auffüllen<br>
+                        ✓ So vermeiden Sie Verkäufe zu ungünstigen Zeitpunkten</p>
+
+                        <p class="muted"><strong>Wichtig:</strong> Frühe Verluste in der Entnahmephase wiegen doppelt schwer,
+                        da sich das entnommene Geld nie wieder erholen kann. Eine Kriegskasse schützt Sie vor diesem Risiko.</p>
+                    </div>
+                `;
+                report.appendChild(sorrSection);
+            }
+        }
+
         // NEU: sicherstellen, dass die <img>-Tags wirklich fertig sind
         await waitForImages(report, 2500);
         await waitFrames(1); // ein Frame für Layout
@@ -10007,6 +10197,21 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                     <span id="session-timer" class="text-xs font-semibold text-green-400">0 Min.</span>
                 </div>
             </div>
+            <!-- v1.7.2: Educational Modules Status -->
+            <div class="p-2 border-b border-gray-700">
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">Besprochene Erklärer</div>
+                <div class="px-3 py-2 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span id="erklaerer-ca-icon" class="text-gray-600">⭕</span>
+                        <span class="text-xs text-gray-400">Cost-Average-Effekt</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="erklaerer-sorr-icon" class="text-gray-600">⭕</span>
+                        <span class="text-xs text-gray-400">Sequence of Returns Risk</span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 px-3 mt-2">✅ = im PDF enthalten</p>
+            </div>
             <div class="p-2 border-b border-gray-700">
                 <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">Auto-Export</div>
                 <div class="px-3 py-2 mb-2">
@@ -10090,7 +10295,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.7.1</span>
+                    <span class="font-mono">v1.7.2</span>
                 </div>
                 <div class="text-xs text-gray-600 text-center mt-1">
                     Notfall: <kbd class="text-xs">Ctrl+Shift+E</kbd>
