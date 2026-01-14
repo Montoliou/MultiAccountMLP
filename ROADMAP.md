@@ -1,9 +1,9 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.7.0 ✅
-**Nächste Version:** 1.7.1 (Weitere Erklärer) - MEDIUM PRIORITY ⭐⭐
+**Aktuelle Version:** 1.7.2 ✅
+**Nächste Version:** 1.8.0 (Weitere Features) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
-**Datum:** Dezember 2025
+**Datum:** Januar 2026
 **Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
 
 ---
@@ -515,6 +515,162 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ 1 commit (fea7ba3)
 - ✅ Tag: v1.7.0
 - ✅ RELEASE_v1.6.0.md dokumentiert
+
+---
+
+### ✅ Version 1.7.2: Smart Educator Tracking & Auto-PDF (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Januar 14, 2026)
+**Fokus:** Intelligentes Tracking von Erklärer-Modulen mit automatischer PDF-Integration
+
+#### Implementierte Features
+
+**🎓 1.7.2: Automatisches Erklärer-Tracking**
+
+- ✅ **Session-basiertes Tracking**
+  - Neue Property `erklaererBesucht` in Session-Struktur
+  - Automatisches Marking beim Öffnen von Erklärer-Modals
+  - Persistentes Tracking über gesamte Session
+  - Funktionen: `markErklaererBesucht()`, `wasErklaererBesucht()`
+
+- ✅ **Session-Menü Status-Anzeige**
+  - Neue Section "Besprochene Erklärer"
+  - Live-Status mit Icons:
+    - ⭕ (grau) = Nicht besprochen
+    - ✅ (grün) = Besprochen, wird in PDF aufgenommen
+  - Automatisches Update beim Modal-Öffnen
+
+- ✅ **Intelligente PDF-Integration**
+  - Bedingte PDF-Seiten für besprochene Erklärer
+  - Cost-Average-Effekt: Vollständige Zusammenfassung
+    - Kernaussage & Prinzip
+    - Szenario-Vergleich (A vs. B)
+    - Praktische Anwendung (4 Punkte)
+  - Sequence of Returns Risk: Vollständige Zusammenfassung
+    - Kernaussage & Risiko-Erklärung
+    - 3-Szenarien-Vergleich (History, Best-First, Worst-First)
+    - Praktische Lösung (Liquiditätsreserve)
+  - Eigene PDF-Seiten mit Page Breaks
+  - MLP Corporate Design Styling
+
+**📊 1.7.2: UX-Verbesserungen**
+
+- ✅ **SoRR Chart Spacing**
+  - Erhöhter Legende-Abstand (padding: 20px)
+  - Bessere Lesbarkeit
+  - Weniger gedrungenes Layout
+
+#### Compliance-Vorteile
+
+**Rechtssicherheit:**
+- PDF dokumentiert automatisch besprochene Themen
+- Schriftliche Bestätigung der Beratungsinhalte
+- Schutz vor Haftungsansprüchen
+
+**Follow-up-Beratungen:**
+- Berater sieht im Session-Menü sofort, was bereits erklärt wurde
+- Keine doppelte Erklärung derselben Konzepte
+- Effizientere Folgetermine
+
+**Zero-Overhead:**
+- Vollautomatisch, keine manuelle Arbeit
+- Funktioniert im Hintergrund
+- Kein Trainingsaufwand für Berater
+
+#### Technische Umsetzung
+
+**Session-Datenstruktur (erweitert):**
+```javascript
+session = {
+  // ... existing fields
+  erklaererBesucht: {
+    costAverage: false,  // Cost-Average-Effekt Erklärer
+    sorr: false          // Sequence of Returns Risk Erklärer
+  }
+}
+```
+
+**Modal-Integration:**
+- `openCostAverageModal()` → markiert automatisch
+- `openSoRRModal()` → markiert automatisch
+- `updateSessionInfoBar()` → aktualisiert Icons
+
+**PDF-Export-Logik:**
+- Prüfung in `prepareAndPrint()` Funktion
+- Bedingte Section-Erzeugung mit `document.createElement()`
+- Print-CSS für `.print-erklaerer` Sections
+
+#### Commits
+
+1. `a70a763` - feat(v1.7.2): Intelligentes Erklärer-Tracking mit automatischer PDF-Integration
+
+---
+
+### ✅ Version 1.7.1: Interaktiver Kursverlauf-Editor (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Dezember 2025)
+**Fokus:** Drag-and-Drop Editor für Cost-Average-Erklärer
+
+#### Implementierte Features
+
+**🎨 1.7.1: Interaktive Kurs-Bearbeitung**
+
+- ✅ **chartjs-plugin-dragdata Integration**
+  - CDN: chartjs-plugin-dragdata v2.2.5
+  - Drag-and-Drop für Chart-Datenpunkte
+  - Vertical-only dragging (dragX: false)
+  - Range-Clamping (0-20€)
+
+- ✅ **Edit-Mode Toggle**
+  - Button "📝 Bearbeitungsmodus"
+  - Visuelles Feedback (Button wird rot)
+  - Hint: "💡 Ziehe die Datenpunkte mit der Maus nach oben/unten"
+  - Cursor-Change bei Hover
+
+- ✅ **Save & Reset Funktionen**
+  - "💾 Speichern & Neuberechnen" Button
+  - Validation: Alle Werte müssen 0-20€ sein
+  - "🔄 Zurücksetzen" zu Default-Werten
+  - Live-Update der Charts
+
+- ✅ **Synchronisation**
+  - Änderungen wirken auf Cost-Average-Erklärer
+  - Änderungen wirken auf Kriegskasse-Erklärer
+  - Shared `courseData.B` Objekt
+
+#### Technische Umsetzung
+
+**Plugin-Konfiguration:**
+```javascript
+dragData: {
+  round: 2,
+  showTooltip: true,
+  dragX: false,  // Only vertical
+  onDragStart: (e, datasetIndex, index, value) => {
+    document.getElementById('save-course-btn').style.display = 'inline-block';
+  },
+  onDrag: (e, datasetIndex, index, value) => {
+    courseData.A[index] = Math.max(0, Math.min(20, value));
+  },
+  onDragEnd: (e, datasetIndex, index, value) => {
+    const clampedValue = Math.max(0, Math.min(20, value));
+    courseData.A[index] = clampedValue;
+    caChartA.update();
+  }
+}
+```
+
+**Default-Werte:**
+```javascript
+const defaultCourseData = {
+    A: [10.0, 13.0, 13.5, 16.0, 17.0, 16.0, 17.0, 16.5, 18.0, 18.9],
+    B: [9.0, 10.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]
+};
+```
+
+#### Commits
+
+1. `d27aedf` - feat(v1.7.1): Interaktiver Kursverlauf-Editor mit Drag-and-Drop
 
 ---
 
