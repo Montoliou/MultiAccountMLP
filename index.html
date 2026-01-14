@@ -2244,10 +2244,17 @@
             <p id="depot-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Lege fest, wie neue Investments verteilt werden.</p>
 
             <!-- v1.6.2: Cost-Average Erklärer Button -->
-            <button type="button" onclick="openCostAverageModal()" class="mb-4 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+            <button type="button" onclick="openCostAverageModal()" class="mb-3 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
                 <span class="text-xl">💡</span>
                 <span>Warum welcher Fonds?</span>
                 <span class="text-sm opacity-75">(Cost-Average-Effekt)</span>
+            </button>
+
+            <!-- v1.7.2: SoRR Simulator Button -->
+            <button type="button" onclick="openSoRRModal()" class="mb-4 w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                <span class="text-xl">⚠️</span>
+                <span>Entnahmephase: Reihenfolge-Risiko</span>
+                <span class="text-sm opacity-75">(Sequence of Returns)</span>
             </button>
 
             <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
@@ -2658,6 +2665,169 @@
                 <!-- Instruction to close -->
                 <div class="text-center text-gray-600 py-4">
                     <p class="text-base">👆 <strong>Klicken Sie irgendwo, um zurückzukehren</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- v1.7.2: Sequence of Returns Risk (SoRR) Simulator Modal -->
+    <div id="sorr-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sorr-title">
+        <div class="bg-white w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
+            <button type="button" onclick="closeSoRRModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl z-10" aria-label="SoRR Simulator schließen">&times;</button>
+
+            <h2 id="sorr-title" class="text-3xl font-bold mb-2" style="color: var(--mlp-corporate-blue);">
+                ⚠️ Sequence of Returns Risiko
+            </h2>
+            <p class="text-lg text-gray-700 mb-6">
+                Warum die Reihenfolge der Renditen in der Entnahmephase entscheidend ist.
+                <span class="text-sm text-gray-500 block mt-1">Datenbasis: MSCI World (2005–2024)</span>
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- LEFT COLUMN: Controls & Data Table -->
+                <div class="lg:col-span-4 space-y-6">
+
+                    <!-- Parameter Controls -->
+                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                            Parameter
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Startkapital</label>
+                                <div class="relative">
+                                    <input type="number" id="sorr-initial-capital" value="500000"
+                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <span class="absolute right-3 top-2 text-gray-400">€</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jährliche Entnahme (Start)</label>
+                                <div class="relative">
+                                    <input type="number" id="sorr-annual-withdrawal" value="25000"
+                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <span class="absolute right-3 top-2 text-gray-400">€</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <span id="sorr-withdrawal-rate">5.0</span>% Entnahmerate
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Dynamik der Entnahme</label>
+                                <div class="relative">
+                                    <input type="number" id="sorr-inflation" value="2.0" step="0.1"
+                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <span class="absolute right-3 top-2 text-gray-400">% p.a.</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Inflationsanpassung der Entnahmen</p>
+                            </div>
+
+                            <button onclick="runSoRRSimulation()"
+                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                                🔄 Neu berechnen
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Renditen-Tabelle (sortierbar) -->
+                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">MSCI World Renditen</h3>
+                            <span id="sorr-avg-return" class="text-xs bg-blue-100 text-blue-800 py-1 px-2 rounded-full font-semibold">
+                                Ø 9.50% p.a.
+                            </span>
+                        </div>
+                        <div class="overflow-y-auto max-h-[400px]">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-gray-200 sticky top-0">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left cursor-pointer hover:bg-gray-300" onclick="sortSoRRTable('year')">
+                                            <div class="flex items-center gap-1">
+                                                Jahr
+                                                <svg id="sorr-sort-icon-year" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-2 text-right cursor-pointer hover:bg-gray-300" onclick="sortSoRRTable('return')">
+                                            <div class="flex justify-end items-center gap-1">
+                                                Rendite
+                                                <svg id="sorr-sort-icon-return" class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sorr-returns-table" class="divide-y divide-gray-100">
+                                    <!-- Will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT COLUMN: Visualization -->
+                <div class="lg:col-span-8 space-y-6">
+
+                    <!-- Chart Container -->
+                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="text-lg font-semibold mb-2">Vermögensentwicklung im Vergleich</h3>
+                        <p class="text-sm text-gray-500 mb-4">
+                            Drei Szenarien mit exakt identischer Durchschnittsrendite - nur die Reihenfolge unterscheidet sich!
+                        </p>
+                        <div style="position: relative; height: 450px;">
+                            <canvas id="sorr-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Result Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 rounded-lg border border-green-200 bg-green-50">
+                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Historisch (2005-2024)</h4>
+                            <div id="sorr-result-history" class="text-2xl font-bold mt-1 text-green-700">500.000 €</div>
+                            <p class="text-xs text-gray-500 mt-2">Startet schwach (2008 Crash), endet stark.</p>
+                        </div>
+                        <div class="p-4 rounded-lg border border-blue-200 bg-blue-50">
+                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Umgekehrt (2024-2005)</h4>
+                            <div id="sorr-result-reverse" class="text-2xl font-bold mt-1 text-blue-700">500.000 €</div>
+                            <p class="text-xs text-gray-500 mt-2">Startet stark (2024, 2023...), endet schwach.</p>
+                        </div>
+                        <div class="p-4 rounded-lg border border-red-200 bg-red-50">
+                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Worst-First</h4>
+                            <div id="sorr-result-worst" class="text-2xl font-bold mt-1 text-red-700">500.000 €</div>
+                            <p class="text-xs text-gray-500 mt-2">-40% Crash direkt im ersten Jahr!</p>
+                        </div>
+                    </div>
+
+                    <!-- Lesson Box -->
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-md">
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-yellow-800 mb-1">Die Lehre für den Kunden:</p>
+                                <p class="text-sm text-yellow-700">
+                                    Obwohl in allen Szenarien die Summe der Renditen identisch ist, entscheidet die <strong>Reihenfolge</strong> über "Reichtum" oder "Pleite".
+                                    In der Entnahmephase wiegen frühe Verluste <strong>doppelt schwer</strong>, da sich das entnommene Geld nie wieder erholen kann.
+                                    <br><br>
+                                    <strong>Lösung:</strong> Liquiditätsreserve (Tagesgeld/Festgeld) für 2-3 Jahre Entnahmen → Ermöglicht, Crashs auszusitzen ohne verkaufen zu müssen!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -7891,6 +8061,311 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     }
 
     // ===== END KRIEGSKASSE ERKLÄRER =====
+
+    // ===== v1.7.2: SEQUENCE OF RETURNS RISK (SoRR) SIMULATOR =====
+
+    // MSCI World historical returns (2005-2024)
+    const msciWorldReturns = [
+        { year: 2005, return: 9.49 },
+        { year: 2006, return: 20.07 },
+        { year: 2007, return: 9.04 },
+        { year: 2008, return: -40.71 },
+        { year: 2009, return: 29.99 },
+        { year: 2010, return: 11.76 },
+        { year: 2011, return: -5.54 },
+        { year: 2012, return: 15.83 },
+        { year: 2013, return: 26.68 },
+        { year: 2014, return: 4.94 },
+        { year: 2015, return: -0.87 },
+        { year: 2016, return: 7.51 },
+        { year: 2017, return: 22.40 },
+        { year: 2018, return: -8.71 },
+        { year: 2019, return: 27.67 },
+        { year: 2020, return: 15.90 },
+        { year: 2021, return: 21.82 },
+        { year: 2022, return: -18.14 },
+        { year: 2023, return: 23.79 },
+        { year: 2024, return: 18.67 }
+    ];
+
+    let sorrChart = null;
+    let sorrSortConfig = { key: 'year', direction: 'ascending' };
+    let sorrCurrentData = { history: [], reverse: [], worst: [] };
+
+    function openSoRRModal() {
+        openModal('sorr-modal');
+
+        // Initialize table
+        renderSoRRTable();
+
+        // Calculate average return
+        const avgReturn = msciWorldReturns.reduce((sum, item) => sum + item.return, 0) / msciWorldReturns.length;
+        document.getElementById('sorr-avg-return').textContent = `Ø ${avgReturn.toFixed(2)}% p.a.`;
+
+        // Run initial simulation
+        runSoRRSimulation();
+    }
+
+    function closeSoRRModal() {
+        closeModal('sorr-modal');
+        if (sorrChart) {
+            sorrChart.destroy();
+            sorrChart = null;
+        }
+    }
+
+    function renderSoRRTable() {
+        const tbody = document.getElementById('sorr-returns-table');
+        tbody.innerHTML = '';
+
+        const sortedData = sortSoRRData(msciWorldReturns, sorrSortConfig);
+
+        sortedData.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-100';
+            tr.innerHTML = `
+                <td class="px-4 py-2 font-mono text-gray-600">${row.year}</td>
+                <td class="px-4 py-2 text-right font-semibold ${row.return >= 0 ? 'text-green-600' : 'text-red-600'}">
+                    ${row.return > 0 ? '+' : ''}${row.return.toFixed(2)} %
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function sortSoRRData(data, sortConfig) {
+        const sorted = [...data];
+        sorted.sort((a, b) => {
+            if (a[sortConfig.key] < b[sortConfig.key]) {
+                return sortConfig.direction === 'ascending' ? -1 : 1;
+            }
+            if (a[sortConfig.key] > b[sortConfig.key]) {
+                return sortConfig.direction === 'ascending' ? 1 : -1;
+            }
+            return 0;
+        });
+        return sorted;
+    }
+
+    function sortSoRRTable(key) {
+        // Toggle direction if same key
+        if (sorrSortConfig.key === key) {
+            sorrSortConfig.direction = sorrSortConfig.direction === 'ascending' ? 'descending' : 'ascending';
+        } else {
+            sorrSortConfig.key = key;
+            sorrSortConfig.direction = 'ascending';
+        }
+
+        // Update icons
+        const yearIcon = document.getElementById('sorr-sort-icon-year');
+        const returnIcon = document.getElementById('sorr-sort-icon-return');
+
+        yearIcon.className = 'w-4 h-4 text-gray-400';
+        returnIcon.className = 'w-4 h-4 text-gray-400';
+
+        if (key === 'year') {
+            yearIcon.className = `w-4 h-4 text-blue-600`;
+        } else {
+            returnIcon.className = `w-4 h-4 text-blue-600`;
+        }
+
+        renderSoRRTable();
+    }
+
+    function simulatePortfolio(orderType) {
+        const initialCapital = parseFloat(document.getElementById('sorr-initial-capital').value) || 500000;
+        const annualWithdrawal = parseFloat(document.getElementById('sorr-annual-withdrawal').value) || 25000;
+        const inflationRate = parseFloat(document.getElementById('sorr-inflation').value) || 2.0;
+
+        let currentBalance = initialCapital;
+        let currentWithdrawal = annualWithdrawal;
+        let dataSequence = [...msciWorldReturns];
+
+        // Manipulate sequence based on type
+        if (orderType === 'reverse') {
+            dataSequence.reverse();
+        } else if (orderType === 'worst-first') {
+            dataSequence.sort((a, b) => a.return - b.return);
+        }
+        // 'history' is default, no change needed
+
+        const history = [];
+
+        // Initial point
+        history.push({
+            period: 0,
+            yearLabel: 'Start',
+            balance: currentBalance,
+            returnPct: 0,
+            withdrawal: 0
+        });
+
+        dataSequence.forEach((item, index) => {
+            // 1. Market Move
+            const growth = currentBalance * (item.return / 100);
+            let newBalance = currentBalance + growth;
+
+            // 2. Withdrawal (End of Year)
+            if (newBalance <= 0) {
+                newBalance = 0;
+            } else {
+                newBalance -= currentWithdrawal;
+                if (newBalance < 0) newBalance = 0;
+            }
+
+            history.push({
+                period: index + 1,
+                yearLabel: orderType === 'history' ? item.year : `Jahr ${index + 1}`,
+                returnPct: item.return,
+                balance: Math.round(newBalance),
+                withdrawal: Math.round(currentWithdrawal)
+            });
+
+            // Prepare next year
+            currentBalance = newBalance;
+            currentWithdrawal = currentWithdrawal * (1 + inflationRate / 100);
+        });
+
+        return history;
+    }
+
+    function runSoRRSimulation() {
+        // Update withdrawal rate display
+        const capital = parseFloat(document.getElementById('sorr-initial-capital').value) || 500000;
+        const withdrawal = parseFloat(document.getElementById('sorr-annual-withdrawal').value) || 25000;
+        const rate = (withdrawal / capital * 100).toFixed(1);
+        document.getElementById('sorr-withdrawal-rate').textContent = rate;
+
+        // Run simulations
+        sorrCurrentData.history = simulatePortfolio('history');
+        sorrCurrentData.reverse = simulatePortfolio('reverse');
+        sorrCurrentData.worst = simulatePortfolio('worst-first');
+
+        // Update result cards
+        const historyEnd = sorrCurrentData.history[sorrCurrentData.history.length - 1].balance;
+        const reverseEnd = sorrCurrentData.reverse[sorrCurrentData.reverse.length - 1].balance;
+        const worstEnd = sorrCurrentData.worst[sorrCurrentData.worst.length - 1].balance;
+
+        document.getElementById('sorr-result-history').textContent = formatMoney(historyEnd);
+        document.getElementById('sorr-result-reverse').textContent = formatMoney(reverseEnd);
+        document.getElementById('sorr-result-worst').textContent = formatMoney(worstEnd);
+
+        // Update chart
+        updateSoRRChart();
+    }
+
+    function updateSoRRChart() {
+        const ctx = document.getElementById('sorr-chart');
+        if (!ctx) return;
+
+        // Prepare chart data
+        const chartData = sorrCurrentData.history.map((item, index) => ({
+            period: item.period,
+            History: item.balance,
+            Reverse: sorrCurrentData.reverse[index]?.balance || 0,
+            Worst: sorrCurrentData.worst[index]?.balance || 0
+        }));
+
+        // Destroy previous chart
+        if (sorrChart) {
+            sorrChart.destroy();
+        }
+
+        // Create new chart
+        sorrChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.map(d => `Jahr ${d.period}`),
+                datasets: [
+                    {
+                        label: 'Historischer Verlauf (2005-2024)',
+                        data: chartData.map(d => d.History),
+                        borderColor: '#16a34a',
+                        backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    },
+                    {
+                        label: 'Umgekehrter Verlauf (2024-2005)',
+                        data: chartData.map(d => d.Reverse),
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        borderDash: [5, 5],
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    },
+                    {
+                        label: 'Schlechteste Jahre zuerst',
+                        data: chartData.map(d => d.Worst),
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 2,
+                        pointHoverRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${formatMoney(context.parsed.y)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Vermögen (€)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return formatMoney(value);
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Jahre'
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        });
+    }
+
+    function formatMoney(value) {
+        return new Intl.NumberFormat('de-DE', {
+            style: 'currency',
+            currency: 'EUR',
+            maximumFractionDigits: 0
+        }).format(value);
+    }
+
+    // ===== END SoRR SIMULATOR =====
 
     // Toast Notification System
     function showToast(message, type = 'success', duration = 4000) {
