@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.7.2 ✅
+**Aktuelle Version:** 1.7.3 ✅
 **Nächste Version:** 1.8.0 (Weitere Features) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Januar 2026
@@ -515,6 +515,82 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ 1 commit (fea7ba3)
 - ✅ Tag: v1.7.0
 - ✅ RELEASE_v1.6.0.md dokumentiert
+
+---
+
+### ✅ Version 1.7.3: Buchungs-Timeline (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Januar 17, 2026)
+**Fokus:** Übersichtliche Timeline-Visualisierung der Buchungstage unter dem Flow-Diagramm
+
+#### Implementierte Features
+
+**📅 Timeline-Visualisierung:**
+
+- ✅ **Timeline-Container unter Flow**
+  - Horizontale Zeitachse (Tag 1-31)
+  - Farbkodierte Marker nach Buchungstyp
+  - Semi-transparenter Glassmorphism-Hintergrund
+  - "Bearbeiten" Button öffnet Buchungskalender
+
+- ✅ **Selbsterklärende Pfeil-Labels**
+  - `Gehalt` - Einkommenseingang (kein Pfeil, ist der Start)
+  - `Fix → Kons` - Fixkostenkonto zu Konsumkonto
+  - `Fix → Depot` - Sparplan ins Depot
+  - `Kons → TG` - Überschuss aufs Tagesgeld sichern
+  - `TG → Depot` - Vom Tagesgeld investieren
+  - Variante B: `Kons → Fix` (umgekehrte Richtung)
+
+- ✅ **Interaktive Features**
+  - Hover: Marker vergrößert sich mit Glow-Effekt
+  - Klick: Öffnet Buchungskalender am entsprechenden Tag
+  - 3-Sekunden Highlight-Animation beim Navigieren
+  - Empty-State mit "Jetzt planen" CTA
+
+- ✅ **Theme Support**
+  - Dark Mode: Halbtransparenter dunkler Hintergrund
+  - Light Mode: Heller Hintergrund mit angepassten Farben
+
+#### Technische Umsetzung
+
+**Neue Funktionen:**
+```javascript
+getTimelineLabel(type)      // Variant-aware Pfeil-Labels
+renderBookingTimeline()     // Timeline rendern
+openBookingModalToDay(day)  // Klick-Navigation mit Highlight
+```
+
+**CSS-Klassen:**
+- `.booking-timeline-container` - Hauptcontainer
+- `.booking-timeline-line` - Horizontale Zeitachse
+- `.booking-timeline-marker` - Einzelner Buchungs-Marker
+- `.booking-timeline-dot` - Farbiger Kreis
+- `.booking-timeline-label` - Text-Label
+
+**Automatische Updates bei:**
+- Buchungsänderungen (toggleDayBooking, removeBookingFromDay)
+- Monat löschen (clearCurrentMonthPlan)
+- Varianten-Wechsel (setVariantUI)
+- Seitenlade (DOMContentLoaded)
+
+#### Visualisierung
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  📅 Buchungsablauf im Monat                           [Bearbeiten]  │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   1.         3.             15.                    27.      28.     │
+│   ●──────────●──────────────●─────────────────────●─────────●       │
+│   💰         🔄             💎                     💛        🔥     │
+│ Gehalt    Fix→Kons      Fix→Depot              Kons→TG   TG→Depot   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+#### Commits
+
+1. `0458de1` - feat(v1.7.3): Buchungs-Timeline unter Flow-Diagramm
 
 ---
 
