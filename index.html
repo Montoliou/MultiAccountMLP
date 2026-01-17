@@ -5184,8 +5184,8 @@ const bookingTypeLookup = {};
             return;
         }
 
-        // Calculate positions (days 1-31 mapped to 0-100%)
-        const getPosition = (day) => ((day - 1) / 30) * 100;
+        // Calculate positions (days 1-31 mapped to 2-98% to align with line)
+        const getPosition = (day) => 2 + ((day - 1) / 30) * 96;
 
         // Build timeline HTML
         let markersHTML = bookings.map(b => {
