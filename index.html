@@ -1960,6 +1960,140 @@
             vertical-align: top;
         }
 
+        /* === v1.7.3: BOOKING TIMELINE === */
+        .booking-timeline-container {
+            background: rgba(31, 41, 55, 0.5);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-top: 24px;
+        }
+        .booking-timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .booking-timeline-edit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #9ca3af;
+            background: rgba(55, 65, 81, 0.5);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .booking-timeline-edit-btn:hover {
+            background: rgba(55, 65, 81, 0.8);
+            color: #e5e7eb;
+            border-color: rgba(107, 114, 128, 0.6);
+        }
+        .booking-timeline {
+            position: relative;
+            padding: 20px 0 40px 0;
+            min-height: 80px;
+        }
+        .booking-timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 24px;
+            right: 24px;
+            height: 2px;
+            background: rgba(107, 114, 128, 0.4);
+            transform: translateY(-50%);
+        }
+        .booking-timeline-markers {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 1;
+        }
+        .booking-timeline-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .booking-timeline-marker:hover {
+            transform: translateY(-2px);
+        }
+        .booking-timeline-marker:hover .booking-timeline-dot {
+            transform: scale(1.3);
+            box-shadow: 0 0 12px currentColor;
+        }
+        .booking-timeline-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            background: var(--gray-900, #111827);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 8px;
+        }
+        .booking-timeline-day {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+        .booking-timeline-icon {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 4px;
+        }
+        .booking-timeline-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+        .booking-timeline-label {
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #6b7280;
+            white-space: nowrap;
+            text-align: center;
+            max-width: 70px;
+        }
+        .booking-timeline-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+        /* Light Theme */
+        .theme-light .booking-timeline-container {
+            background: rgba(249, 250, 251, 0.8);
+            border-color: rgba(209, 213, 219, 0.8);
+        }
+        .theme-light .booking-timeline-edit-btn {
+            background: rgba(243, 244, 246, 0.8);
+            border-color: rgba(209, 213, 219, 0.8);
+            color: #4b5563;
+        }
+        .theme-light .booking-timeline-edit-btn:hover {
+            background: rgba(229, 231, 235, 0.9);
+            color: #1f2937;
+        }
+        .theme-light .booking-timeline-line {
+            background: rgba(209, 213, 219, 0.8);
+        }
+        .theme-light .booking-timeline-dot {
+            background: #fff;
+        }
+        .theme-light .booking-timeline-day {
+            color: #4b5563;
+        }
+        .theme-light .booking-timeline-label {
+            color: #6b7280;
+        }
+
         /* === MOBILE OPTIMIZATIONS === */
 
         /* Mobile Warning Overlay */
@@ -2244,6 +2378,27 @@
                 <button id="depot-basin" class="account-basin cursor-pointer hover:border-purple-500" type="button" aria-controls="depot-modal" aria-haspopup="dialog" onclick="updateRenditeSuggestions(parseInt(document.getElementById('anlagezeitraum').value, 10)); openModal('depot-modal');"></button>
                 <button id="vermieterkonto-basin" class="account-basin cursor-pointer hover:border-blue-500" type="button" aria-controls="vermieterkonto-modal" aria-haspopup="dialog" onclick="loadVermieterkontoData(); openModal('vermieterkonto-modal')" style="height: 100px;"></button>
                 <button id="immobilien-basin" class="account-basin cursor-pointer hover:border-amber-500" type="button" aria-controls="immobilien-modal" aria-haspopup="dialog" onclick="openModal('immobilien-modal')"></button>
+            </div>
+
+            <!-- v1.7.3: Buchungs-Timeline -->
+            <div id="booking-timeline-container" class="booking-timeline-container mt-6 no-print">
+                <div class="booking-timeline-header">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-gray-400">📅 Buchungsablauf im Monat</span>
+                    </div>
+                    <button onclick="openBookingModal()" class="booking-timeline-edit-btn" title="Buchungskalender bearbeiten">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Bearbeiten
+                    </button>
+                </div>
+                <div id="booking-timeline" class="booking-timeline">
+                    <!-- Timeline wird dynamisch befüllt -->
+                    <div class="booking-timeline-empty">
+                        <span class="text-gray-500 text-sm">Keine Buchungen geplant</span>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -4920,6 +5075,7 @@ const bookingTypeLookup = {};
         saveBookingPlan();
         renderBookingCalendar();
         updateBookingHint();
+        renderBookingTimeline(); // v1.7.3
     }
 
     function removeBookingFromDay(day, typeId) {
@@ -4934,6 +5090,7 @@ const bookingTypeLookup = {};
         saveBookingPlan();
         renderBookingCalendar();
         updateBookingHint();
+        renderBookingTimeline(); // v1.7.3
     }
 
     function updateBookingHint(message) {
@@ -4958,6 +5115,7 @@ const bookingTypeLookup = {};
             saveBookingPlan();
             renderBookingCalendar();
             updateBookingHint();
+            renderBookingTimeline(); // v1.7.3
         }
     }
 
@@ -4971,6 +5129,103 @@ const bookingTypeLookup = {};
 
     function getBookingType(typeId) {
         return bookingTypeLookup[typeId];
+    }
+
+    // v1.7.3: Timeline Labels - selbsterklärende Pfeil-Notation
+    function getTimelineLabel(type) {
+        if (!type) return '';
+        const labels = {
+            'salary_to_fix': currentVariant === 'B' ? 'Gehalt' : 'Gehalt',
+            'standing_to_konsum': currentVariant === 'B' ? 'Kons → Fix' : 'Fix → Kons',
+            'sparplan': 'Fix → Depot',
+            'konsum_to_tagesgeld': 'Kons → TG',
+            'tagesgeld_to_depot': 'TG → Depot'
+        };
+        return labels[type.id] || type.label || '';
+    }
+
+    // v1.7.3: Render Timeline under Flow
+    function renderBookingTimeline() {
+        const container = getEl('booking-timeline');
+        if (!container) return;
+
+        const monthPlan = bookingPlan[selectedBookingMonth] || bookingPlan[BOOKING_KEY] || {};
+
+        // Collect all bookings with their days
+        const bookings = [];
+        Object.keys(monthPlan).forEach(day => {
+            const dayNum = parseInt(day, 10);
+            if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return;
+
+            const entries = monthPlan[day];
+            if (!Array.isArray(entries)) return;
+
+            entries.forEach(typeId => {
+                const type = getBookingType(typeId);
+                if (type) {
+                    bookings.push({ day: dayNum, type });
+                }
+            });
+        });
+
+        // Sort by day
+        bookings.sort((a, b) => a.day - b.day);
+
+        // Empty state
+        if (bookings.length === 0) {
+            container.innerHTML = `
+                <div class="booking-timeline-empty">
+                    <span class="text-gray-500 text-sm">Keine Buchungen geplant - </span>
+                    <button onclick="openBookingModal()" class="text-blue-400 hover:text-blue-300 text-sm ml-1 underline">
+                        Jetzt planen
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Calculate positions (days 1-31 mapped to 0-100%)
+        const getPosition = (day) => ((day - 1) / 30) * 100;
+
+        // Build timeline HTML
+        let markersHTML = bookings.map(b => {
+            const pos = getPosition(b.day);
+            const label = getTimelineLabel(b.type);
+            const icon = getActiveBookingIcon(b.type);
+
+            return `
+                <div class="booking-timeline-marker"
+                     style="position: absolute; left: ${pos}%; transform: translateX(-50%); color: ${b.type.accent};"
+                     onclick="openBookingModalToDay(${b.day})"
+                     title="${getActiveBookingLabel(b.type)}">
+                    <div class="booking-timeline-day">${b.day}.</div>
+                    <div class="booking-timeline-dot" style="background: ${b.type.accent}; border-color: ${b.type.accent};"></div>
+                    <div class="booking-timeline-icon" style="color: ${b.type.accent};">${icon}</div>
+                    <div class="booking-timeline-label">${label}</div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="booking-timeline-line"></div>
+            <div class="booking-timeline-markers" style="position: relative; height: 100px;">
+                ${markersHTML}
+            </div>
+        `;
+    }
+
+    // v1.7.3: Open booking modal and scroll to specific day
+    function openBookingModalToDay(day) {
+        openBookingModal();
+        // After modal opens, highlight the day
+        setTimeout(() => {
+            const dayEl = document.querySelector(`.booking-day[data-day="${day}"]`);
+            if (dayEl) {
+                dayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                dayEl.style.boxShadow = '0 0 0 3px rgba(96, 165, 250, 0.6)';
+                setTimeout(() => { dayEl.style.boxShadow = ''; }, 2000);
+            }
+        }, 300);
     }
 
     function setupBookingPlanner() {
@@ -9972,6 +10227,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             renderBookingTypeButtons();
             renderBookingCalendar();
             updateBookingHint();
+            renderBookingTimeline(); // v1.7.3
             // Keep consultation view consistent when variant changes
             applyConsultationVisibility();
             calculateAndUpdate();
@@ -9997,6 +10253,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             setVariantUI();
             updateRenditeSuggestions(parseInt(inputs.anlagezeitraum.value, 10));
             calculateAndUpdate();
+            renderBookingTimeline(); // v1.7.3: Initial timeline render
 
             // Load fine-grained min/max ranges from TXT (MLP-Dreieck)
             loadRenditeExtremes();
@@ -10295,7 +10552,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.7.2</span>
+                    <span class="font-mono">v1.7.3</span>
                 </div>
                 <div class="text-xs text-gray-600 text-center mt-1">
                     Notfall: <kbd class="text-xs">Ctrl+Shift+E</kbd>
