@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Das strategische Vermögensmanagement</title>
+    <title>Der Flow - Vom Einkommen zum Investment</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@2.2.5"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
@@ -1419,6 +1419,20 @@
         .theme-light .bg-gray-700 .text-gray-400,
         .theme-light .text-gray-400 { color: var(--muted) !important; }
 
+        /* v1.7.3: App heading - Design Guide compliant */
+        .app-heading {
+            color: #ffffff;  /* Dark mode: white */
+        }
+        .app-subheading {
+            color: #9ca3af;  /* Dark mode: gray-400 */
+        }
+        .theme-light .app-heading {
+            color: #033D5D;  /* Light mode: MLP Blau Dark */
+        }
+        .theme-light .app-subheading {
+            color: #717171;  /* Light mode: Text Medium */
+        }
+
         /* Panels / cards / modals */
         .theme-light .account-basin {
           background-color: var(--card) !important;
@@ -2213,14 +2227,14 @@
         }
     </style>
 </head>
-<body class="theme-dark bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden" id="theme-root">
+<body class="theme-dark bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden" id="theme-root" style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
 
     <a class="skip-link" href="#main-content">Zum Hauptinhalt springen</a>
 
     <main id="main-content" class="max-w-screen-2xl mx-auto" tabindex="-1">
         <header class="text-center mb-12">
-            <h1 class="text-3xl md:text-5xl font-bold text-white mb-2">Das strategische Vermögensmanagement</h1>
-            <p class="text-md md:text-lg text-gray-400">vom Einkommen zum Investment.</p>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-2 app-heading" style="letter-spacing: -0.02em;">Der Flow</h1>
+            <p class="text-md md:text-lg app-subheading font-light" style="letter-spacing: 0.04em;">Vom Einkommen zum Investment</p>
         </header>
 
         <!-- v1.4.0: Sidebar entfernt - Controls in Modals/FAB integriert -->
