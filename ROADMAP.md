@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.7.3 ✅
+**Aktuelle Version:** 1.7.4 ✅
 **Nächste Version:** 1.8.0 (Weitere Features) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Januar 2026
@@ -515,6 +515,31 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ 1 commit (fea7ba3)
 - ✅ Tag: v1.7.0
 - ✅ RELEASE_v1.6.0.md dokumentiert
+
+---
+
+### ✅ Version 1.7.4: Inter Font & "Der Flow" Headline (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Januar 2026)
+**Fokus:** Typography-Upgrade mit Google Font Inter und neue App-Headline
+
+#### Implementierte Features
+
+**🔤 Typography-Upgrade:**
+- ✅ **Google Font Inter** als primäre Schriftart (Gewichte 300-800)
+- ✅ Fallback-Stack: -apple-system, BlinkMacSystemFont, Segoe UI, Arial
+- ✅ Gesamte App nutzt Inter für konsistentes Erscheinungsbild
+
+**🎨 Neue Headline:**
+- ✅ **"Der Flow"** - H1, font-weight 800, letter-spacing -0.02em
+- ✅ **"Vom Einkommen zum Investment"** - Untertitel, font-weight 300, letter-spacing 0.04em
+- ✅ MLP Design Guide Compliance:
+  - Dark Mode: Weiß (#FFFFFF) für H1, Grau (#9CA3AF) für Untertitel
+  - Light Mode: MLP Blau Dark (#033D5D) für H1, Text Medium (#717171) für Untertitel
+
+#### Commits
+
+1. `3096be1` - feat(v1.7.4): Inter Font + neue Headline "Der Flow"
 
 ---
 
