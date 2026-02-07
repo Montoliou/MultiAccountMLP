@@ -748,6 +748,7 @@
         .chip-state{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;font-size:.8rem;font-weight:600;color:var(--muted);background:rgba(0,47,108,0.05);transition:all .2s ease;}
         .theme-dark .chip-state{background:rgba(148,163,184,0.12);color:#cbd5f5;}
         .chip-state--active{color:#ffffff;background:linear-gradient(135deg,var(--accent1),var(--accent2));box-shadow:0 10px 18px -12px rgba(0,47,108,0.6);}
+        .theme-dark .chip-state--active{background:linear-gradient(135deg,#60a5fa,#818cf8);box-shadow:0 0 10px rgba(96,165,250,0.45),0 10px 18px -12px rgba(96,165,250,0.3);}
         .control-chip--consultation{width:44px;}
         .control-chip--consultation .chip-button{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:color .2s ease,background .2s ease;}
         .control-chip--consultation .chip-button:hover{color:var(--accent1);}
@@ -890,6 +891,10 @@
             color: #ffffff;
             background: linear-gradient(135deg, var(--accent1), var(--accent2));
             box-shadow: 0 4px 8px -4px rgba(0, 47, 108, 0.6);
+        }
+        .theme-dark .control-bar-item--variant .bar-state--active {
+            background: linear-gradient(135deg, #60a5fa, #818cf8);
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.45), 0 4px 8px -4px rgba(96, 165, 250, 0.3);
         }
 
         /* Consultation Button */
@@ -4810,7 +4815,7 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
 
     // ===== END EXPORT FUNCTIONS =====
 
-    let currentVariant = 'A';
+    let currentVariant = sessionStorage.getItem('mlp_current_variant') || 'A';
     
     const BOOKING_DAYS = 31;
     const BOOKING_KEY = "0";
@@ -10229,6 +10234,21 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             if (variantSwitch) {
                 variantSwitch.checked = (currentVariant === 'B');
             }
+            // Sync control bar switch
+            const barSwitch = getEl('variant-switch-bar');
+            if (barSwitch) barSwitch.checked = (currentVariant === 'B');
+            // Sync control bar labels
+            const aBar = getEl('variante-a-label-bar');
+            const bBar = getEl('variante-b-label-bar');
+            if (aBar && bBar) {
+                if (currentVariant === 'A') {
+                    aBar.classList.add('bar-state--active');
+                    bBar.classList.remove('bar-state--active');
+                } else {
+                    bBar.classList.add('bar-state--active');
+                    aBar.classList.remove('bar-state--active');
+                }
+            }
             if (currentVariant === 'A') {
                 if (varianteALabel) varianteALabel.classList.add('chip-state--active');
                 if (varianteBLabel) varianteBLabel.classList.remove('chip-state--active');
@@ -10250,6 +10270,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
         if (variantSwitch) {
             variantSwitch.addEventListener('change', (e) => {
                 currentVariant = e.target.checked ? 'B' : 'A';
+                sessionStorage.setItem('mlp_current_variant', currentVariant);
                 setVariantUI();
             });
         }
@@ -10374,6 +10395,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             if (variantSwitchBar) {
                 variantSwitchBar.addEventListener('change', (e) => {
                     currentVariant = e.target.checked ? 'B' : 'A';
+                    sessionStorage.setItem('mlp_current_variant', currentVariant);
                     // Update Control Bar UI
                     if (varianteALabelBar && varianteBLabelBar) {
                         if (currentVariant === 'A') {
@@ -10566,7 +10588,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.7.3</span>
+                    <span class="font-mono">v1.7.5</span>
                 </div>
                 <div class="text-xs text-gray-600 text-center mt-1">
                     Notfall: <kbd class="text-xs">Ctrl+Shift+E</kbd>
