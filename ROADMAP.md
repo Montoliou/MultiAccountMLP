@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.7.4 ✅
+**Aktuelle Version:** 1.7.5 ✅
 **Nächste Version:** 1.8.0 (Weitere Features) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Januar 2026
@@ -515,6 +515,29 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ 1 commit (fea7ba3)
 - ✅ Tag: v1.7.0
 - ✅ RELEASE_v1.6.0.md dokumentiert
+
+---
+
+### ✅ Version 1.7.5: Variant Persistence & Dark Mode Indicator (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Februar 2026)
+**Fokus:** UX-Verbesserungen für Varianten-Umschaltung
+
+#### Implementierte Features
+
+**💾 Variante A/B Persistenz:**
+- ✅ Aktive Variante (A/B) wird in sessionStorage gespeichert
+- ✅ Beim Reload wird die zuletzt gewählte Variante automatisch wiederhergestellt
+- ✅ Sidebar-Chip und Control-Bar-Switch werden synchron initialisiert
+
+**🌙 Dark Mode Variant-Indicator:**
+- ✅ Hellerer Gradient (#60a5fa → #818cf8) für aktiven Variant-Indicator im Dark Mode
+- ✅ Glow-Effekt (box-shadow) für bessere Sichtbarkeit auf dunklem Hintergrund
+- ✅ Gilt für beide UI-Elemente: Sidebar-Chip und Control-Bar
+
+#### Commits
+
+1. `f7fa266` - feat(v1.7.5): Variant persistence + Dark Mode indicator
 
 ---
 
