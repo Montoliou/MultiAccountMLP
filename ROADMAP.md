@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.7.5 ✅
+**Aktuelle Version:** 1.7.6 ✅
 **Nächste Version:** 1.8.0 (Weitere Features) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Januar 2026
@@ -515,6 +515,37 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ 1 commit (fea7ba3)
 - ✅ Tag: v1.7.0
 - ✅ RELEASE_v1.6.0.md dokumentiert
+
+---
+
+### ✅ Version 1.7.6: Equity Meter Basin & Variante B Layout (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Februar 2026)
+**Fokus:** Erweitertes Immobilien-Basin und kreuzungsfreies Variante-B-Layout
+
+#### Implementierte Features
+
+**🏠 Equity Meter Basin (Immobilien):**
+- ✅ Visueller Equity-Balken: Türkis (#47A190) = Eigenkapital, Orange (#E3691E) = Darlehen
+- ✅ Netto-Wert als Hero-Zahl (Grün bei positiv, Rot bei negativ)
+- ✅ Kompakte k/M-Formatierung (z.B. 350k, 1,3M) für Basin-Ansicht
+- ✅ Wert und Darlehen als beschriftete Subtext-Zeilen
+- ✅ MLP Design Guide konforme Farbgebung
+
+**🔢 Anzahl Immobilien:**
+- ✅ Neues Eingabefeld im Immobilien-Modal
+- ✅ Anzeige als "(n)" im Basin-Titel
+- ✅ Persistenz in sessionStorage
+
+**🔄 Variante B Layout-Spiegelung:**
+- ✅ Vermieterkonto + Immobilien nach RECHTS verschoben
+- ✅ Fixkosten + Depot nach LINKS verschoben
+- ✅ Eliminiert Flow-Kreuzungen bei Fixkosten ↔ Vermieterkonto-Verbindung
+- ✅ Gesamtlayout bleibt zentriert (gleiche outerFrameWidth)
+
+#### Commits
+
+1. `eb84015` - feat(v1.7.6): Equity Meter Basin + Variante B Layout-Spiegelung
 
 ---
 
