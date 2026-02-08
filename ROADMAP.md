@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.7.5 ✅
+**Aktuelle Version:** 1.7.6 ✅
 **Nächste Version:** 1.8.0 (Weitere Features) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Januar 2026
@@ -515,6 +515,38 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ 1 commit (fea7ba3)
 - ✅ Tag: v1.7.0
 - ✅ RELEASE_v1.6.0.md dokumentiert
+
+---
+
+### ✅ Version 1.7.6: Equity Meter & Variante B Layout (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Februar 2026)
+**Fokus:** Immobilien-Basin Redesign, Variante B Neupositionierung, Flow-Anker-Optimierung
+
+#### Implementierte Features
+
+**🏠 Immobilien Equity Meter:**
+- ✅ Neues Basin-Design zeigt Vermögen, Darlehen und Nettovermögen
+- ✅ Farbcodierter Fortschrittsbalken (Türkis = Eigenkapital, Orange = Restschuld)
+- ✅ Kompaktformat (k/M) für übersichtliche Darstellung
+- ✅ Anzahl Immobilien im Titel angezeigt
+- ✅ Try/Catch-Fallback verhindert Flow-Crash bei Render-Fehlern
+
+**📐 Variante B Layout-Neupositionierung:**
+- ✅ Fixkosten rechts neben Konsum (statt links)
+- ✅ Vermieterkonto unterhalb Fixkosten
+- ✅ Tagesgeld links positioniert
+- ✅ Positionen per Drag-Tool ermittelt und als relative Werte umgesetzt
+
+**🔀 Flow-Anker-Optimierung (Variante B):**
+- ✅ Konsum → Fixkosten: ankommend Oben Mitte
+- ✅ Fixkosten → Vermieterkonto: abgehend Unten Rechts (bidirektional)
+- ✅ Fixkosten → Depot: abgehend Unten Links, ankommend Oben Rechts
+- ✅ Tagesgeld → Depot: ankommend Oben Mitte
+
+**🔢 Anzahl Immobilien Input:**
+- ✅ Neues Eingabefeld im Immobilien-Modal
+- ✅ Persistiert in sessionStorage
 
 ---
 

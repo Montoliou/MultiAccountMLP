@@ -3059,6 +3059,12 @@
             <h3 id="immobilien-modal-title" class="text-xl font-bold mb-4">Immobilien-Verwaltung</h3>
             <p id="immobilien-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Verwalte deine Immobilien, Einnahmen und Ausgaben.</p>
 
+            <!-- Anzahl Immobilien -->
+            <div class="mb-4 bg-gray-900 p-4 rounded-lg flex items-center gap-4">
+                <label class="text-sm text-gray-400 whitespace-nowrap">Anzahl Immobilien</label>
+                <input type="number" id="immo-anzahl" value="1" min="0" max="99" class="w-20 bg-gray-700 p-2 rounded-lg text-white text-center" inputmode="numeric">
+            </div>
+
             <!-- Grid für 2 Kategorien -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -5600,6 +5606,7 @@ const bookingTypeLookup = {};
     let inputs, basins, flowContainer, flowSvg; // Declare globally, assign in DOMContentLoaded
     const getEl = (id) => document.getElementById(id);
     const formatCurrency = (val) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+    const formatCompact = (val) => { const a = Math.abs(val); const s = val < 0 ? '-' : ''; if (a >= 1000000) return s + (a / 1000000).toFixed(1).replace('.', ',') + 'M'; if (a >= 1000) return s + Math.round(a / 1000) + 'k'; return val.toString(); };
     const getMonthlyAmount = (item) => { const a = item.amount || 0; switch (item.interval) { case 'quarterly': return a / 3; case 'annually': return a / 12; default: return a; } };
 
 function renderBasin(element, title, value, icon, subtext = '', { current = 0, min = 0, limit = Infinity, minScaleBase = null } = {}, specialContent = '') {
@@ -5697,18 +5704,17 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
         let positions;
         if (currentVariant === 'B') {
-            // Variante B (Konsum-first): Einkommen -> Konsum -> (Fixkosten + Vermieterkonto) -> Tagesgeld -> Depot
-            // Ebene 1: Konsum
-            // Ebene 2: Fixkosten + Vermieterkonto (beide UNTERKANTE bündig!)
+            // Variante B: Positionen per Drag-Tool ermittelt
+            // Rechte Spalte: Fixkosten (Ebene 2) → Vermieterkonto (Ebene 3) → Immobilien (Ebene 4)
+            // Linke/Center: Konsum (Ebene 1) → Tagesgeld (Ebene 3) → Depot (Ebene 4)
             positions = {
                 einkommen:      { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
-                konsum:         { top: v_gap,      left: giroLeft2 }, // Mitte
-                // Ebene 2: UNTERKANTEN bündig (Vermieterkonto tiefer wegen kleinerer Höhe)
-                vermieterkonto: { top: v_gap * 2 + heightDiff,  left: giroLeft1 }, // Links, tiefer!
-                fixkosten:      { top: v_gap * 2,  left: giroLeft3 }, // Rechts (weiter rechts!)
-                tagesgeld:      { top: v_gap * 3,  left: newCenterX - basins.tagesgeld.offsetWidth / 2 + 40 },
-                depot:          { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
-                immobilien:     { top: v_gap * 4.0, left: outerFrameLeft },
+                konsum:         { top: v_gap,      left: giroLeft2 },
+                fixkosten:      { top: v_gap * 2,  left: giroLeft2 + giroBasinWidth },
+                vermieterkonto: { top: v_gap * 3 + heightDiff,  left: giroLeft2 + giroBasinWidth + 80 },
+                tagesgeld:      { top: v_gap * 3,  left: giroLeft2 - 168 },
+                depot:          { top: v_gap * 4,  left: outerFrameLeft },
+                immobilien:     { top: v_gap * 4,  left: outerFrameLeft + depotWidth + gapBetweenDepotImmo },
             };
         } else { // Variante A
             // Variante A (Fixkosten-first): Einkommen -> Fixkosten -> (Konsum + Vermieterkonto) -> Tagesgeld -> Depot
@@ -5786,16 +5792,31 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const CURVE_SHORT = 55;  // short bends for side-to-side connections
 
         if (pathId === 'fixkosten-depot-flow') {
-            // From right side of fixkosten into right half of depot
-            fromX = fromRect.left - containerRect.left + fromRect.width * 0.75;
-            const toDepotX = toRect.left - containerRect.left + toRect.width * 0.75;
-            fromY -= EXIT_OFFSET_Y;
-            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 70} ${toDepotX},${toY - 70} ${toDepotX},${toY}`;
+            if (typeof currentVariant !== 'undefined' && currentVariant === 'B') {
+                // Var B: Fixkosten abgehend UNTEN LINKS → Depot ankommend OBEN RECHTS
+                fromX = fromRect.left - containerRect.left + fromRect.width * 0.25; // exit BOTTOM LEFT
+                fromY -= EXIT_OFFSET_Y;
+                const toDepotX = toRect.left - containerRect.left + toRect.width * 0.75; // enter TOP RIGHT
+                pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 70} ${toDepotX},${toY - 70} ${toDepotX},${toY}`;
+            } else {
+                // Var A: From right side of fixkosten into right half of depot
+                fromX = fromRect.left - containerRect.left + fromRect.width * 0.75;
+                const toDepotX = toRect.left - containerRect.left + toRect.width * 0.75;
+                fromY -= EXIT_OFFSET_Y;
+                pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 70} ${toDepotX},${toY - 70} ${toDepotX},${toY}`;
+            }
         } else if (pathId === 'tagesgeld-depot-flow') {
-            // From center of tagesgeld into left half of depot
-            const toDepotX = toRect.left - containerRect.left + (toRect.width * 0.25);
-            fromY -= EXIT_OFFSET_Y;
-            pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 55} ${toDepotX},${toY - 55} ${toDepotX},${toY}`;
+            if (typeof currentVariant !== 'undefined' && currentVariant === 'B') {
+                // Var B: Tagesgeld → Depot ankommend OBEN MITTE
+                const toDepotX = toRect.left - containerRect.left + toRect.width * 0.50; // enter TOP CENTER
+                fromY -= EXIT_OFFSET_Y;
+                pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 55} ${toDepotX},${toY - 55} ${toDepotX},${toY}`;
+            } else {
+                // Var A: From center of tagesgeld into left half of depot
+                const toDepotX = toRect.left - containerRect.left + (toRect.width * 0.25);
+                fromY -= EXIT_OFFSET_Y;
+                pathData = `M ${fromX},${fromY} C ${fromX},${fromY + 55} ${toDepotX},${toY - 55} ${toDepotX},${toY}`;
+            }
         } else if (pathId === 'konsum-tagesgeld-flow') {
             // Überschuss-Stream aus dem Konsumkonto:
             //  • Variante B: unten links aus dem Konsumkonto starten (verhindert Kreuzungen)
@@ -5824,12 +5845,12 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const toKonsumX = toRect.left - containerRect.left + toRect.width * 0.80; // enter right
             pathData = `M ${fromX},${fromY} C ${fromX - R},${fromY + R} ${toKonsumX + R},${toY - R} ${toKonsumX},${toY}`;
         } else if (pathId === 'flow-path-2' && typeof currentVariant !== 'undefined' && currentVariant === 'B') {
-            // Dauerauftrag: from right side of Konsum (left column) to right-half of Fixkosten (right column)
-            const R = 65; // curve radius
+            // Dauerauftrag Var B: Konsum (center) → Fixkosten (rechts), ankommend OBEN MITTE
+            const R = 65;
             fromX = fromRect.left - containerRect.left + fromRect.width * 0.80; // exit right
             fromY -= EXIT_OFFSET_Y;
-            const toRightX = toRect.left - containerRect.left + toRect.width * 0.75; // enter right half
-            pathData = `M ${fromX},${fromY} C ${fromX + R},${fromY + R} ${toRightX - R},${toY - R} ${toRightX},${toY}`;
+            const toMidX = toRect.left - containerRect.left + toRect.width * 0.50; // enter TOP CENTER
+            pathData = `M ${fromX},${fromY} C ${fromX + R},${fromY + R} ${toMidX},${toY - R} ${toMidX},${toY}`;
         } else if (pathId === 'vermieterkonto-einkommen-flow') {
             // Flow von Vermieterkonto HOCH zum Einkommen (Mieteinnahmen fließen ins Einkommen)
             // Mäandernder organischer Flow wie alle anderen (kein Stilbruch!)
@@ -5860,39 +5881,73 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const isPositiveFlow = fromBasin.id === 'vermieterkonto-basin';
 
             if (isPositiveFlow) {
-                // Positiv: Vermieterkonto → Fixkosten/Konsum
-                // Start: Oberkante Mitte vom Vermieterkonto
-                fromX = fromRect.left - containerRect.left + fromRect.width * 0.5;
-                fromY = fromRect.top - containerRect.top;
+                if (typeof currentVariant !== 'undefined' && currentVariant === 'B') {
+                    // Var B positiv: Vermieterkonto (unten) → Fixkosten (oben), aufsteigend
+                    fromX = fromRect.left - containerRect.left + fromRect.width * 0.35; // TOP leicht links
+                    fromY = fromRect.top - containerRect.top;
 
-                // Ziel: Linke Seite Mitte vom Ziel-Basin (Fixkosten oder Konsum)
-                const toTargetX = toRect.left - containerRect.left + toRect.width * 0.10;
-                const toTargetY = toRect.top - containerRect.top + toRect.height * 0.5;
+                    const toTargetX = toRect.left - containerRect.left + toRect.width * 0.85; // BOTTOM RIGHT
+                    const toTargetY = toRect.bottom - containerRect.top;
 
-                // Umgekehrte mäandernde Kurve (nach oben und rechts)
-                const c1x = fromX - 40; // Nach links schwingen
-                const c1y = fromY - 60;
-                const c2x = toTargetX - 60; // Nach links vorbei
-                const c2y = toTargetY - (toTargetY - fromY) * 0.3;
+                    const dy = toTargetY - fromY;
+                    const c1x = fromX - 20;
+                    const c1y = fromY + dy * 0.65;
+                    const c2x = toTargetX + 30;
+                    const c2y = toTargetY + 50;
 
-                pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toTargetX},${toTargetY}`;
+                    pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toTargetX},${toTargetY}`;
+                } else {
+                    // Var A positiv: Vermieterkonto → Fixkosten/Konsum
+                    // Start: Oberkante Mitte vom Vermieterkonto
+                    fromX = fromRect.left - containerRect.left + fromRect.width * 0.5;
+                    fromY = fromRect.top - containerRect.top;
+
+                    // Ziel: Linke Seite Mitte vom Ziel-Basin (Fixkosten oder Konsum)
+                    const toTargetX = toRect.left - containerRect.left + toRect.width * 0.10;
+                    const toTargetY = toRect.top - containerRect.top + toRect.height * 0.5;
+
+                    // Umgekehrte mäandernde Kurve (nach oben und rechts)
+                    const c1x = fromX - 40; // Nach links schwingen
+                    const c1y = fromY - 60;
+                    const c2x = toTargetX - 60; // Nach links vorbei
+                    const c2y = toTargetY - (toTargetY - fromY) * 0.3;
+
+                    pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toTargetX},${toTargetY}`;
+                }
             } else {
                 // Negativ: Fixkosten → Vermieterkonto (Deckung)
-                // Start: Linker Rand vom Fixkostenkonto (10%)
-                fromX = fromRect.left - containerRect.left + fromRect.width * 0.10;
-                fromY = fromRect.top - containerRect.top + fromRect.height * 0.5;
+                if (typeof currentVariant !== 'undefined' && currentVariant === 'B') {
+                    // Var B: Fixkosten ÜBER Vermieterkonto → abgehend UNTEN RECHTS
+                    fromX = fromRect.left - containerRect.left + fromRect.width * 0.85; // BOTTOM RIGHT (85%)
+                    fromY = fromRect.bottom - containerRect.top; // Unterkante
 
-                // Ziel: Oberkante Mitte vom Vermieterkonto
-                const toVermX = toRect.left - containerRect.left + toRect.width * 0.5;
-                const toVermY = toRect.top - containerRect.top;
+                    const toVermX = toRect.left - containerRect.left + toRect.width * 0.35; // TOP leicht links
+                    const toVermY = toRect.top - containerRect.top;
 
-                // Mäandernde Kurve (nach links und unten)
-                const c1x = fromX - 60; // Nach links schwingen
-                const c1y = fromY + (toVermY - fromY) * 0.3;
-                const c2x = toVermX - 40; // Zurück zur Mitte
-                const c2y = toVermY - 60;
+                    const dy = toVermY - fromY;
+                    const c1x = fromX + 30;
+                    const c1y = fromY + dy * 0.35;
+                    const c2x = toVermX - 20;
+                    const c2y = toVermY - 50;
 
-                pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toVermX},${toVermY}`;
+                    pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toVermX},${toVermY}`;
+                } else {
+                    // Var A: Start: Linker Rand vom Fixkostenkonto (10%)
+                    fromX = fromRect.left - containerRect.left + fromRect.width * 0.10;
+                    fromY = fromRect.top - containerRect.top + fromRect.height * 0.5;
+
+                    // Ziel: Oberkante Mitte vom Vermieterkonto
+                    const toVermX = toRect.left - containerRect.left + toRect.width * 0.5;
+                    const toVermY = toRect.top - containerRect.top;
+
+                    // Mäandernde Kurve (nach links und unten)
+                    const c1x = fromX - 60; // Nach links schwingen
+                    const c1y = fromY + (toVermY - fromY) * 0.3;
+                    const c2x = toVermX - 40; // Zurück zur Mitte
+                    const c2y = toVermY - 60;
+
+                    pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toVermX},${toVermY}`;
+                }
             }
         } else {
             // Default smooth S-curve between centers
@@ -6779,7 +6834,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         const gesamtwert = immobilienData.reduce((sum, immo) => sum + (immo.wert || 0), 0);
         const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
         const immoNettovermoegen = gesamtwert - gesamtdarlehen;
-        const anzahlImmobilien = immobilienData.length;
+        const anzahlImmobilien = immobilienAnzahl;
 
         return {
             income,
@@ -6851,16 +6906,36 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             createAccountSVG()
         );
 
-        // Immobilien-Basin rendern
-        renderBasin(
-            basins.immobilien,
-            'Immobilien',
-            formatCurrency(immoNettovermoegen),
-            '',
-            anzahlImmobilien > 0 ? `${anzahlImmobilien} Immobilie${anzahlImmobilien > 1 ? 'n' : ''}` : '(Klick zum Bearbeiten)',
-            {},
-            createHouseSVG()
-        );
+        // Immobilien-Basin rendern (Equity Meter mit Fallback)
+        try {
+            if (gesamtwert > 0 || gesamtdarlehen > 0) {
+                const eqPct = gesamtwert > 0 ? Math.max(0, Math.min(100, ((gesamtwert - gesamtdarlehen) / gesamtwert) * 100)) : 0;
+                const nColor = immoNettovermoegen >= 0 ? '#13853E' : '#C1293D';
+                const aSuffix = anzahlImmobilien > 0 ? ' (' + anzahlImmobilien + ')' : '';
+                basins.immobilien.innerHTML =
+                    '<div class="relative z-10 flex flex-col items-center justify-center h-full w-full" style="padding:0 12px;">' +
+                        '<p class="font-bold" style="font-size:14px;margin-bottom:4px;">\u{1F3E0} Immobilien' + aSuffix + '</p>' +
+                        '<p class="font-mono font-bold" style="font-size:18px;color:' + nColor + ';">' + formatCompact(immoNettovermoegen) + '</p>' +
+                        '<p style="font-size:10px;color:#6b7280;margin-top:-2px;margin-bottom:4px;">Netto</p>' +
+                        '<div style="width:100%;height:8px;border-radius:9999px;overflow:hidden;background:rgba(227,105,30,0.3);">' +
+                            '<div style="height:100%;border-radius:9999px;width:' + eqPct + '%;background:#47A190;transition:width 0.5s;"></div>' +
+                        '</div>' +
+                        '<div style="display:flex;justify-content:space-between;width:100%;margin-top:4px;">' +
+                            '<span style="font-size:10px;font-family:ui-monospace,monospace;color:#47A190;">' + formatCompact(gesamtwert) + '</span>' +
+                            '<span style="font-size:10px;font-family:ui-monospace,monospace;color:#E3691E;">' + formatCompact(gesamtdarlehen) + '</span>' +
+                        '</div>' +
+                        '<div style="display:flex;justify-content:space-between;width:100%;">' +
+                            '<span style="font-size:10px;color:#6b7280;">Wert</span>' +
+                            '<span style="font-size:10px;color:#6b7280;">Darlehen</span>' +
+                        '</div>' +
+                    '</div>';
+            } else {
+                renderBasin(basins.immobilien, 'Immobilien', '', '', '(Klick zum Bearbeiten)', {}, createHouseSVG());
+            }
+        } catch (e) {
+            console.error('Immobilien Basin render error:', e);
+            renderBasin(basins.immobilien, 'Immobilien', formatCurrency(immoNettovermoegen), '', '', {}, createHouseSVG());
+        }
     }
 
     /**
@@ -9140,6 +9215,7 @@ function updateFixkostenItem(index, key, value) {
     // === IMMOBILIEN-DATENMODELL ===
     // Liste von Immobilien mit Wert und Darlehen
     let immobilienData = [];
+    let immobilienAnzahl = 0;
 
     // === VERMIETERKONTO-DATENMODELL ===
     // Separates Datenmodell für Einnahmen und Ausgaben
@@ -9219,6 +9295,8 @@ function updateFixkostenItem(index, key, value) {
                 console.warn('Fehler beim Laden der Immobilien-Daten', e);
             }
         }
+        const savedAnzahl = sessionStorage.getItem('immobilienAnzahl');
+        immobilienAnzahl = savedAnzahl ? parseInt(savedAnzahl) : (immobilienData.length > 0 && immobilienData[0].wert > 0 ? 1 : 0);
         updateImmobilienInputs();
         updateImmobilienSummary();
     }
@@ -9234,6 +9312,7 @@ function updateFixkostenItem(index, key, value) {
         if (getEl('immo-zinssatz')) getEl('immo-zinssatz').value = immo.zinssatz || 0;
         if (getEl('immo-tilgungssatz')) getEl('immo-tilgungssatz').value = immo.tilgungssatz || 0;
         if (getEl('immo-wertsteigerung')) getEl('immo-wertsteigerung').value = immo.wertsteigerung || 0;
+        if (getEl('immo-anzahl')) getEl('immo-anzahl').value = immobilienAnzahl;
 
         // Trigger Darlehensberechnung wenn Werte vorhanden
         if (immo.zinssatz > 0 || immo.tilgungssatz > 0) {
@@ -9292,7 +9371,9 @@ function updateFixkostenItem(index, key, value) {
             sessionStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
         }
 
+        immobilienAnzahl = parseInt(getEl('immo-anzahl')?.value || 0);
         sessionStorage.setItem('immobilienData', JSON.stringify(immobilienData));
+        sessionStorage.setItem('immobilienAnzahl', immobilienAnzahl.toString());
         calculateAndUpdate(); // Aktualisiert alle Basins inkl. Vermieterkonto
         closeModal('immobilien-modal');
     }
@@ -10588,7 +10669,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.7.5</span>
+                    <span class="font-mono">v1.7.6</span>
                 </div>
                 <div class="text-xs text-gray-600 text-center mt-1">
                     Notfall: <kbd class="text-xs">Ctrl+Shift+E</kbd>
