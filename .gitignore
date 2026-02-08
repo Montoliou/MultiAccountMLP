@@ -149,3 +149,6 @@ deployment-log.txt
 
 # WinSCP (auto-downloaded for deployment)
 WinSCP/
+
+# Claude Code local settings
+.claude/settings.local.json
