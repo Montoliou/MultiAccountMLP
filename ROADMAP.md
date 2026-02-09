@@ -532,6 +532,12 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ Anzahl Immobilien im Titel angezeigt
 - ✅ Try/Catch-Fallback verhindert Flow-Crash bei Render-Fehlern
 
+**🛠️ Dev-Tool: Basin Drag-and-Drop Positionierung:**
+- ✅ Permanent im Code integriert (IIFE, kein UI-Footprint)
+- ✅ Aktivierung: `Ctrl+Alt+F12`
+- ✅ Grid-Overlay, 8px Snap, Live-Koordinaten, "Positionen kopieren"-Button
+- ✅ Quellcode-Backup: `dev-tools/basin-drag-tool.js`
+
 **📐 Variante B Layout-Neupositionierung:**
 - ✅ Fixkosten rechts neben Konsum (statt links)
 - ✅ Vermieterkonto unterhalb Fixkosten

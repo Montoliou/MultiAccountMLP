@@ -5649,7 +5649,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     `;
     }
 
+    let _devDragMode = false;
     function positionCascade() {
+        if (_devDragMode) return;
         if (!flowContainer) return;
         const containerWidth = flowContainer.clientWidth;
         const h_gap_side = LAYOUT.HORIZONTAL_GAP;  // v1.5.4: Use named constant
@@ -5704,17 +5706,16 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
         let positions;
         if (currentVariant === 'B') {
-            // Variante B: Positionen per Drag-Tool ermittelt
-            // Rechte Spalte: Fixkosten (Ebene 2) → Vermieterkonto (Ebene 3) → Immobilien (Ebene 4)
-            // Linke/Center: Konsum (Ebene 1) → Tagesgeld (Ebene 3) → Depot (Ebene 4)
+            // Variante B: Offsets direkt von newCenterX (einziger Referenzpunkt!)
+            // Ermittelt per Drag-Tool bei containerWidth ~1510, newCenterX ~755
             positions = {
-                einkommen:      { top: 0,          left: newCenterX - basins.einkommen.offsetWidth / 2 },
-                konsum:         { top: v_gap,      left: giroLeft2 },
-                fixkosten:      { top: v_gap * 2,  left: giroLeft2 + giroBasinWidth },
-                vermieterkonto: { top: v_gap * 3 + heightDiff,  left: giroLeft2 + giroBasinWidth + 80 },
-                tagesgeld:      { top: v_gap * 3,  left: giroLeft2 - 168 },
-                depot:          { top: v_gap * 4,  left: outerFrameLeft },
-                immobilien:     { top: v_gap * 4,  left: outerFrameLeft + depotWidth + gapBetweenDepotImmo },
+                einkommen:      { top: 0,              left: newCenterX - basins.einkommen.offsetWidth / 2 },
+                konsum:         { top: v_gap,          left: newCenterX - 395 },
+                fixkosten:      { top: v_gap * 2,      left: newCenterX + 181 },
+                vermieterkonto: { top: v_gap * 2 + 280, left: newCenterX + 173 },
+                tagesgeld:      { top: v_gap * 3,      left: newCenterX - 251 },
+                depot:          { top: v_gap * 4,      left: outerFrameLeft },
+                immobilien:     { top: v_gap * 4,      left: outerFrameLeft + depotWidth + gapBetweenDepotImmo },
             };
         } else { // Variante A
             // Variante A (Fixkosten-first): Einkommen -> Fixkosten -> (Konsum + Vermieterkonto) -> Tagesgeld -> Depot
@@ -5882,20 +5883,15 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
             if (isPositiveFlow) {
                 if (typeof currentVariant !== 'undefined' && currentVariant === 'B') {
-                    // Var B positiv: Vermieterkonto (unten) → Fixkosten (oben), aufsteigend
-                    fromX = fromRect.left - containerRect.left + fromRect.width * 0.35; // TOP leicht links
+                    // Var B positiv: Vermieterkonto (unten) MITTE OBEN → Fixkosten (oben) MITTE UNTEN
+                    fromX = fromRect.left - containerRect.left + fromRect.width * 0.50;
                     fromY = fromRect.top - containerRect.top;
 
-                    const toTargetX = toRect.left - containerRect.left + toRect.width * 0.85; // BOTTOM RIGHT
+                    const toTargetX = toRect.left - containerRect.left + toRect.width * 0.50;
                     const toTargetY = toRect.bottom - containerRect.top;
 
                     const dy = toTargetY - fromY;
-                    const c1x = fromX - 20;
-                    const c1y = fromY + dy * 0.65;
-                    const c2x = toTargetX + 30;
-                    const c2y = toTargetY + 50;
-
-                    pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toTargetX},${toTargetY}`;
+                    pathData = `M ${fromX},${fromY} C ${fromX},${fromY + dy * 0.4} ${toTargetX},${toTargetY - dy * 0.4} ${toTargetX},${toTargetY}`;
                 } else {
                     // Var A positiv: Vermieterkonto → Fixkosten/Konsum
                     // Start: Oberkante Mitte vom Vermieterkonto
@@ -5917,20 +5913,15 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             } else {
                 // Negativ: Fixkosten → Vermieterkonto (Deckung)
                 if (typeof currentVariant !== 'undefined' && currentVariant === 'B') {
-                    // Var B: Fixkosten ÜBER Vermieterkonto → abgehend UNTEN RECHTS
-                    fromX = fromRect.left - containerRect.left + fromRect.width * 0.85; // BOTTOM RIGHT (85%)
-                    fromY = fromRect.bottom - containerRect.top; // Unterkante
+                    // Var B: Fixkosten direkt ÜBER Vermieterkonto → abgehend MITTE UNTEN, ankommend MITTE OBEN
+                    fromX = fromRect.left - containerRect.left + fromRect.width * 0.50;
+                    fromY = fromRect.bottom - containerRect.top;
 
-                    const toVermX = toRect.left - containerRect.left + toRect.width * 0.35; // TOP leicht links
+                    const toVermX = toRect.left - containerRect.left + toRect.width * 0.50;
                     const toVermY = toRect.top - containerRect.top;
 
                     const dy = toVermY - fromY;
-                    const c1x = fromX + 30;
-                    const c1y = fromY + dy * 0.35;
-                    const c2x = toVermX - 20;
-                    const c2y = toVermY - 50;
-
-                    pathData = `M ${fromX},${fromY} C ${c1x},${c1y} ${c2x},${c2y} ${toVermX},${toVermY}`;
+                    pathData = `M ${fromX},${fromY} C ${fromX},${fromY + dy * 0.4} ${toVermX},${toVermY - dy * 0.4} ${toVermX},${toVermY}`;
                 } else {
                     // Var A: Start: Linker Rand vom Fixkostenkonto (10%)
                     fromX = fromRect.left - containerRect.left + fromRect.width * 0.10;
@@ -10542,6 +10533,141 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             });
         }, 100);
     });
+
+    // ===== DEV TOOL: Basin Drag-and-Drop Positionierung (Ctrl+Alt+F12) =====
+    (function() {
+        let dragMode = false;
+        let dragTarget = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let overlay = null;
+        let infoPanel = null;
+
+        function toggleDragMode() {
+            dragMode = !dragMode;
+            if (dragMode) { enableDragMode(); } else { disableDragMode(); }
+        }
+
+        function enableDragMode() {
+            const fc = document.getElementById('flow-container');
+            if (!fc) return;
+            _devDragMode = true;
+            overlay = document.createElement('div');
+            overlay.id = 'dev-grid-overlay';
+            overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:5;' +
+                'background-image:linear-gradient(rgba(96,165,250,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(96,165,250,0.08) 1px,transparent 1px);' +
+                'background-size:40px 40px;';
+            fc.appendChild(overlay);
+            infoPanel = document.createElement('div');
+            infoPanel.id = 'dev-info-panel';
+            infoPanel.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:9999;' +
+                'background:#1e293b;border:2px solid #60a5fa;border-radius:12px;padding:16px 24px;' +
+                'font-family:ui-monospace,monospace;font-size:13px;color:#e2e8f0;max-width:700px;width:90%;';
+            infoPanel.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+                '<span style="font-weight:bold;color:#60a5fa;">Basin Positionierung (Drag & Drop)</span>' +
+                '<div>' +
+                '<button id="dev-copy-btn" style="background:#3b82f6;color:white;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;margin-right:8px;font-size:13px;">Positionen kopieren</button>' +
+                '<button id="dev-close-btn" style="background:#ef4444;color:white;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;">Schlie\u00dfen</button>' +
+                '</div></div>' +
+                '<div id="dev-positions" style="font-size:12px;line-height:1.8;color:#94a3b8;"></div>';
+            document.body.appendChild(infoPanel);
+            document.getElementById('dev-copy-btn').addEventListener('click', copyPositions);
+            document.getElementById('dev-close-btn').addEventListener('click', toggleDragMode);
+            var basinIds = ['einkommen-basin','fixkosten-basin','konsum-basin','tagesgeld-basin','depot-basin','vermieterkonto-basin','immobilien-basin'];
+            basinIds.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                el.style.cursor = 'grab';
+                el.style.outline = '2px dashed rgba(96,165,250,0.5)';
+                el.setAttribute('data-draggable', 'true');
+            });
+            fc.addEventListener('mousedown', onMouseDown);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            updatePositionDisplay();
+        }
+
+        function disableDragMode() {
+            _devDragMode = false;
+            if (overlay) { overlay.remove(); overlay = null; }
+            if (infoPanel) { infoPanel.remove(); infoPanel = null; }
+            var els = document.querySelectorAll('[data-draggable]');
+            els.forEach(function(el) { el.style.cursor = ''; el.style.outline = ''; el.removeAttribute('data-draggable'); });
+            var fc = document.getElementById('flow-container');
+            if (fc) fc.removeEventListener('mousedown', onMouseDown);
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+
+        function onMouseDown(e) {
+            var el = e.target.closest('[data-draggable]');
+            if (!el) return;
+            e.preventDefault();
+            dragTarget = el;
+            el.style.cursor = 'grabbing';
+            el.style.zIndex = '100';
+            dragOffsetX = e.clientX - el.getBoundingClientRect().left;
+            dragOffsetY = e.clientY - el.getBoundingClientRect().top;
+        }
+
+        function onMouseMove(e) {
+            if (!dragTarget) return;
+            var fc = document.getElementById('flow-container');
+            if (!fc) return;
+            var fcRect = fc.getBoundingClientRect();
+            var newLeft = Math.round((e.clientX - fcRect.left - dragOffsetX) / 8) * 8;
+            var newTop = Math.round((e.clientY - fcRect.top - dragOffsetY) / 8) * 8;
+            dragTarget.style.left = newLeft + 'px';
+            dragTarget.style.top = newTop + 'px';
+            updatePositionDisplay();
+        }
+
+        function onMouseUp() {
+            if (dragTarget) { dragTarget.style.cursor = 'grab'; dragTarget.style.zIndex = '10'; dragTarget = null; }
+        }
+
+        function getBasinPositions() {
+            var fc = document.getElementById('flow-container');
+            if (!fc) return {};
+            var names = { 'einkommen-basin':'einkommen', 'fixkosten-basin':'fixkosten', 'konsum-basin':'konsum', 'tagesgeld-basin':'tagesgeld', 'depot-basin':'depot', 'vermieterkonto-basin':'vermieterkonto', 'immobilien-basin':'immobilien' };
+            var result = {};
+            Object.keys(names).forEach(function(id) { var el = document.getElementById(id); if (el) result[names[id]] = { top: parseInt(el.style.top) || 0, left: parseInt(el.style.left) || 0 }; });
+            return result;
+        }
+
+        function updatePositionDisplay() {
+            var posDiv = document.getElementById('dev-positions');
+            if (!posDiv) return;
+            var pos = getBasinPositions();
+            var lines = [];
+            ['einkommen','konsum','fixkosten','vermieterkonto','tagesgeld','depot','immobilien'].forEach(function(name) {
+                if (pos[name]) lines.push('<span style="color:#60a5fa;font-weight:600;">' + name + '</span>: top: <span style="color:#fbbf24;">' + pos[name].top + '</span>, left: <span style="color:#fbbf24;">' + pos[name].left + '</span>');
+            });
+            posDiv.innerHTML = lines.join('<br>');
+        }
+
+        function copyPositions() {
+            var pos = getBasinPositions();
+            var code = 'positions = {\n';
+            ['einkommen','konsum','fixkosten','vermieterkonto','tagesgeld','depot','immobilien'].forEach(function(name) {
+                if (pos[name]) code += '                ' + name + ': '.padEnd(16 - name.length) + '{ top: ' + pos[name].top + ', left: ' + pos[name].left + ' },\n';
+            });
+            code += '            };';
+            navigator.clipboard.writeText(code).then(function() {
+                var btn = document.getElementById('dev-copy-btn');
+                btn.textContent = 'Kopiert!';
+                btn.style.background = '#22c55e';
+                setTimeout(function() { btn.textContent = 'Positionen kopieren'; btn.style.background = '#3b82f6'; }, 2000);
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.altKey && e.key === 'F12') {
+                e.preventDefault();
+                toggleDragMode();
+            }
+        });
+    })();
 
     </script>
 
