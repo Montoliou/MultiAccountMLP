@@ -1,14 +1,11 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.7.7 ✅
+**Aktuelle Version:** 1.7.8 ✅
 **Nächste Version:** 1.8.0 (Weitere Features) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Januar 2026
 **Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
 
-
-Eine weitere Idee von Matthias zur Erklärung des SORR-Effekts: Die Grpahen sollten nur auf Klick alle 3 angezeigt ansonsten nur der Graph der die Sortierung nach Renditen oder Jahren aufgreift. 
-Bitte berücksichtige beim nächsten Patch
 
 ---
 
@@ -519,6 +516,33 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ 1 commit (fea7ba3)
 - ✅ Tag: v1.7.0
 - ✅ RELEASE_v1.6.0.md dokumentiert
+
+---
+
+### ✅ Version 1.7.8: Aktien & Anleihen Erklärer-Modal (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Februar 2026)
+**Fokus:** Educational Modal zur Erklärung der Beziehung zwischen Aktien und Anleihen
+
+#### Implementierte Features
+
+**📉 Tab 1: Zinssensitivität (Duration-Chart):**
+- ✅ Balkendiagramm zeigt Kursänderung pro Restlaufzeitjahr
+- ✅ Bidirektionaler Zins-Slider (-5% bis +5%) — Kursgewinne UND -verluste sichtbar
+- ✅ Pull-to-Par visuell sofort erkennbar (Balken schrumpfen zur Fälligkeit)
+
+**⚖️ Tab 2: Zins-Wippe (SVG Animation):**
+- ✅ Animierte SVG-Wippe: Marktzins ↑ = Anleihekurs ↓
+- ✅ Marktzins-Slider (0-10%) mit Live-Kursberechnung
+
+**📈 Tab 3: Equity Premium (Kapitalfluss-Erklärung):**
+- ✅ SVG-Flussdiagramm: Anleihegläubiger → Unternehmen → Aktionäre
+- ✅ Animierte Geldfluss-Pfeile + dynamische Szenarien (Gewinn/Break Even/Insolvenz)
+- ✅ Drei Erklärsäulen: Miete für Geld, Wachstum, Aktionärsgewinn
+
+**🔧 Integration:**
+- ✅ Erklärer-Tracking (Session: `anleihen` Status)
+- ✅ Sidebar-Button + Lesson Box
 
 ---
 

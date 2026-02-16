@@ -2473,6 +2473,13 @@
                 <span class="text-sm opacity-75">(Sequence of Returns)</span>
             </button>
 
+            <!-- v1.7.8: Aktien & Anleihen Erklärer Button -->
+            <button type="button" onclick="openAnleihenModal()" class="mb-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                <span class="text-xl">📊</span>
+                <span>Aktien & Anleihen</span>
+                <span class="text-sm opacity-75">(Equity Risk Premium)</span>
+            </button>
+
             <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
             <button type="button" onclick="addDepotItem()" class="mt-4 text-sm bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-md">+ Fonds hinzufügen</button>
             <hr class="border-gray-600 my-4">
@@ -3057,6 +3064,347 @@
         </div>
     </div>
 
+    <!-- v1.7.8: Aktien & Anleihen Erklärer Modal -->
+    <div id="anleihen-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="anleihen-title">
+        <div class="bg-white w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
+            <button type="button" onclick="closeAnleihenModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl z-10" aria-label="Aktien & Anleihen Modal schließen">&times;</button>
+
+            <h2 id="anleihen-title" class="text-3xl font-bold mb-2" style="color: var(--mlp-corporate-blue);">
+                📊 Aktien & Anleihen
+            </h2>
+            <p class="text-lg text-gray-700 mb-6">
+                Warum Aktien langfristig mehr Rendite bringen müssen als Anleihen.
+            </p>
+
+            <!-- Tab-Navigation -->
+            <div class="flex gap-2 mb-6">
+                <button id="anleihen-tab-btn-duration" onclick="switchAnleihenTab('duration')"
+                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all bg-blue-600 text-white">
+                    📉 Zinssensitivität
+                </button>
+                <button id="anleihen-tab-btn-seesaw" onclick="switchAnleihenTab('seesaw')"
+                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all bg-gray-200 text-gray-700 hover:bg-gray-300">
+                    ⚖️ Zins-Wippe
+                </button>
+                <button id="anleihen-tab-btn-spread" onclick="switchAnleihenTab('spread')"
+                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all bg-gray-200 text-gray-700 hover:bg-gray-300">
+                    📈 Equity Premium
+                </button>
+            </div>
+
+            <!-- Tab 1: Zinssensitivität (Duration) -->
+            <div id="anleihen-tab-duration">
+                <div class="grid grid-cols-12 gap-6">
+                    <!-- Left: Inputs (4 cols) -->
+                    <div class="col-span-4 space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Anleihe-Parameter</h3>
+
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kupon (Zinssatz)</label>
+                                <div class="relative">
+                                    <input type="number" id="anleihen-kupon" value="3.0" step="0.5" min="0" max="15"
+                                        class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900"
+                                        onchange="updateDurationChart()">
+                                    <span class="absolute right-3 top-2 text-gray-400">% p.a.</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Restlaufzeit</label>
+                                <div class="relative">
+                                    <input type="number" id="anleihen-laufzeit" value="10" step="1" min="1" max="30"
+                                        class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900"
+                                        onchange="updateDurationChart()">
+                                    <span class="absolute right-3 top-2 text-gray-400">Jahre</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nennwert</label>
+                                <div class="relative">
+                                    <input type="number" id="anleihen-nennwert" value="10000" step="1000" min="1000"
+                                        class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900"
+                                        onchange="updateDurationChart()">
+                                    <span class="absolute right-3 top-2 text-gray-400">€</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Zinsänderung</h3>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Marktzins ändert sich um: <span id="anleihen-zinsdelta-display" class="font-bold text-blue-600">+1.0%</span>
+                            </label>
+                            <input type="range" id="anleihen-zinsdelta" min="-5" max="5" step="0.5" value="1.0"
+                                class="w-full accent-blue-600"
+                                oninput="var v=parseFloat(this.value); document.getElementById('anleihen-zinsdelta-display').textContent = (v>=0?'+':'')+v.toFixed(1)+'%'; updateDurationChart();">
+                            <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                <span>-5.0%</span>
+                                <span>0</span>
+                                <span>+5.0%</span>
+                            </div>
+                        </div>
+
+                        <!-- Ergebnis-Card -->
+                        <div id="anleihen-duration-result" class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                            <div class="text-sm text-blue-700 font-semibold mb-1">Aktueller Kurs</div>
+                            <div id="anleihen-kurs-wert" class="text-2xl font-bold text-blue-900">10.000 €</div>
+                            <div id="anleihen-kurs-prozent" class="text-sm text-blue-600">100,00% vom Nennwert</div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Chart (8 cols) -->
+                    <div class="col-span-8">
+                        <div class="bg-white border border-gray-200 rounded-lg p-4" style="height: 420px;">
+                            <canvas id="anleihen-duration-chart"></canvas>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 text-center">
+                            Kursänderung der Anleihe bei Zinsanstieg — je kürzer die Restlaufzeit, desto geringer die Schwankung (Pull-to-Par)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Zins-Wippe -->
+            <div id="anleihen-tab-seesaw" style="display: none;">
+                <div class="grid grid-cols-12 gap-6">
+                    <!-- Left: Controls (4 cols) -->
+                    <div class="col-span-4 space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Marktzins</h3>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Aktueller Marktzins: <span id="anleihen-marktzins-display" class="font-bold text-blue-600">3.0%</span>
+                            </label>
+                            <input type="range" id="anleihen-marktzins" min="0" max="10" step="0.25" value="3.0"
+                                class="w-full accent-blue-600"
+                                oninput="document.getElementById('anleihen-marktzins-display').textContent = this.value + '%'; updateSeesawSVG();">
+                            <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                <span>0%</span>
+                                <span>10%</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Anleihe-Daten</h3>
+                            <p class="text-sm text-gray-600 mb-1">Kupon: <span id="seesaw-kupon" class="font-semibold">3.0%</span></p>
+                            <p class="text-sm text-gray-600 mb-1">Laufzeit: <span id="seesaw-laufzeit" class="font-semibold">10 Jahre</span></p>
+                            <p class="text-xs text-gray-500 mt-2">(Übernommen aus Tab 1)</p>
+                        </div>
+
+                        <!-- Kurs-Anzeige -->
+                        <div id="seesaw-result" class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                            <div class="text-sm text-blue-700 font-semibold mb-1">Anleihekurs</div>
+                            <div id="seesaw-kurs-wert" class="text-2xl font-bold text-blue-900">100,00%</div>
+                            <div id="seesaw-kurs-euro" class="text-sm text-blue-600">10.000 €</div>
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                            <p class="text-xs text-yellow-800">
+                                <strong>Warum?</strong> Wenn neue Anleihen höhere Zinsen bieten, werden bestehende Anleihen mit niedrigerem Kupon weniger wert — und umgekehrt.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right: SVG Wippe (8 cols) -->
+                    <div class="col-span-8 flex items-center justify-center">
+                        <div class="w-full" style="max-width: 600px;">
+                            <svg id="seesaw-svg" viewBox="0 0 500 300" class="w-full">
+                                <!-- Stütze (Dreieck) -->
+                                <polygon points="250,220 230,270 270,270" fill="#94a3b8" stroke="#64748b" stroke-width="2"/>
+                                <!-- Basis -->
+                                <rect x="180" y="270" width="140" height="8" rx="4" fill="#64748b"/>
+
+                                <!-- Wippe (rotierbar) -->
+                                <g id="seesaw-beam" transform="rotate(0, 250, 220)" style="transition: transform 0.5s ease-out;">
+                                    <!-- Balken -->
+                                    <rect x="50" y="212" width="400" height="16" rx="8" fill="#3b82f6"/>
+
+                                    <!-- Linke Seite: Marktzins -->
+                                    <g id="seesaw-left">
+                                        <rect x="70" y="162" width="100" height="50" rx="8" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+                                        <text x="120" y="183" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Marktzins</text>
+                                        <text x="120" y="200" text-anchor="middle" fill="white" font-size="16" font-weight="bold" id="seesaw-zins-text">3.0%</text>
+                                    </g>
+
+                                    <!-- Rechte Seite: Anleihekurs -->
+                                    <g id="seesaw-right">
+                                        <rect x="330" y="162" width="100" height="50" rx="8" fill="#22c55e" stroke="#16a34a" stroke-width="2"/>
+                                        <text x="380" y="183" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Anleihekurs</text>
+                                        <text x="380" y="200" text-anchor="middle" fill="white" font-size="16" font-weight="bold" id="seesaw-kurs-text">100%</text>
+                                    </g>
+                                </g>
+
+                                <!-- Labels -->
+                                <text x="120" y="145" text-anchor="middle" fill="#64748b" font-size="12">↑ steigt</text>
+                                <text x="380" y="145" text-anchor="middle" fill="#64748b" font-size="12">↓ sinkt</text>
+                                <text x="250" y="295" text-anchor="middle" fill="#94a3b8" font-size="11">Inverse Beziehung: Zins ↑ = Kurs ↓</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Equity Risk Premium -->
+            <div id="anleihen-tab-spread" style="display: none;">
+
+                <!-- Interaktive Kapitalfluss-Erklärung -->
+                <div class="grid grid-cols-12 gap-6">
+                    <!-- Left: Slider + Ergebnis (4 cols) -->
+                    <div class="col-span-4 space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Unternehmens-Rendite</h3>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Das Unternehmen erwirtschaftet: <span id="equity-rendite-display" class="font-bold text-blue-600">8%</span>
+                            </label>
+                            <input type="range" id="equity-rendite-slider" min="0" max="15" step="0.5" value="8"
+                                class="w-full accent-blue-600"
+                                oninput="updateEquityFlow();">
+                            <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                <span>0%</span>
+                                <span>15%</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Anleihe-Kosten</h3>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Zinsen an Anleihegläubiger: <span id="equity-zins-display" class="font-bold text-red-500">3%</span>
+                            </label>
+                            <input type="range" id="equity-zins-slider" min="0" max="10" step="0.5" value="3"
+                                class="w-full accent-red-500"
+                                oninput="updateEquityFlow();">
+                            <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                <span>0%</span>
+                                <span>10%</span>
+                            </div>
+                        </div>
+
+                        <!-- Ergebnis -->
+                        <div id="equity-result-card" class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                            <div class="text-sm font-semibold mb-1" id="equity-result-label" style="color: #15803d;">Gewinn der Aktionäre</div>
+                            <div id="equity-result-value" class="text-2xl font-bold" style="color: #14532d;">+5,0%</div>
+                            <div id="equity-result-text" class="text-sm" style="color: #16a34a;">Equity Risk Premium</div>
+                        </div>
+
+                        <!-- Fazit-Box -->
+                        <div id="equity-fazit" class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                            <p class="text-xs text-blue-800" id="equity-fazit-text">
+                                <strong>Ergebnis:</strong> Das Unternehmen verdient 5% mehr als es für das geliehene Geld zahlt. Dieser Überschuss steigert den Unternehmenswert und gehört den Aktionären.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Visualisierung (8 cols) -->
+                    <div class="col-span-8 flex items-center justify-center">
+                        <svg id="equity-flow-svg" viewBox="0 0 560 400" class="w-full" style="max-width: 560px;">
+                            <!-- Unternehmen (Zentrum) -->
+                            <rect x="190" y="130" width="180" height="80" rx="12" fill="#1e40af" stroke="#1e3a8a" stroke-width="2"/>
+                            <text x="280" y="162" text-anchor="middle" fill="white" font-size="13" font-weight="bold">Unternehmen</text>
+                            <text x="280" y="182" text-anchor="middle" fill="#93c5fd" font-size="12" id="equity-company-text">erwirtschaftet 8%</text>
+
+                            <!-- Anleihegläubiger (Links) -->
+                            <rect x="10" y="10" width="150" height="60" rx="10" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+                            <text x="85" y="35" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Anleihegläubiger</text>
+                            <text x="85" y="52" text-anchor="middle" fill="#fecaca" font-size="11">(Fremdkapital)</text>
+
+                            <!-- Pfeil: Gläubiger → Unternehmen (Geld verleihen) -->
+                            <defs>
+                                <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+                                </marker>
+                                <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+                                </marker>
+                                <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+                                </marker>
+                            </defs>
+
+                            <!-- Pfeil: Gläubiger verleihen Geld → Unternehmen -->
+                            <path d="M 135,70 C 135,100 210,100 210,130" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="6 3" marker-end="url(#arrow-blue)"/>
+                            <text x="145" y="100" fill="#3b82f6" font-size="10" font-weight="600">verleiht Geld</text>
+
+                            <!-- Pfeil: Unternehmen zahlt Zinsen → Gläubiger -->
+                            <path d="M 190,150 C 140,150 85,110 85,70" fill="none" stroke="#ef4444" stroke-width="3" marker-end="url(#arrow-red)">
+                                <animate attributeName="stroke-dasharray" values="0 200;200 0" dur="2s" repeatCount="indefinite"/>
+                            </path>
+                            <rect x="75" y="102" width="70" height="22" rx="4" fill="white" stroke="#ef4444" stroke-width="1"/>
+                            <text x="110" y="117" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="bold" id="equity-zins-flow">3% Zinsen</text>
+                            <text x="110" y="90" text-anchor="middle" fill="#ef4444" font-size="9">„Miete" für Geld</text>
+
+                            <!-- Aktionäre (Rechts) -->
+                            <rect x="400" y="10" width="150" height="60" rx="10" fill="#22c55e" stroke="#16a34a" stroke-width="2" id="equity-aktionaer-box"/>
+                            <text x="475" y="35" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Aktionäre</text>
+                            <text x="475" y="52" text-anchor="middle" fill="#bbf7d0" font-size="11">(Eigenkapital)</text>
+
+                            <!-- Pfeil: Unternehmen → Aktionäre (Gewinn) -->
+                            <path d="M 350,150 C 400,150 475,110 475,70" fill="none" stroke="#22c55e" stroke-width="3" id="equity-profit-arrow" marker-end="url(#arrow-green)">
+                                <animate attributeName="stroke-dasharray" values="0 200;200 0" dur="2s" repeatCount="indefinite"/>
+                            </path>
+                            <rect x="385" y="102" width="85" height="22" rx="4" fill="white" stroke="#22c55e" stroke-width="1" id="equity-profit-bg"/>
+                            <text x="428" y="117" text-anchor="middle" fill="#16a34a" font-size="12" font-weight="bold" id="equity-profit-flow">+5% Gewinn</text>
+                            <text x="428" y="90" text-anchor="middle" fill="#16a34a" font-size="9" id="equity-profit-label">Wertsteigerung</text>
+
+                            <!-- Waage / Balken-Vergleich unten -->
+                            <text x="280" y="250" text-anchor="middle" fill="#475569" font-size="12" font-weight="bold">Aufteilung der Unternehmensrendite</text>
+
+                            <!-- Balken: Gesamt-Rendite -->
+                            <rect x="80" y="268" width="400" height="30" rx="6" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+
+                            <!-- Balken: Zinskosten (rot, links) -->
+                            <rect x="80" y="268" rx="6" height="30" fill="#ef4444" id="equity-bar-zins" width="150">
+                                <animate attributeName="width" dur="0.5s" fill="freeze"/>
+                            </rect>
+                            <text y="288" fill="white" font-size="11" font-weight="bold" id="equity-bar-zins-text" x="155" text-anchor="middle">3%</text>
+
+                            <!-- Balken: Gewinn (grün, rechts neben rot) -->
+                            <rect y="268" height="30" fill="#22c55e" id="equity-bar-gewinn" x="230" width="250" rx="0">
+                                <animate attributeName="width" dur="0.5s" fill="freeze"/>
+                            </rect>
+                            <text y="288" fill="white" font-size="11" font-weight="bold" id="equity-bar-gewinn-text" x="355" text-anchor="middle">5%</text>
+
+                            <!-- Labels unter Balken -->
+                            <text x="155" y="315" text-anchor="middle" fill="#ef4444" font-size="10" id="equity-bar-label-zins">Zinsen (Anleihe)</text>
+                            <text x="355" y="315" text-anchor="middle" fill="#16a34a" font-size="10" id="equity-bar-label-gewinn">Aktionärsgewinn</text>
+
+                            <!-- Warnung bei Verlust -->
+                            <g id="equity-warning" style="display: none;">
+                                <rect x="130" y="335" width="300" height="36" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+                                <text x="280" y="350" text-anchor="middle" fill="#991b1b" font-size="11" font-weight="bold" id="equity-warning-text">Unternehmen kann Zinsen nicht bedienen!</text>
+                                <text x="280" y="365" text-anchor="middle" fill="#b91c1c" font-size="10">Insolvenzgefahr</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Drei Erklärsäulen -->
+                <div class="mt-6 grid grid-cols-3 gap-4">
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                        <p class="font-semibold text-red-800 mb-1 text-sm">1. Anleihe = „Miete" für Geld</p>
+                        <p class="text-xs text-red-700">Das Unternehmen gibt eine Anleihe heraus und verspricht, regelmäßig Zinsen zu zahlen. Wie ein Mieter, der Miete für eine Wohnung zahlt — nur hier ist es Miete für geliehenes Kapital.</p>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                        <p class="font-semibold text-green-800 mb-1 text-sm">2. Gewinne > Miete = Wachstum</p>
+                        <p class="text-xs text-green-700">Das Unternehmen investiert das Geld in Projekte und Produkte. Die Gewinne daraus müssen höher sein als die Zinszahlungen — sonst lohnt sich das Geschäft nicht. Der Überschuss steigert den Unternehmenswert.</p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                        <p class="font-semibold text-blue-800 mb-1 text-sm">3. Aktionäre profitieren vom Rest</p>
+                        <p class="text-xs text-blue-700">Erst werden die Anleihegläubiger bezahlt (Priorität!). Was übrig bleibt, gehört den Aktionären. Dafür tragen sie das volle Risiko — und verlangen deshalb langfristig eine höhere Rendite als Anleihen bieten.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson Box (immer sichtbar) -->
+            <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                <p class="text-sm text-yellow-800">
+                    <strong>💡 Merke:</strong> Eine Anleihe ist nur dann „sicher", wenn der Emittent zahlungsfähig bleibt
+                    und man die Laufzeit aussitzt. Die Schwankungen dazwischen sind lediglich Opportunitätskosten des Marktes.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Immobilien Modal -->
     <div id="immobilien-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="immobilien-modal-title" aria-describedby="immobilien-modal-description">
         <div class="bg-gray-800 w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
@@ -3336,7 +3684,8 @@
             // v1.7.2: Track which educational modules were discussed
             erklaererBesucht: {
                 costAverage: false,
-                sorr: false
+                sorr: false,
+                anleihen: false
             }
         };
 
@@ -3440,6 +3789,12 @@
         if (sorrIcon) {
             sorrIcon.textContent = wasErklaererBesucht('sorr') ? '✅' : '⭕';
             sorrIcon.className = wasErklaererBesucht('sorr') ? 'text-green-400' : 'text-gray-600';
+        }
+
+        const anleihenIcon = getEl('erklaerer-anleihen-icon');
+        if (anleihenIcon) {
+            anleihenIcon.textContent = wasErklaererBesucht('anleihen') ? '✅' : '⭕';
+            anleihenIcon.className = wasErklaererBesucht('anleihen') ? 'text-green-400' : 'text-gray-600';
         }
 
         buttonContainer.style.display = 'block';
@@ -8907,6 +9262,348 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
     // ===== END SoRR SIMULATOR =====
 
+    // ===== AKTIEN & ANLEIHEN ERKLÄRER (v1.7.8) =====
+
+    let anleihenDurationChart = null;
+    let anleihenActiveTab = 'duration';
+
+    function openAnleihenModal() {
+        markErklaererBesucht('anleihen');
+        openModal('anleihen-modal');
+        anleihenActiveTab = 'duration';
+        switchAnleihenTab('duration');
+    }
+
+    function closeAnleihenModal() {
+        closeModal('anleihen-modal');
+        if (anleihenDurationChart) { anleihenDurationChart.destroy(); anleihenDurationChart = null; }
+    }
+
+    function switchAnleihenTab(tab) {
+        anleihenActiveTab = tab;
+        var tabs = ['duration', 'seesaw', 'spread'];
+        tabs.forEach(function(t) {
+            var panel = document.getElementById('anleihen-tab-' + t);
+            var btn = document.getElementById('anleihen-tab-btn-' + t);
+            if (panel) panel.style.display = (t === tab) ? '' : 'none';
+            if (btn) {
+                if (t === tab) {
+                    btn.className = 'px-4 py-2 rounded-lg font-semibold text-sm transition-all bg-blue-600 text-white';
+                } else {
+                    btn.className = 'px-4 py-2 rounded-lg font-semibold text-sm transition-all bg-gray-200 text-gray-700 hover:bg-gray-300';
+                }
+            }
+        });
+
+        if (tab === 'duration') {
+            updateDurationChart();
+        } else if (tab === 'seesaw') {
+            // Sync parameters from Tab 1
+            var kupon = parseFloat(document.getElementById('anleihen-kupon').value) || 3;
+            var laufzeit = parseInt(document.getElementById('anleihen-laufzeit').value) || 10;
+            document.getElementById('seesaw-kupon').textContent = kupon.toFixed(1) + '%';
+            document.getElementById('seesaw-laufzeit').textContent = laufzeit + ' Jahre';
+            updateSeesawSVG();
+        } else if (tab === 'spread') {
+            updateEquityFlow();
+        }
+    }
+
+    // Bond price calculation: PV = Σ(Kupon/(1+r)^t) + 100/(1+r)^n
+    function calculateBondPrice(kuponRate, laufzeit, marktzins) {
+        var pv = 0;
+        for (var t = 1; t <= laufzeit; t++) {
+            pv += kuponRate / Math.pow(1 + marktzins, t);
+        }
+        pv += 100 / Math.pow(1 + marktzins, laufzeit);
+        return pv; // Returns price as % of par
+    }
+
+    // Duration sensitivity: price change at each remaining year when rates change by delta
+    function calculateDurationSensitivity() {
+        var kupon = parseFloat(document.getElementById('anleihen-kupon').value) || 3;
+        var laufzeit = parseInt(document.getElementById('anleihen-laufzeit').value) || 10;
+        var nennwert = parseFloat(document.getElementById('anleihen-nennwert').value) || 10000;
+        var zinsDelta = parseFloat(document.getElementById('anleihen-zinsdelta').value);
+        if (isNaN(zinsDelta)) zinsDelta = 1;
+
+        var kuponRate = kupon / 100;
+        var marktzinsBase = kupon / 100; // Base = Kupon → Kurs = 100%
+        var marktzinsShocked = marktzinsBase + zinsDelta / 100;
+
+        var labels = [];
+        var changes = [];
+
+        for (var remainingYears = laufzeit; remainingYears >= 1; remainingYears--) {
+            var priceBase = calculateBondPrice(kuponRate * 100, remainingYears, marktzinsBase);
+            var priceShocked = calculateBondPrice(kuponRate * 100, remainingYears, marktzinsShocked);
+            var change = priceShocked - priceBase; // negative = price drop
+
+            labels.push(remainingYears + (remainingYears === 1 ? ' Jahr' : ' Jahre'));
+            changes.push(parseFloat(change.toFixed(2)));
+        }
+
+        // Update result card: show current price at shocked rate for full laufzeit
+        var currentPrice = calculateBondPrice(kupon, laufzeit, marktzinsShocked);
+        var kursEuro = (currentPrice / 100) * nennwert;
+        document.getElementById('anleihen-kurs-wert').textContent = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(kursEuro);
+        document.getElementById('anleihen-kurs-prozent').textContent = currentPrice.toFixed(2).replace('.', ',') + '% vom Nennwert';
+
+        return { labels: labels, changes: changes };
+    }
+
+    function updateDurationChart() {
+        var data = calculateDurationSensitivity();
+
+        if (anleihenDurationChart) {
+            anleihenDurationChart.destroy();
+            anleihenDurationChart = null;
+        }
+
+        var ctx = document.getElementById('anleihen-duration-chart');
+        if (!ctx) return;
+
+        var zinsDelta = parseFloat(document.getElementById('anleihen-zinsdelta').value);
+        if (isNaN(zinsDelta)) zinsDelta = 1;
+
+        var titleText = zinsDelta === 0 ? 'Keine Zinsänderung (Kurs = Par)' :
+            zinsDelta > 0 ? 'Kursänderung bei +' + zinsDelta.toFixed(1) + '% Zinsanstieg' :
+            'Kursänderung bei ' + zinsDelta.toFixed(1) + '% Zinssenkung';
+
+        anleihenDurationChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Kursänderung (%)',
+                    data: data.changes,
+                    backgroundColor: data.changes.map(function(v) {
+                        return v < 0 ? 'rgba(239, 68, 68, 0.7)' : 'rgba(34, 197, 94, 0.7)';
+                    }),
+                    borderColor: data.changes.map(function(v) {
+                        return v < 0 ? 'rgb(239, 68, 68)' : 'rgb(34, 197, 94)';
+                    }),
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: titleText,
+                        font: { size: 14, weight: 'bold' },
+                        color: '#1e293b'
+                    },
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Kursänderung: ' + context.parsed.y.toFixed(2) + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Restlaufzeit', color: '#64748b' },
+                        grid: { display: false }
+                    },
+                    y: {
+                        title: { display: true, text: 'Kursänderung (%)', color: '#64748b' },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    }
+                }
+            }
+        });
+    }
+
+    // Tab 2: Zins-Wippe
+    function updateSeesawSVG() {
+        var marktzins = parseFloat(document.getElementById('anleihen-marktzins').value) || 3;
+        var kupon = parseFloat(document.getElementById('anleihen-kupon').value) || 3;
+        var laufzeit = parseInt(document.getElementById('anleihen-laufzeit').value) || 10;
+        var nennwert = parseFloat(document.getElementById('anleihen-nennwert').value) || 10000;
+
+        // Calculate bond price
+        var kursPercent = calculateBondPrice(kupon, laufzeit, marktzins / 100);
+        var kursEuro = (kursPercent / 100) * nennwert;
+
+        // Update displays
+        document.getElementById('seesaw-kurs-wert').textContent = kursPercent.toFixed(2).replace('.', ',') + '%';
+        document.getElementById('seesaw-kurs-euro').textContent = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(kursEuro);
+        document.getElementById('seesaw-zins-text').textContent = marktzins.toFixed(1) + '%';
+        document.getElementById('seesaw-kurs-text').textContent = kursPercent.toFixed(0) + '%';
+
+        // Rotate seesaw: difference from par determines angle
+        // At par (marktzins = kupon): angle = 0
+        // Higher rate: left side heavy (positive rotation = left down)
+        var zinsDiff = marktzins - kupon;
+        var angle = Math.max(-25, Math.min(25, zinsDiff * 5)); // ±25° max
+        document.getElementById('seesaw-beam').setAttribute('transform', 'rotate(' + angle + ', 250, 220)');
+
+        // Update label directions
+        var leftLabel = document.querySelector('#seesaw-svg text:nth-of-type(1)');
+        var rightLabel = document.querySelector('#seesaw-svg text:nth-of-type(2)');
+        // Labels are static for clarity
+    }
+
+    // Tab 3: Equity Risk Premium — Kapitalfluss-Visualisierung
+    function updateEquityFlow() {
+        var rendite = parseFloat(document.getElementById('equity-rendite-slider').value) || 0;
+        var zins = parseFloat(document.getElementById('equity-zins-slider').value) || 0;
+        var spread = rendite - zins;
+
+        // Update display labels
+        document.getElementById('equity-rendite-display').textContent = rendite.toFixed(1) + '%';
+        document.getElementById('equity-zins-display').textContent = zins.toFixed(1) + '%';
+
+        // SVG texts
+        document.getElementById('equity-company-text').textContent = 'erwirtschaftet ' + rendite.toFixed(1) + '%';
+        document.getElementById('equity-zins-flow').textContent = zins.toFixed(1) + '% Zinsen';
+
+        // Bars — total width = 400px for max 15%
+        var barTotal = 400;
+        var maxRate = 15;
+        var zinsWidth = Math.max(0, (zins / maxRate) * barTotal);
+        var gewinnWidth = Math.max(0, (spread / maxRate) * barTotal);
+
+        var zinsBar = document.getElementById('equity-bar-zins');
+        var gewinnBar = document.getElementById('equity-bar-gewinn');
+        var zinsText = document.getElementById('equity-bar-zins-text');
+        var gewinnText = document.getElementById('equity-bar-gewinn-text');
+
+        zinsBar.setAttribute('width', zinsWidth);
+        zinsText.setAttribute('x', 80 + zinsWidth / 2);
+        zinsText.textContent = zins.toFixed(1) + '%';
+
+        document.getElementById('equity-bar-label-zins').setAttribute('x', 80 + zinsWidth / 2);
+
+        if (spread > 0) {
+            gewinnBar.setAttribute('x', 80 + zinsWidth);
+            gewinnBar.setAttribute('width', gewinnWidth);
+            gewinnBar.setAttribute('fill', '#22c55e');
+            gewinnText.setAttribute('x', 80 + zinsWidth + gewinnWidth / 2);
+            gewinnText.textContent = '+' + spread.toFixed(1) + '%';
+            document.getElementById('equity-bar-label-gewinn').setAttribute('x', 80 + zinsWidth + gewinnWidth / 2);
+            document.getElementById('equity-bar-label-gewinn').textContent = 'Aktionärsgewinn';
+            document.getElementById('equity-bar-label-gewinn').setAttribute('fill', '#16a34a');
+        } else if (spread < 0) {
+            var lossWidth = Math.max(0, (Math.abs(spread) / maxRate) * barTotal);
+            gewinnBar.setAttribute('x', 80 + zinsWidth - lossWidth);
+            gewinnBar.setAttribute('width', lossWidth);
+            gewinnBar.setAttribute('fill', '#f97316');
+            gewinnText.setAttribute('x', 80 + zinsWidth - lossWidth / 2);
+            gewinnText.textContent = spread.toFixed(1) + '%';
+            document.getElementById('equity-bar-label-gewinn').setAttribute('x', 80 + zinsWidth - lossWidth / 2);
+            document.getElementById('equity-bar-label-gewinn').textContent = 'Verlust!';
+            document.getElementById('equity-bar-label-gewinn').setAttribute('fill', '#ea580c');
+        } else {
+            gewinnBar.setAttribute('width', 0);
+            gewinnText.textContent = '';
+            document.getElementById('equity-bar-label-gewinn').textContent = '';
+        }
+
+        // Profit arrow & text
+        var profitArrow = document.getElementById('equity-profit-arrow');
+        var profitFlow = document.getElementById('equity-profit-flow');
+        var profitLabel = document.getElementById('equity-profit-label');
+        var profitBg = document.getElementById('equity-profit-bg');
+        var aktionaerBox = document.getElementById('equity-aktionaer-box');
+
+        if (spread > 0) {
+            profitArrow.setAttribute('stroke', '#22c55e');
+            profitArrow.setAttribute('marker-end', 'url(#arrow-green)');
+            profitFlow.textContent = '+' + spread.toFixed(1) + '% Gewinn';
+            profitFlow.setAttribute('fill', '#16a34a');
+            profitLabel.textContent = 'Wertsteigerung';
+            profitLabel.setAttribute('fill', '#16a34a');
+            profitBg.setAttribute('stroke', '#22c55e');
+            aktionaerBox.setAttribute('fill', '#22c55e');
+            aktionaerBox.setAttribute('stroke', '#16a34a');
+        } else if (spread < 0) {
+            profitArrow.setAttribute('stroke', '#f97316');
+            profitArrow.setAttribute('marker-end', 'url(#arrow-red)');
+            profitFlow.textContent = spread.toFixed(1) + '% Verlust';
+            profitFlow.setAttribute('fill', '#ea580c');
+            profitLabel.textContent = 'Substanzverlust';
+            profitLabel.setAttribute('fill', '#ea580c');
+            profitBg.setAttribute('stroke', '#f97316');
+            aktionaerBox.setAttribute('fill', '#f97316');
+            aktionaerBox.setAttribute('stroke', '#ea580c');
+        } else {
+            profitArrow.setAttribute('stroke', '#94a3b8');
+            profitFlow.textContent = '0% — Break Even';
+            profitFlow.setAttribute('fill', '#64748b');
+            profitLabel.textContent = 'Kein Gewinn';
+            profitLabel.setAttribute('fill', '#64748b');
+            profitBg.setAttribute('stroke', '#94a3b8');
+            aktionaerBox.setAttribute('fill', '#94a3b8');
+            aktionaerBox.setAttribute('stroke', '#64748b');
+        }
+
+        // Result card
+        var resultCard = document.getElementById('equity-result-card');
+        var resultLabel = document.getElementById('equity-result-label');
+        var resultValue = document.getElementById('equity-result-value');
+        var resultText = document.getElementById('equity-result-text');
+
+        if (spread > 0) {
+            resultCard.className = 'bg-green-50 border border-green-200 p-4 rounded-lg';
+            resultLabel.textContent = 'Gewinn der Aktionäre';
+            resultLabel.style.color = '#15803d';
+            resultValue.textContent = '+' + spread.toFixed(1) + '%';
+            resultValue.style.color = '#14532d';
+            resultText.textContent = 'Equity Risk Premium';
+            resultText.style.color = '#16a34a';
+        } else if (spread < 0) {
+            resultCard.className = 'bg-red-50 border border-red-200 p-4 rounded-lg';
+            resultLabel.textContent = 'Verlust der Aktionäre';
+            resultLabel.style.color = '#991b1b';
+            resultValue.textContent = spread.toFixed(1) + '%';
+            resultValue.style.color = '#7f1d1d';
+            resultText.textContent = 'Unternehmen verbrennt Kapital';
+            resultText.style.color = '#b91c1c';
+        } else {
+            resultCard.className = 'bg-gray-50 border border-gray-200 p-4 rounded-lg';
+            resultLabel.textContent = 'Break Even';
+            resultLabel.style.color = '#475569';
+            resultValue.textContent = '±0%';
+            resultValue.style.color = '#1e293b';
+            resultText.textContent = 'Kein Mehrwert für Aktionäre';
+            resultText.style.color = '#64748b';
+        }
+
+        // Warning
+        var warning = document.getElementById('equity-warning');
+        warning.style.display = spread < 0 ? '' : 'none';
+
+        // Fazit text
+        var fazit = document.getElementById('equity-fazit');
+        var fazitText = document.getElementById('equity-fazit-text');
+        if (spread > 2) {
+            fazit.className = 'bg-blue-50 border border-blue-200 p-3 rounded-lg';
+            fazitText.innerHTML = '<strong>Ergebnis:</strong> Das Unternehmen verdient ' + spread.toFixed(1) + '% mehr als es für das geliehene Geld zahlt. Dieser Überschuss steigert den Unternehmenswert und gehört den Aktionären.';
+            fazitText.className = 'text-xs text-blue-800';
+        } else if (spread > 0) {
+            fazit.className = 'bg-yellow-50 border border-yellow-200 p-3 rounded-lg';
+            fazitText.innerHTML = '<strong>Knapp:</strong> Der Spread von nur ' + spread.toFixed(1) + '% reicht kaum, um das höhere Risiko der Aktionäre zu kompensieren. Aktien wären hier wenig attraktiv.';
+            fazitText.className = 'text-xs text-yellow-800';
+        } else if (spread === 0) {
+            fazit.className = 'bg-gray-50 border border-gray-300 p-3 rounded-lg';
+            fazitText.innerHTML = '<strong>Break Even:</strong> Das Unternehmen verdient exakt so viel wie es an Zinsen zahlt. Für Aktionäre gibt es keinen Mehrwert — warum sollte jemand das Risiko tragen?';
+            fazitText.className = 'text-xs text-gray-700';
+        } else {
+            fazit.className = 'bg-red-50 border border-red-200 p-3 rounded-lg';
+            fazitText.innerHTML = '<strong>Gefahr!</strong> Das Unternehmen verdient weniger als es an Zinsen zahlt. Es verliert ' + Math.abs(spread).toFixed(1) + '% pro Jahr an Substanz. Langfristig führt das zur Insolvenz — die Anleihe wird wertlos, die Aktie auch.';
+            fazitText.className = 'text-xs text-red-800';
+        }
+    }
+
+    // ===== END AKTIEN & ANLEIHEN ERKLÄRER =====
+
     // Toast Notification System
     function showToast(message, type = 'success', duration = 4000) {
         // Create toast container if it doesn't exist
@@ -10790,6 +11487,10 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                         <span id="erklaerer-sorr-icon" class="text-gray-600">⭕</span>
                         <span class="text-xs text-gray-400">Sequence of Returns Risk</span>
                     </div>
+                    <div class="flex items-center gap-2">
+                        <span id="erklaerer-anleihen-icon" class="text-gray-600">⭕</span>
+                        <span class="text-xs text-gray-400">Aktien & Anleihen</span>
+                    </div>
                 </div>
                 <p class="text-xs text-gray-500 px-3 mt-2">✅ = im PDF enthalten</p>
             </div>
@@ -10876,7 +11577,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.7.7</span>
+                    <span class="font-mono">v1.7.8</span>
                 </div>
                 <div class="text-xs text-gray-600 text-center mt-1">
                     Notfall: <kbd class="text-xs">Ctrl+Shift+E</kbd>
