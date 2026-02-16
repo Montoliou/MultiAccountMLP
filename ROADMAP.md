@@ -1,10 +1,14 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.7.6 ✅
+**Aktuelle Version:** 1.7.7 ✅
 **Nächste Version:** 1.8.0 (Weitere Features) - MEDIUM PRIORITY ⭐⭐
 **Ziel-Version:** 2.0.0
 **Datum:** Januar 2026
 **Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
+
+
+Eine weitere Idee von Matthias zur Erklärung des SORR-Effekts: Die Grpahen sollten nur auf Klick alle 3 angezeigt ansonsten nur der Graph der die Sortierung nach Renditen oder Jahren aufgreift. 
+Bitte berücksichtige beim nächsten Patch
 
 ---
 
@@ -515,6 +519,29 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ 1 commit (fea7ba3)
 - ✅ Tag: v1.7.0
 - ✅ RELEASE_v1.6.0.md dokumentiert
+
+---
+
+### ✅ Version 1.7.7: SoRR Simulator Einzelansicht (ABGESCHLOSSEN)
+
+**Status:** ✅ Released (Februar 2026)
+**Fokus:** UX-Verbesserung des Sequence-of-Returns-Risk Simulators
+
+#### Implementierte Features
+
+**📊 Einzelgraph-Ansicht (Standard):**
+- ✅ Standardmäßig nur 1 Graph sichtbar (passend zur Tabellen-Sortierung)
+- ✅ Tabelle nach Jahren (aufsteigend) → Historischer Verlauf (grün)
+- ✅ Tabelle nach Jahren (absteigend) → Best-First (blau)
+- ✅ Tabelle nach Rendite (aufsteigend) → Worst-First (rot)
+- ✅ Tabelle nach Rendite (absteigend) → Best-First (blau)
+- ✅ Dynamischer Chart-Titel und Untertitel je nach Szenario
+- ✅ Result-Cards einzeln ein-/ausgeblendet
+
+**🔀 Vergleichsansicht (per Button):**
+- ✅ "Alle Szenarien vergleichen" Button über dem Chart
+- ✅ Toggle zwischen Einzel- und Vergleichsansicht
+- ✅ Bei Sortierungswechsel automatisch zurück zur Einzelansicht
 
 ---
 

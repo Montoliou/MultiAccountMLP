@@ -2996,9 +2996,14 @@
 
                     <!-- Chart Container -->
                     <div class="bg-white p-6 rounded-lg border border-gray-200">
-                        <h3 class="text-lg font-semibold mb-2">Vermögensentwicklung im Vergleich</h3>
-                        <p class="text-sm text-gray-500 mb-6">
-                            Drei Szenarien mit exakt identischer Durchschnittsrendite - nur die Reihenfolge unterscheidet sich!
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 id="sorr-chart-title" class="text-lg font-semibold">Vermögensentwicklung</h3>
+                            <button id="sorr-compare-btn" onclick="toggleSoRRCompare()" class="text-xs font-semibold py-2 px-4 rounded-lg border-2 transition-all duration-200 border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50">
+                                Alle Szenarien vergleichen
+                            </button>
+                        </div>
+                        <p id="sorr-chart-subtitle" class="text-sm text-gray-500 mb-6">
+                            Sortiere die Tabelle links, um das Szenario zu wechseln.
                         </p>
                         <div style="position: relative; height: 450px;">
                             <canvas id="sorr-chart"></canvas>
@@ -3006,20 +3011,20 @@
                     </div>
 
                     <!-- Result Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="p-4 rounded-lg border border-green-200 bg-green-50">
+                    <div id="sorr-result-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div id="sorr-card-history" class="p-4 rounded-lg border border-green-200 bg-green-50">
                             <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Historisch (2005-2024)</h4>
                             <div id="sorr-result-history" class="text-2xl font-bold mt-1 text-green-700">500.000 €</div>
                             <div id="sorr-duration-history" class="text-xs text-gray-600 mt-1 font-medium">Endlos</div>
                             <p class="text-xs text-gray-500 mt-2">Startet schwach (2008 Crash), endet stark.</p>
                         </div>
-                        <div class="p-4 rounded-lg border border-blue-200 bg-blue-50">
+                        <div id="sorr-card-reverse" class="p-4 rounded-lg border border-blue-200 bg-blue-50">
                             <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Best-First (2024-2005)</h4>
                             <div id="sorr-result-reverse" class="text-2xl font-bold mt-1 text-blue-700">500.000 €</div>
                             <div id="sorr-duration-reverse" class="text-xs text-gray-600 mt-1 font-medium">Endlos</div>
                             <p class="text-xs text-gray-500 mt-2">Startet stark (2024, 2023...), endet schwach.</p>
                         </div>
-                        <div class="p-4 rounded-lg border border-red-200 bg-red-50">
+                        <div id="sorr-card-worst" class="p-4 rounded-lg border border-red-200 bg-red-50">
                             <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Worst-First</h4>
                             <div id="sorr-result-worst" class="text-2xl font-bold mt-1 text-red-700">500.000 €</div>
                             <div id="sorr-duration-worst" class="text-xs text-gray-600 mt-1 font-medium">Endlos</div>
@@ -8525,6 +8530,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     let sorrChart = null;
     let sorrSortConfig = { key: 'year', direction: 'ascending' };
     let sorrCurrentData = { history: [], reverse: [], worst: [] };
+    let sorrShowAll = false;
 
     function openSoRRModal() {
         // v1.7.2: Mark as visited for PDF inclusion
@@ -8607,6 +8613,20 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         }
 
         renderSoRRTable();
+
+        // Bei Sortierungswechsel: Einzelansicht + Chart/Cards aktualisieren
+        if (sorrShowAll) {
+            sorrShowAll = false;
+            var btn = document.getElementById('sorr-compare-btn');
+            if (btn) {
+                btn.className = 'text-xs font-semibold py-2 px-4 rounded-lg border-2 transition-all duration-200 border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50';
+                btn.textContent = 'Alle Szenarien vergleichen';
+            }
+        }
+        if (sorrCurrentData.history.length > 0) {
+            updateSoRRChart();
+            updateSoRRResultCards();
+        }
     }
 
     function simulatePortfolio(orderType) {
@@ -8707,8 +8727,58 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         document.getElementById('sorr-duration-reverse').textContent = calculateDuration(sorrCurrentData.reverse);
         document.getElementById('sorr-duration-worst').textContent = calculateDuration(sorrCurrentData.worst);
 
-        // Update chart
+        // Update chart + cards visibility
         updateSoRRChart();
+        updateSoRRResultCards();
+    }
+
+    function updateSoRRResultCards() {
+        var cardHistory = document.getElementById('sorr-card-history');
+        var cardReverse = document.getElementById('sorr-card-reverse');
+        var cardWorst = document.getElementById('sorr-card-worst');
+        var container = document.getElementById('sorr-result-cards');
+        if (!cardHistory || !cardReverse || !cardWorst || !container) return;
+
+        if (sorrShowAll) {
+            // Alle 3 Cards nebeneinander
+            container.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
+            cardHistory.style.display = '';
+            cardReverse.style.display = '';
+            cardWorst.style.display = '';
+        } else {
+            // Nur die aktive Card, zentriert
+            var active = getActiveSoRRScenario();
+            container.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
+            cardHistory.style.display = active === 'history' ? '' : 'none';
+            cardReverse.style.display = active === 'reverse' ? '' : 'none';
+            cardWorst.style.display = active === 'worst' ? '' : 'none';
+        }
+    }
+
+    function getActiveSoRRScenario() {
+        // Welches Szenario passt zur aktuellen Tabellen-Sortierung?
+        if (sorrSortConfig.key === 'year' && sorrSortConfig.direction === 'ascending') return 'history';
+        if (sorrSortConfig.key === 'year' && sorrSortConfig.direction === 'descending') return 'reverse';
+        if (sorrSortConfig.key === 'return' && sorrSortConfig.direction === 'ascending') return 'worst';
+        if (sorrSortConfig.key === 'return' && sorrSortConfig.direction === 'descending') return 'reverse';
+        return 'history';
+    }
+
+    function toggleSoRRCompare() {
+        sorrShowAll = !sorrShowAll;
+        updateSoRRChart();
+        updateSoRRResultCards();
+        // Button-Style aktualisieren
+        var btn = document.getElementById('sorr-compare-btn');
+        if (btn) {
+            if (sorrShowAll) {
+                btn.className = 'text-xs font-semibold py-2 px-4 rounded-lg border-2 transition-all duration-200 border-blue-500 text-white bg-blue-500 hover:bg-blue-600';
+                btn.textContent = 'Einzelansicht';
+            } else {
+                btn.className = 'text-xs font-semibold py-2 px-4 rounded-lg border-2 transition-all duration-200 border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50';
+                btn.textContent = 'Alle Szenarien vergleichen';
+            }
+        }
     }
 
     function updateSoRRChart() {
@@ -8723,6 +8793,66 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             Worst: sorrCurrentData.worst[index]?.balance || 0
         }));
 
+        // Dataset-Definitionen
+        const allDatasets = {
+            history: {
+                label: 'Historischer Verlauf (2005-2024)',
+                data: chartData.map(d => d.History),
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(22, 163, 74, 0.15)',
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            },
+            reverse: {
+                label: 'Best-First (2024-2005)',
+                data: chartData.map(d => d.Reverse),
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.15)',
+                borderWidth: 3,
+                borderDash: [5, 5],
+                tension: 0.3,
+                fill: true,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            },
+            worst: {
+                label: 'Schlechteste Jahre zuerst',
+                data: chartData.map(d => d.Worst),
+                borderColor: '#dc2626',
+                backgroundColor: 'rgba(220, 38, 38, 0.15)',
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            }
+        };
+
+        // Datasets auswählen
+        var datasets;
+        var titleEl = document.getElementById('sorr-chart-title');
+        var subtitleEl = document.getElementById('sorr-chart-subtitle');
+        if (sorrShowAll) {
+            // Alle 3 Szenarien, kein Fill
+            datasets = [
+                Object.assign({}, allDatasets.history, { fill: false }),
+                Object.assign({}, allDatasets.reverse, { fill: false }),
+                Object.assign({}, allDatasets.worst, { fill: false, borderWidth: 2 })
+            ];
+            if (titleEl) titleEl.textContent = 'Vermögensentwicklung im Vergleich';
+            if (subtitleEl) subtitleEl.textContent = 'Drei Szenarien mit identischer Durchschnittsrendite \u2013 nur die Reihenfolge unterscheidet sich!';
+        } else {
+            var active = getActiveSoRRScenario();
+            datasets = [allDatasets[active]];
+            var titles = { history: 'Historischer Verlauf (2005\u20132024)', reverse: 'Best-First (2024\u20132005)', worst: 'Schlechteste Jahre zuerst' };
+            var subtitles = { history: 'Reihenfolge wie sie tats\u00e4chlich war: 2005, 2006, 2007...', reverse: 'Beste Renditen zuerst: Von den guten in die schlechten Jahre.', worst: 'Schlechteste Renditen zuerst: Crash direkt zu Beginn der Entnahme.' };
+            if (titleEl) titleEl.textContent = titles[active];
+            if (subtitleEl) subtitleEl.textContent = subtitles[active];
+        }
+
         // Destroy previous chart
         if (sorrChart) {
             sorrChart.destroy();
@@ -8732,62 +8862,22 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         sorrChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: chartData.map(d => `Jahr ${d.period}`),
-                datasets: [
-                    {
-                        label: 'Historischer Verlauf (2005-2024)',
-                        data: chartData.map(d => d.History),
-                        borderColor: '#16a34a',
-                        backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.3,
-                        fill: false,
-                        pointRadius: 3,
-                        pointHoverRadius: 5
-                    },
-                    {
-                        label: 'Best-First (2024-2005)',
-                        data: chartData.map(d => d.Reverse),
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        borderWidth: 3,
-                        borderDash: [5, 5],
-                        tension: 0.3,
-                        fill: false,
-                        pointRadius: 3,
-                        pointHoverRadius: 5
-                    },
-                    {
-                        label: 'Schlechteste Jahre zuerst',
-                        data: chartData.map(d => d.Worst),
-                        borderColor: '#dc2626',
-                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: false,
-                        pointRadius: 2,
-                        pointHoverRadius: 4
-                    }
-                ]
+                labels: chartData.map(d => 'Jahr ' + d.period),
+                datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: true,
+                        display: sorrShowAll,
                         position: 'top',
-                        labels: {
-                            padding: 20,
-                            font: {
-                                size: 12
-                            }
-                        }
+                        labels: { padding: 20, font: { size: 12 } }
                     },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${formatMoney(context.parsed.y)}`;
+                                return context.dataset.label + ': ' + formatMoney(context.parsed.y);
                             }
                         }
                     }
@@ -8795,27 +8885,14 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Vermögen (€)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return formatMoney(value);
-                            }
-                        }
+                        title: { display: true, text: 'Verm\u00f6gen (\u20ac)' },
+                        ticks: { callback: function(value) { return formatMoney(value); } }
                     },
                     x: {
-                        title: {
-                            display: true,
-                            text: 'Jahre'
-                        }
+                        title: { display: true, text: 'Jahre' }
                     }
                 },
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                }
+                interaction: { mode: 'index', intersect: false }
             }
         });
     }
@@ -10799,7 +10876,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
             </div>
             <div class="px-3 py-2 border-t border-gray-700">
                 <div class="text-xs text-gray-500 text-center">
-                    <span class="font-mono">v1.7.6</span>
+                    <span class="font-mono">v1.7.7</span>
                 </div>
                 <div class="text-xs text-gray-600 text-center mt-1">
                     Notfall: <kbd class="text-xs">Ctrl+Shift+E</kbd>
