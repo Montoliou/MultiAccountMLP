@@ -1,9 +1,9 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
 **Aktuelle Version:** 1.7.8 ✅
-**Nächste Version:** 1.8.0 (Weitere Features) - MEDIUM PRIORITY ⭐⭐
-**Ziel-Version:** 2.0.0
-**Datum:** Januar 2026
+**Nächste Version:** 2.0.0 (Design-Overhaul & Architektur) - HIGH PRIORITY ⭐⭐⭐
+**Ziel-Version:** 3.0.0 (Vermögensverzehr-Modus)
+**Datum:** Februar 2026
 **Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
 
 
@@ -1582,9 +1582,224 @@ git log --oneline --decorate  # See all tagged versions
 
 ---
 
-### Version 2.0.0: Vermögensverzehr-Modus (Ruhestandsplanung)
+### 🎨 Version 2.0.0: Design-Overhaul & Architektur-Modernisierung
 
-**ETA:** Q2 2027 (10-12 Wochen)
+**ETA:** Q1-Q2 2026 (4-6 Sessions)
+**Fokus:** Komplettes MLP Corporate Design + Architektur-Entschuldung
+**Priorität:** ⭐⭐⭐ HIGH
+
+#### Warum v2.0 jetzt?
+
+Die App ist funktional ausgereift (Basins, Flows, Erklärer, Exporte). Aber das UI ist ein gewachsener Mix aus:
+- Tailwind-Utility-Classes (teilweise JIT-Probleme)
+- Inline-Styles (nachträglich für Bugfixes)
+- Generic Browser-Defaults (Buttons, Inputs, Slider)
+- Nur die neusten Erklärer-Modals (Anleihen) haben das Premium-MLP-Design
+
+v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
+
+#### Design-Prinzipien
+
+1. **MLP Corporate Design Guide** als einzige Designquelle
+2. **CSS Custom Properties** statt verstreuter Hex-Werte
+3. **Konsistente Komponenten** — ein Button sieht überall gleich aus
+4. **Premium-Ästhetik** — die Anleihen-Modals als Referenz für alles
+5. **8px Grid** durchgängig (aktuell teilweise willkürlich)
+
+---
+
+#### Phase 1: Design-System-Foundation (Session 1)
+
+**CSS Custom Properties & Design Tokens:**
+
+```css
+:root {
+  /* MLP Brand Colors */
+  --mlp-primary: #033D5D;        /* MLP Blau Dark */
+  --mlp-secondary: #BEB6AA;      /* Titanium */
+  --mlp-accent: #47A190;         /* Türkis */
+
+  /* Text */
+  --mlp-text-dark: #2B2B2B;
+  --mlp-text-medium: #717171;
+  --mlp-text-light: #FFFFFF;
+
+  /* Backgrounds */
+  --mlp-bg-white: #FFFFFF;
+  --mlp-bg-gray: #F8F8F8;
+  --mlp-bg-dark: #033D5D;
+
+  /* Functional (NUR semantisch!) */
+  --mlp-info: #047584;
+  --mlp-success: #13853E;
+  --mlp-warning: #E3691E;
+  --mlp-error: #C1293D;
+
+  /* Spacing (8px Grid) */
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 32px;
+  --space-xl: 48px;
+  --space-xxl: 64px;
+
+  /* Typography */
+  --font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-body: 16px;
+  --font-size-small: 14px;
+  --font-size-h1: 32px;
+  --font-size-h2: 24px;
+  --font-size-h3: 20px;
+
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --shadow-elevated: 0 4px 12px rgba(0,0,0,0.15);
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+```
+
+- [ ] CSS Custom Properties in `<style>` Block definieren
+- [ ] Alle hardcoded Hex-Werte durch `var(--mlp-*)` ersetzen (schrittweise)
+- [ ] Globale Reset-Styles (kein `#000000`, min font-size 16px)
+
+---
+
+#### Phase 2: Globale Komponenten-Styles (Session 1-2)
+
+**Buttons — einheitlich für die gesamte App:**
+- [ ] `.mlp-btn-primary` — MLP Blau Dark bg, weiß text, hover/active/focus states
+- [ ] `.mlp-btn-secondary` — Titanium bg, Text Dark, hover states
+- [ ] `.mlp-btn-tertiary` — Weiß bg, MLP Blau border, hover states
+- [ ] `.mlp-btn-danger` — Error Red, nur für destruktive Aktionen
+- [ ] Alle bestehenden Buttons migrieren (Sidebar, Modals, Controls)
+
+**Form Inputs — konsistentes Styling:**
+- [ ] Text-Inputs: Titanium border, Focus=MLP Blau, 40-48px Höhe
+- [ ] Range-Slider: Globaler Style (bereits als Vorlage im Anleihen-Modal)
+- [ ] Select-Dropdowns: Passend zu Inputs
+- [ ] Checkboxen/Toggles: MLP-branded
+
+**Cards & Container:**
+- [ ] `.mlp-card` — Titanium border ODER subtle shadow, nie beides
+- [ ] `.mlp-section` — F8F8F8 bg, 8px-Grid padding
+- [ ] `.mlp-modal` — Einheitliche Modal-Basis (aktuell 4+ verschiedene Stile)
+
+---
+
+#### Phase 3: App-Chrome Redesign (Session 2)
+
+**Header/Control Bar:**
+- [ ] Obere Leiste: MLP Blau Dark Hintergrund, weiß Text
+- [ ] Varianten-Toggle (A/B): Premium-styled, nicht generic Tailwind
+- [ ] Beratungsmodus-Stepper: MLP-Farben für Steps
+- [ ] Session-Info-Dropdown: Glasmorphism beibehalten, MLP-Farben
+
+**Session-Start/End Modals:**
+- [ ] Session-Start: MLP-branded, professioneller erster Eindruck
+- [ ] Session-End: Export-Buttons in MLP-Style
+- [ ] Inputs: Konsistent mit globalem Form-Style
+
+**Sidebar (Erklärer & Einstellungen):**
+- [ ] Erklärer-Buttons: Einheitliches Card-Design statt Gradient-Buttons
+- [ ] Einstellungs-Panel: MLP-styled Toggles und Selects
+- [ ] Erklärer-Status-Icons: MLP Türkis für besucht statt generic grün
+
+---
+
+#### Phase 4: Basin & Flow Redesign (Session 3)
+
+**Basins:**
+- [ ] Rahmen: Titanium borders statt gemischter Styles
+- [ ] Labels: MLP Blau Dark Überschriften, Text Dark Werte
+- [ ] Wert-Pills: Konsistente Farben (Türkis für positiv, Error Red nur bei Defizit)
+- [ ] Hover-States: Subtile Shadow-Elevation
+
+**Flows (Pfeile & Labels):**
+- [ ] Flow-Farben: MLP-Palette (aktuell teilweise Tailwind-Defaults)
+- [ ] Flow-Labels: Bessere Lesbarkeit, konsistente Positionierung
+- [ ] Animations: Smooth, professionell, nicht verspielt
+
+**Gradient-Zonen:**
+- [ ] Farb-Abstimmung auf MLP-Palette (subtiler, professioneller)
+- [ ] Opacity-Werte optimieren für Light Theme
+- [ ] Transitions bei Beratungsmodus-Steps verfeinern
+
+---
+
+#### Phase 5: Erklärer-Modals vereinheitlichen (Session 3-4)
+
+**Referenz-Design: Anleihen-Modal (v1.7.8)**
+- Premium MLP-Farben, Inline-Styles, professionelle Ästhetik
+
+**Migration auf einheitlichen Style:**
+- [ ] Cost-Average-Modal: MLP-Farben, Tab-Style, Chart-Farben
+- [ ] SoRR-Modal: MLP-Farben, Slider-Style, Chart-Farben
+- [ ] Immobilien-Modal: MLP-styled Formulare und Ergebnisse
+- [ ] MSCI-Renditedreieck: Farbgebung prüfen
+
+**Gemeinsame Erklärer-Elemente:**
+- [ ] Tab-Navigation: Einheitliches Pattern (wie Anleihen)
+- [ ] Lesson-Boxes: MLP-Style (BEB6AA border, nicht gelb)
+- [ ] Result-Cards: Konsistente Darstellung über alle Modals
+
+---
+
+#### Phase 6: Export & Print (Session 4)
+
+**PDF-Export:**
+- [ ] MLP-Logo oder Textmarke im Header
+- [ ] MLP Blau Dark Überschriften
+- [ ] Titanium Trennlinien
+- [ ] Professionelle Tabellen-Formatierung
+
+**Print-Stylesheet:**
+- [ ] `@media print` optimiert für MLP-Branding
+- [ ] Korrekte Farben für Druck (CMYK-safe Varianten beachten)
+
+---
+
+#### Phase 7: Architektur-Entschuldung (Session 5-6, optional)
+
+**CSS Extraktion:**
+- [ ] `<style>` Block aus index.html in separate `styles.css`
+- [ ] Inline-Styles wo möglich durch CSS-Klassen ersetzen
+- [ ] Tailwind-Dependencies evaluieren (beibehalten vs. entfernen)
+
+**JavaScript Modularisierung (evaluieren):**
+- [ ] Erklärer-Module in separate Dateien? (Pro: Wartbarkeit, Con: Lade-Logik)
+- [ ] Gemeinsame Utility-Functions extrahieren (calculateBondPrice etc.)
+- [ ] Event-Handler konsolidieren
+
+**Code-Hygiene:**
+- [ ] Auskommentierte Blöcke entfernen (MSCI-Animation etc.)
+- [ ] Console.log-Statements aufräumen
+- [ ] Konsistente Namenskonventionen (camelCase vs. kebab-case)
+
+---
+
+#### v2.0 Qualitäts-Checkliste (vor Release)
+
+- [ ] **Kein `#000000`** irgendwo in der App (alles `#2B2B2B` oder heller)
+- [ ] **Kein arbitrary spacing** (alles 8px-Grid)
+- [ ] **Alle Buttons** haben hover/active/focus/disabled States
+- [ ] **Alle Inputs** haben focus/error States
+- [ ] **Alle Modals** nutzen gleiche Basis-Struktur
+- [ ] **Contrast Ratios** WCAG-konform (4.5:1 für Text, 3:1 für große Elemente)
+- [ ] **Mobile responsive** getestet (375px, 768px, 1024px)
+- [ ] **Lokal getestet** — alle Features funktionieren noch
+- [ ] **Variante A + B** visuell konsistent
+- [ ] **Beratungsmodus** funktioniert mit neuem Design
+- [ ] **Exports** (PDF, CSV, Excel, JSON) funktionieren
+
+---
+
+### Version 3.0.0: Vermögensverzehr-Modus (Ruhestandsplanung)
+
+**ETA:** Q3-Q4 2026 (10-12 Wochen)
 **Fokus:** Paradigmenwechsel - Von "Vermögensaufbau" zu "Vermögensverzehr"
 
 **Zielgruppe:** Pensionäre, Rentner, Menschen vor dem Ruhestand
@@ -1620,7 +1835,7 @@ Einnahmen-Quellen:
 
 #### Features
 
-**2.0.1: Modus-Toggle & Datenmodell** (Woche 1-2)
+**3.0.1: Modus-Toggle & Datenmodell** (Woche 1-2)
 
 - [ ] **App-Modus-Switch**
   - Toggle-Button (wie Variante A/B): "Vermögensaufbau" ⇄ "Vermögensverzehr"
@@ -1662,7 +1877,7 @@ Einnahmen-Quellen:
   - Gewünschter Konsum (statt berechnet)
   - Depot-Startwert, Rendite, Inflation
 
-**2.0.2: Berechnungs-Engine** (Woche 2-4)
+**3.0.2: Berechnungs-Engine** (Woche 2-4)
 
 - [ ] **Vermögensverzehr-Algorithmus**
   - Berechne monatliche Depot-Entnahme
@@ -1689,7 +1904,7 @@ Einnahmen-Quellen:
   - Nachhaltige Entnahmerate berechnen
   - Warnung: "Sie entnehmen 6% p.a. - empfohlen: max. 4%"
 
-**2.0.3: UI/UX - Umgekehrte Flows** (Woche 4-6)
+**3.0.3: UI/UX - Umgekehrte Flows** (Woche 4-6)
 
 - [ ] **Neue Basin-Anordnung (Verzehr-Modus)**
   ```
@@ -1718,7 +1933,7 @@ Einnahmen-Quellen:
   - Dann Überschuss zurück ins Depot
   - Visual: Grüner Rückfluss-Pfeil Tagesgeld → Depot
 
-**2.0.4: Prognose-Chart (Must-Have)** (Woche 6-7)
+**3.0.4: Prognose-Chart (Must-Have)** (Woche 6-7)
 
 - [ ] **Vermögensverlaufs-Chart**
   - X-Achse: Alter (67 → 105 Jahre)
@@ -1738,7 +1953,7 @@ Einnahmen-Quellen:
   - Chart aktualisiert live
   - Vergleich: Optimistisch / Realistisch / Pessimistisch
 
-**2.0.5: Immobilien-Verkaufs-Simulation** (Woche 7-8)
+**3.0.5: Immobilien-Verkaufs-Simulation** (Woche 7-8)
 
 - [ ] **Automatischer Vorschlag bei Fehlbetrag**
   ```
@@ -1769,7 +1984,7 @@ Einnahmen-Quellen:
   - Input-Feld direkt im Modal
   - Automatisches Hinzufügen zu Fixkosten
 
-**2.0.6: Depot-Verzehr-Szenarien** (Woche 8-9)
+**3.0.6: Depot-Verzehr-Szenarien** (Woche 8-9)
 
 - [ ] **Szenario-Auswahl**
   - Checkbox 1: "Depot-Verzehr aktivieren" (Standard)
@@ -1790,7 +2005,7 @@ Einnahmen-Quellen:
   - Highlight: Beste Option für gewünschtes Endalter
   - Erklärung: "Warum dieses Szenario?"
 
-**2.0.7: Export-Erweiterung für Verzehr-Modus** (Woche 9-10)
+**3.0.7: Export-Erweiterung für Verzehr-Modus** (Woche 9-10)
 
 - [ ] **PDF-Export: Ruhestandsplanung**
   - Sektion: "Vermögensverzehr-Analyse"
@@ -1804,7 +2019,7 @@ Einnahmen-Quellen:
   - 50 Jahre vorausberechnet
   - Excel-kompatibel (UTF-8 BOM)
 
-**2.0.8: Testing & Finalisierung** (Woche 10-12)
+**3.0.8: Testing & Finalisierung** (Woche 10-12)
 
 - [ ] **Modus-Wechsel testen**
   - Aufbau ↔ Verzehr ohne Datenverlust
@@ -1921,7 +2136,7 @@ Tab-Close → sessionStorage.clear()
 - [ ] **Export-Rate**: > 90% der Sessions werden exportiert
 - [ ] **Session-Dauer**: Durchschnittlich 20-40 Min.
 
-### Version 2.0.0 (Enterprise)
+### Version 3.0.0 (Enterprise)
 
 - [ ] **Berater-Adoption**: > 80% nutzen regelmäßig
 - [ ] **Export-Formate**: PDF + CSV Standard
@@ -2034,7 +2249,7 @@ Tab-Close → sessionStorage.clear()
 
 ## 🎯 Roadmap-Ziele
 
-**🎯 Ziel: Version 2.0.0 (Vermögensverzehr-Modus) bis Q1-Q2 2027**
+**🎯 Ziel: Version 2.0.0 (Design-Overhaul) → Version 3.0.0 (Vermögensverzehr-Modus)**
 **📅 Nächster Meilenstein: v1.6.4 (Presenter-Mode) - Q1 2026**
 
 **Langfristige Vision:**
