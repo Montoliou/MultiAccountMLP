@@ -544,6 +544,12 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 - ✅ Erklärer-Tracking (Session: `anleihen` Status)
 - ✅ Sidebar-Button + Lesson Box
 
+**🐛 Bugfix: SoRR Best-First Sortierung (v1.7.8):**
+- ✅ Best-First sortiert jetzt korrekt nach Rendite absteigend (beste zuerst: 2009 → 2008)
+- ✅ Vorher: `dataSequence.reverse()` kehrte nur chronologische Reihenfolge um (2024→2005)
+- ✅ Nachher: `dataSequence.sort((a, b) => b.return - a.return)` — echte Rendite-Sortierung
+- ✅ Labels aktualisiert: "Best-First (2009→2008)" statt "(2024-2005)"
+
 ---
 
 ### ✅ Version 1.7.7: SoRR Simulator Einzelansicht (ABGESCHLOSSEN)

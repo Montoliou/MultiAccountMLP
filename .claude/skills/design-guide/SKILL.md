@@ -1,5 +1,5 @@
 ---
-name: design-guide-mlp
+name: design-guide
 description: MLP Finanzberatung SE Corporate Design System combined with modern UI principles. Use when creating any UI, presentations, documents, or materials for MLP financial advisors. Ensures brand-compliant colors, typography, accessibility standards, consistent spacing (8px grid), and subbrand guidelines for medical professionals (MLP Med) and education (SOFE).
 ---
 
