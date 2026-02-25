@@ -1616,14 +1616,36 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
 
 #### Phase 1: Design-System-Foundation (Session 1)
 
-**CSS Custom Properties & Design Tokens:**
+**Design-Entscheidungen:**
+- ✅ **Light-Theme wird Default**, Dark bleibt als Option
+- ✅ **Arial statt Inter** (MLP Corporate Font, Systemfont = kein CDN nötig)
+- ✅ **Gradient-Zonen ganzseitig** — geplant für Phase 3/4 (Wolken/Erde-Metapher über ganzen Viewport)
+
+**Ist-Analyse (Probleme im aktuellen CSS):**
+
+| Problem | Ort | Details |
+|---------|-----|---------|
+| 2 konfligierende `:root`-Blöcke | L14-49 + L534-541 | `--mlp-blue-1` doppelt definiert mit verschiedenen Werten |
+| Falsches Blau als Primary | L16 | `--mlp-blue-primary: #3b82f6` (Tailwind!) statt `#033D5D` |
+| Falsche Status-Farben | L27-31 | `--color-success: #10b981` statt `#13853E`, etc. |
+| Falscher Font | L8, L51, L2235 | Inter (Google Font CDN) statt Arial |
+| Dark-Theme als Default | L2235 | `<body class="theme-dark bg-gray-900">` |
+| ~260 hardcoded Hex-Werte | verteilt | 48× `#033D5D`, 39× `#BEB6AA`, 28× `#47A190`, 27× `#2B2B2B` |
+| ~100+ var()-Referenzen auf alte Namen | verteilt | `--mlp-blue`, `--accent1`, `--gray-800` etc. |
+
+**7 Implementierungsschritte:**
+
+**Schritt 1:** Google Fonts `<link>` entfernen (L8)
+- Inter-Font-CDN löschen — Arial ist Systemfont
+
+**Schritt 2:** Zwei `:root`-Blöcke → ein autoritativer Block (L14-49 + L534-541)
 
 ```css
 :root {
   /* MLP Brand Colors */
-  --mlp-primary: #033D5D;        /* MLP Blau Dark */
-  --mlp-secondary: #BEB6AA;      /* Titanium */
-  --mlp-accent: #47A190;         /* Türkis */
+  --mlp-primary: #033D5D;
+  --mlp-secondary: #BEB6AA;
+  --mlp-accent: #47A190;
 
   /* Text */
   --mlp-text-dark: #2B2B2B;
@@ -1633,7 +1655,6 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
   /* Backgrounds */
   --mlp-bg-white: #FFFFFF;
   --mlp-bg-gray: #F8F8F8;
-  --mlp-bg-dark: #033D5D;
 
   /* Functional (NUR semantisch!) */
   --mlp-info: #047584;
@@ -1642,35 +1663,63 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
   --mlp-error: #C1293D;
 
   /* Spacing (8px Grid) */
-  --space-xs: 8px;
-  --space-sm: 16px;
-  --space-md: 24px;
-  --space-lg: 32px;
-  --space-xl: 48px;
-  --space-xxl: 64px;
+  --space-xs: 8px; --space-sm: 16px; --space-md: 24px;
+  --space-lg: 32px; --space-xl: 48px; --space-xxl: 64px;
 
   /* Typography */
   --font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-size-body: 16px;
-  --font-size-small: 14px;
-  --font-size-h1: 32px;
-  --font-size-h2: 24px;
-  --font-size-h3: 20px;
+  --font-size-body: 16px; --font-size-small: 14px;
+  --font-size-h1: 32px; --font-size-h2: 24px; --font-size-h3: 20px;
 
-  /* Shadows */
+  /* Shadows & Radius */
   --shadow-subtle: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
   --shadow-elevated: 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-modal: 0 25px 50px -12px rgba(0,0,0,0.5);
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
 
-  /* Radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Backwards-Kompatibilität (100+ Referenzen!) */
+  --mlp-corporate-blue: var(--mlp-primary);
+  --mlp-titanium: var(--mlp-secondary);
+  --mlp-turkis: var(--mlp-accent);
+  --mlp-blue: var(--mlp-primary);
+  --mlp-blue-primary: var(--mlp-primary);
+  --mlp-blue-dark: var(--mlp-primary);
+  --mlp-blue-1: var(--mlp-primary);
+  --mlp-blue-2: #2a6a8a;
+  --mlp-gold: var(--mlp-secondary);
+  --color-success: var(--mlp-success);
+  --color-warning: var(--mlp-warning);
+  --color-error: var(--mlp-error);
+
+  /* Gray Scale (Tailwind-Kompatibilität) */
+  --gray-50 bis --gray-900 beibehalten;
 }
 ```
 
-- [ ] CSS Custom Properties in `<style>` Block definieren
-- [ ] Alle hardcoded Hex-Werte durch `var(--mlp-*)` ersetzen (schrittweise)
-- [ ] Globale Reset-Styles (kein `#000000`, min font-size 16px)
+**Schritt 3:** Theme-Klassen aktualisieren (L542-563)
+- `.theme-light`: `--border` → Titanium, `--accent2` → Türkis (statt Gold)
+- `.theme-dark`: `--accent1` → MLP Blau (statt Tailwind Blau), `--accent2` → Türkis (statt Indigo)
+
+**Schritt 4:** Font + Body + Theme-JS
+- `body { font-family: var(--font-family); }` (L51)
+- `<body class="theme-light ...">` statt `theme-dark` (L2235)
+- Flow-Gradient Dark: `#033D5D` + `#47A190` (L10984-85)
+- `loadTheme()` Default → `'light'` (L10991)
+
+**Schritt 5:** Globale Component-Klassen einfügen (~L1345, additiv)
+- `.mlp-btn` + `.mlp-btn-primary/secondary/tertiary/danger`
+- `.mlp-input-field-v2`, `.mlp-slider`, `.mlp-card`
+
+**Schritt 6:** Hardcoded Hex in CSS-Blöcken ersetzen
+- Anleihen-Slider, App-Heading, Print-Styles → `var(--mlp-*)`
+
+**Schritt 7:** Basin/Flow Base-Styles theme-aware machen (L54-60, L96)
+- `var(--gray-800)` → `var(--card)`, `var(--gray-700)` → `var(--border)`
+
+**Nicht in Scope (Phase 1):**
+- Inline `style="color: #033D5D"` in JS-generiertem HTML (~28 Stellen) → Phase 2+
+- Chart.js Farbwerte in JS-Objekten → Phase 4
+- Tailwind CDN Entfernung → Phase 7
 
 ---
 
@@ -1729,10 +1778,12 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
 - [ ] Flow-Labels: Bessere Lesbarkeit, konsistente Positionierung
 - [ ] Animations: Smooth, professionell, nicht verspielt
 
-**Gradient-Zonen:**
+**Gradient-Zonen (Design-Entscheidung ✅):**
+- [ ] **Ganzseitig statt im Rahmen** — Wolken/Erde-Metapher über den kompletten Viewport
 - [ ] Farb-Abstimmung auf MLP-Palette (subtiler, professioneller)
 - [ ] Opacity-Werte optimieren für Light Theme
 - [ ] Transitions bei Beratungsmodus-Steps verfeinern
+- [ ] Responsiv: Gradient skaliert natürlich mit Viewport (kein Rahmen-Problem)
 
 ---
 
