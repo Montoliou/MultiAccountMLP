@@ -1739,13 +1739,15 @@
 
         /* v1.9.0: Fonds-Autocomplete Dropdown */
         .fonds-autocomplete-wrap { position: relative; }
-        .fonds-autocomplete-list {
-            position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+        /* v1.9.3: Global dropdown — fixed positioniert, nicht mehr vom scroll-container geclippt */
+        #fonds-dropdown-global {
+            position: fixed;
+            z-index: 200;
             max-height: 220px; overflow-y: auto;
             background: #1f2937; border: 1px solid #374151; border-radius: 8px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: none;
         }
-        .fonds-autocomplete-list.open { display: block; }
+        #fonds-dropdown-global.open { display: block; }
         .fonds-ac-item {
             padding: 8px 12px; cursor: pointer; display: flex;
             align-items: center; gap: 8px; font-size: 13px;
@@ -1768,7 +1770,7 @@
         .depot-item-badge.blau { background: rgba(3,61,93,0.25); color: #60a5fa; }
         .depot-item-badge.rot { background: rgba(239,68,68,0.2); color: #fca5a5; }
         .depot-item-badge.custom { background: rgba(156,163,175,0.2); color: #9ca3af; }
-        .theme-light .fonds-autocomplete-list { background: #ffffff; border-color: #BEB6AA; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+        .theme-light #fonds-dropdown-global { background: #ffffff; border-color: #BEB6AA; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
         .theme-light .fonds-ac-item:hover, .theme-light .fonds-ac-item.active { background: rgba(3,61,93,0.08); }
         .theme-light .fonds-ac-badge.blau { background: rgba(3,61,93,0.12); color: #033D5D; }
         .theme-light .fonds-ac-badge.rot { background: rgba(193,41,61,0.1); color: #C1293D; }
@@ -1877,24 +1879,31 @@
         }
         .theme-light .prognose-slider-row .slider-value { color: #2B2B2B; }
         .prognose-btn {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
-            padding: 10px 16px;
-            border-radius: 8px;
-            border: none;
-            font-size: 14px;
+            padding: 7px 14px;
+            border-radius: 6px;
+            border: 1px solid #033D5D;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            background: #033D5D;
-            color: #ffffff;
+            background: transparent;
+            color: #60a5fa;
         }
         .prognose-btn:hover {
-            background: #04506f;
-            box-shadow: 0 2px 8px rgba(3,61,93,0.3);
+            background: rgba(3,61,93,0.15);
+            color: #93c5fd;
+        }
+        .theme-light .prognose-btn {
+            color: #033D5D;
+            border-color: #033D5D;
+        }
+        .theme-light .prognose-btn:hover {
+            background: rgba(3,61,93,0.08);
         }
         .prognose-hint {
             font-size: 11px;
@@ -2641,6 +2650,8 @@
             </div>
 
             <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
+            <!-- v1.9.3: Globales Dropdown AUSSERHALB des scroll-Containers -->
+            <div id="fonds-dropdown-global" class="fonds-autocomplete-list"></div>
             <button type="button" onclick="addDepotItem()" style="margin-top:10px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:5px; border:1px dashed rgba(156,163,175,0.3); background:transparent; color:#9ca3af; cursor:pointer; transition:all 0.15s;">+ Fonds hinzufügen</button>
             <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:12px; border-top:1px solid rgba(156,163,175,0.12);">
                 <span style="font-size:13px; color:#9ca3af;">Gesamt-Verteilung</span>
@@ -2685,8 +2696,8 @@
                 </div>
             </div>
 
-            <div style="margin-top:16px; padding-top:12px; border-top:1px solid rgba(156,163,175,0.12);">
-                <button id="depot-save-button" type="button" onclick="saveDepot()" style="width:100%; padding:10px 16px; border-radius:8px; border:none; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; background:#47A190; color:#ffffff;">Speichern &amp; Schließen</button>
+            <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(156,163,175,0.12);">
+                <button id="depot-save-button" type="button" onclick="saveDepot()" style="width:100%; padding:8px 16px; border-radius:6px; border:1px solid #47A190; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; background:rgba(71,161,144,0.1); color:#47A190;">Speichern &amp; Schließen</button>
             </div>
         </div>
     </div>
@@ -10208,16 +10219,15 @@ function updateFixkostenItem(index, key, value) {
             var badgeHtml = fondsDBBadge(item);
 
             itemEl.innerHTML =
-                '<div class="col-span-6 fonds-autocomplete-wrap">' +
+                '<div class="col-span-6">' +
                     '<div class="flex items-center gap-2">' +
                         badgeHtml +
                         '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" ' +
                         'oninput="onFondsInput(this, ' + index + ')" ' +
                         'onfocus="onFondsInput(this, ' + index + ')" ' +
-                        'onblur="setTimeout(function(){closeFondsDropdown(' + index + ')}, 200)" ' +
+                        'onblur="setTimeout(function(){closeFondsDropdown()}, 200)" ' +
                         'placeholder="Fonds / ETF / WKN tippen..." class="flex-1 bg-gray-700 p-1 rounded text-sm" autocomplete="off">' +
                     '</div>' +
-                    '<div id="fonds-dropdown-' + index + '" class="fonds-autocomplete-list"></div>' +
                 '</div>' +
                 '<div class="relative col-span-2">' +
                     '<input type="number" value="' + item.allocation + '" onchange="updateDepotItem(' + index + ', \'allocation\', this.value)" ' +
@@ -10237,13 +10247,17 @@ function updateFixkostenItem(index, key, value) {
     }
 
     // v1.9.0: Autocomplete Event-Handler
+    // v1.9.3: Globales Dropdown — positioniert sich per fixed am Input
+    var _fondsDropdownIndex = -1;
+
     function onFondsInput(inputEl, index) {
         var query = inputEl.value;
-        var dropdown = document.getElementById('fonds-dropdown-' + index);
+        var dropdown = document.getElementById('fonds-dropdown-global');
         if (!dropdown) return;
 
         // Update name live
         depotItems[index].name = query;
+        _fondsDropdownIndex = index;
 
         var results = searchFonds(query);
         if (results.length === 0) {
@@ -10255,7 +10269,7 @@ function updateFixkostenItem(index, key, value) {
         var html = '';
         for (var i = 0; i < results.length; i++) {
             var f = results[i];
-            html += '<div class="fonds-ac-item" onmousedown="selectFonds(' + index + ', ' + i + ', this)">' +
+            html += '<div class="fonds-ac-item" onmousedown="selectFonds(' + index + ', ' + i + ')">' +
                 '<span class="fonds-ac-badge ' + f.farbe + '">' + f.farbe.toUpperCase() + '</span>' +
                 '<span class="fonds-ac-wkn">' + f.wkn + '</span>' +
                 '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.name + '</span>' +
@@ -10263,10 +10277,16 @@ function updateFixkostenItem(index, key, value) {
                 '</div>';
         }
         dropdown.innerHTML = html;
+
+        // Position: direkt unter dem Input-Feld
+        var rect = inputEl.getBoundingClientRect();
+        dropdown.style.left = rect.left + 'px';
+        dropdown.style.top = rect.bottom + 2 + 'px';
+        dropdown.style.width = rect.width + 'px';
         dropdown.classList.add('open');
     }
 
-    function selectFonds(index, resultIdx, el) {
+    function selectFonds(index, resultIdx) {
         var query = depotItems[index].name || '';
         var results = searchFonds(query);
         var fonds = results[resultIdx];
@@ -10276,13 +10296,18 @@ function updateFixkostenItem(index, key, value) {
         depotItems[index].color = getFondsColor(fonds.farbe);
         depotItems[index].risk = (fonds.farbe === 'blau') ? 'conservative' : 'aggressive';
 
+        closeFondsDropdown();
         renderDepotList();
         renderDepotBasin();
     }
 
-    function closeFondsDropdown(index) {
-        var dropdown = document.getElementById('fonds-dropdown-' + index);
-        if (dropdown) dropdown.classList.remove('open');
+    function closeFondsDropdown() {
+        var dropdown = document.getElementById('fonds-dropdown-global');
+        if (dropdown) {
+            dropdown.classList.remove('open');
+            dropdown.innerHTML = '';
+        }
+        _fondsDropdownIndex = -1;
     }
 
     function updateDepotItem(index, key, value) {
