@@ -1737,6 +1737,46 @@
             box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
         }
 
+        /* v1.9.0: Fonds-Autocomplete Dropdown */
+        .fonds-autocomplete-wrap { position: relative; }
+        .fonds-autocomplete-list {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+            max-height: 220px; overflow-y: auto;
+            background: #1f2937; border: 1px solid #374151; border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: none;
+        }
+        .fonds-autocomplete-list.open { display: block; }
+        .fonds-ac-item {
+            padding: 8px 12px; cursor: pointer; display: flex;
+            align-items: center; gap: 8px; font-size: 13px;
+            border-bottom: 1px solid rgba(55,65,81,0.5);
+        }
+        .fonds-ac-item:last-child { border-bottom: none; }
+        .fonds-ac-item:hover, .fonds-ac-item.active { background: rgba(59,130,246,0.15); }
+        .fonds-ac-badge {
+            display: inline-block; padding: 1px 6px; border-radius: 4px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.3px; flex-shrink: 0;
+        }
+        .fonds-ac-badge.blau { background: rgba(3,61,93,0.25); color: #60a5fa; }
+        .fonds-ac-badge.rot { background: rgba(239,68,68,0.2); color: #fca5a5; }
+        .fonds-ac-kategorie { font-size: 11px; color: #9ca3af; margin-left: auto; flex-shrink: 0; }
+        .fonds-ac-wkn { font-size: 11px; color: #6b7280; font-family: ui-monospace, monospace; }
+        .depot-item-badge {
+            display: inline-block; padding: 1px 6px; border-radius: 4px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+        }
+        .depot-item-badge.blau { background: rgba(3,61,93,0.25); color: #60a5fa; }
+        .depot-item-badge.rot { background: rgba(239,68,68,0.2); color: #fca5a5; }
+        .depot-item-badge.custom { background: rgba(156,163,175,0.2); color: #9ca3af; }
+        .theme-light .fonds-autocomplete-list { background: #ffffff; border-color: #BEB6AA; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+        .theme-light .fonds-ac-item:hover, .theme-light .fonds-ac-item.active { background: rgba(3,61,93,0.08); }
+        .theme-light .fonds-ac-badge.blau { background: rgba(3,61,93,0.12); color: #033D5D; }
+        .theme-light .fonds-ac-badge.rot { background: rgba(193,41,61,0.1); color: #C1293D; }
+        .theme-light .fonds-ac-kategorie { color: #717171; }
+        .theme-light .fonds-ac-wkn { color: #717171; }
+        .theme-light .depot-item-badge.blau { background: rgba(3,61,93,0.12); color: #033D5D; }
+        .theme-light .depot-item-badge.rot { background: rgba(193,41,61,0.1); color: #C1293D; }
+
         /* Fund Blocks in Depot Basin */
         .depot-basin-content {
             display: flex;
@@ -5712,6 +5752,119 @@ const bookingTypeLookup = {};
             { name: 'Sparplan Depot', amount: 250, interval: 'monthly', target: 'depot' },
         ];
     })();
+
+    // ╔══════════════════════════════════════════════════════════════════╗
+    // ║  FONDSLISTE ROT/BLAU — HIER EDITIEREN (v1.9.0)                ║
+    // ║  Einfach Zeilen hinzufuegen/entfernen/aendern.                 ║
+    // ║  Format: { wkn, name, kategorie, farbe }                      ║
+    // ║  farbe: 'blau' = Strategie/Kern, 'rot' = Markt/Idee           ║
+    // ╚══════════════════════════════════════════════════════════════════╝
+    var MLP_FONDS_DB = [
+        // === BLAU: Kapitalreserve ===
+        { wkn: '847809', name: 'Basis-Fonds I Nachhaltig', kategorie: 'Kapitalreserve', farbe: 'blau' },
+        { wkn: '979952', name: 'Renten Strategie K', kategorie: 'Kapitalreserve', farbe: 'blau' },
+        { wkn: 'A0MUWS', name: 'ZinsPlus', kategorie: 'Kapitalreserve', farbe: 'blau' },
+        { wkn: 'A2P9FU', name: 'Flossbach von Storch - Bond Defensive', kategorie: 'Kapitalreserve Plus', farbe: 'blau' },
+        // === BLAU: VV Defensiv ===
+        { wkn: 'A0LBPU', name: 'Allianz Multi Asset Risk Control', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A0YFQ9', name: 'BKC Treuhand Portfolio', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: '974515', name: 'DWS Concept DJE Alpha Renten Global', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A1JUU9', name: 'EB - Multi Asset Conservative', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A0M43U', name: 'Flossbach von Storch - Multi Asset - Defensive', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A2H61M', name: 'Invesco Pan European High Income Fund', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A2JFHW', name: 'Lazard Patrimoine SRI', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A2JJ1S', name: 'ODDO BHF Polaris Moderate', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A1W76Y', name: 'PIMCO Strategic Income Fund', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: '214466', name: 'Sauren Global Defensiv', kategorie: 'VV Defensiv', farbe: 'blau' },
+        // === BLAU: VV Ausgewogen ===
+        { wkn: 'A2DR2M', name: 'ACATIS Value Event Fonds', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A1J24Q', name: 'Allianz Income and Growth', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: '987852', name: 'Arete PRIME VALUES Growth', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A12GMF', name: 'FERI Core Strategy Balanced', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A3ERNP', name: 'GANE Value Event Fund', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: '975745', name: 'MEAG EuroBalance', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A0M003', name: 'ODDO BHF Polaris Flexible', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A0MN91', name: 'Phaidros Funds - Balanced', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: '930920', name: 'Sauren Global Balanced', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A1CVCD', name: 'X of the Best - ausgewogen', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        // === BLAU: VV Dynamisch ===
+        { wkn: 'A3CUB5', name: 'Allianz Better World Dynamic', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A12HQR', name: 'Arabesque Global ESG Flexible Allocation', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: '986855', name: 'BL Global 75', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'DWS17J', name: 'DWS ESG Dynamic Opportunities', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A12GMG', name: 'FERI Core Strategy Dynamic', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: '847811', name: 'FMM-Fonds (DJE)', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A0M430', name: 'Flossbach von Storch - Multiple Opportunities', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A1W5Y6', name: 'JPM Total Emerging Markets Income', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A2ANEB', name: 'MFS Prudent Capital', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: '930921', name: 'Sauren Global Opportunities', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        // === BLAU: MLP Classic ===
+        { wkn: 'A0EAWB', name: 'Dynamic Global Balance', kategorie: 'MLP Classic', farbe: 'blau' },
+        // === ROT: Titan Aktien ===
+        { wkn: 'A0LF01', name: 'Fidelity Funds - Germany', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A2PKNU', name: 'Eleva European Selection Fund', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '750443', name: 'Pictet - Quest Europe Sustainable Equities', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '989229', name: 'Janus Henderson Pan Europ. Small Comp.', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '986838', name: 'AB SICAV - American Growth Portf.', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '988149', name: 'Robeco Asia-Pacific Equities', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A2PKR1', name: 'FERI Sustainable Quality', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A1H6XK', name: 'Morgan Stanley - Global Opport.', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '591135', name: 'Nordea Global Stable Equity', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '984734', name: 'terrAssisi Aktien I AMI', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '974968', name: 'OekoWorld OekoVision Classic', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A0Q5MC', name: 'X of the Best - dynamisch', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A2PK9Q', name: 'Janus Henderson Global Small Comp.', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A4039Q', name: 'Triodos Pioneer Impact Fund', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A2DKZV', name: 'Guinness Global Equity Income', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '973045', name: 'Schroder ISF Asian Opportunities', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A0LHAL', name: 'FSSA Greater China Growth Fund', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A1C9ED', name: 'Nomura India Equity Fund', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A0NDKJ', name: 'Robeco QI EM Active Equities', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A1C9QD', name: 'Schroder ISF Frontier Markets Equity', kategorie: 'Titan Aktien', farbe: 'rot' },
+        // === ROT: Titan Branchen ===
+        { wkn: '986932', name: 'BGF World Mining Fund', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: '974119', name: 'BGF World Gold Fund', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0BL36', name: 'BGF World Healthscience Fund', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: '921800', name: 'Fidelity Funds - Global Technology', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A2DMRL', name: 'FS Exponential Technologies', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A141Q9', name: 'Pictet - Robotics', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0MWAL', name: 'DNB Fund Renewable Energy', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0RCVV', name: 'Vontobel - Global Environmental Change', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A2QBUQ', name: 'Robeco Sustainable Water', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A2PGYQ', name: 'Wellington Enduring Infrastructure Assets', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0QZ7T', name: 'Pictet - Timber', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'LB6B0M', name: 'LBBW Sicher Leben', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0MP0Q', name: 'Janus Henderson Global Property Equities', kategorie: 'Titan Branchen', farbe: 'rot' },
+        // === ROT: Titan Anleihen ===
+        { wkn: '848105', name: 'Ampega Rendite Rentenfonds', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        { wkn: 'A0X758', name: 'ACATIS IfK Value Renten', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        { wkn: 'A2DW8B', name: 'T. Rowe Price - Diversified Income Bond', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        { wkn: 'A2PXFB', name: 'Schroder ISF Sustainable Euro Credit', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        { wkn: 'DWS04F', name: 'DWS Invest Euro High Yield Corporates', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        // === ROT: Spezialitaeten ===
+        { wkn: 'DWSK01', name: 'DWS Concept Kaldemorgen', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A2H6V0', name: 'OptoFlex', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A2QD6P', name: 'EuroEquityFlex', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A12E0S', name: 'US EquityFlex', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A2JKK0', name: 'Vontobel Fund - Commodity', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A0M67Q', name: 'DJE - Gold & Stabilitaetsfonds', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A0NEKK', name: 'HansaGold', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A1H72F', name: 'ACATIS Datini Valueflex Fonds', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: '633596', name: 'Morgan Stanley - Global Convertible Bond', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        // === ROT: ETF ===
+        { wkn: 'A0RGEL', name: 'iShares EUR Government Bond 0-1yr', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'DBX0VA', name: 'Xtrackers Target Mat Sept 2027', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'DBX1DA', name: 'Xtrackers DAX UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A1T8FS', name: 'Vanguard FTSE Dev. Europe ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'DBX1EU', name: 'Xtrackers Euro Stoxx 50 UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A0YEDG', name: 'iShares Core S&P 500 UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A3DXEB', name: 'AXA IM Nasdaq 100 UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A0RPWH', name: 'iShares Core MSCI World UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A2JDDJ', name: 'iShares Edge MSCI World Value Factor', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A2PZBH', name: 'UBS MSCI World Socially Responsible', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A1C1H5', name: 'iShares MSCI EM Asia UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A113FF', name: 'Xtrackers MSCI World Energy ETF', kategorie: 'ETF', farbe: 'rot' }
+    ];
 
     let depotItems = (() => {
         try {
@@ -9880,50 +10033,174 @@ function updateFixkostenItem(index, key, value) {
     function removeFixkostenItem(index) { fixkostenItems.splice(index, 1); renderFixkostenList(); }
     const depotModal = { list: getEl('depot-list'), total: getEl('depot-total'), warning: getEl('depot-warning'), saveButton: getEl('depot-save-button') };
     function saveDepot() { if(checkDepotTotal()) { calculateAndUpdate(); closeModal('depot-modal'); } }
+
+    // v1.9.0: Farb-Paletten fuer Rot/Blau
+    var BLAU_FARBEN = ['#033D5D', '#1a5276', '#2471a3', '#2e86c1', '#3498db', '#5dade2', '#1b4f72', '#154360'];
+    var ROT_FARBEN = ['#C1293D', '#e74c3c', '#cb4335', '#b03a2e', '#922b21', '#d35400', '#e67e22', '#dc7633'];
+    var _blauIdx = 0;
+    var _rotIdx = 0;
+
+    function getFondsColor(farbe) {
+        if (farbe === 'blau') {
+            var c = BLAU_FARBEN[_blauIdx % BLAU_FARBEN.length];
+            _blauIdx++;
+            return c;
+        } else if (farbe === 'rot') {
+            var c = ROT_FARBEN[_rotIdx % ROT_FARBEN.length];
+            _rotIdx++;
+            return c;
+        }
+        return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+    }
+
+    // v1.9.0: Fonds-Autocomplete Suche
+    function searchFonds(query) {
+        if (!query || query.length < 2) return [];
+        var q = query.toLowerCase();
+        return MLP_FONDS_DB.filter(function(f) {
+            return f.name.toLowerCase().indexOf(q) !== -1 || f.wkn.toLowerCase().indexOf(q) !== -1;
+        }).slice(0, 8);
+    }
+
+    // v1.9.0: Lookup Fonds-Info by name
+    function lookupFonds(name) {
+        if (!name) return null;
+        var n = name.toLowerCase();
+        for (var i = 0; i < MLP_FONDS_DB.length; i++) {
+            if (MLP_FONDS_DB[i].name.toLowerCase() === n) return MLP_FONDS_DB[i];
+        }
+        return null;
+    }
+
+    // v1.9.0: Fonds-Badge HTML erzeugen
+    function fondsDBBadge(item) {
+        var info = lookupFonds(item.name);
+        if (info) {
+            return '<span class="depot-item-badge ' + info.farbe + '">' + info.farbe.toUpperCase() + '</span>';
+        }
+        if (item.name) {
+            return '<span class="depot-item-badge custom">EIGEN</span>';
+        }
+        return '';
+    }
+
     function renderDepotList() {
         depotModal.list.innerHTML = '';
-        let total = 0;
-        depotItems.forEach((item, index) => {
+        var total = 0;
+        _blauIdx = 0;
+        _rotIdx = 0;
+        depotItems.forEach(function(item, index) {
             total += item.allocation;
-            // Ensure risk property exists (backward compatibility)
             if (!item.risk) item.risk = 'conservative';
 
-            const itemEl = document.createElement('div');
+            var itemEl = document.createElement('div');
             itemEl.className = 'grid grid-cols-12 gap-2 items-center mb-2';
-            itemEl.innerHTML = `
-                <input type="color" value="${item.color}" onchange="updateDepotItem(${index}, 'color', this.value)"
-                       class="col-span-1 h-8 bg-gray-700 p-0 rounded" title="Fonds-Farbe">
-                <input type="text" value="${item.name}" onchange="updateDepotItem(${index}, 'name', this.value)"
-                       placeholder="Fonds / ETF Name" class="col-span-5 bg-gray-700 p-1 rounded text-sm">
-                <div class="relative col-span-2">
-                    <input type="number" value="${item.allocation}" onchange="updateDepotItem(${index}, 'allocation', this.value)"
-                           class="w-full text-right pr-6 bg-gray-700 p-1 rounded text-sm">
-                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
-                </div>
-                <div class="col-span-3 risk-toggle ${item.risk}" onclick="updateDepotItem(${index}, 'risk', '${item.risk === 'conservative' ? 'aggressive' : 'conservative'}')" title="${item.risk === 'conservative' ? 'Konservativ' : 'Chancenreich'}">
-                    <span class="risk-dot conservative"></span>
-                    <span class="risk-dot aggressive"></span>
-                </div>
-                <button type="button" onclick="removeDepotItem(${index})"
-                        class="col-span-1 text-red-400 hover:text-red-300 text-xl" title="Entfernen">&times;</button>
-            `;
+
+            // Badge fuer Rot/Blau
+            var badgeHtml = fondsDBBadge(item);
+
+            itemEl.innerHTML =
+                '<div class="col-span-1 flex flex-col items-center justify-center gap-1">' +
+                    '<input type="color" value="' + item.color + '" onchange="updateDepotItem(' + index + ', \'color\', this.value)" ' +
+                    'class="h-6 w-6 bg-gray-700 p-0 rounded cursor-pointer" title="Fonds-Farbe" style="border:none;">' +
+                    badgeHtml +
+                '</div>' +
+                '<div class="col-span-5 fonds-autocomplete-wrap">' +
+                    '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" ' +
+                    'oninput="onFondsInput(this, ' + index + ')" ' +
+                    'onfocus="onFondsInput(this, ' + index + ')" ' +
+                    'onblur="setTimeout(function(){closeFondsDropdown(' + index + ')}, 200)" ' +
+                    'placeholder="Fonds / ETF / WKN tippen..." class="w-full bg-gray-700 p-1 rounded text-sm" autocomplete="off">' +
+                    '<div id="fonds-dropdown-' + index + '" class="fonds-autocomplete-list"></div>' +
+                '</div>' +
+                '<div class="relative col-span-2">' +
+                    '<input type="number" value="' + item.allocation + '" onchange="updateDepotItem(' + index + ', \'allocation\', this.value)" ' +
+                    'class="w-full text-right pr-6 bg-gray-700 p-1 rounded text-sm">' +
+                    '<span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>' +
+                '</div>' +
+                '<div class="col-span-3 risk-toggle ' + item.risk + '" onclick="updateDepotItem(' + index + ', \'risk\', \'' + (item.risk === 'conservative' ? 'aggressive' : 'conservative') + '\')" title="' + (item.risk === 'conservative' ? 'Konservativ' : 'Chancenreich') + '">' +
+                    '<span class="risk-dot conservative"></span>' +
+                    '<span class="risk-dot aggressive"></span>' +
+                '</div>' +
+                '<button type="button" onclick="removeDepotItem(' + index + ')" ' +
+                'class="col-span-1 text-red-400 hover:text-red-300 text-xl" title="Entfernen">&times;</button>';
+
             depotModal.list.appendChild(itemEl);
         });
         checkDepotTotal();
     }
 
+    // v1.9.0: Autocomplete Event-Handler
+    function onFondsInput(inputEl, index) {
+        var query = inputEl.value;
+        var dropdown = document.getElementById('fonds-dropdown-' + index);
+        if (!dropdown) return;
+
+        // Update name live
+        depotItems[index].name = query;
+
+        var results = searchFonds(query);
+        if (results.length === 0) {
+            dropdown.classList.remove('open');
+            dropdown.innerHTML = '';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < results.length; i++) {
+            var f = results[i];
+            html += '<div class="fonds-ac-item" onmousedown="selectFonds(' + index + ', ' + i + ', this)">' +
+                '<span class="fonds-ac-badge ' + f.farbe + '">' + f.farbe.toUpperCase() + '</span>' +
+                '<span class="fonds-ac-wkn">' + f.wkn + '</span>' +
+                '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.name + '</span>' +
+                '<span class="fonds-ac-kategorie">' + f.kategorie + '</span>' +
+                '</div>';
+        }
+        dropdown.innerHTML = html;
+        dropdown.classList.add('open');
+    }
+
+    function selectFonds(index, resultIdx, el) {
+        var query = depotItems[index].name || '';
+        var results = searchFonds(query);
+        var fonds = results[resultIdx];
+        if (!fonds) return;
+
+        depotItems[index].name = fonds.name;
+        depotItems[index].color = getFondsColor(fonds.farbe);
+        depotItems[index].risk = (fonds.farbe === 'blau') ? 'conservative' : 'aggressive';
+
+        renderDepotList();
+        renderDepotBasin();
+    }
+
+    function closeFondsDropdown(index) {
+        var dropdown = document.getElementById('fonds-dropdown-' + index);
+        if (dropdown) dropdown.classList.remove('open');
+    }
+
     function updateDepotItem(index, key, value) {
         if (key === 'allocation') value = parseInt(value, 10) || 0;
         depotItems[index][key] = value;
+
+        // v1.9.0: Wenn Name geaendert, pruefen ob Fonds in DB ist und Farbe/Risk auto-setzen
+        if (key === 'name') {
+            var info = lookupFonds(value);
+            if (info) {
+                depotItems[index].color = getFondsColor(info.farbe);
+                depotItems[index].risk = (info.farbe === 'blau') ? 'conservative' : 'aggressive';
+            }
+        }
+
         debouncedRenderDepotList();
-        renderDepotBasin(); // Update basin visualization
+        renderDepotBasin();
     }
 
     function addDepotItem() {
         depotItems.push({
             name: '',
             allocation: 0,
-            color: '#' + Math.floor(Math.random() * 16777215).toString(16),
+            color: '#6b7280',
             risk: 'conservative'
         });
         renderDepotList();
@@ -9931,7 +10208,7 @@ function updateFixkostenItem(index, key, value) {
     function removeDepotItem(index) {
         depotItems.splice(index, 1);
         renderDepotList();
-        renderDepotBasin(); // Update basin visualization
+        renderDepotBasin();
     }
 
     function checkDepotTotal() {
