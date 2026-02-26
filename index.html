@@ -1777,6 +1777,33 @@
         .theme-light .depot-item-badge.blau { background: rgba(3,61,93,0.12); color: #033D5D; }
         .theme-light .depot-item-badge.rot { background: rgba(193,41,61,0.1); color: #C1293D; }
 
+        /* v1.9.1: Dezente Erklärer-Links im Depot-Modal */
+        .depot-erklaerer-link {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(156,163,175,0.3);
+            background: transparent;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .depot-erklaerer-link:hover {
+            border-color: rgba(96,165,250,0.5);
+            color: #60a5fa;
+            background: rgba(96,165,250,0.08);
+        }
+        .theme-light .depot-erklaerer-link {
+            color: #717171;
+            border-color: #BEB6AA;
+        }
+        .theme-light .depot-erklaerer-link:hover {
+            color: #033D5D;
+            border-color: #033D5D;
+            background: rgba(3,61,93,0.05);
+        }
+
         /* Fund Blocks in Depot Basin */
         .depot-basin-content {
             display: flex;
@@ -2499,26 +2526,13 @@
             <h3 id="depot-modal-title" class="text-xl font-bold mb-4">Depot-Aufteilung</h3>
             <p id="depot-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Lege fest, wie neue Investments verteilt werden.</p>
 
-            <!-- v1.6.2: Cost-Average Erklärer Button -->
-            <button type="button" onclick="openCostAverageModal()" class="mb-3 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
-                <span class="text-xl">💡</span>
-                <span>Warum welcher Fonds?</span>
-                <span class="text-sm opacity-75">(Cost-Average-Effekt)</span>
-            </button>
-
-            <!-- v1.7.2: SoRR Simulator Button -->
-            <button type="button" onclick="openSoRRModal()" class="mb-4 w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
-                <span class="text-xl">⚠️</span>
-                <span>Entnahmephase: Reihenfolge-Risiko</span>
-                <span class="text-sm opacity-75">(Sequence of Returns)</span>
-            </button>
-
-            <!-- v1.7.8: Aktien & Anleihen Erklärer Button -->
-            <button type="button" onclick="openAnleihenModal()" class="mb-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
-                <span class="text-xl">📊</span>
-                <span>Aktien & Anleihen</span>
-                <span class="text-sm opacity-75">(Equity Risk Premium)</span>
-            </button>
+            <!-- v1.9.1: Erklärer-Links — dezent, eine Reihe -->
+            <div class="flex flex-wrap gap-2 mb-4">
+                <button type="button" onclick="openCostAverageModal()" class="depot-erklaerer-link">Cost-Average</button>
+                <button type="button" onclick="openSoRRModal()" class="depot-erklaerer-link">SoRR-Risiko</button>
+                <button type="button" onclick="openAnleihenModal()" class="depot-erklaerer-link">Aktien &amp; Anleihen</button>
+                <button type="button" onclick="openMsciRenditedreieck()" class="depot-erklaerer-link">MSCI Renditedreieck</button>
+            </div>
 
             <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
             <button type="button" onclick="addDepotItem()" class="mt-4 text-sm bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-md">+ Fonds hinzufügen</button>
@@ -2574,12 +2588,6 @@
             <hr class="border-gray-600 my-6">
 
             <button id="depot-save-button" type="button" onclick="saveDepot()" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern &amp; Schließen</button>
-            <button type="button" onclick="openMsciRenditedreieck()" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                MSCI Renditedreieck anzeigen
-            </button>
         </div>
     </div>
 
@@ -10100,17 +10108,15 @@ function updateFixkostenItem(index, key, value) {
             var badgeHtml = fondsDBBadge(item);
 
             itemEl.innerHTML =
-                '<div class="col-span-1 flex flex-col items-center justify-center gap-1">' +
-                    '<input type="color" value="' + item.color + '" onchange="updateDepotItem(' + index + ', \'color\', this.value)" ' +
-                    'class="h-6 w-6 bg-gray-700 p-0 rounded cursor-pointer" title="Fonds-Farbe" style="border:none;">' +
-                    badgeHtml +
-                '</div>' +
-                '<div class="col-span-5 fonds-autocomplete-wrap">' +
-                    '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" ' +
-                    'oninput="onFondsInput(this, ' + index + ')" ' +
-                    'onfocus="onFondsInput(this, ' + index + ')" ' +
-                    'onblur="setTimeout(function(){closeFondsDropdown(' + index + ')}, 200)" ' +
-                    'placeholder="Fonds / ETF / WKN tippen..." class="w-full bg-gray-700 p-1 rounded text-sm" autocomplete="off">' +
+                '<div class="col-span-6 fonds-autocomplete-wrap">' +
+                    '<div class="flex items-center gap-2">' +
+                        badgeHtml +
+                        '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" ' +
+                        'oninput="onFondsInput(this, ' + index + ')" ' +
+                        'onfocus="onFondsInput(this, ' + index + ')" ' +
+                        'onblur="setTimeout(function(){closeFondsDropdown(' + index + ')}, 200)" ' +
+                        'placeholder="Fonds / ETF / WKN tippen..." class="flex-1 bg-gray-700 p-1 rounded text-sm" autocomplete="off">' +
+                    '</div>' +
                     '<div id="fonds-dropdown-' + index + '" class="fonds-autocomplete-list"></div>' +
                 '</div>' +
                 '<div class="relative col-span-2">' +
