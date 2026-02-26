@@ -5,50 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Der Flow - Vom Einkommen zum Vermögen</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- v2.0: Inter-Font entfernt — Arial ist MLP-Systemfont, kein CDN nötig -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@2.2.5"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <style>
-        /* v1.5.2: CSS Custom Properties for theme consistency */
+        /* ═══════════════════════════════════════════════════════
+           v2.0 Design Token System — EINZIGER :root Block
+           MLP Finanzberatung SE Corporate Design
+           ═══════════════════════════════════════════════════════ */
         :root {
-            /* MLP Corporate Colors */
-            --mlp-blue-primary: #3b82f6;
-            --mlp-blue-dark: #002f6c;
-            --mlp-blue-light: #60a5fa;
-            --mlp-platin: #cbd5f5;
+            /* ── MLP Brand Colors ── */
+            --mlp-primary: #033D5D;
+            --mlp-secondary: #BEB6AA;
+            --mlp-accent: #47A190;
 
-            /* v1.6.2: MLP Corporate Design (Official) */
-            --mlp-corporate-blue: #033D5D;  /* MLP Blau Dark - Logo, Headings, Primary Buttons */
-            --mlp-titanium: #BEB6AA;         /* Titanium - Dividers, Borders, Secondary */
-            --mlp-turkis: #47A190;           /* Türkis - Backgrounds, Highlights */
+            /* ── Text ── */
+            --mlp-text-dark: #2B2B2B;
+            --mlp-text-medium: #717171;
+            --mlp-text-light: #FFFFFF;
 
-            /* Status Colors */
-            --color-success: #10b981;
-            --color-warning: #fbbf24;
-            --color-error: #ef4444;
-            --color-error-dark: #dc2626;
-            --color-error-light: #fca5a5;
+            /* ── Backgrounds ── */
+            --mlp-bg-white: #FFFFFF;
+            --mlp-bg-gray: #F8F8F8;
 
-            /* Neutral Colors */
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-500: #6b7280;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
+            /* ── Functional (semantisch) ── */
+            --mlp-info: #047584;
+            --mlp-success: #13853E;
+            --mlp-warning: #E3691E;
+            --mlp-error: #C1293D;
+
+            /* ── Spacing (8px Grid) ── */
+            --space-xs: 8px; --space-sm: 16px; --space-md: 24px;
+            --space-lg: 32px; --space-xl: 48px; --space-xxl: 64px;
+
+            /* ── Typography ── */
+            --font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --font-size-body: 16px; --font-size-small: 14px;
+            --font-size-h1: 32px; --font-size-h2: 24px; --font-size-h3: 20px;
+
+            /* ── Shadows & Radius ── */
+            --shadow-subtle: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --shadow-elevated: 0 4px 12px rgba(0,0,0,0.15);
+            --shadow-modal: 0 25px 50px -12px rgba(0,0,0,0.5);
+            --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
+
+            /* ── Backwards-Kompatibilität (100+ var()-Referenzen) ── */
+            --mlp-corporate-blue: var(--mlp-primary);
+            --mlp-titanium: var(--mlp-secondary);
+            --mlp-turkis: var(--mlp-accent);
+            --mlp-blue: var(--mlp-primary);
+            --mlp-blue-primary: var(--mlp-primary);
+            --mlp-blue-dark: var(--mlp-primary);
+            --mlp-blue-light: var(--mlp-accent);
+            --mlp-blue-1: var(--mlp-primary);
+            --mlp-blue-2: #2a6a8a;
+            --mlp-gold: var(--mlp-secondary);
+            --mlp-platin: var(--mlp-secondary);
+            --color-success: var(--mlp-success);
+            --color-warning: var(--mlp-warning);
+            --color-error: var(--mlp-error);
+            --color-error-dark: #A1223A;
+            --color-error-light: #E8A0AA;
+
+            /* ── Gray Scale (Tailwind-Kompatibilität) ── */
+            --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+            --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+            --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937;
             --gray-900: #111827;
 
-            /* Semantic Colors (backwards compatibility) */
-            --accent1: var(--mlp-blue-primary);
-            --mlp-blue-1: var(--mlp-blue-primary);
-            --mlp-blue-2: var(--mlp-blue-light);
+            --input-bg: #ffffff;
+            --input-border: #BEB6AA;
         }
 
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: var(--font-family); }
         .skip-link { position: absolute; left: -1000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
         .skip-link:focus { left: 50%; top: 1rem; width: auto; height: auto; padding: 0.75rem 1rem; background: var(--mlp-blue-primary); color: #ffffff; border-radius: 999px; transform: translateX(-50%); z-index: 9999; box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
         .account-basin {
@@ -531,35 +561,29 @@
         }
 
         /* === THEME TOKENS (Dark stays default) === */
-        :root {
-          --mlp-blue: #002F6C;
-          --mlp-blue-1: #002F6C;  /* deep navy */
-          --mlp-blue-2: #3C6AA3;  /* lighter MLP blue for shading */
-          --mlp-gold: #BDA177;
-          --input-bg: #1f2937;
-          --input-border: #374151;
-        }
+        /* v2.0: Zweiter :root-Block entfernt — alle Tokens jetzt im einzigen :root oben */
+        /* v2.0: Theme-Klassen mit korrekten MLP-Farben */
         .theme-dark {
-          --bg: #111827;        /* body bg */
-          --fg: #FFFFFF;        /* text color */
-          --card: #1f2937;      /* panels */
-          --border: #374151;    /* borders */
-          --muted: #9ca3af;     /* secondary text */
-          --accent1: #3b82f6;   /* gradient start */
-          --accent2: #6366f1;   /* gradient end */
+          --bg: #111827;
+          --fg: #FFFFFF;
+          --card: #1f2937;
+          --border: #374151;
+          --muted: #9ca3af;
+          --accent1: var(--mlp-primary);     /* MLP Blau statt Tailwind Blau */
+          --accent2: var(--mlp-accent);      /* Türkis statt Indigo */
           --input-bg: rgba(17, 24, 39, 0.92);
           --input-border: #374151;
         }
         .theme-light {
-          --bg: #FFFFFF;
-          --fg: #111827;
-          --card: #F9FAFB;
-          --border: #E5E7EB;
-          --muted: #6B7280;
-          --accent1: var(--mlp-blue);  /* MLP Blau */
-          --accent2: var(--mlp-gold);  /* MLP Gold */
-          --input-bg: #ffffff;
-          --input-border: #d0d7e3;
+          --bg: var(--mlp-bg-white);
+          --fg: var(--mlp-text-dark);
+          --card: var(--mlp-bg-gray);
+          --border: var(--mlp-secondary);    /* Titanium */
+          --muted: var(--mlp-text-medium);
+          --accent1: var(--mlp-primary);
+          --accent2: var(--mlp-accent);      /* Türkis statt Gold */
+          --input-bg: var(--mlp-bg-white);
+          --input-border: var(--mlp-secondary);
         }
 
         /* Base background/text via CSS vars (keine Änderung an Tailwind nötig) */
