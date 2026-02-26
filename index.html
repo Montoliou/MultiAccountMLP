@@ -1737,6 +1737,188 @@
             box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
         }
 
+        /* v1.9.0: Fonds-Autocomplete Dropdown */
+        .fonds-autocomplete-wrap { position: relative; }
+        /* v1.9.3: Global dropdown — fixed positioniert, nicht mehr vom scroll-container geclippt */
+        #fonds-dropdown-global {
+            position: fixed;
+            z-index: 200;
+            max-height: 220px; overflow-y: auto;
+            background: #1f2937; border: 1px solid #374151; border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: none;
+        }
+        #fonds-dropdown-global.open { display: block; }
+        .fonds-ac-item {
+            padding: 8px 12px; cursor: pointer; display: flex;
+            align-items: center; gap: 8px; font-size: 13px;
+            border-bottom: 1px solid rgba(55,65,81,0.5);
+        }
+        .fonds-ac-item:last-child { border-bottom: none; }
+        .fonds-ac-item:hover, .fonds-ac-item.active { background: rgba(59,130,246,0.15); }
+        .fonds-ac-badge {
+            display: inline-block; padding: 1px 6px; border-radius: 4px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.3px; flex-shrink: 0;
+        }
+        .fonds-ac-badge.blau { background: rgba(3,61,93,0.25); color: #60a5fa; }
+        .fonds-ac-badge.rot { background: rgba(239,68,68,0.2); color: #fca5a5; }
+        .fonds-ac-kategorie { font-size: 11px; color: #9ca3af; margin-left: auto; flex-shrink: 0; }
+        .fonds-ac-wkn { font-size: 11px; color: #6b7280; font-family: ui-monospace, monospace; }
+        .depot-item-badge {
+            display: inline-block; padding: 1px 6px; border-radius: 4px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+        }
+        .depot-item-badge.blau { background: rgba(3,61,93,0.25); color: #60a5fa; }
+        .depot-item-badge.rot { background: rgba(239,68,68,0.2); color: #fca5a5; }
+        .depot-item-badge.custom { background: rgba(156,163,175,0.2); color: #9ca3af; }
+        .theme-light #fonds-dropdown-global { background: #ffffff; border-color: #BEB6AA; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+        .theme-light .fonds-ac-item:hover, .theme-light .fonds-ac-item.active { background: rgba(3,61,93,0.08); }
+        .theme-light .fonds-ac-badge.blau { background: rgba(3,61,93,0.12); color: #033D5D; }
+        .theme-light .fonds-ac-badge.rot { background: rgba(193,41,61,0.1); color: #C1293D; }
+        .theme-light .fonds-ac-kategorie { color: #717171; }
+        .theme-light .fonds-ac-wkn { color: #717171; }
+        .theme-light .depot-item-badge.blau { background: rgba(3,61,93,0.12); color: #033D5D; }
+        .theme-light .depot-item-badge.rot { background: rgba(193,41,61,0.1); color: #C1293D; }
+
+        /* v1.9.2: Erklärer-Buttons — edel, gleichmäßig verteilt */
+        .depot-erklaerer-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .depot-erklaerer-btn {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            padding: 8px 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(156,163,175,0.25);
+            background: rgba(255,255,255,0.04);
+            color: #b0b8c4;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            line-height: 1.3;
+        }
+        .depot-erklaerer-btn:hover {
+            border-color: #47A190;
+            color: #ffffff;
+            background: rgba(71,161,144,0.12);
+            box-shadow: 0 1px 4px rgba(71,161,144,0.15);
+        }
+        .theme-light .depot-erklaerer-btn {
+            color: #4b5563;
+            border-color: #BEB6AA;
+            background: rgba(3,61,93,0.03);
+        }
+        .theme-light .depot-erklaerer-btn:hover {
+            color: #033D5D;
+            border-color: #033D5D;
+            background: rgba(3,61,93,0.08);
+            box-shadow: 0 1px 4px rgba(3,61,93,0.12);
+        }
+
+        /* v1.9.2: Prognose-Section kompakt */
+        .prognose-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .prognose-grid .prognose-full { grid-column: 1 / -1; }
+        .prognose-field label {
+            font-size: 12px;
+            color: #9ca3af;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .theme-light .prognose-field label { color: #717171; }
+        .prognose-input {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(55,65,81,0.5);
+            border: 1px solid rgba(156,163,175,0.2);
+            border-radius: 6px;
+            padding: 6px 10px;
+            transition: border-color 0.15s ease;
+        }
+        .prognose-input:focus-within {
+            border-color: #47A190;
+        }
+        .prognose-input input {
+            flex: 1;
+            background: transparent;
+            color: #ffffff;
+            outline: none;
+            font-size: 14px;
+            min-width: 0;
+        }
+        .prognose-input .unit {
+            font-size: 12px;
+            color: #6b7280;
+            flex-shrink: 0;
+        }
+        .theme-light .prognose-input {
+            background: #ffffff;
+            border-color: #BEB6AA;
+        }
+        .theme-light .prognose-input input { color: #2B2B2B; }
+        .prognose-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .prognose-slider-row input[type="range"] { flex: 1; }
+        .prognose-slider-row .slider-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+            min-width: 60px;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .theme-light .prognose-slider-row .slider-value { color: #2B2B2B; }
+        .prognose-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 7px 14px;
+            border-radius: 6px;
+            border: 1px solid #033D5D;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            color: #60a5fa;
+        }
+        .prognose-btn:hover {
+            background: rgba(3,61,93,0.15);
+            color: #93c5fd;
+        }
+        .theme-light .prognose-btn {
+            color: #033D5D;
+            border-color: #033D5D;
+        }
+        .theme-light .prognose-btn:hover {
+            background: rgba(3,61,93,0.08);
+        }
+        .prognose-hint {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+            padding: 6px 8px;
+            background: rgba(17,24,39,0.5);
+            border-radius: 4px;
+            border-left: 2px solid #BEB6AA;
+        }
+        .theme-light .prognose-hint {
+            background: #f9fafb;
+            color: #717171;
+        }
+
         /* Fund Blocks in Depot Basin */
         .depot-basin-content {
             display: flex;
@@ -2459,87 +2641,64 @@
             <h3 id="depot-modal-title" class="text-xl font-bold mb-4">Depot-Aufteilung</h3>
             <p id="depot-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Lege fest, wie neue Investments verteilt werden.</p>
 
-            <!-- v1.6.2: Cost-Average Erklärer Button -->
-            <button type="button" onclick="openCostAverageModal()" class="mb-3 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
-                <span class="text-xl">💡</span>
-                <span>Warum welcher Fonds?</span>
-                <span class="text-sm opacity-75">(Cost-Average-Effekt)</span>
-            </button>
-
-            <!-- v1.7.2: SoRR Simulator Button -->
-            <button type="button" onclick="openSoRRModal()" class="mb-4 w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
-                <span class="text-xl">⚠️</span>
-                <span>Entnahmephase: Reihenfolge-Risiko</span>
-                <span class="text-sm opacity-75">(Sequence of Returns)</span>
-            </button>
-
-            <!-- v1.7.8: Aktien & Anleihen Erklärer Button -->
-            <button type="button" onclick="openAnleihenModal()" class="mb-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
-                <span class="text-xl">📊</span>
-                <span>Aktien & Anleihen</span>
-                <span class="text-sm opacity-75">(Equity Risk Premium)</span>
-            </button>
+            <!-- v1.9.2: Erklärer-Buttons — edel, gleichmäßig verteilt -->
+            <div class="depot-erklaerer-row">
+                <button type="button" onclick="openCostAverageModal()" class="depot-erklaerer-btn">Cost-Average</button>
+                <button type="button" onclick="openSoRRModal()" class="depot-erklaerer-btn">SoRR-Risiko</button>
+                <button type="button" onclick="openAnleihenModal()" class="depot-erklaerer-btn">Aktien &amp; Anleihen</button>
+                <button type="button" onclick="openMsciRenditedreieck()" class="depot-erklaerer-btn">MSCI Renditedreieck</button>
+            </div>
 
             <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
-            <button type="button" onclick="addDepotItem()" class="mt-4 text-sm bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-md">+ Fonds hinzufügen</button>
-            <hr class="border-gray-600 my-4">
-            <div class="flex justify-between items-center">
-                <p class="text-lg">Gesamt-Verteilung:</p>
+            <!-- v1.9.3: Globales Dropdown AUSSERHALB des scroll-Containers -->
+            <div id="fonds-dropdown-global" class="fonds-autocomplete-list"></div>
+            <button type="button" onclick="addDepotItem()" style="margin-top:10px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:5px; border:1px dashed rgba(156,163,175,0.3); background:transparent; color:#9ca3af; cursor:pointer; transition:all 0.15s;">+ Fonds hinzufügen</button>
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:12px; border-top:1px solid rgba(156,163,175,0.12);">
+                <span style="font-size:13px; color:#9ca3af;">Gesamt-Verteilung</span>
                 <p id="depot-total" class="text-2xl font-bold">100 %</p>
             </div>
-            <p id="depot-warning" class="text-center text-yellow-400 mt-2 h-6"></p>
+            <p id="depot-warning" class="text-center text-yellow-400 mt-1" style="font-size:12px; min-height:18px;"></p>
 
-            <!-- Prognose Section (v1.4.0) -->
-            <hr class="border-gray-600 my-6">
-            <h4 class="text-lg font-bold mb-4">Prognose-Einstellungen</h4>
+            <!-- Prognose Section (v1.9.2 redesign) -->
+            <hr class="border-gray-600 my-4" style="border-color: rgba(156,163,175,0.15);">
+            <h4 style="font-size:14px; font-weight:700; margin-bottom:12px; color:#b0b8c4; letter-spacing:0.5px; text-transform:uppercase;">Prognose</h4>
 
-            <div class="space-y-4">
-                <!-- Aktueller Depotstand -->
-                <div>
-                    <label for="depotCurrent" class="text-sm text-gray-400 block mb-2">Aktueller Depotstand</label>
-                    <div class="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
-                        <span class="text-gray-400">€</span>
-                        <input type="number" id="depotCurrent" value="25000" class="flex-1 bg-transparent text-white outline-none" inputmode="decimal" placeholder="Aktueller Depotstand">
+            <div class="prognose-grid">
+                <div class="prognose-field">
+                    <label for="depotCurrent">Depotstand</label>
+                    <div class="prognose-input">
+                        <span class="unit">&euro;</span>
+                        <input type="number" id="depotCurrent" value="25000" inputmode="decimal" placeholder="25.000">
                     </div>
                 </div>
-
-                <!-- Anlagezeitraum Slider -->
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <label for="anlagezeitraum" class="text-sm text-gray-400">Anlagezeitraum</label>
-                        <span id="anlagezeitraum-label" class="text-sm font-bold text-white">15 Jahre</span>
+                <div class="prognose-field">
+                    <label for="rendite">Rendite p.a.</label>
+                    <div class="prognose-input">
+                        <input type="number" id="rendite" step="0.1" value="7" inputmode="decimal" placeholder="7">
+                        <span class="unit">%</span>
                     </div>
-                    <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="mlp-range">
+                    <div id="rendite-info" class="prognose-hint"></div>
                 </div>
-
-                <!-- Erwartete Rendite -->
-                <div>
-                    <label for="rendite" class="text-sm text-gray-400 block mb-2">Erwartete Rendite p.a.</label>
-                    <div class="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
-                        <input type="number" id="rendite" step="0.1" value="7" class="flex-1 bg-transparent text-white outline-none" inputmode="decimal" placeholder="Rendite p.a.">
-                        <span class="text-gray-400">%</span>
+                <div class="prognose-field prognose-full">
+                    <label for="anlagezeitraum">Anlagezeitraum</label>
+                    <div class="prognose-slider-row">
+                        <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="mlp-range">
+                        <span id="anlagezeitraum-label" class="slider-value">15 Jahre</span>
                     </div>
-                    <div id="rendite-info" class="text-xs text-gray-300 mt-2 p-2 bg-gray-900 rounded-lg"></div>
                 </div>
-
-                <!-- Prognose Button -->
-                <button type="button" onclick="showProjection();" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-                    </svg>
-                    Prognose anzeigen
-                </button>
+                <div class="prognose-full">
+                    <button type="button" onclick="showProjection();" class="prognose-btn">
+                        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                        </svg>
+                        Prognose anzeigen
+                    </button>
+                </div>
             </div>
 
-            <hr class="border-gray-600 my-6">
-
-            <button id="depot-save-button" type="button" onclick="saveDepot()" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern &amp; Schließen</button>
-            <button type="button" onclick="openMsciRenditedreieck()" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                MSCI Renditedreieck anzeigen
-            </button>
+            <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(156,163,175,0.12);">
+                <button id="depot-save-button" type="button" onclick="saveDepot()" style="width:100%; padding:8px 16px; border-radius:6px; border:1px solid #47A190; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; background:rgba(71,161,144,0.1); color:#47A190;">Speichern &amp; Schließen</button>
+            </div>
         </div>
     </div>
 
@@ -5712,6 +5871,119 @@ const bookingTypeLookup = {};
             { name: 'Sparplan Depot', amount: 250, interval: 'monthly', target: 'depot' },
         ];
     })();
+
+    // ╔══════════════════════════════════════════════════════════════════╗
+    // ║  FONDSLISTE ROT/BLAU — HIER EDITIEREN (v1.9.0)                ║
+    // ║  Einfach Zeilen hinzufuegen/entfernen/aendern.                 ║
+    // ║  Format: { wkn, name, kategorie, farbe }                      ║
+    // ║  farbe: 'blau' = Strategie/Kern, 'rot' = Markt/Idee           ║
+    // ╚══════════════════════════════════════════════════════════════════╝
+    var MLP_FONDS_DB = [
+        // === BLAU: Kapitalreserve ===
+        { wkn: '847809', name: 'Basis-Fonds I Nachhaltig', kategorie: 'Kapitalreserve', farbe: 'blau' },
+        { wkn: '979952', name: 'Renten Strategie K', kategorie: 'Kapitalreserve', farbe: 'blau' },
+        { wkn: 'A0MUWS', name: 'ZinsPlus', kategorie: 'Kapitalreserve', farbe: 'blau' },
+        { wkn: 'A2P9FU', name: 'Flossbach von Storch - Bond Defensive', kategorie: 'Kapitalreserve Plus', farbe: 'blau' },
+        // === BLAU: VV Defensiv ===
+        { wkn: 'A0LBPU', name: 'Allianz Multi Asset Risk Control', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A0YFQ9', name: 'BKC Treuhand Portfolio', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: '974515', name: 'DWS Concept DJE Alpha Renten Global', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A1JUU9', name: 'EB - Multi Asset Conservative', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A0M43U', name: 'Flossbach von Storch - Multi Asset - Defensive', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A2H61M', name: 'Invesco Pan European High Income Fund', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A2JFHW', name: 'Lazard Patrimoine SRI', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A2JJ1S', name: 'ODDO BHF Polaris Moderate', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: 'A1W76Y', name: 'PIMCO Strategic Income Fund', kategorie: 'VV Defensiv', farbe: 'blau' },
+        { wkn: '214466', name: 'Sauren Global Defensiv', kategorie: 'VV Defensiv', farbe: 'blau' },
+        // === BLAU: VV Ausgewogen ===
+        { wkn: 'A2DR2M', name: 'ACATIS Value Event Fonds', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A1J24Q', name: 'Allianz Income and Growth', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: '987852', name: 'Arete PRIME VALUES Growth', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A12GMF', name: 'FERI Core Strategy Balanced', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A3ERNP', name: 'GANE Value Event Fund', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: '975745', name: 'MEAG EuroBalance', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A0M003', name: 'ODDO BHF Polaris Flexible', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A0MN91', name: 'Phaidros Funds - Balanced', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: '930920', name: 'Sauren Global Balanced', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        { wkn: 'A1CVCD', name: 'X of the Best - ausgewogen', kategorie: 'VV Ausgewogen', farbe: 'blau' },
+        // === BLAU: VV Dynamisch ===
+        { wkn: 'A3CUB5', name: 'Allianz Better World Dynamic', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A12HQR', name: 'Arabesque Global ESG Flexible Allocation', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: '986855', name: 'BL Global 75', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'DWS17J', name: 'DWS ESG Dynamic Opportunities', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A12GMG', name: 'FERI Core Strategy Dynamic', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: '847811', name: 'FMM-Fonds (DJE)', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A0M430', name: 'Flossbach von Storch - Multiple Opportunities', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A1W5Y6', name: 'JPM Total Emerging Markets Income', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: 'A2ANEB', name: 'MFS Prudent Capital', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        { wkn: '930921', name: 'Sauren Global Opportunities', kategorie: 'VV Dynamisch', farbe: 'blau' },
+        // === BLAU: MLP Classic ===
+        { wkn: 'A0EAWB', name: 'Dynamic Global Balance', kategorie: 'MLP Classic', farbe: 'blau' },
+        // === ROT: Titan Aktien ===
+        { wkn: 'A0LF01', name: 'Fidelity Funds - Germany', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A2PKNU', name: 'Eleva European Selection Fund', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '750443', name: 'Pictet - Quest Europe Sustainable Equities', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '989229', name: 'Janus Henderson Pan Europ. Small Comp.', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '986838', name: 'AB SICAV - American Growth Portf.', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '988149', name: 'Robeco Asia-Pacific Equities', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A2PKR1', name: 'FERI Sustainable Quality', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A1H6XK', name: 'Morgan Stanley - Global Opport.', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '591135', name: 'Nordea Global Stable Equity', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '984734', name: 'terrAssisi Aktien I AMI', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '974968', name: 'OekoWorld OekoVision Classic', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A0Q5MC', name: 'X of the Best - dynamisch', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A2PK9Q', name: 'Janus Henderson Global Small Comp.', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A4039Q', name: 'Triodos Pioneer Impact Fund', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A2DKZV', name: 'Guinness Global Equity Income', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: '973045', name: 'Schroder ISF Asian Opportunities', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A0LHAL', name: 'FSSA Greater China Growth Fund', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A1C9ED', name: 'Nomura India Equity Fund', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A0NDKJ', name: 'Robeco QI EM Active Equities', kategorie: 'Titan Aktien', farbe: 'rot' },
+        { wkn: 'A1C9QD', name: 'Schroder ISF Frontier Markets Equity', kategorie: 'Titan Aktien', farbe: 'rot' },
+        // === ROT: Titan Branchen ===
+        { wkn: '986932', name: 'BGF World Mining Fund', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: '974119', name: 'BGF World Gold Fund', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0BL36', name: 'BGF World Healthscience Fund', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: '921800', name: 'Fidelity Funds - Global Technology', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A2DMRL', name: 'FS Exponential Technologies', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A141Q9', name: 'Pictet - Robotics', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0MWAL', name: 'DNB Fund Renewable Energy', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0RCVV', name: 'Vontobel - Global Environmental Change', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A2QBUQ', name: 'Robeco Sustainable Water', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A2PGYQ', name: 'Wellington Enduring Infrastructure Assets', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0QZ7T', name: 'Pictet - Timber', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'LB6B0M', name: 'LBBW Sicher Leben', kategorie: 'Titan Branchen', farbe: 'rot' },
+        { wkn: 'A0MP0Q', name: 'Janus Henderson Global Property Equities', kategorie: 'Titan Branchen', farbe: 'rot' },
+        // === ROT: Titan Anleihen ===
+        { wkn: '848105', name: 'Ampega Rendite Rentenfonds', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        { wkn: 'A0X758', name: 'ACATIS IfK Value Renten', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        { wkn: 'A2DW8B', name: 'T. Rowe Price - Diversified Income Bond', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        { wkn: 'A2PXFB', name: 'Schroder ISF Sustainable Euro Credit', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        { wkn: 'DWS04F', name: 'DWS Invest Euro High Yield Corporates', kategorie: 'Titan Anleihen', farbe: 'rot' },
+        // === ROT: Spezialitaeten ===
+        { wkn: 'DWSK01', name: 'DWS Concept Kaldemorgen', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A2H6V0', name: 'OptoFlex', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A2QD6P', name: 'EuroEquityFlex', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A12E0S', name: 'US EquityFlex', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A2JKK0', name: 'Vontobel Fund - Commodity', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A0M67Q', name: 'DJE - Gold & Stabilitaetsfonds', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A0NEKK', name: 'HansaGold', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: 'A1H72F', name: 'ACATIS Datini Valueflex Fonds', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        { wkn: '633596', name: 'Morgan Stanley - Global Convertible Bond', kategorie: 'Spezialitaeten', farbe: 'rot' },
+        // === ROT: ETF ===
+        { wkn: 'A0RGEL', name: 'iShares EUR Government Bond 0-1yr', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'DBX0VA', name: 'Xtrackers Target Mat Sept 2027', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'DBX1DA', name: 'Xtrackers DAX UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A1T8FS', name: 'Vanguard FTSE Dev. Europe ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'DBX1EU', name: 'Xtrackers Euro Stoxx 50 UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A0YEDG', name: 'iShares Core S&P 500 UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A3DXEB', name: 'AXA IM Nasdaq 100 UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A0RPWH', name: 'iShares Core MSCI World UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A2JDDJ', name: 'iShares Edge MSCI World Value Factor', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A2PZBH', name: 'UBS MSCI World Socially Responsible', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A1C1H5', name: 'iShares MSCI EM Asia UCITS ETF', kategorie: 'ETF', farbe: 'rot' },
+        { wkn: 'A113FF', name: 'Xtrackers MSCI World Energy ETF', kategorie: 'ETF', farbe: 'rot' }
+    ];
 
     let depotItems = (() => {
         try {
@@ -9880,50 +10152,186 @@ function updateFixkostenItem(index, key, value) {
     function removeFixkostenItem(index) { fixkostenItems.splice(index, 1); renderFixkostenList(); }
     const depotModal = { list: getEl('depot-list'), total: getEl('depot-total'), warning: getEl('depot-warning'), saveButton: getEl('depot-save-button') };
     function saveDepot() { if(checkDepotTotal()) { calculateAndUpdate(); closeModal('depot-modal'); } }
+
+    // v1.9.0: Farb-Paletten fuer Rot/Blau
+    var BLAU_FARBEN = ['#033D5D', '#1a5276', '#2471a3', '#2e86c1', '#3498db', '#5dade2', '#1b4f72', '#154360'];
+    var ROT_FARBEN = ['#C1293D', '#e74c3c', '#cb4335', '#b03a2e', '#922b21', '#d35400', '#e67e22', '#dc7633'];
+    var _blauIdx = 0;
+    var _rotIdx = 0;
+
+    function getFondsColor(farbe) {
+        if (farbe === 'blau') {
+            var c = BLAU_FARBEN[_blauIdx % BLAU_FARBEN.length];
+            _blauIdx++;
+            return c;
+        } else if (farbe === 'rot') {
+            var c = ROT_FARBEN[_rotIdx % ROT_FARBEN.length];
+            _rotIdx++;
+            return c;
+        }
+        return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+    }
+
+    // v1.9.0: Fonds-Autocomplete Suche
+    function searchFonds(query) {
+        if (!query || query.length < 2) return [];
+        var q = query.toLowerCase();
+        return MLP_FONDS_DB.filter(function(f) {
+            return f.name.toLowerCase().indexOf(q) !== -1 || f.wkn.toLowerCase().indexOf(q) !== -1;
+        }).slice(0, 8);
+    }
+
+    // v1.9.0: Lookup Fonds-Info by name
+    function lookupFonds(name) {
+        if (!name) return null;
+        var n = name.toLowerCase();
+        for (var i = 0; i < MLP_FONDS_DB.length; i++) {
+            if (MLP_FONDS_DB[i].name.toLowerCase() === n) return MLP_FONDS_DB[i];
+        }
+        return null;
+    }
+
+    // v1.9.0: Fonds-Badge HTML erzeugen
+    function fondsDBBadge(item) {
+        var info = lookupFonds(item.name);
+        if (info) {
+            return '<span class="depot-item-badge ' + info.farbe + '">' + info.farbe.toUpperCase() + '</span>';
+        }
+        if (item.name) {
+            return '<span class="depot-item-badge custom">EIGEN</span>';
+        }
+        return '';
+    }
+
     function renderDepotList() {
         depotModal.list.innerHTML = '';
-        let total = 0;
-        depotItems.forEach((item, index) => {
+        var total = 0;
+        _blauIdx = 0;
+        _rotIdx = 0;
+        depotItems.forEach(function(item, index) {
             total += item.allocation;
-            // Ensure risk property exists (backward compatibility)
             if (!item.risk) item.risk = 'conservative';
 
-            const itemEl = document.createElement('div');
+            var itemEl = document.createElement('div');
             itemEl.className = 'grid grid-cols-12 gap-2 items-center mb-2';
-            itemEl.innerHTML = `
-                <input type="color" value="${item.color}" onchange="updateDepotItem(${index}, 'color', this.value)"
-                       class="col-span-1 h-8 bg-gray-700 p-0 rounded" title="Fonds-Farbe">
-                <input type="text" value="${item.name}" onchange="updateDepotItem(${index}, 'name', this.value)"
-                       placeholder="Fonds / ETF Name" class="col-span-5 bg-gray-700 p-1 rounded text-sm">
-                <div class="relative col-span-2">
-                    <input type="number" value="${item.allocation}" onchange="updateDepotItem(${index}, 'allocation', this.value)"
-                           class="w-full text-right pr-6 bg-gray-700 p-1 rounded text-sm">
-                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
-                </div>
-                <div class="col-span-3 risk-toggle ${item.risk}" onclick="updateDepotItem(${index}, 'risk', '${item.risk === 'conservative' ? 'aggressive' : 'conservative'}')" title="${item.risk === 'conservative' ? 'Konservativ' : 'Chancenreich'}">
-                    <span class="risk-dot conservative"></span>
-                    <span class="risk-dot aggressive"></span>
-                </div>
-                <button type="button" onclick="removeDepotItem(${index})"
-                        class="col-span-1 text-red-400 hover:text-red-300 text-xl" title="Entfernen">&times;</button>
-            `;
+
+            // Badge fuer Rot/Blau
+            var badgeHtml = fondsDBBadge(item);
+
+            itemEl.innerHTML =
+                '<div class="col-span-6">' +
+                    '<div class="flex items-center gap-2">' +
+                        badgeHtml +
+                        '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" ' +
+                        'oninput="onFondsInput(this, ' + index + ')" ' +
+                        'onfocus="onFondsInput(this, ' + index + ')" ' +
+                        'onblur="setTimeout(function(){closeFondsDropdown()}, 200)" ' +
+                        'placeholder="Fonds / ETF / WKN tippen..." class="flex-1 bg-gray-700 p-1 rounded text-sm" autocomplete="off">' +
+                    '</div>' +
+                '</div>' +
+                '<div class="relative col-span-2">' +
+                    '<input type="number" value="' + item.allocation + '" onchange="updateDepotItem(' + index + ', \'allocation\', this.value)" ' +
+                    'class="w-full text-right pr-6 bg-gray-700 p-1 rounded text-sm">' +
+                    '<span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>' +
+                '</div>' +
+                '<div class="col-span-3 risk-toggle ' + item.risk + '" onclick="updateDepotItem(' + index + ', \'risk\', \'' + (item.risk === 'conservative' ? 'aggressive' : 'conservative') + '\')" title="' + (item.risk === 'conservative' ? 'Konservativ' : 'Chancenreich') + '">' +
+                    '<span class="risk-dot conservative"></span>' +
+                    '<span class="risk-dot aggressive"></span>' +
+                '</div>' +
+                '<button type="button" onclick="removeDepotItem(' + index + ')" ' +
+                'class="col-span-1 text-red-400 hover:text-red-300 text-xl" title="Entfernen">&times;</button>';
+
             depotModal.list.appendChild(itemEl);
         });
         checkDepotTotal();
     }
 
+    // v1.9.0: Autocomplete Event-Handler
+    // v1.9.3: Globales Dropdown — positioniert sich per fixed am Input
+    var _fondsDropdownIndex = -1;
+
+    function onFondsInput(inputEl, index) {
+        var query = inputEl.value;
+        var dropdown = document.getElementById('fonds-dropdown-global');
+        if (!dropdown) return;
+
+        // Update name live
+        depotItems[index].name = query;
+        _fondsDropdownIndex = index;
+
+        var results = searchFonds(query);
+        if (results.length === 0) {
+            dropdown.classList.remove('open');
+            dropdown.innerHTML = '';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < results.length; i++) {
+            var f = results[i];
+            html += '<div class="fonds-ac-item" onmousedown="selectFonds(' + index + ', ' + i + ')">' +
+                '<span class="fonds-ac-badge ' + f.farbe + '">' + f.farbe.toUpperCase() + '</span>' +
+                '<span class="fonds-ac-wkn">' + f.wkn + '</span>' +
+                '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.name + '</span>' +
+                '<span class="fonds-ac-kategorie">' + f.kategorie + '</span>' +
+                '</div>';
+        }
+        dropdown.innerHTML = html;
+
+        // Position: direkt unter dem Input-Feld
+        var rect = inputEl.getBoundingClientRect();
+        dropdown.style.left = rect.left + 'px';
+        dropdown.style.top = rect.bottom + 2 + 'px';
+        dropdown.style.width = rect.width + 'px';
+        dropdown.classList.add('open');
+    }
+
+    function selectFonds(index, resultIdx) {
+        var query = depotItems[index].name || '';
+        var results = searchFonds(query);
+        var fonds = results[resultIdx];
+        if (!fonds) return;
+
+        depotItems[index].name = fonds.name;
+        depotItems[index].color = getFondsColor(fonds.farbe);
+        depotItems[index].risk = (fonds.farbe === 'blau') ? 'conservative' : 'aggressive';
+
+        closeFondsDropdown();
+        renderDepotList();
+        renderDepotBasin();
+    }
+
+    function closeFondsDropdown() {
+        var dropdown = document.getElementById('fonds-dropdown-global');
+        if (dropdown) {
+            dropdown.classList.remove('open');
+            dropdown.innerHTML = '';
+        }
+        _fondsDropdownIndex = -1;
+    }
+
     function updateDepotItem(index, key, value) {
         if (key === 'allocation') value = parseInt(value, 10) || 0;
         depotItems[index][key] = value;
+
+        // v1.9.0: Wenn Name geaendert, pruefen ob Fonds in DB ist und Farbe/Risk auto-setzen
+        if (key === 'name') {
+            var info = lookupFonds(value);
+            if (info) {
+                depotItems[index].color = getFondsColor(info.farbe);
+                depotItems[index].risk = (info.farbe === 'blau') ? 'conservative' : 'aggressive';
+            }
+        }
+
         debouncedRenderDepotList();
-        renderDepotBasin(); // Update basin visualization
+        renderDepotBasin();
     }
 
     function addDepotItem() {
         depotItems.push({
             name: '',
             allocation: 0,
-            color: '#' + Math.floor(Math.random() * 16777215).toString(16),
+            color: '#6b7280',
             risk: 'conservative'
         });
         renderDepotList();
@@ -9931,23 +10339,25 @@ function updateFixkostenItem(index, key, value) {
     function removeDepotItem(index) {
         depotItems.splice(index, 1);
         renderDepotList();
-        renderDepotBasin(); // Update basin visualization
+        renderDepotBasin();
     }
 
     function checkDepotTotal() {
         const total = depotItems.reduce((sum, i) => sum + i.allocation, 0);
-        depotModal.total.textContent = `${total} %`;
+        depotModal.total.textContent = total + ' %';
         if (total === 100) {
-            depotModal.total.className = "text-2xl font-bold text-green-400";
-            depotModal.warning.textContent = "";
+            depotModal.total.style.color = '#47A190';
+            depotModal.warning.textContent = '';
             depotModal.saveButton.disabled = false;
-            depotModal.saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            depotModal.saveButton.style.opacity = '1';
+            depotModal.saveButton.style.cursor = 'pointer';
             return true;
         } else {
-            depotModal.total.className = "text-2xl font-bold text-red-400";
-            depotModal.warning.textContent = "Die Summe der Verteilung muss 100% ergeben.";
+            depotModal.total.style.color = '#C1293D';
+            depotModal.warning.textContent = 'Die Summe der Verteilung muss 100% ergeben.';
             depotModal.saveButton.disabled = true;
-            depotModal.saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+            depotModal.saveButton.style.opacity = '0.5';
+            depotModal.saveButton.style.cursor = 'not-allowed';
             return false;
         }
     }

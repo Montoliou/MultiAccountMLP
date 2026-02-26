@@ -519,6 +519,40 @@ Basierend auf umfassender Code-Analyse (36 identifizierte Optimierungspunkte):
 
 ---
 
+### Version 1.9.0: Depot Rot/Blau-Fondsklassifizierung (GEPLANT)
+
+**Status:** Geplant
+**Fokus:** Searchable Dropdown mit MLP Rot/Blau-Fondsliste im Depot-Modal
+**Branch:** main (vor v2.0 Design-Overhaul)
+
+#### Konzept
+
+Integration der MLP "Robustes Portfolio"-Systematik in das Depot-Modal:
+- **BLAU (Strategie/Kern):** Aktive Vermögensverwalter, Kapitalreserve, Core-Strategien
+- **ROT (Markt/Idee):** Titan-Fonds, ETFs, Sachwerte, Spezialitäten
+
+#### Geplante Features
+
+**Searchable Dropdown (Autocomplete):**
+- [ ] JS-Array mit ~90 Fonds (WKN, Name, Kategorie, Rot/Blau)
+- [ ] Autocomplete: Berater tippt 2-3 Buchstaben → passende Fonds werden vorgeschlagen
+- [ ] Rot/Blau-Farbcodierung automatisch setzen (kein manueller Color-Picker nötig)
+- [ ] Kategorie als Badge/Tooltip (z.B. "VV Defensiv", "Titan Aktien", "ETF")
+- [ ] Freitext weiterhin möglich für unbekannte Fonds
+
+**Datenquelle:**
+- `Instruktionen zur Depotanalyse RotBlau.md` als Referenz
+- ~35 BLAU-Fonds (Kapitalreserve, VV Defensiv/Ausgewogen/Dynamisch)
+- ~55 ROT-Fonds (Titan Aktien/Branchen/Anleihen, Spezialitäten, ETFs)
+
+**Integration im Depot-Modal:**
+- [ ] Aktuelles Freitext-Input ersetzen durch Searchable Dropdown + Freitext-Fallback
+- [ ] Risk-Toggle (konservativ/chancenreich) automatisch aus Rot/Blau ableiten
+- [ ] Fondsfarbe automatisch: Blau-Palette für BLAU, Rot-Palette für ROT
+- [ ] Pflege: JS-Array leicht editierbar wenn MLP die Fondsliste aktualisiert
+
+---
+
 ### ✅ Version 1.7.8: Aktien & Anleihen Erklärer-Modal (ABGESCHLOSSEN)
 
 **Status:** ✅ Released (Februar 2026)
