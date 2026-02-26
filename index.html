@@ -1777,31 +1777,137 @@
         .theme-light .depot-item-badge.blau { background: rgba(3,61,93,0.12); color: #033D5D; }
         .theme-light .depot-item-badge.rot { background: rgba(193,41,61,0.1); color: #C1293D; }
 
-        /* v1.9.1: Dezente Erklärer-Links im Depot-Modal */
-        .depot-erklaerer-link {
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 4px;
-            border: 1px solid rgba(156,163,175,0.3);
-            background: transparent;
-            color: #9ca3af;
+        /* v1.9.2: Erklärer-Buttons — edel, gleichmäßig verteilt */
+        .depot-erklaerer-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .depot-erklaerer-btn {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            padding: 8px 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(156,163,175,0.25);
+            background: rgba(255,255,255,0.04);
+            color: #b0b8c4;
             cursor: pointer;
-            transition: all 0.15s ease;
-            white-space: nowrap;
+            transition: all 0.2s ease;
+            text-align: center;
+            line-height: 1.3;
         }
-        .depot-erklaerer-link:hover {
-            border-color: rgba(96,165,250,0.5);
-            color: #60a5fa;
-            background: rgba(96,165,250,0.08);
+        .depot-erklaerer-btn:hover {
+            border-color: #47A190;
+            color: #ffffff;
+            background: rgba(71,161,144,0.12);
+            box-shadow: 0 1px 4px rgba(71,161,144,0.15);
         }
-        .theme-light .depot-erklaerer-link {
-            color: #717171;
+        .theme-light .depot-erklaerer-btn {
+            color: #4b5563;
             border-color: #BEB6AA;
+            background: rgba(3,61,93,0.03);
         }
-        .theme-light .depot-erklaerer-link:hover {
+        .theme-light .depot-erklaerer-btn:hover {
             color: #033D5D;
             border-color: #033D5D;
-            background: rgba(3,61,93,0.05);
+            background: rgba(3,61,93,0.08);
+            box-shadow: 0 1px 4px rgba(3,61,93,0.12);
+        }
+
+        /* v1.9.2: Prognose-Section kompakt */
+        .prognose-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .prognose-grid .prognose-full { grid-column: 1 / -1; }
+        .prognose-field label {
+            font-size: 12px;
+            color: #9ca3af;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .theme-light .prognose-field label { color: #717171; }
+        .prognose-input {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(55,65,81,0.5);
+            border: 1px solid rgba(156,163,175,0.2);
+            border-radius: 6px;
+            padding: 6px 10px;
+            transition: border-color 0.15s ease;
+        }
+        .prognose-input:focus-within {
+            border-color: #47A190;
+        }
+        .prognose-input input {
+            flex: 1;
+            background: transparent;
+            color: #ffffff;
+            outline: none;
+            font-size: 14px;
+            min-width: 0;
+        }
+        .prognose-input .unit {
+            font-size: 12px;
+            color: #6b7280;
+            flex-shrink: 0;
+        }
+        .theme-light .prognose-input {
+            background: #ffffff;
+            border-color: #BEB6AA;
+        }
+        .theme-light .prognose-input input { color: #2B2B2B; }
+        .prognose-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .prognose-slider-row input[type="range"] { flex: 1; }
+        .prognose-slider-row .slider-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+            min-width: 60px;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .theme-light .prognose-slider-row .slider-value { color: #2B2B2B; }
+        .prognose-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #033D5D;
+            color: #ffffff;
+        }
+        .prognose-btn:hover {
+            background: #04506f;
+            box-shadow: 0 2px 8px rgba(3,61,93,0.3);
+        }
+        .prognose-hint {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+            padding: 6px 8px;
+            background: rgba(17,24,39,0.5);
+            border-radius: 4px;
+            border-left: 2px solid #BEB6AA;
+        }
+        .theme-light .prognose-hint {
+            background: #f9fafb;
+            color: #717171;
         }
 
         /* Fund Blocks in Depot Basin */
@@ -2526,68 +2632,62 @@
             <h3 id="depot-modal-title" class="text-xl font-bold mb-4">Depot-Aufteilung</h3>
             <p id="depot-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Lege fest, wie neue Investments verteilt werden.</p>
 
-            <!-- v1.9.1: Erklärer-Links — dezent, eine Reihe -->
-            <div class="flex flex-wrap gap-2 mb-4">
-                <button type="button" onclick="openCostAverageModal()" class="depot-erklaerer-link">Cost-Average</button>
-                <button type="button" onclick="openSoRRModal()" class="depot-erklaerer-link">SoRR-Risiko</button>
-                <button type="button" onclick="openAnleihenModal()" class="depot-erklaerer-link">Aktien &amp; Anleihen</button>
-                <button type="button" onclick="openMsciRenditedreieck()" class="depot-erklaerer-link">MSCI Renditedreieck</button>
+            <!-- v1.9.2: Erklärer-Buttons — edel, gleichmäßig verteilt -->
+            <div class="depot-erklaerer-row">
+                <button type="button" onclick="openCostAverageModal()" class="depot-erklaerer-btn">Cost-Average</button>
+                <button type="button" onclick="openSoRRModal()" class="depot-erklaerer-btn">SoRR-Risiko</button>
+                <button type="button" onclick="openAnleihenModal()" class="depot-erklaerer-btn">Aktien &amp; Anleihen</button>
+                <button type="button" onclick="openMsciRenditedreieck()" class="depot-erklaerer-btn">MSCI Renditedreieck</button>
             </div>
 
             <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
-            <button type="button" onclick="addDepotItem()" class="mt-4 text-sm bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-md">+ Fonds hinzufügen</button>
-            <hr class="border-gray-600 my-4">
-            <div class="flex justify-between items-center">
-                <p class="text-lg">Gesamt-Verteilung:</p>
+            <button type="button" onclick="addDepotItem()" style="margin-top:10px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:5px; border:1px dashed rgba(156,163,175,0.3); background:transparent; color:#9ca3af; cursor:pointer; transition:all 0.15s;">+ Fonds hinzufügen</button>
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:12px; border-top:1px solid rgba(156,163,175,0.12);">
+                <span style="font-size:13px; color:#9ca3af;">Gesamt-Verteilung</span>
                 <p id="depot-total" class="text-2xl font-bold">100 %</p>
             </div>
-            <p id="depot-warning" class="text-center text-yellow-400 mt-2 h-6"></p>
+            <p id="depot-warning" class="text-center text-yellow-400 mt-1" style="font-size:12px; min-height:18px;"></p>
 
-            <!-- Prognose Section (v1.4.0) -->
-            <hr class="border-gray-600 my-6">
-            <h4 class="text-lg font-bold mb-4">Prognose-Einstellungen</h4>
+            <!-- Prognose Section (v1.9.2 redesign) -->
+            <hr class="border-gray-600 my-4" style="border-color: rgba(156,163,175,0.15);">
+            <h4 style="font-size:14px; font-weight:700; margin-bottom:12px; color:#b0b8c4; letter-spacing:0.5px; text-transform:uppercase;">Prognose</h4>
 
-            <div class="space-y-4">
-                <!-- Aktueller Depotstand -->
-                <div>
-                    <label for="depotCurrent" class="text-sm text-gray-400 block mb-2">Aktueller Depotstand</label>
-                    <div class="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
-                        <span class="text-gray-400">€</span>
-                        <input type="number" id="depotCurrent" value="25000" class="flex-1 bg-transparent text-white outline-none" inputmode="decimal" placeholder="Aktueller Depotstand">
+            <div class="prognose-grid">
+                <div class="prognose-field">
+                    <label for="depotCurrent">Depotstand</label>
+                    <div class="prognose-input">
+                        <span class="unit">&euro;</span>
+                        <input type="number" id="depotCurrent" value="25000" inputmode="decimal" placeholder="25.000">
                     </div>
                 </div>
-
-                <!-- Anlagezeitraum Slider -->
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <label for="anlagezeitraum" class="text-sm text-gray-400">Anlagezeitraum</label>
-                        <span id="anlagezeitraum-label" class="text-sm font-bold text-white">15 Jahre</span>
+                <div class="prognose-field">
+                    <label for="rendite">Rendite p.a.</label>
+                    <div class="prognose-input">
+                        <input type="number" id="rendite" step="0.1" value="7" inputmode="decimal" placeholder="7">
+                        <span class="unit">%</span>
                     </div>
-                    <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="mlp-range">
+                    <div id="rendite-info" class="prognose-hint"></div>
                 </div>
-
-                <!-- Erwartete Rendite -->
-                <div>
-                    <label for="rendite" class="text-sm text-gray-400 block mb-2">Erwartete Rendite p.a.</label>
-                    <div class="flex items-center gap-2 bg-gray-700 rounded-lg px-3 py-2">
-                        <input type="number" id="rendite" step="0.1" value="7" class="flex-1 bg-transparent text-white outline-none" inputmode="decimal" placeholder="Rendite p.a.">
-                        <span class="text-gray-400">%</span>
+                <div class="prognose-field prognose-full">
+                    <label for="anlagezeitraum">Anlagezeitraum</label>
+                    <div class="prognose-slider-row">
+                        <input type="range" id="anlagezeitraum" min="1" max="30" value="15" class="mlp-range">
+                        <span id="anlagezeitraum-label" class="slider-value">15 Jahre</span>
                     </div>
-                    <div id="rendite-info" class="text-xs text-gray-300 mt-2 p-2 bg-gray-900 rounded-lg"></div>
                 </div>
-
-                <!-- Prognose Button -->
-                <button type="button" onclick="showProjection();" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-                    </svg>
-                    Prognose anzeigen
-                </button>
+                <div class="prognose-full">
+                    <button type="button" onclick="showProjection();" class="prognose-btn">
+                        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                        </svg>
+                        Prognose anzeigen
+                    </button>
+                </div>
             </div>
 
-            <hr class="border-gray-600 my-6">
-
-            <button id="depot-save-button" type="button" onclick="saveDepot()" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Speichern &amp; Schließen</button>
+            <div style="margin-top:16px; padding-top:12px; border-top:1px solid rgba(156,163,175,0.12);">
+                <button id="depot-save-button" type="button" onclick="saveDepot()" style="width:100%; padding:10px 16px; border-radius:8px; border:none; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; background:#47A190; color:#ffffff;">Speichern &amp; Schließen</button>
+            </div>
         </div>
     </div>
 
@@ -10219,18 +10319,20 @@ function updateFixkostenItem(index, key, value) {
 
     function checkDepotTotal() {
         const total = depotItems.reduce((sum, i) => sum + i.allocation, 0);
-        depotModal.total.textContent = `${total} %`;
+        depotModal.total.textContent = total + ' %';
         if (total === 100) {
-            depotModal.total.className = "text-2xl font-bold text-green-400";
-            depotModal.warning.textContent = "";
+            depotModal.total.style.color = '#47A190';
+            depotModal.warning.textContent = '';
             depotModal.saveButton.disabled = false;
-            depotModal.saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            depotModal.saveButton.style.opacity = '1';
+            depotModal.saveButton.style.cursor = 'pointer';
             return true;
         } else {
-            depotModal.total.className = "text-2xl font-bold text-red-400";
-            depotModal.warning.textContent = "Die Summe der Verteilung muss 100% ergeben.";
+            depotModal.total.style.color = '#C1293D';
+            depotModal.warning.textContent = 'Die Summe der Verteilung muss 100% ergeben.';
             depotModal.saveButton.disabled = true;
-            depotModal.saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+            depotModal.saveButton.style.opacity = '0.5';
+            depotModal.saveButton.style.cursor = 'not-allowed';
             return false;
         }
     }
