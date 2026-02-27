@@ -2831,6 +2831,76 @@
             box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
         }
 
+        /* v1.9.0: Fonds-Autocomplete Dropdown (Glassmorphism-kompatibel) */
+        #fonds-dropdown-global {
+            position: fixed;
+            z-index: 200;
+            max-height: 220px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            display: none;
+        }
+        #fonds-dropdown-global.open { display: block; }
+        .fonds-ac-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.15s ease;
+        }
+        .fonds-ac-item:last-child { border-bottom: none; }
+        .fonds-ac-item:hover { background: rgba(255,255,255,0.08); }
+        .fonds-ac-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+        }
+        .fonds-ac-badge.blau { background: rgba(3,61,93,0.3); color: #60a5fa; }
+        .fonds-ac-badge.rot { background: rgba(239,68,68,0.2); color: #fca5a5; }
+        .fonds-ac-wkn { font-size: 10px; color: #6b7280; font-family: monospace; flex-shrink: 0; }
+        .fonds-ac-kategorie { font-size: 10px; color: #4b5563; flex-shrink: 0; }
+
+        /* v1.9.0: Depot-Item Badges (BLAU/ROT/EIGEN) */
+        .depot-item-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .depot-item-badge.blau { background: rgba(3,61,93,0.3); color: #60a5fa; }
+        .depot-item-badge.rot { background: rgba(239,68,68,0.2); color: #fca5a5; }
+        .depot-item-badge.custom { background: rgba(156,163,175,0.2); color: #9ca3af; }
+
+        /* Light theme overrides */
+        .theme-light #fonds-dropdown-global {
+            background: rgba(255,255,255,0.95);
+            border-color: rgba(190,182,170,0.4);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .theme-light .fonds-ac-item:hover { background: rgba(3,61,93,0.06); }
+        .theme-light .fonds-ac-badge.blau { background: rgba(3,61,93,0.12); color: #033D5D; }
+        .theme-light .fonds-ac-badge.rot { background: rgba(193,41,61,0.1); color: #C1293D; }
+        .theme-light .fonds-ac-kategorie { color: #717171; }
+        .theme-light .fonds-ac-wkn { color: #717171; }
+        .theme-light .depot-item-badge.blau { background: rgba(3,61,93,0.12); color: #033D5D; }
+        .theme-light .depot-item-badge.rot { background: rgba(193,41,61,0.1); color: #C1293D; }
+
         /* Fund Blocks in Depot Basin */
         .depot-basin-content {
             display: flex;
