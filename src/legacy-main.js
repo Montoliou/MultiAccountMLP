@@ -1,0 +1,8115 @@
+// ===== SESSION MANAGEMENT SYSTEM (v1.2.0) =====
+// Implements DSGVO-compliant session-based data storage
+
+const SESSION_STORAGE_KEY = 'mlp_current_session';
+const INACTIVITY_WARNING_MS = 30 * 60 * 1000; // 30 minutes
+const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000; // 60 minutes
+
+let sessionInactivityWarningTimer = null;
+let sessionInactivityTimeoutTimer = null;
+let sessionStartTime = null;
+let sessionTimerInterval = null;
+
+// Generate unique session ID: YYYYMMDD-HHMM-XXXX
+function generateSessionId() {
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const time = now.toTimeString().slice(0, 5).replace(':', '');
+    const random = Math.random().toString(36).substr(2, 4).toUpperCase();
+    return `${date}-${time}-${random}`;
+}
+
+// Get current session data
+function getCurrentSession() {
+    try {
+        const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        console.warn('Failed to load session:', e);
+        return null;
+    }
+}
+
+// Save session data
+function saveSession(session) {
+    try {
+        session.letzteAktivitaet = new Date().toISOString();
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+        resetInactivityTimers();
+    } catch (e) {
+        console.error('Failed to save session:', e);
+    }
+}
+
+// Start new session
+function startSession(kundenKuerzel = null, berater = null) {
+    const sessionId = generateSessionId();
+    const now = new Date().toISOString();
+
+    const session = {
+        id: sessionId,
+        kundenKuerzel: kundenKuerzel || null,
+        berater: berater || null,
+        startzeit: now,
+        letzteAktivitaet: now,
+        status: 'aktiv',
+        // v1.7.2: Track which educational modules were discussed
+        erklaererBesucht: {
+            costAverage: false,
+            sorr: false,
+            anleihen: false
+        }
+    };
+
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    sessionStartTime = new Date();
+
+    // Start session timer
+    updateSessionInfoBar();
+    startSessionTimer();
+    resetInactivityTimers();
+
+    // Start auto-export timer (v1.3.6)
+    startAutoExport();
+
+    // Hide session start dialog
+    closeModal('session-start-dialog');
+
+    console.log(`📋 Session gestartet: ${sessionId}`);
+    return session;
+}
+
+// v1.7.2: Mark educational module as visited
+function markErklaererBesucht(module) {
+    const session = getCurrentSession();
+    if (!session) return;
+
+    if (!session.erklaererBesucht) {
+        session.erklaererBesucht = { costAverage: false, sorr: false };
+    }
+
+    session.erklaererBesucht[module] = true;
+    saveSession(session);
+    console.log(`✅ Erklärer besucht: ${module}`);
+
+    // Update UI immediately
+    updateSessionInfoBar();
+}
+
+// v1.7.2: Check if module was visited
+function wasErklaererBesucht(module) {
+    const session = getCurrentSession();
+    return session?.erklaererBesucht?.[module] || false;
+}
+
+// End session and clear all data
+function endSession(exportFirst = false) {
+    const session = getCurrentSession();
+
+    if (exportFirst) {
+        // Export session as JSON before ending
+        exportAsJSON(false);
+    }
+
+    // Stop auto-export timer (v1.3.6)
+    stopAutoExport();
+
+    // Clear all session storage
+    sessionStorage.clear();
+
+    if (session) {
+        console.log(`🗑️ Session gelöscht: ${session.id} am ${new Date().toISOString()}`);
+    }
+
+    // Stop timers
+    if (sessionTimerInterval) {
+        clearInterval(sessionTimerInterval);
+        sessionTimerInterval = null;
+    }
+    clearInactivityTimers();
+
+    // Reload to show session start dialog
+    window.location.reload();
+}
+
+// Update session button and dropdown
+function updateSessionInfoBar() {
+    const session = getCurrentSession();
+    if (!session) return;
+
+    const buttonContainer = getEl('session-button-container');
+    if (!buttonContainer) return;
+
+    const sessionIdEl = getEl('session-id-display');
+    const kundenKuerzelEl = getEl('session-kunden-display');
+    const timerEl = getEl('session-timer');
+
+    if (sessionIdEl) sessionIdEl.textContent = session.id;
+    if (kundenKuerzelEl) {
+        kundenKuerzelEl.textContent = session.kundenKuerzel || 'Keine Angabe';
+    }
+
+    // v1.7.2: Update educational modules status icons
+    const caIcon = getEl('erklaerer-ca-icon');
+    const sorrIcon = getEl('erklaerer-sorr-icon');
+
+    if (caIcon) {
+        caIcon.textContent = wasErklaererBesucht('costAverage') ? '✅' : '⭕';
+        caIcon.className = wasErklaererBesucht('costAverage') ? 'text-green-400' : 'text-gray-600';
+    }
+
+    if (sorrIcon) {
+        sorrIcon.textContent = wasErklaererBesucht('sorr') ? '✅' : '⭕';
+        sorrIcon.className = wasErklaererBesucht('sorr') ? 'text-green-400' : 'text-gray-600';
+    }
+
+    const anleihenIcon = getEl('erklaerer-anleihen-icon');
+    if (anleihenIcon) {
+        anleihenIcon.textContent = wasErklaererBesucht('anleihen') ? '✅' : '⭕';
+        anleihenIcon.className = wasErklaererBesucht('anleihen') ? 'text-green-400' : 'text-gray-600';
+    }
+
+    buttonContainer.style.display = 'block';
+}
+
+// Toggle session dropdown menu
+function toggleSessionMenu() {
+    const dropdown = getEl('session-dropdown');
+    const chevron = getEl('session-menu-chevron');
+
+    if (!dropdown) return;
+
+    const isOpen = dropdown.style.display === 'block';
+
+    if (isOpen) {
+        dropdown.style.display = 'none';
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+    } else {
+        dropdown.style.display = 'block';
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const buttonContainer = getEl('session-button-container');
+    const dropdown = getEl('session-dropdown');
+    const chevron = getEl('session-menu-chevron');
+
+    if (!buttonContainer || !dropdown) return;
+
+    // If click is outside the button container and dropdown is open
+    if (!buttonContainer.contains(e.target) && dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+    }
+});
+
+// Start session duration timer
+function startSessionTimer() {
+    if (sessionTimerInterval) {
+        clearInterval(sessionTimerInterval);
+    }
+
+    sessionTimerInterval = setInterval(() => {
+        const session = getCurrentSession();
+        if (!session) return;
+
+        const start = new Date(session.startzeit);
+        const now = new Date();
+        const diffMs = now - start;
+        const diffMins = Math.floor(diffMs / 60000);
+
+        const timerEl = getEl('session-timer');
+        if (timerEl) {
+            if (diffMins < 60) {
+                timerEl.textContent = `${diffMins} Min.`;
+            } else {
+                const hours = Math.floor(diffMins / 60);
+                const mins = diffMins % 60;
+                timerEl.textContent = `${hours}h ${mins}m`;
+            }
+        }
+    }, 30000); // Update every 30 seconds
+}
+
+// Reset inactivity timers
+function resetInactivityTimers() {
+    clearInactivityTimers();
+
+    // Warning after 30 min
+    sessionInactivityWarningTimer = setTimeout(() => {
+        showInactivityWarning();
+    }, INACTIVITY_WARNING_MS);
+
+    // Auto-end after 60 min
+    sessionInactivityTimeoutTimer = setTimeout(() => {
+        showInactivityTimeout();
+    }, INACTIVITY_TIMEOUT_MS);
+}
+
+// Clear inactivity timers
+function clearInactivityTimers() {
+    if (sessionInactivityWarningTimer) {
+        clearTimeout(sessionInactivityWarningTimer);
+        sessionInactivityWarningTimer = null;
+    }
+    if (sessionInactivityTimeoutTimer) {
+        clearTimeout(sessionInactivityTimeoutTimer);
+        sessionInactivityTimeoutTimer = null;
+    }
+}
+
+// Show inactivity warning
+function showInactivityWarning() {
+    const toast = document.createElement('div');
+    toast.id = 'inactivity-warning-toast';
+    toast.className = 'fixed bottom-4 right-4 bg-yellow-600 text-white px-6 py-4 rounded-lg shadow-2xl z-50 max-w-md';
+    toast.innerHTML = `
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <p class="font-bold mb-1">Beratung noch aktiv?</p>
+                    <p class="text-sm mb-3">Daten werden bei weiterer Inaktivität nach 60 Min. automatisch gelöscht.</p>
+                    <button onclick="confirmSessionActive()" class="bg-white text-yellow-600 px-4 py-2 rounded font-bold hover:bg-yellow-50">
+                        Ich bin noch da
+                    </button>
+                </div>
+            </div>
+        `;
+    document.body.appendChild(toast);
+}
+
+// Confirm session is still active
+function confirmSessionActive() {
+    const toast = getEl('inactivity-warning-toast');
+    if (toast) toast.remove();
+
+    const session = getCurrentSession();
+    if (session) {
+        saveSession(session);
+    }
+
+    // Reset inactivity timers so user gets another 30 minutes
+    resetInactivityTimers();
+}
+
+// Show inactivity timeout dialog
+function showInactivityTimeout() {
+    if (confirm('Die Beratung wurde wegen Inaktivität beendet. Alle Daten werden gelöscht.\n\nMöchten Sie die Daten vor dem Löschen exportieren?')) {
+        endSession(true);
+    } else {
+        endSession(false);
+    }
+}
+
+// Show session start dialog
+function showSessionStartDialog() {
+    openModal('session-start-dialog');
+
+    // Check if privacy notice was previously acknowledged
+    const privacyAcknowledged = localStorage.getItem('mlp-privacy-acknowledged') === 'true';
+    const privacyBox = getEl('privacy-notice-box');
+    if (privacyBox) {
+        privacyBox.style.display = privacyAcknowledged ? 'none' : 'block';
+    }
+}
+
+// Show session recovery dialog
+function showSessionRecoveryDialog(session) {
+    const dialog = getEl('session-recovery-dialog');
+    if (!dialog) return;
+
+    const sessionInfo = getEl('recovery-session-info');
+    if (sessionInfo) {
+        const start = new Date(session.startzeit);
+        const now = new Date();
+        const diffMins = Math.floor((now - start) / 60000);
+
+        sessionInfo.innerHTML = `
+                <p class="mb-2"><strong>Session-ID:</strong> ${session.id}</p>
+                <p class="mb-2"><strong>Kunde:</strong> ${session.kundenKuerzel || 'Keine Angabe'}</p>
+                <p><strong>Gestartet:</strong> vor ${diffMins} Min.</p>
+            `;
+    }
+
+    openModal('session-recovery-dialog');
+}
+
+// Continue existing session
+function continueSession() {
+    const session = getCurrentSession();
+    if (session) {
+        sessionStartTime = new Date(session.startzeit);
+        updateSessionInfoBar();
+        startSessionTimer();
+        resetInactivityTimers();
+        closeModal('session-recovery-dialog');
+        console.log(`▶️ Session fortgesetzt: ${session.id}`);
+    }
+}
+
+// Start new session (discard old one)
+function startNewSessionAndDiscard() {
+    sessionStorage.clear();
+    closeModal('session-recovery-dialog');
+    showSessionStartDialog();
+}
+
+// Show session end confirmation dialog
+function showSessionEndDialog() {
+    const session = getCurrentSession();
+    if (!session) return;
+
+    const dialog = getEl('session-end-dialog');
+    if (!dialog) return;
+
+    openModal('session-end-dialog');
+}
+
+// Prevent tab close without confirmation
+let allowReloadWithoutWarning = false;
+window.addEventListener('beforeunload', (e) => {
+    // Skip warning if we're reloading after import
+    if (allowReloadWithoutWarning) {
+        return;
+    }
+
+    const session = getCurrentSession();
+    if (session && session.status !== 'exportiert') {
+        e.preventDefault();
+        e.returnValue = 'Beratung beenden? Daten gehen verloren!';
+    }
+});
+
+// Track user activity
+function trackActivity() {
+    const session = getCurrentSession();
+    if (session) {
+        saveSession(session);
+    }
+}
+
+// Attach activity listeners
+['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+    document.addEventListener(event, trackActivity, { passive: true, once: false });
+});
+
+// Start session from dialog with user input
+function startSessionFromDialog() {
+    const kundenKuerzel = getEl('session-kunden-kuerzel')?.value.trim() || null;
+    const berater = getEl('session-berater')?.value.trim() || null;
+
+    // Save privacy acknowledgment if checkbox is checked
+    const privacyCheckbox = getEl('privacy-understood-checkbox');
+    if (privacyCheckbox && privacyCheckbox.checked) {
+        localStorage.setItem('mlp-privacy-acknowledged', 'true');
+    }
+
+    startSession(kundenKuerzel, berater);
+}
+
+// ===== END SESSION MANAGEMENT SYSTEM =====
+
+// ===== EXPORT FUNCTIONS (v1.3.0) =====
+
+// Export all session data as CSV
+function exportAsCSV() {
+    const session = getCurrentSession();
+    if (!session) {
+        alert('Keine Session gefunden!');
+        return;
+    }
+
+    // Check if inputs are initialized
+    if (typeof inputs === 'undefined') {
+        console.error('Export failed: inputs not initialized');
+        alert('Export-Fehler: Bitte warten Sie, bis die Seite vollständig geladen ist.');
+        return;
+    }
+
+    // Collect all data
+    const income = parseFloat(inputs.income?.value) || 0;
+    const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
+    const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
+    const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent?.value) || 0;
+    const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit?.value) || 0;
+    const depotCurrent = parseFloat(inputs.depotCurrent?.value) || 0;
+    const anlagezeitraum = parseInt(inputs.anlagezeitraum?.value, 10) || 15;
+    const rendite = parseFloat(inputs.rendite?.value) || 0;
+
+    // Build CSV content
+    const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+    let csv = '';
+
+    // Header with session metadata
+    csv += `# Beratungsprotokoll - MLP Vermögensmanagement\n`;
+    csv += `# Session-ID: ${session.id}\n`;
+    csv += `# Kunde: ${session.kundenKuerzel || 'N/A'}\n`;
+    csv += `# Berater: ${session.berater || 'N/A'}\n`;
+    csv += `# Datum: ${new Date(session.startzeit).toLocaleDateString('de-DE')}\n`;
+    csv += `# Exportiert am: ${new Date().toLocaleDateString('de-DE')} um ${new Date().toLocaleTimeString('de-DE')}\n`;
+    csv += `# Variante: ${currentVariant}\n`;
+    csv += `\n`;
+
+    // Data section
+    csv += `Kategorie;Beschreibung;Betrag (EUR);Intervall;Ziel\n`;
+
+    // Einkommen
+    csv += `Einkommen;Haupteinkommen;${income};monatlich;einkommen\n`;
+
+    // Fixkosten & Sparpläne
+    fixkostenItems.forEach(item => {
+        const monthlyAmount = getMonthlyAmount(item);
+        const kategorie = item.target === 'depot' ? 'Sparplan' : 'Fixkosten';
+        const intervall = item.interval === 'monthly' ? 'monatlich' :
+            item.interval === 'quarterly' ? 'vierteljährlich' : 'jährlich';
+        csv += `${kategorie};${item.name};${monthlyAmount};${intervall};${item.target}\n`;
+    });
+
+    // Konsum
+    csv += `Konsum;Mindestbetrag;${konsumMin};monatlich;konsum\n`;
+    csv += `Konsum;Überschuss;${konsumLeftover};monatlich;konsum\n`;
+
+    // Tagesgeld
+    csv += `Tagesgeld;Aktueller Stand;${tagesgeldCurrent};einmalig;tagesgeld\n`;
+    csv += `Tagesgeld;Sparziel;${tagesgeldLimit};einmalig;tagesgeld\n`;
+
+    // Depot
+    csv += `Depot;Aktueller Stand;${depotCurrent};einmalig;depot\n`;
+    csv += `Depot;Anlagezeitraum (Jahre);${anlagezeitraum};-;depot\n`;
+    csv += `Depot;Erwartete Rendite (%);${rendite};jährlich;depot\n`;
+
+    // Depot-Allocation
+    csv += `\n# Depot-Aufteilung\n`;
+    csv += `Fonds/ETF;Allocation (%)\n`;
+    depotItems.forEach(item => {
+        csv += `${item.name};${item.allocation}\n`;
+    });
+
+    // Immobilien
+    if (immobilienData && immobilienData.length > 0) {
+        csv += `\n# Immobilien\n`;
+        csv += `Objekt;Wert (EUR);Darlehen (EUR);Zinssatz (%);Tilgungssatz (%);Mieteinnahmen (EUR);Kosten (EUR)\n`;
+        immobilienData.forEach(immo => {
+            csv += `${immo.objekt || 'Immobilie'};${immo.wert || 0};${immo.darlehen || 0};${immo.zinssatz || 0};${immo.tilgungssatz || 0};${immo.mieteinnahmen || 0};${immo.kosten || 0}\n`;
+        });
+    }
+
+    // Vermieterkonto
+    const vermieterData = getVermieterkontoData();
+    if (vermieterData) {
+        csv += `\n# Vermieterkonto\n`;
+        csv += `Beschreibung;Betrag (EUR)\n`;
+        csv += `Mieteinnahmen (netto);${vermieterData.mieteinnahmenNetto}\n`;
+        csv += `Darlehenszinsen;${vermieterData.darlehenszinsen}\n`;
+        csv += `Tilgung;${vermieterData.tilgung}\n`;
+        csv += `Nebenkosten & Instandhaltung;${vermieterData.nebenkostenInstand}\n`;
+        csv += `Gesamt-Ausgaben;${vermieterData.gesamtAusgaben}\n`;
+        csv += `Saldo (monatlich);${vermieterData.saldo}\n`;
+    }
+
+    // Buchungsplaner
+    if (typeof bookingPlan !== 'undefined' && bookingPlan && Object.keys(bookingPlan).length > 0) {
+        csv += `\n# Buchungsplaner (Transaktionstermine)\n`;
+        csv += `Tag;Beschreibung\n`;
+
+        Object.keys(bookingPlan).forEach(month => {
+            const monthData = bookingPlan[month];
+            if (monthData && typeof monthData === 'object') {
+                Object.keys(monthData).forEach(day => {
+                    const bookings = monthData[day];
+                    if (Array.isArray(bookings)) {
+                        bookings.forEach(bookingTypeId => {
+                            const bookingType = bookingTypeLookup[bookingTypeId];
+                            if (bookingType) {
+                                const description = getActiveBookingDescription(bookingType);
+                                csv += `${day};${description}\n`;
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // Create download
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
+    const filename = `Beratung_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.csv`;
+    downloadFile(blob, filename);
+
+    console.log('📄 CSV-Export erstellt:', filename);
+}
+
+// ===== EXCEL EXPORT (v1.7.0) =====
+function exportAsExcel() {
+    const session = getCurrentSession();
+    if (!session) {
+        alert('Keine Session gefunden!');
+        return;
+    }
+
+    // Check if inputs are initialized
+    if (typeof inputs === 'undefined') {
+        console.error('Export failed: inputs not initialized');
+        alert('Export-Fehler: Bitte warten Sie, bis die Seite vollständig geladen ist.');
+        return;
+    }
+
+    try {
+        // Create a new workbook
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1: Übersicht (Session-Daten)
+        const overviewData = createOverviewSheet(session);
+        const ws1 = XLSX.utils.aoa_to_sheet(overviewData);
+        applyOverviewFormatting(ws1, overviewData);
+        XLSX.utils.book_append_sheet(wb, ws1, "Übersicht");
+
+        // Sheet 2: Cashflow-Analyse
+        const cashflowData = createCashflowSheet();
+        const ws2 = XLSX.utils.aoa_to_sheet(cashflowData);
+        applyCashflowFormatting(ws2, cashflowData);
+        XLSX.utils.book_append_sheet(wb, ws2, "Cashflow");
+
+        // Sheet 3: Immobilien (if exists)
+        if (immobilienData && immobilienData.length > 0) {
+            const immobilienSheet = createImmobilienSheet();
+            const ws3 = XLSX.utils.aoa_to_sheet(immobilienSheet);
+            applyImmobilienFormatting(ws3, immobilienSheet);
+            XLSX.utils.book_append_sheet(wb, ws3, "Immobilien");
+        }
+
+        // Sheet 4: Depot-Allocation
+        if (depotItems && depotItems.length > 0) {
+            const depotData = createDepotSheet();
+            const ws4 = XLSX.utils.aoa_to_sheet(depotData);
+            applyDepotFormatting(ws4, depotData);
+            XLSX.utils.book_append_sheet(wb, ws4, "Depot");
+        }
+
+        // Generate Excel file
+        const filename = `Beratung_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, filename);
+
+        console.log('📊 Excel-Export erstellt:', filename);
+    } catch (error) {
+        console.error('Excel-Export Fehler:', error);
+        alert('Fehler beim Excel-Export: ' + error.message);
+    }
+}
+
+// Create Overview Sheet Data
+function createOverviewSheet(session) {
+    const income = parseFloat(inputs.income?.value) || 0;
+    const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
+    const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
+    const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent?.value) || 0;
+    const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit?.value) || 0;
+    const depotCurrent = parseFloat(inputs.depotCurrent?.value) || 0;
+    const anlagezeitraum = parseInt(inputs.anlagezeitraum?.value, 10) || 15;
+    const rendite = parseFloat(inputs.rendite?.value) || 0;
+
+    const data = [
+        ['MLP FINANZBERATUNG SE'],
+        ['Beratungsprotokoll - Vermögensmanagement'],
+        [],
+        ['Session-Informationen'],
+        ['Session-ID', session.id],
+        ['Kunde', session.kundenKuerzel || 'N/A'],
+        ['Berater', session.berater || 'N/A'],
+        ['Datum', new Date(session.startzeit).toLocaleDateString('de-DE')],
+        ['Exportiert am', new Date().toLocaleString('de-DE')],
+        ['Variante', currentVariant],
+        [],
+        ['BASISDATEN'],
+        ['Kategorie', 'Wert', 'Einheit'],
+        ['Haupteinkommen', income, '€ / Monat'],
+        ['Konsum (Minimum)', konsumMin, '€ / Monat'],
+        ['Konsum (Überschuss)', konsumLeftover, '€ / Monat'],
+        ['Tagesgeld (aktuell)', tagesgeldCurrent, '€'],
+        ['Tagesgeld (Sparziel)', tagesgeldLimit, '€'],
+        ['Depot (aktuell)', depotCurrent, '€'],
+        ['Anlagezeitraum', anlagezeitraum, 'Jahre'],
+        ['Erwartete Rendite', rendite, '% p.a.'],
+        [],
+        ['FIXKOSTEN & SPARPLÄNE'],
+        ['Beschreibung', 'Betrag', 'Intervall', 'Ziel']
+    ];
+
+    // Add Fixkosten items
+    fixkostenItems.forEach(item => {
+        const monthlyAmount = getMonthlyAmount(item);
+        const intervall = item.interval === 'monthly' ? 'monatlich' :
+            item.interval === 'quarterly' ? 'vierteljährlich' : 'jährlich';
+        data.push([item.name, monthlyAmount, intervall, item.target]);
+    });
+
+    return data;
+}
+
+// Create Cashflow Sheet
+function createCashflowSheet() {
+    const income = parseFloat(inputs.income?.value) || 0;
+    const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
+    const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
+
+    // Calculate flows
+    let totalFixkosten = 0;
+    let totalSparplan = 0;
+
+    fixkostenItems.forEach(item => {
+        const monthlyAmount = getMonthlyAmount(item);
+        if (item.target === 'depot') {
+            totalSparplan += monthlyAmount;
+        } else {
+            totalFixkosten += monthlyAmount;
+        }
+    });
+
+    const totalKonsum = konsumMin + konsumLeftover;
+    const totalAusgaben = totalFixkosten + totalKonsum + totalSparplan;
+    const saldo = income - totalAusgaben;
+
+    const data = [
+        ['CASHFLOW-ANALYSE'],
+        ['Monatliche Ein- und Ausgaben'],
+        [],
+        ['EINNAHMEN'],
+        ['Beschreibung', 'Betrag (€)'],
+        ['Haupteinkommen', income],
+        [],
+        ['AUSGABEN'],
+        ['Kategorie', 'Betrag (€)'],
+        ['Fixkosten', totalFixkosten],
+        ['Konsum', totalKonsum],
+        ['  - Mindestbetrag', konsumMin],
+        ['  - Überschuss', konsumLeftover],
+        ['Sparpläne (Depot)', totalSparplan],
+        [],
+        ['ZUSAMMENFASSUNG'],
+        ['Position', 'Betrag (€)'],
+        ['Gesamt-Einnahmen', income],
+        ['Gesamt-Ausgaben', totalAusgaben],
+        ['Saldo', saldo]
+    ];
+
+    return data;
+}
+
+// Create Immobilien Sheet
+function createImmobilienSheet() {
+    const data = [
+        ['IMMOBILIEN-ÜBERSICHT'],
+        [],
+        ['Objekt', 'Wert (€)', 'Darlehen (€)', 'Eigenkapital (€)', 'Zinssatz (%)', 'Tilgungssatz (%)', 'Mieteinnahmen (€)', 'Kosten (€)', 'Netto-Cashflow (€)']
+    ];
+
+    immobilienData.forEach(immo => {
+        const eigenkapital = (immo.wert || 0) - (immo.darlehen || 0);
+        const zinsen = (immo.darlehen || 0) * (immo.zinssatz || 0) / 100 / 12;
+        const tilgung = (immo.darlehen || 0) * (immo.tilgungssatz || 0) / 100 / 12;
+        const nettoCashflow = (immo.mieteinnahmen || 0) - (immo.kosten || 0) - zinsen - tilgung;
+
+        data.push([
+            immo.objekt || 'Immobilie',
+            immo.wert || 0,
+            immo.darlehen || 0,
+            eigenkapital,
+            immo.zinssatz || 0,
+            immo.tilgungssatz || 0,
+            immo.mieteinnahmen || 0,
+            immo.kosten || 0,
+            nettoCashflow
+        ]);
+    });
+
+    // Add Tilgungsplan section
+    data.push([]);
+    data.push(['TILGUNGSPLAN']);
+    data.push(['Jahr', 'Restschuld (€)', 'Zinsen (€)', 'Tilgung (€)', 'Rate (€)', 'Wertsteigerung (€)', 'Eigenkapital (€)']);
+
+    // Calculate for first property (example)
+    if (immobilienData.length > 0) {
+        const immo = immobilienData[0];
+        let restschuld = immo.darlehen || 0;
+        const wertsteigerungRate = (immo.wertsteigerung || 0) / 100;
+        let immobilienwert = immo.wert || 0;
+
+        for (let jahr = 1; jahr <= 30 && restschuld > 0; jahr++) {
+            const jahresZinsen = restschuld * (immo.zinssatz || 0) / 100;
+            const jahresTilgung = restschuld * (immo.tilgungssatz || 0) / 100;
+            const jahresRate = jahresZinsen + jahresTilgung;
+
+            immobilienwert *= (1 + wertsteigerungRate);
+            const eigenkapital = immobilienwert - restschuld;
+
+            data.push([
+                jahr,
+                Math.round(restschuld),
+                Math.round(jahresZinsen),
+                Math.round(jahresTilgung),
+                Math.round(jahresRate),
+                Math.round(immobilienwert),
+                Math.round(eigenkapital)
+            ]);
+
+            restschuld -= jahresTilgung;
+            if (restschuld < 0) restschuld = 0;
+        }
+    }
+
+    return data;
+}
+
+// Create Depot Sheet
+function createDepotSheet() {
+    const data = [
+        ['DEPOT-ALLOKATION'],
+        [],
+        ['Fonds/ETF', 'Allocation (%)']
+    ];
+
+    depotItems.forEach(item => {
+        data.push([item.name, item.allocation]);
+    });
+
+    // Add total check
+    const totalAllocation = depotItems.reduce((sum, item) => sum + item.allocation, 0);
+    data.push([]);
+    data.push(['GESAMT', totalAllocation]);
+
+    return data;
+}
+
+// Apply formatting to Overview sheet
+function applyOverviewFormatting(ws, data) {
+    const range = XLSX.utils.decode_range(ws['!ref']);
+
+    // Set column widths
+    ws['!cols'] = [
+        { wch: 30 },  // Column A
+        { wch: 20 },  // Column B
+        { wch: 15 }   // Column C
+    ];
+
+    // Apply styles (note: SheetJS community edition has limited styling)
+    // For full styling, would need SheetJS Pro
+
+    // Merge title cells
+    if (!ws['!merges']) ws['!merges'] = [];
+    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }); // Title row
+    ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: 2 } }); // Subtitle row
+}
+
+// Apply formatting to Cashflow sheet
+function applyCashflowFormatting(ws, data) {
+    ws['!cols'] = [
+        { wch: 30 },  // Column A
+        { wch: 15 }   // Column B
+    ];
+
+    if (!ws['!merges']) ws['!merges'] = [];
+    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }); // Title
+}
+
+// Apply formatting to Immobilien sheet
+function applyImmobilienFormatting(ws, data) {
+    ws['!cols'] = [
+        { wch: 20 },  // Objekt
+        { wch: 12 },  // Wert
+        { wch: 12 },  // Darlehen
+        { wch: 12 },  // Eigenkapital
+        { wch: 12 },  // Zinssatz
+        { wch: 12 },  // Tilgungssatz
+        { wch: 15 },  // Mieteinnahmen
+        { wch: 12 },  // Kosten
+        { wch: 15 }   // Netto-Cashflow
+    ];
+}
+
+// Apply formatting to Depot sheet
+function applyDepotFormatting(ws, data) {
+    ws['!cols'] = [
+        { wch: 40 },  // Fonds/ETF
+        { wch: 15 }   // Allocation
+    ];
+}
+
+// ===== AUTO-EXPORT SYSTEM (v1.3.7) =====
+let autoExportInterval = null;
+let lastAutoExportTime = null;
+let autoExportDirectoryHandle = null; // File System Access API handle
+let useFileSystemAPI = false;
+
+// IndexedDB for persisting directory handle
+const DB_NAME = 'mlp-auto-export-db';
+const DB_VERSION = 1;
+const STORE_NAME = 'directory-handles';
+const HANDLE_KEY = 'auto-export-directory';
+
+// Open IndexedDB
+function openHandleDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+    });
+}
+
+// Save directory handle to IndexedDB
+async function saveDirectoryHandle(handle) {
+    try {
+        const db = await openHandleDB();
+        const transaction = db.transaction(STORE_NAME, 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        store.put(handle, HANDLE_KEY);
+
+        return new Promise((resolve, reject) => {
+            transaction.oncomplete = () => {
+                console.log('✅ Directory Handle in IndexedDB gespeichert');
+                resolve(true);
+            };
+            transaction.onerror = () => reject(transaction.error);
+        });
+    } catch (err) {
+        console.error('Fehler beim Speichern des Handles:', err);
+        return false;
+    }
+}
+
+// Load directory handle from IndexedDB
+async function loadDirectoryHandle() {
+    try {
+        const db = await openHandleDB();
+        const transaction = db.transaction(STORE_NAME, 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.get(HANDLE_KEY);
+
+        return new Promise((resolve, reject) => {
+            request.onsuccess = () => {
+                const handle = request.result;
+                if (handle) {
+                    console.log('📂 Directory Handle aus IndexedDB geladen');
+                    resolve(handle);
+                } else {
+                    resolve(null);
+                }
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (err) {
+        console.error('Fehler beim Laden des Handles:', err);
+        return null;
+    }
+}
+
+// Verify permission for directory handle
+async function verifyHandlePermission(handle, requestIfNeeded = false) {
+    const permission = await handle.queryPermission({ mode: 'readwrite' });
+    if (permission === 'granted') {
+        return true;
+    }
+
+    // Only request permission if explicitly requested (requires user gesture)
+    if (requestIfNeeded) {
+        try {
+            const requestResult = await handle.requestPermission({ mode: 'readwrite' });
+            return requestResult === 'granted';
+        } catch (err) {
+            // Permission request failed (likely no user gesture)
+            return false;
+        }
+    }
+
+    return false;
+}
+
+// Check if File System Access API is available
+function checkFileSystemAPISupport() {
+    return 'showDirectoryPicker' in window;
+}
+
+// Request directory access from user
+async function selectAutoExportDirectory() {
+    if (!checkFileSystemAPISupport()) {
+        alert('Ihr Browser unterstützt keine direkte Ordner-Speicherung.\n\nBitte nutzen Sie Chrome oder Edge (Version 86+) für diese Funktion.\n\nFallback: Dateien werden in den Download-Ordner gespeichert.');
+        return false;
+    }
+
+    try {
+        // Show directory picker
+        const dirHandle = await window.showDirectoryPicker({
+            mode: 'readwrite',
+            startIn: 'documents'
+        });
+
+        // Request permission
+        const permission = await dirHandle.requestPermission({ mode: 'readwrite' });
+
+        if (permission !== 'granted') {
+            alert('Ordner-Zugriff wurde verweigert. Auto-Export verwendet Download-Ordner.');
+            return false;
+        }
+
+        // Store handle in memory AND IndexedDB
+        autoExportDirectoryHandle = dirHandle;
+
+        // Save to IndexedDB (persistent across reloads!)
+        await saveDirectoryHandle(dirHandle);
+
+        // Save preference to localStorage (as backup indicator)
+        localStorage.setItem('mlp-auto-export-dir-name', dirHandle.name);
+        localStorage.setItem('mlp-use-filesystem-api', 'true');
+        useFileSystemAPI = true;
+
+        console.log('✅ Auto-Export-Ordner ausgewählt:', dirHandle.name);
+        updateAutoExportFolderDisplay();
+
+        showToast(`Auto-Export-Ordner eingerichtet: ${dirHandle.name}\n\nEin Test-Export wird erstellt...`, 'success', 4000);
+
+        // Trigger immediate test export to verify it works
+        setTimeout(() => {
+            exportAsJSON(true);
+        }, 500);
+
+        return true;
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            console.log('Ordner-Auswahl abgebrochen');
+        } else {
+            console.error('Fehler bei Ordner-Auswahl:', err);
+            alert('Fehler beim Einrichten des Auto-Export-Ordners.');
+        }
+        return false;
+    }
+}
+
+// Restore directory handle on page load
+async function restoreAutoExportDirectory() {
+    const useFSAPI = localStorage.getItem('mlp-use-filesystem-api') === 'true';
+
+    if (!useFSAPI || !checkFileSystemAPISupport()) {
+        useFileSystemAPI = false;
+        updateAutoExportFolderDisplay();
+        return;
+    }
+
+    try {
+        // Load handle from IndexedDB
+        const savedHandle = await loadDirectoryHandle();
+
+        if (!savedHandle) {
+            console.log('⚠️ Kein Handle in IndexedDB gefunden');
+            useFileSystemAPI = true;
+            updateAutoExportFolderDisplay();
+            return;
+        }
+
+        // Verify permission
+        const hasPermission = await verifyHandlePermission(savedHandle);
+
+        if (hasPermission) {
+            // Success! Handle restored and permission granted
+            autoExportDirectoryHandle = savedHandle;
+            useFileSystemAPI = true;
+            console.log('✅ Directory Handle wiederhergestellt:', savedHandle.name);
+            showToast(`Auto-Export-Ordner wiederhergestellt: ${savedHandle.name}`, 'success', 3000);
+        } else {
+            // Permission denied
+            console.log('❌ Permission verweigert für gespeicherten Ordner');
+            useFileSystemAPI = true; // Keep trying, will fallback to downloads
+        }
+
+        updateAutoExportFolderDisplay();
+    } catch (err) {
+        console.error('Fehler beim Wiederherstellen des Handles:', err);
+        useFileSystemAPI = false;
+        updateAutoExportFolderDisplay();
+    }
+}
+
+// Update folder display in UI
+function updateAutoExportFolderDisplay() {
+    const folderDisplayEl = document.getElementById('auto-export-folder-display');
+    if (!folderDisplayEl) return;
+
+    if (useFileSystemAPI && autoExportDirectoryHandle) {
+        folderDisplayEl.innerHTML = `<span class="text-green-400">📁 ${autoExportDirectoryHandle.name}</span>`;
+    } else if (useFileSystemAPI) {
+        const savedName = localStorage.getItem('mlp-auto-export-dir-name');
+        if (savedName) {
+            folderDisplayEl.innerHTML = `<span class="text-yellow-400">📁 ${savedName} (reaktivieren)</span>`;
+        } else {
+            folderDisplayEl.innerHTML = `<span class="text-gray-400">📁 Nicht konfiguriert</span>`;
+        }
+    } else {
+        folderDisplayEl.innerHTML = `<span class="text-gray-400">📥 Download-Ordner</span>`;
+    }
+}
+
+// Write file to selected directory using File System Access API
+async function writeToDirectory(filename, blob) {
+    if (!autoExportDirectoryHandle) {
+        // Can't show picker automatically (needs user gesture)
+        // Return false to trigger fallback to download
+        console.warn('⚠️ Kein Ordner-Handle verfügbar. Bitte "Ordner auswählen" klicken.');
+
+        // Show user a hint (only once per session)
+        if (!sessionStorage.getItem('folder-hint-shown')) {
+            sessionStorage.setItem('folder-hint-shown', 'true');
+            setTimeout(() => {
+                showToast('💡 Tipp: Klicke im Session-Menü auf "Ordner auswählen" für direkte Speicherung', 'info', 5000);
+            }, 1000);
+        }
+
+        return false;
+    }
+
+    try {
+        // Create/overwrite file in directory
+        const fileHandle = await autoExportDirectoryHandle.getFileHandle(filename, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+
+        console.log(`✅ Datei gespeichert: ${autoExportDirectoryHandle.name}/${filename}`);
+        return true;
+    } catch (err) {
+        console.error('Fehler beim Speichern:', err);
+
+        // If permission was revoked, reset
+        if (err.name === 'NotAllowedError') {
+            autoExportDirectoryHandle = null;
+            localStorage.removeItem('mlp-use-filesystem-api');
+            useFileSystemAPI = false;
+            updateAutoExportFolderDisplay();
+        }
+
+        return false;
+    }
+}
+
+// Generate auto-export filename: {DATUM}_{KÜRZEL}_{UHRZEIT}_{SESSION-ID}.json
+function generateAutoExportFilename() {
+    const session = getCurrentSession();
+    if (!session) return null;
+
+    const now = new Date();
+
+    // DATUM: YYYY-MM-DD
+    const datum = now.toISOString().slice(0, 10);
+
+    // KÜRZEL: from session or "ANON"
+    const kuerzel = session.kundenKuerzel || 'ANON';
+
+    // UHRZEIT: HHMM
+    const stunden = String(now.getHours()).padStart(2, '0');
+    const minuten = String(now.getMinutes()).padStart(2, '0');
+    const uhrzeit = stunden + minuten;
+
+    // SESSION-ID: first 4 chars
+    const sessionId = session.id.substring(0, 8).toUpperCase();
+
+    return `${datum}_${kuerzel}_${uhrzeit}_SES-${sessionId}.json`;
+}
+
+// Export all session data as JSON (used for manual and auto-export)
+function exportAsJSON(isAutoExport = false) {
+    const session = getCurrentSession();
+    if (!session) {
+        if (!isAutoExport) alert('Keine Session gefunden!');
+        return;
+    }
+
+    // Check if inputs are initialized
+    if (typeof inputs === 'undefined') {
+        console.error('Export failed: inputs not initialized');
+        if (!isAutoExport) alert('Export-Fehler: Bitte warten Sie, bis die Seite vollständig geladen ist.');
+        return;
+    }
+
+    // Collect ALL application data for complete session backup
+    const exportData = {
+        // Format version for future compatibility
+        version: '1.3.7',
+        exportType: 'FULL_SESSION_BACKUP',
+
+        // LLM Prompt for generating consultation protocol
+        llmPrompt: `Du bist ein professioneller Finanzberater bei MLP. Erstelle aus den folgenden Session-Daten ein strukturiertes, professionelles Gesprächsprotokoll für die Kundendokumentation.
+
+**Aufgabe:**
+Erstelle ein Beratungsprotokoll im MLP-Stil mit folgender Struktur:
+
+1. **Kopfdaten**
+   - Session-ID, Datum, Berater, Kunde
+   - Beratungsdauer
+
+2. **Ist-Situation (Einnahmen)**
+   - Monatliches Einkommen
+   - Sonstige Einnahmen (falls vorhanden)
+
+3. **Ausgabenstruktur**
+   - Fixkosten (detailliert auflisten)
+   - Lebenshaltungskosten
+   - Kontenmodell (Variante A oder B?)
+
+4. **Vermögenssituation**
+   - Tagesgeld (aktuell, Ziel)
+   - Depot (aktuell, Sparplan, Allocation, Renditeerwartung)
+   - Immobilien (falls vorhanden: Wert, Darlehen, Cashflow)
+   - Vermieterkonto (falls vorhanden: Einnahmen/Ausgaben)
+
+5. **Finanzplanung**
+   - Monatliche Sparrate
+   - Anlagehorizont
+   - Buchungsplan (Transaktionstermine)
+
+6. **Empfehlungen**
+   - Basierend auf den Daten: Was läuft gut? Wo gibt es Optimierungspotenzial?
+   - Nächste Schritte
+
+**Tonalität:**
+- Professionell, aber verständlich
+- Faktenbasiert
+- Positive Formulierungen
+- Konkrete Zahlen nennen
+
+**Format:** Markdown mit klaren Überschriften und Bullet-Points.
+
+Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs, fixkostenItems, depotItems, immobilienData, vermieterkontoData, buchungsplan.`,
+
+        // Session metadata
+        session: {
+            id: session.id,
+            kundenKuerzel: session.kundenKuerzel,
+            berater: session.berater,
+            startzeit: session.startzeit,
+            letzteAktivitaet: session.letzteAktivitaet,
+            exportiert: new Date().toISOString(),
+            status: session.status
+        },
+
+        // Application settings (for UI state restoration)
+        settings: {
+            currentVariant: currentVariant,
+            consultationMode: consultationMode,
+            consultationStep: consultationStep,
+            theme: localStorage.getItem('theme') || 'dark'
+        },
+
+        // All financial input data
+        inputs: {
+            income: parseFloat(inputs.income?.value) || 0,
+            konsumMin: parseFloat(inputs.konsumMin?.value) || 0,
+            konsumLeftover: parseFloat(inputs.konsumLeftover?.value) || 0,
+            tagesgeldCurrent: parseFloat(inputs.tagesgeldCurrent?.value) || 0,
+            tagesgeldLimit: parseFloat(inputs.tagesgeldLimit?.value) || 0,
+            depotCurrent: parseFloat(inputs.depotCurrent?.value) || 0,
+            anlagezeitraum: parseInt(inputs.anlagezeitraum?.value, 10) || 15,
+            rendite: parseFloat(inputs.rendite?.value) || 0
+        },
+
+        // Structured data arrays
+        fixkostenItems: fixkostenItems || [],
+        depotItems: depotItems || [],
+        immobilienData: immobilienData || [],
+
+        // Vermieterkonto (complete structure)
+        vermieterkontoData: (function () {
+            try {
+                const saved = sessionStorage.getItem('vermieterkontoData');
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) {
+                return null;
+            }
+        })(),
+
+        // Buchungsplan (transaction scheduler)
+        buchungsplan: (typeof bookingPlan !== 'undefined') ? bookingPlan : {},
+
+        // Raw sessionStorage snapshot (for complete restoration)
+        sessionStorageSnapshot: {
+            mlp_current_session: sessionStorage.getItem('mlp_current_session'),
+            mlp_booking_plan_v1: sessionStorage.getItem('mlp_booking_plan_v1'),
+            immobilienData: sessionStorage.getItem('immobilienData'),
+            vermieterkontoData: sessionStorage.getItem('vermieterkontoData')
+        }
+    };
+
+    // Create pretty-printed JSON
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+
+    // Use auto-export filename format or fallback to old format
+    const filename = isAutoExport
+        ? generateAutoExportFilename()
+        : `Session-Backup_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.json`;
+
+    // Try File System API for auto-export, fallback to download
+    if (isAutoExport && useFileSystemAPI) {
+        writeToDirectory(filename, blob).then(success => {
+            if (success) {
+                lastAutoExportTime = Date.now();
+                updateAutoExportStatus();
+                console.log('🔄 Auto-Export (File System API):', filename);
+            } else {
+                // Fallback to download
+                downloadFile(blob, filename);
+                lastAutoExportTime = Date.now();
+                updateAutoExportStatus();
+                console.log('🔄 Auto-Export (Download fallback):', filename);
+            }
+        }).catch(err => {
+            console.error('Auto-Export Fehler:', err);
+            // Fallback to download on error
+            downloadFile(blob, filename);
+            lastAutoExportTime = Date.now();
+            updateAutoExportStatus();
+        });
+    } else {
+        // Manual export or File System API not available
+        downloadFile(blob, filename);
+
+        // Update last export time
+        if (isAutoExport) {
+            lastAutoExportTime = Date.now();
+            updateAutoExportStatus();
+            console.log('🔄 Auto-Export erstellt:', filename);
+        } else {
+            console.log('📄 JSON-Backup erstellt:', filename);
+            console.log('💾 Vollständiges Session-Backup - kann für Re-Import verwendet werden');
+        }
+    }
+}
+
+// Start auto-export timer (runs every 2 minutes)
+// Check if auto-save is enabled
+function isAutoSaveEnabled() {
+    // Default: OFF (manual save only)
+    const enabled = localStorage.getItem('mlp-auto-save-enabled');
+    return enabled === 'true';
+}
+
+// Save auto-save preference
+function setAutoSaveEnabled(enabled) {
+    localStorage.setItem('mlp-auto-save-enabled', enabled ? 'true' : 'false');
+    console.log(`🔄 Auto-Save ${enabled ? 'aktiviert' : 'deaktiviert'}`);
+}
+
+function startAutoExport() {
+    // Only start if auto-save is enabled
+    if (!isAutoSaveEnabled()) {
+        console.log('⏸️ Auto-Export nicht gestartet (manueller Modus)');
+        return;
+    }
+
+    // Clear existing timer
+    if (autoExportInterval) {
+        clearInterval(autoExportInterval);
+    }
+
+    // First export after 30 seconds (give user time to enter data)
+    setTimeout(() => {
+        if (isAutoSaveEnabled()) {
+            exportAsJSON(true);
+        }
+    }, 30000);
+
+    // Then export every 2 minutes (120000ms)
+    autoExportInterval = setInterval(() => {
+        if (isAutoSaveEnabled()) {
+            exportAsJSON(true);
+        }
+    }, 120000);
+
+    console.log('✅ Auto-Export aktiviert (alle 2 Min., erster Export in 30 Sek.)');
+}
+
+// Stop auto-export timer
+function stopAutoExport() {
+    if (autoExportInterval) {
+        clearInterval(autoExportInterval);
+        autoExportInterval = null;
+        console.log('⏹️ Auto-Export gestoppt');
+    }
+}
+
+// Toggle auto-save on/off
+function toggleAutoSave(enabled) {
+    setAutoSaveEnabled(enabled);
+
+    if (enabled) {
+        startAutoExport();
+        showToast('Automatische Speicherung aktiviert (alle 2 Min.)', 'success', 3000);
+    } else {
+        stopAutoExport();
+        showToast('Automatische Speicherung deaktiviert', 'info', 3000);
+    }
+
+    // Update UI
+    updateAutoSaveUI();
+}
+
+// Update auto-save UI elements
+function updateAutoSaveUI() {
+    const toggle = document.getElementById('auto-save-toggle');
+    const intervalInfo = document.getElementById('auto-save-interval-info');
+    const enabled = isAutoSaveEnabled();
+
+    if (toggle) {
+        toggle.checked = enabled;
+    }
+
+    if (intervalInfo) {
+        if (enabled) {
+            intervalInfo.textContent = 'Automatisch alle 2 Minuten';
+            intervalInfo.classList.remove('text-gray-500');
+            intervalInfo.classList.add('text-green-500');
+        } else {
+            intervalInfo.textContent = 'Manueller Speichermodus';
+            intervalInfo.classList.remove('text-green-500');
+            intervalInfo.classList.add('text-gray-500');
+        }
+    }
+}
+
+// Update auto-export status display
+function updateAutoExportStatus() {
+    const statusEl = document.getElementById('auto-export-status');
+    if (!statusEl) return;
+
+    if (!lastAutoExportTime) {
+        statusEl.innerHTML = '<span class="text-yellow-400">⏳ Wartet auf ersten Export...</span>';
+        return;
+    }
+
+    const secondsAgo = Math.floor((Date.now() - lastAutoExportTime) / 1000);
+
+    if (secondsAgo < 60) {
+        statusEl.innerHTML = `<span class="text-green-400">🟢 Vor ${secondsAgo} Sek.</span>`;
+    } else {
+        const minutesAgo = Math.floor(secondsAgo / 60);
+        statusEl.innerHTML = `<span class="text-green-400">🟢 Vor ${minutesAgo} Min.</span>`;
+    }
+}
+
+// Update status display every 5 seconds
+setInterval(() => {
+    updateAutoExportStatus();
+}, 5000);
+
+// Import session from JSON backup file
+function importSessionBackup() {
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const text = await file.text();
+            const backup = JSON.parse(text);
+
+            // Validate backup format
+            if (!backup.version || backup.exportType !== 'FULL_SESSION_BACKUP') {
+                showToast('Ungültiges Backup-Format! Bitte wähle eine gültige Session-Backup-Datei.', 'error', 5000);
+                return;
+            }
+
+            // Show confirmation modal (keep the existing modal from screenshot)
+            const confirmed = confirm(
+                `Session-Backup importieren?\n\n` +
+                `Session-ID: ${backup.session?.id || 'Unbekannt'}\n` +
+                `Kunde: ${backup.session?.kundenKuerzel || 'N/A'}\n` +
+                `Berater: ${backup.session?.berater || 'N/A'}\n` +
+                `Exportiert: ${backup.session?.exportiert ? new Date(backup.session.exportiert).toLocaleString('de-DE') : 'N/A'}\n\n` +
+                `Alle aktuellen Daten werden überschrieben!`
+            );
+
+            if (!confirmed) return;
+
+            // Restore sessionStorage
+            if (backup.sessionStorageSnapshot) {
+                Object.keys(backup.sessionStorageSnapshot).forEach(key => {
+                    const value = backup.sessionStorageSnapshot[key];
+                    if (value) {
+                        sessionStorage.setItem(key, value);
+                    }
+                });
+            }
+
+            // Restore input field values AND persist to sessionStorage for reload
+            if (backup.inputs) {
+                // Persist to sessionStorage (to survive reload)
+                sessionStorage.setItem('mlp_inputs', JSON.stringify(backup.inputs));
+
+                // Set values (will be overwritten by reload, but needed for consistency)
+                if (inputs.income) inputs.income.value = backup.inputs.income || 0;
+                if (inputs.konsumMin) inputs.konsumMin.value = backup.inputs.konsumMin || 0;
+                if (inputs.konsumLeftover) inputs.konsumLeftover.value = backup.inputs.konsumLeftover || 0;
+                if (inputs.tagesgeldCurrent) inputs.tagesgeldCurrent.value = backup.inputs.tagesgeldCurrent || 0;
+                if (inputs.tagesgeldLimit) inputs.tagesgeldLimit.value = backup.inputs.tagesgeldLimit || 0;
+                if (inputs.depotCurrent) inputs.depotCurrent.value = backup.inputs.depotCurrent || 0;
+                if (inputs.anlagezeitraum) inputs.anlagezeitraum.value = backup.inputs.anlagezeitraum || 15;
+                if (inputs.rendite) inputs.rendite.value = backup.inputs.rendite || 7;
+            }
+
+            // Restore global variables AND persist to sessionStorage for reload
+            if (backup.fixkostenItems) {
+                fixkostenItems = backup.fixkostenItems;
+                // Persist to survive reload
+                sessionStorage.setItem('mlp_fixkostenItems', JSON.stringify(backup.fixkostenItems));
+            }
+            if (backup.depotItems) {
+                // Migration: Add 'risk' property to old data (v1.5.1+)
+                depotItems = backup.depotItems.map(item => {
+                    if (!item.risk) {
+                        item.risk = 'conservative'; // Default for backward compatibility
+                    }
+                    return item;
+                });
+                // Persist to survive reload
+                sessionStorage.setItem('mlp_depotItems', JSON.stringify(depotItems));
+            }
+            if (backup.immobilienData) {
+                immobilienData = backup.immobilienData;
+                // Already persisted via sessionStorageSnapshot
+            }
+            if (backup.buchungsplan && typeof bookingPlan !== 'undefined') {
+                bookingPlan = backup.buchungsplan;
+                saveBookingPlan(); // This already saves to sessionStorage
+            }
+
+            // Restore UI settings
+            if (backup.settings) {
+                if (backup.settings.currentVariant) {
+                    currentVariant = backup.settings.currentVariant;
+                }
+                if (typeof backup.settings.consultationMode !== 'undefined') {
+                    consultationMode = backup.settings.consultationMode;
+                }
+                if (typeof backup.settings.consultationStep !== 'undefined') {
+                    consultationStep = backup.settings.consultationStep;
+                }
+                if (backup.settings.theme) {
+                    localStorage.setItem('theme', backup.settings.theme);
+                    loadTheme();
+                }
+            }
+
+            console.log('✅ Session-Backup erfolgreich importiert:', backup.session?.id);
+
+            // Set flag to skip recovery dialog after reload
+            sessionStorage.setItem('skipRecoveryDialog', 'true');
+
+            // Show success toast and reload automatically after 2 seconds
+            showToast(
+                `Session-Backup erfolgreich importiert! Seite wird neu geladen...`,
+                'success',
+                2000
+            );
+
+            // Reload page automatically after toast (without confirmation)
+            setTimeout(() => {
+                allowReloadWithoutWarning = true;
+                location.reload();
+            }, 2000);
+
+        } catch (error) {
+            console.error('Import-Fehler:', error);
+            showToast(`Fehler beim Importieren: ${error.message}`, 'error', 6000);
+        }
+    };
+
+    // Trigger file picker
+    input.click();
+}
+
+// Helper function to download files
+function downloadFile(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ===== END EXPORT FUNCTIONS =====
+
+let currentVariant = sessionStorage.getItem('mlp_current_variant') || 'A';
+
+const BOOKING_DAYS = 31;
+const BOOKING_KEY = "0";
+const bookingTypes = [
+    {
+        id: 'salary_to_fix',
+        label: 'Einkommen → Fixkosten',
+        labelB: 'Einkommen → Konsum',
+        description: 'Einkommen landet auf dem Fixkostenkonto.',
+        descriptionB: 'Einkommen landet auf dem Konsumkonto.',
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6.5" width="7.5" height="11" rx="2"></rect><path d="M6.5 9.5h2"></path><path d="M6.5 12h1.6"></path><circle cx="16.5" cy="12" r="3"></circle><path d="M11 12h3.5"></path><path d="M14.5 10l2 2-2 2"></path></svg>`,
+        accent: '#34d399',
+        border: 'rgba(16, 185, 129, 0.65)',
+        dayBackground: 'rgba(16, 185, 129, 0.18)',
+        badgeBackground: 'rgba(16, 185, 129, 0.18)',
+        badgeColor: '#34d399'
+    },
+    {
+        id: 'standing_to_konsum',
+        label: 'Fixkosten → Konsum',
+        labelB: 'Konsum → Fixkosten',
+        description: 'Regelmäßiger Übertrag vom Fixkostenkonto auf das Konsumkonto.',
+        descriptionB: 'Regelmäßiger Übertrag vom Konsumkonto auf das Fixkostenkonto.',
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h8a4 4 0 0 1 4 4v0"></path><path d="M17 10l2 2-2 2"></path><path d="M17 14h-8a4 4 0 0 1-4-4v0"></path><path d="M7 16l-2-2 2-2"></path></svg>`,
+        iconB: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h-8a4 4 0 0 0-4 4v0"></path><path d="M7 10l-2 2 2 2"></path><path d="M7 14h8a4 4 0 0 0 4-4v0"></path><path d="M17 16l2-2-2-2"></path></svg>`,
+        accent: '#60a5fa',
+        border: 'rgba(96, 165, 250, 0.6)',
+        dayBackground: 'rgba(59, 130, 246, 0.16)',
+        badgeBackground: 'rgba(59, 130, 246, 0.16)',
+        badgeColor: '#60a5fa'
+    },
+    {
+        id: 'sparplan',
+        label: 'Fixkosten → Sparplan',
+        description: 'Sparrate wird in den Depot-Sparplan investiert.',
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 16l4-5 3 2 5-6"></path><path d="M15.5 6.5h3v3"></path><path d="M6 18v2"></path><path d="M11 15v5"></path><path d="M16 17v3"></path></svg>`,
+        accent: '#c084fc',
+        border: 'rgba(168, 85, 247, 0.6)',
+        dayBackground: 'rgba(168, 85, 247, 0.16)',
+        badgeBackground: 'rgba(168, 85, 247, 0.18)',
+        badgeColor: '#c084fc'
+    },
+    {
+        id: 'konsum_to_tagesgeld',
+        label: 'Konsum → Tagesgeld',
+        description: 'Restbetrag wird auf das Tagesgeld geschoben.',
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3"></circle><path d="M12 11v7"></path><path d="M9 15l3 3 3-3"></path><path d="M6 20h12"></path></svg>`,
+        accent: '#facc15',
+        border: 'rgba(250, 204, 21, 0.6)',
+        dayBackground: 'rgba(250, 204, 21, 0.14)',
+        badgeBackground: 'rgba(250, 204, 21, 0.18)',
+        badgeColor: '#facc15'
+    },
+    {
+        id: 'tagesgeld_to_depot',
+        label: 'Tagesgeld → Depot',
+        description: 'Überschüsse vom Tagesgeld fließen ins Depot.',
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14"></path><path d="M8 17v-4"></path><path d="M12 17v-7"></path><path d="M16 17v-2"></path><path d="M12 5l-3 3h2v4h2V8h2z"></path></svg>`,
+        accent: '#f97316',
+        border: 'rgba(249, 115, 22, 0.6)',
+        dayBackground: 'rgba(249, 115, 22, 0.16)',
+        badgeBackground: 'rgba(249, 115, 22, 0.18)',
+        badgeColor: '#f97316'
+    }
+];
+function getActiveBookingLabel(type) {
+    if (!type) return '';
+    if (currentVariant === 'B' && type.labelB) return type.labelB;
+    return type.label || '';
+}
+
+function getActiveBookingDescription(type) {
+    if (!type) return '';
+    if (currentVariant === 'B' && type.descriptionB) return type.descriptionB;
+    return type.description || getActiveBookingLabel(type);
+}
+
+function getActiveBookingIcon(type) {
+    if (!type) return '';
+    if (currentVariant === 'B' && type.iconB) return type.iconB;
+    return type.icon || '';
+}
+
+const bookingTypeLookup = {};
+bookingTypes.forEach((type, index) => {
+    bookingTypeLookup[type.id] = Object.assign({ order: index }, type);
+});
+const bookingStorageKey = 'mlp_booking_plan_v1';
+let bookingPlan = loadBookingPlan() || createDefaultBookingPlan();
+let selectedBookingMonth = String(determineInitialBookingMonth(bookingPlan));
+let selectedBookingTypeId = bookingTypes.length ? bookingTypes[0].id : null;
+let bookingTypeButtonsEl = null;
+let bookingCalendarEl = null;
+let bookingHintEl = null;
+let bookingClearMonthBtn = null;
+
+function loadBookingPlan() {
+    try {
+        const raw = sessionStorage.getItem(bookingStorageKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === 'object') ? parsed : null;
+    } catch (err) {
+        console.warn('Buchungsplan konnte nicht geladen werden.', err);
+        return null;
+    }
+}
+
+function saveBookingPlan() {
+    pruneEmptyMonths();
+    try {
+        sessionStorage.setItem(bookingStorageKey, JSON.stringify(bookingPlan));
+    } catch (err) {
+        console.warn('Buchungsplan konnte nicht gespeichert werden.', err);
+    }
+}
+
+function pruneEmptyMonths() {
+    Object.keys(bookingPlan).forEach(key => {
+        const monthPlan = bookingPlan[key];
+        if (!monthPlan || !Object.keys(monthPlan).length) {
+            delete bookingPlan[key];
+        }
+    });
+}
+
+function createDefaultBookingPlan() {
+    return {
+        [BOOKING_KEY]: {
+            '1': ['salary_to_fix'],
+            '3': ['standing_to_konsum'],
+            '15': ['sparplan'],
+            '27': ['konsum_to_tagesgeld'],
+            '28': ['tagesgeld_to_depot']
+        }
+    };
+}
+
+function determineInitialBookingMonth(plan) {
+    if (plan && hasEntriesForMonth(BOOKING_KEY, plan)) return BOOKING_KEY;
+    const keys = plan ? Object.keys(plan) : [];
+    return keys.length ? keys[0] : BOOKING_KEY;
+}
+
+function hasEntriesForMonth(month, plan = bookingPlan) {
+    const monthPlan = plan[String(month)];
+    return !!(monthPlan && Object.keys(monthPlan).length);
+}
+
+function ensureMonthPlan(month) {
+    const key = String(month);
+    if (!bookingPlan[key]) bookingPlan[key] = {};
+    return bookingPlan[key];
+}
+
+function renderBookingTypeButtons() {
+    if (!bookingTypeButtonsEl) return;
+    bookingTypeButtonsEl.innerHTML = '';
+    bookingTypes.forEach(type => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'booking-type-btn';
+        if (type.badgeBackground) btn.style.backgroundColor = type.badgeBackground;
+        if (type.border) btn.style.borderColor = type.border;
+        if (type.badgeColor) btn.style.color = type.badgeColor;
+        const iconMarkup = getActiveBookingIcon(type);
+        const activeLabel = getActiveBookingLabel(type);
+        const activeDesc = getActiveBookingDescription(type);
+        // Icon-only, compact and clean
+        btn.innerHTML = iconMarkup;
+        const tooltip = activeDesc || activeLabel || type.id;
+        btn.title = tooltip;
+        btn.setAttribute('aria-label', tooltip);
+        btn.setAttribute('aria-pressed', selectedBookingTypeId === type.id ? 'true' : 'false');
+        if (selectedBookingTypeId === type.id) btn.classList.add('booking-type-btn-active');
+        btn.addEventListener('click', () => handleBookingTypeSelect(type.id));
+        bookingTypeButtonsEl.appendChild(btn);
+    });
+}
+
+function handleBookingTypeSelect(typeId) {
+    if (selectedBookingTypeId === typeId) return;
+    selectedBookingTypeId = typeId;
+    renderBookingTypeButtons();
+    updateBookingHint();
+}
+
+function renderBookingCalendar() {
+    if (!bookingCalendarEl) return;
+    bookingCalendarEl.innerHTML = '';
+    const monthPlan = ensureMonthPlan(selectedBookingMonth);
+    for (let day = 1; day <= BOOKING_DAYS; day++) {
+        const dayKey = String(day);
+        const entries = Array.isArray(monthPlan[dayKey]) ? monthPlan[dayKey] : [];
+        const cell = document.createElement('div');
+        cell.className = 'booking-day';
+        if (day >= 29) cell.classList.add('booking-day--overflow');
+        cell.dataset.day = dayKey;
+        cell.setAttribute('role', 'button');
+        cell.setAttribute('tabindex', '0');
+        cell.addEventListener('click', () => toggleDayBooking(day));
+        cell.addEventListener('keydown', evt => {
+            if (evt.key === 'Enter' || evt.key === ' ') {
+                evt.preventDefault();
+                toggleDayBooking(day);
+            }
+        });
+        const number = document.createElement('div');
+        number.className = 'booking-day-number';
+        number.textContent = String(day);
+        cell.appendChild(number);
+        const content = document.createElement('div');
+        content.className = 'booking-day-content';
+        cell.appendChild(content);
+        if (entries.length) {
+            cell.classList.add('has-booking');
+            const dominant = getBookingType(entries[0]);
+            if (dominant && dominant.dayBackground) cell.style.backgroundColor = dominant.dayBackground;
+            if (dominant && dominant.border) cell.style.borderColor = dominant.border;
+        } else {
+            cell.style.backgroundColor = '';
+            cell.style.borderColor = '';
+        }
+        entries.slice().sort((a, b) => getTypeOrder(a) - getTypeOrder(b)).forEach(typeId => {
+            const type = getBookingType(typeId);
+            if (!type) return;
+            const iconBtn = document.createElement('button');
+            iconBtn.type = 'button';
+            iconBtn.className = 'booking-entry-btn';
+            const entryIcon = getActiveBookingIcon(type) || type.icon || '';
+            const entryLabel = getActiveBookingLabel(type) || type.label || '';
+            iconBtn.innerHTML = entryIcon;
+            const removeTooltip = entryLabel ? `${entryLabel} entfernen` : 'Aktion entfernen';
+            iconBtn.title = removeTooltip;
+            iconBtn.setAttribute('aria-label', entryLabel ? `${entryLabel} am Tag ${day} entfernen` : `Aktion am Tag ${day} entfernen`);
+            if (type.badgeBackground) iconBtn.style.backgroundColor = type.badgeBackground;
+            if (type.badgeColor) iconBtn.style.color = type.badgeColor;
+            iconBtn.addEventListener('click', evt => {
+                evt.stopPropagation();
+                removeBookingFromDay(day, typeId);
+            });
+            content.appendChild(iconBtn);
+        });
+        bookingCalendarEl.appendChild(cell);
+    }
+    updateClearButtonState();
+}
+
+function getTypeOrder(typeId) {
+    const type = getBookingType(typeId);
+    return typeof type?.order === 'number' ? type.order : Number.MAX_SAFE_INTEGER;
+}
+
+function toggleDayBooking(day) {
+    if (!selectedBookingTypeId) {
+        updateBookingHint('Waehle zuerst einen Buchungstyp.');
+        return;
+    }
+    const type = getBookingType(selectedBookingTypeId);
+    if (!type) return;
+    const monthPlan = ensureMonthPlan(selectedBookingMonth);
+    const key = String(day);
+    let items = monthPlan[key];
+    if (!Array.isArray(items)) {
+        items = [];
+        monthPlan[key] = items;
+    }
+    const idx = items.indexOf(selectedBookingTypeId);
+    if (idx >= 0) {
+        items.splice(idx, 1);
+    } else {
+        items.push(selectedBookingTypeId);
+        items.sort((a, b) => getTypeOrder(a) - getTypeOrder(b));
+    }
+    if (!items.length) delete monthPlan[key];
+    saveBookingPlan();
+    renderBookingCalendar();
+    updateBookingHint();
+    renderBookingTimeline(); // v1.7.3
+}
+
+function removeBookingFromDay(day, typeId) {
+    const monthPlan = bookingPlan[String(selectedBookingMonth)];
+    if (!monthPlan) return;
+    const key = String(day);
+    const items = monthPlan[key];
+    if (!Array.isArray(items)) return;
+    const idx = items.indexOf(typeId);
+    if (idx >= 0) items.splice(idx, 1);
+    if (!items.length) delete monthPlan[key];
+    saveBookingPlan();
+    renderBookingCalendar();
+    updateBookingHint();
+    renderBookingTimeline(); // v1.7.3
+}
+
+function updateBookingHint(message) {
+    if (!bookingHintEl) return;
+    if (message) {
+        bookingHintEl.textContent = message;
+        return;
+    }
+    if (!selectedBookingTypeId) {
+        bookingHintEl.textContent = 'Waehle einen Buchungstyp und klicke auf den passenden Tag.';
+        return;
+    }
+    const type = getBookingType(selectedBookingTypeId);
+    const activeLabel = getActiveBookingLabel(type);
+    bookingHintEl.innerHTML = `Aktiver Typ: <span class="booking-hint-strong">${activeLabel || ''}</span>. Klicke auf einen Tag, um ihn hinzufuegen oder zu entfernen.`;
+}
+
+function clearCurrentMonthPlan() {
+    const key = String(selectedBookingMonth);
+    if (bookingPlan[key]) {
+        bookingPlan[key] = {};
+        saveBookingPlan();
+        renderBookingCalendar();
+        updateBookingHint();
+        renderBookingTimeline(); // v1.7.3
+    }
+}
+
+function updateClearButtonState() {
+    if (!bookingClearMonthBtn) return;
+    const hasEntries = hasEntriesForMonth(selectedBookingMonth);
+    bookingClearMonthBtn.disabled = !hasEntries;
+    bookingClearMonthBtn.classList.toggle('opacity-50', !hasEntries);
+    bookingClearMonthBtn.classList.toggle('cursor-not-allowed', !hasEntries);
+}
+
+function getBookingType(typeId) {
+    return bookingTypeLookup[typeId];
+}
+
+// v1.7.3: Timeline Labels - selbsterklärende Pfeil-Notation
+function getTimelineLabel(type) {
+    if (!type) return '';
+    const labels = {
+        'salary_to_fix': currentVariant === 'B' ? 'Gehalt' : 'Gehalt',
+        'standing_to_konsum': currentVariant === 'B' ? 'Kons → Fix' : 'Fix → Kons',
+        'sparplan': 'Fix → Depot',
+        'konsum_to_tagesgeld': 'Kons → TG',
+        'tagesgeld_to_depot': 'TG → Depot'
+    };
+    return labels[type.id] || type.label || '';
+}
+
+// v1.7.3: Render Timeline under Flow
+function renderBookingTimeline() {
+    const container = getEl('booking-timeline');
+    if (!container) return;
+
+    const monthPlan = bookingPlan[selectedBookingMonth] || bookingPlan[BOOKING_KEY] || {};
+
+    // Collect all bookings with their days
+    const bookings = [];
+    Object.keys(monthPlan).forEach(day => {
+        const dayNum = parseInt(day, 10);
+        if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return;
+
+        const entries = monthPlan[day];
+        if (!Array.isArray(entries)) return;
+
+        entries.forEach(typeId => {
+            const type = getBookingType(typeId);
+            if (type) {
+                bookings.push({ day: dayNum, type });
+            }
+        });
+    });
+
+    // Sort by day
+    bookings.sort((a, b) => a.day - b.day);
+
+    // Empty state
+    if (bookings.length === 0) {
+        container.innerHTML = `
+                <div class="booking-timeline-empty">
+                    <span class="text-gray-500 text-sm">Keine Buchungen geplant - </span>
+                    <button onclick="openBookingModal()" class="text-blue-400 hover:text-blue-300 text-sm ml-1 underline">
+                        Jetzt planen
+                    </button>
+                </div>
+            `;
+        return;
+    }
+
+    // Calculate positions (days 1-31 mapped to 2-98% to align with line)
+    const getPosition = (day) => 2 + ((day - 1) / 30) * 96;
+
+    // Build timeline HTML
+    let markersHTML = bookings.map(b => {
+        const pos = getPosition(b.day);
+        const label = getTimelineLabel(b.type);
+        const icon = getActiveBookingIcon(b.type);
+
+        return `
+                <div class="booking-timeline-marker"
+                     style="position: absolute; left: ${pos}%; transform: translateX(-50%); color: ${b.type.accent};"
+                     onclick="openBookingModalToDay(${b.day})"
+                     title="${getActiveBookingLabel(b.type)}">
+                    <div class="booking-timeline-day">${b.day}.</div>
+                    <div class="booking-timeline-dot" style="background: ${b.type.accent}; border-color: ${b.type.accent};"></div>
+                    <div class="booking-timeline-icon" style="color: ${b.type.accent};">${icon}</div>
+                    <div class="booking-timeline-label">${label}</div>
+                </div>
+            `;
+    }).join('');
+
+    container.innerHTML = `
+            <div class="booking-timeline-line"></div>
+            <div class="booking-timeline-markers" style="position: relative; height: 100px;">
+                ${markersHTML}
+            </div>
+        `;
+}
+
+// v1.7.3: Open booking modal and scroll to specific day
+function openBookingModalToDay(day) {
+    openBookingModal();
+    // After modal opens, highlight the day
+    setTimeout(() => {
+        const dayEl = document.querySelector(`.booking-day[data-day="${day}"]`);
+        if (dayEl) {
+            dayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            dayEl.style.boxShadow = '0 0 0 3px rgba(96, 165, 250, 0.6)';
+            setTimeout(() => { dayEl.style.boxShadow = ''; }, 2000);
+        }
+    }, 300);
+}
+
+function setupBookingPlanner() {
+    bookingTypeButtonsEl = getEl('booking-type-buttons');
+    bookingCalendarEl = getEl('booking-calendar');
+    bookingHintEl = getEl('booking-hint');
+    bookingClearMonthBtn = getEl('booking-clear-month');
+    if (!bookingTypeButtonsEl || !bookingCalendarEl) return;
+    renderBookingTypeButtons();
+    renderBookingCalendar();
+    updateBookingHint();
+    if (bookingClearMonthBtn) {
+        bookingClearMonthBtn.addEventListener('click', clearCurrentMonthPlan);
+    }
+}
+
+// Load from sessionStorage if available (for import restoration)
+let fixkostenItems = (() => {
+    try {
+        const saved = sessionStorage.getItem('mlp_fixkostenItems');
+        if (saved) {
+            console.log('✅ fixkostenItems aus sessionStorage geladen');
+            return JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden von fixkostenItems aus sessionStorage:', e);
+    }
+    // Default values
+    return [
+        { name: 'Miete', amount: 850, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Strom', amount: 60, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Kommunikation (Handy/Netz)', amount: 40, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Mobilität (Auto/Ticket)', amount: 150, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Versicherungen', amount: 180, interval: 'quarterly', target: 'fixkosten' },
+        { name: 'Sport/Hobbies', amount: 50, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Vorsorge (z.B. BU)', amount: 70, interval: 'monthly', target: 'fixkosten' },
+        { name: 'Sparplan Depot', amount: 250, interval: 'monthly', target: 'depot' },
+    ];
+})();
+
+let depotItems = (() => {
+    try {
+        const saved = sessionStorage.getItem('mlp_depotItems');
+        if (saved) {
+            console.log('✅ depotItems aus sessionStorage geladen');
+            const items = JSON.parse(saved);
+            // Migration: Add 'risk' property to old data (v1.5.1+)
+            return items.map(item => {
+                if (!item.risk) {
+                    item.risk = 'conservative'; // Default for backward compatibility
+                }
+                return item;
+            });
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden von depotItems aus sessionStorage:', e);
+    }
+    // Default values (with risk property for v1.5.1+)
+    return [
+        { name: 'MSCI World ETF', allocation: 70, color: '#3b82f6', risk: 'conservative' },
+        { name: 'Emerging Markets ETF', allocation: 30, color: '#8b5cf6', risk: 'aggressive' }
+    ];
+})();
+let prognoseChartInstance = null;
+// Beratungsansicht state
+let consultationMode = false;      // off by default
+let consultationStep = 0;          // 0..6 per variant (Step 6: Immobilien)
+let allowDepotStream = true;       // normal mode shows depot stream
+
+// ===== DEBOUNCE UTILITY (v1.4.0) =====
+/**
+ * Debounce function - delays execution until after wait time
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Wait time in ms
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Debounced calculateProjection (v1.4.0 - Auto-Prognose)
+const debouncedProjection = debounce(calculateProjection, 300);
+
+// Debounced calculateAndUpdate (v1.5.0 - Performance Optimization)
+const debouncedCalculateAndUpdate = debounce(calculateAndUpdate, 150);
+
+// Debounced renderFixkostenList (v1.5.0 - Performance Optimization)
+const debouncedRenderFixkostenList = debounce(function () {
+    // Will be defined after renderFixkostenList is available
+    if (typeof renderFixkostenList === 'function') {
+        renderFixkostenList();
+    }
+}, 150);
+
+// Debounced renderDepotList (v1.5.0 - Performance Optimization)
+const debouncedRenderDepotList = debounce(function () {
+    if (typeof renderDepotList === 'function') {
+        renderDepotList();
+    }
+}, 150);
+
+function setConsultationMode(on) {
+    consultationMode = !!on;
+    consultationStep = on ? 1 : 0;
+    allowDepotStream = !on; // only enable depot stream at step 5 in consultation
+    applyConsultationVisibility();
+    calculateAndUpdate();
+
+    // Update old sidebar buttons
+    const nextBtn = getEl('consult-next-btn');
+    const toggleBtn = getEl('consult-toggle-btn');
+    const consultChip = toggleBtn ? toggleBtn.closest('.control-chip--consultation') : null;
+    if (on) {
+        if (nextBtn) nextBtn.classList.remove('hidden');
+        if (toggleBtn) { toggleBtn.setAttribute('aria-label', 'Beratung beenden'); toggleBtn.setAttribute('title', 'Beratung beenden'); }
+        if (consultChip) consultChip.classList.add('is-active');
+    } else {
+        if (nextBtn) nextBtn.classList.add('hidden');
+        if (toggleBtn) { toggleBtn.setAttribute('aria-label', 'Beratung starten'); toggleBtn.setAttribute('title', 'Beratung starten'); }
+        if (consultChip) consultChip.classList.remove('is-active');
+    }
+
+    // Update Control Bar buttons (v1.4.0)
+    const nextBtnBar = getEl('consult-next-btn-bar');
+    const toggleBtnBar = getEl('consult-toggle-btn-bar');
+    const consultBarItem = toggleBtnBar ? toggleBtnBar.closest('.control-bar-item--consultation') : null;
+    if (on) {
+        if (nextBtnBar) nextBtnBar.classList.remove('hidden');
+        if (toggleBtnBar) { toggleBtnBar.setAttribute('aria-label', 'Beratung beenden'); toggleBtnBar.setAttribute('title', 'Beratung beenden'); }
+        if (consultBarItem) consultBarItem.classList.add('is-active');
+    } else {
+        if (nextBtnBar) nextBtnBar.classList.add('hidden');
+        if (toggleBtnBar) { toggleBtnBar.setAttribute('aria-label', 'Beratung starten'); toggleBtnBar.setAttribute('title', 'Beratung starten'); }
+        if (consultBarItem) consultBarItem.classList.remove('is-active');
+    }
+}
+
+function nextConsultationStep() {
+    if (!consultationMode) return;
+    consultationStep = Math.min(6, consultationStep + 1);
+    if (consultationStep === 5) allowDepotStream = true; // enable depot stream at step 5
+    applyConsultationVisibility();
+    calculateAndUpdate();
+}
+
+function isVisible(el) {
+    return el && el.offsetParent !== null; // hidden via CSS class will report null
+}
+
+function show(el, on) {
+    if (!el) return;
+    if (on) el.classList.remove('hidden'); else el.classList.add('hidden');
+}
+
+function applyConsultationVisibility() {
+    const secIncome = getEl('sec-income');
+    const secKonsum = getEl('sec-konsum');
+    const secTG = getEl('sec-tagesgeld');
+    const secProg = getEl('sec-prognose');
+
+    // Gradient zones
+    const zone1 = getEl('gradient-zone-1');
+    const zone2 = getEl('gradient-zone-2');
+    const zone3 = getEl('gradient-zone-3');
+    const zone4 = getEl('gradient-zone-4');
+
+    // Default: all visible (normal mode)
+    if (!consultationMode) {
+        [secIncome, secKonsum, secTG, secProg].forEach(el => show(el, true));
+        // all basins visible
+        for (const key in basins) show(basins[key], true);
+        // all zones visible
+        [zone1, zone2, zone3, zone4].forEach(el => show(el, true));
+        return;
+    }
+
+    const A = (currentVariant === 'A');
+    // Step visibility by variant
+    if (A) {
+        show(secIncome, true);
+        show(secKonsum, consultationStep >= 2);
+        show(secTG, consultationStep >= 3);
+        show(secProg, consultationStep >= 4);
+
+        // Step 1: Nur Einkommen
+        show(basins.einkommen, true);
+        show(basins.fixkosten, consultationStep >= 2);
+        show(basins.konsum, consultationStep >= 3);
+        show(basins.tagesgeld, consultationStep >= 4);
+        show(basins.depot, consultationStep >= 5);
+        show(basins.immobilien, consultationStep >= 6); // Step 6: Immobilien
+        show(basins.vermieterkonto, consultationStep >= 6); // Step 6: Vermieterkonto (zusammen mit Immobilien)
+
+        // Gradient zones
+        show(zone1, true); // Einkommen immer sichtbar
+        show(zone2, consultationStep >= 2); // Girokonten ab Step 2
+        show(zone3, consultationStep >= 4); // Liquidität ab Step 4
+        show(zone4, consultationStep >= 5); // Vermögensaufbau ab Step 5
+    } else {
+        show(secIncome, true);
+        show(secKonsum, consultationStep >= 2); // B: konsum ab step 2 (wie Fixkosten in A)
+        show(secTG, consultationStep >= 3);
+        show(secProg, consultationStep >= 4);
+
+        show(basins.einkommen, true);
+        show(basins.konsum, consultationStep >= 2); // Step 2: Konsum (wie Fixkosten in A)
+        show(basins.fixkosten, consultationStep >= 3); // Step 3: Fixkosten
+        show(basins.tagesgeld, consultationStep >= 4); // Step 4: Tagesgeld
+        show(basins.depot, consultationStep >= 5); // Step 5: Depot
+        show(basins.immobilien, consultationStep >= 6); // Step 6: Immobilien
+        show(basins.vermieterkonto, consultationStep >= 6); // Step 6: Vermieterkonto (zusammen mit Immobilien)
+
+        // Gradient zones (Variante B)
+        show(zone1, true); // Einkommen immer sichtbar
+        show(zone2, consultationStep >= 2); // Konsum/Fixkosten ab Step 2
+        show(zone3, consultationStep >= 4); // Liquidität ab Step 4
+        show(zone4, consultationStep >= 5); // Vermögensaufbau ab Step 5
+    }
+}
+
+// Interpret historische Minimum/Maximum-Renditen als ca. 5. und 90. Perzentil einer Normalverteilung.
+const GAUSSIAN_LOWER_Q = 0.05;
+const GAUSSIAN_UPPER_Q = 0.9;
+
+// v1.5.4: Layout Constants (extracted from magic numbers for maintainability)
+const LAYOUT = {
+    HORIZONTAL_GAP: 100,      // Abstand zwischen Basins horizontal (px)
+    VERTICAL_GAP: 240,        // Abstand zwischen Ebenen (px)
+    DEPOT_WIDTH: 440,         // Breite Depot-Basin (px)
+    VERMIETERKONTO_HEIGHT: 140, // height of Vermieterkonto (was 100)
+    MIN_FLOW_WIDTH: 10,       // Minimale Flow-Breite (px)
+    MAX_FLOW_WIDTH: 45        // Maximale Flow-Breite (px)
+};
+
+const roundToDecimal = (value, digits = 1) => {
+    const factor = Math.pow(10, digits);
+    return Math.round((Number(value) || 0) * factor) / factor;
+};
+
+const clamp = (value, min, max) => {
+    if (!Number.isFinite(value)) return value;
+    if (Number.isFinite(min) && value < min) return min;
+    if (Number.isFinite(max) && value > max) return max;
+    return value;
+};
+
+function inverseStandardNormal(p) {
+    if (p <= 0 || p >= 1) throw new RangeError('p must be in (0,1)');
+    const a = [-39.6968302866538, 220.946098424521, -275.928510446969, 138.357751867269, -30.6647980661472, 2.50662827745924];
+    const b = [-54.4760987982241, 161.585836858041, -155.698979859887, 66.8013118877197, -13.2806815528857];
+    const c = [-0.00778489400243029, -0.322396458041136, -2.40075827716184, -2.54973253934373, 4.37466414146497, 2.93816398269878];
+    const d = [0.00778469570904146, 0.32246712907004, 2.445134137143, 3.75440866190742];
+    const plow = 0.02425;
+    const phigh = 1 - plow;
+    let q, r;
+    if (p < plow) {
+        q = Math.sqrt(-2 * Math.log(p));
+        return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+            ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+    if (phigh < p) {
+        q = Math.sqrt(-2 * Math.log(1 - p));
+        return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+            ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+    q = p - 0.5;
+    r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+        (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+}
+
+function buildRenditeStat(min, max) {
+    const cleanMin = Number(min);
+    const cleanMax = Number(max);
+    if (!Number.isFinite(cleanMin) || !Number.isFinite(cleanMax)) {
+        return { min: roundToDecimal(min), max: roundToDecimal(max), mean: roundToDecimal((Number(min) + Number(max)) / 2) };
+    }
+    const zLow = inverseStandardNormal(GAUSSIAN_LOWER_Q);
+    const zHigh = inverseStandardNormal(GAUSSIAN_UPPER_Q);
+    const range = cleanMax - cleanMin;
+    let mean = (cleanMin + cleanMax) / 2;
+    if (Number.isFinite(range) && range > 0 && Number.isFinite(zHigh - zLow)) {
+        const sigma = range / (zHigh - zLow);
+        const candidate = cleanMin - zLow * sigma;
+        if (Number.isFinite(candidate)) {
+            mean = candidate;
+        }
+    }
+    const clampedMean = clamp(mean, cleanMin, cleanMax);
+    return {
+        min: roundToDecimal(cleanMin),
+        max: roundToDecimal(cleanMax),
+        mean: roundToDecimal(clampedMean)
+    };
+}
+
+const renditeData = {
+    1: buildRenditeStat(-40, 50),
+    5: buildRenditeStat(-12, 32),
+    10: buildRenditeStat(-1.5, 19),
+    15: buildRenditeStat(3, 15),
+    20: buildRenditeStat(4, 13),
+    25: buildRenditeStat(5, 12),
+    30: buildRenditeStat(6, 11)
+};
+// === Load fine-grained min/max returns from TXT (MLP Renditedreieck) ===
+// File: data/rendite_extreme_generated.txt
+// Format (tab/whitespace):
+// Anlagezeitraum (Jahre)    Minimale Rendite (%)   Maximale Rendite (%)
+// 1   -42.2   51.7
+let renditeExtremes = null;
+
+async function loadRenditeExtremes() {
+    try {
+        const res = await fetch('data/rendite_extreme_generated.txt', { cache: 'no-store' });
+        if (!res.ok) throw new Error('not found');
+        const txt = await res.text();
+        renditeExtremes = parseRenditeExtremesTSV(txt);
+        // refresh UI for current slider value
+        const jahre = parseInt(inputs.anlagezeitraum.value, 10);
+        updateRenditeSuggestions(jahre);
+    } catch (e) {
+        console.warn('Rendite-Extremwerte nicht geladen, nutze Fallback.', e);
+        renditeExtremes = null;
+    }
+}
+
+function parseRenditeExtremesTSV(tsv) {
+    const map = {};
+    tsv.split(/\r?\n/).forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        if (!/^\d+/.test(trimmed)) return; // skip header
+        const parts = trimmed.split(/\t|\s+/).filter(Boolean);
+        if (parts.length < 3) return;
+        const years = parseInt(parts[0], 10);
+        const min = parseFloat(String(parts[1]).replace(',', '.'));
+        const max = parseFloat(String(parts[2]).replace(',', '.'));
+        if (Number.isFinite(years) && Number.isFinite(min) && Number.isFinite(max)) {
+            map[years] = buildRenditeStat(min, max);
+        }
+    });
+    return map;
+}
+
+let inputs, basins, flowContainer, flowSvg; // Declare globally, assign in DOMContentLoaded
+const getEl = (id) => document.getElementById(id);
+const formatCurrency = (val) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+const formatCompact = (val) => { const a = Math.abs(val); const s = val < 0 ? '-' : ''; if (a >= 1000000) return s + (a / 1000000).toFixed(1).replace('.', ',') + 'M'; if (a >= 1000) return s + Math.round(a / 1000) + 'k'; return val.toString(); };
+const getMonthlyAmount = (item) => { const a = item.amount || 0; switch (item.interval) { case 'quarterly': return a / 3; case 'annually': return a / 12; default: return a; } };
+
+function renderBasin(element, title, value, icon, subtext = '', { current = 0, min = 0, limit = Infinity, minScaleBase = null } = {}, specialContent = '') {
+    // Fill height is only meaningful when a real capacity limit is provided
+    const fillPercent = (limit > 0 && limit !== Infinity)
+        ? Math.min(100, (current / limit) * 100)
+        : 0;
+
+    // The yellow minimum line can be scaled against an explicit base (minScaleBase),
+    // falling back to the same limit if none provided. This allows Konsumkonto to
+    // scale its Min-Linie gegen den monatlichen Überschuss statt gegen das Kartenlimit.
+    const baseForMin = (minScaleBase != null && isFinite(minScaleBase) && minScaleBase > 0)
+        ? minScaleBase
+        : ((limit > 0 && limit !== Infinity) ? limit : null);
+    const minPercent = baseForMin ? Math.min(100, (min / baseForMin) * 100) : 0;
+
+    // Check if element is editable (v1.4.0)
+    const isEditable = element.classList.contains('account-basin--editable');
+    const editIcon = isEditable ? `
+        <div class="basin-edit-indicator">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+        </div>
+    ` : '';
+
+    element.innerHTML = `
+        <div class="absolute inset-0 bg-sky-500/30 rounded-lg transition-all duration-500" style="height: ${fillPercent}%; top: auto; bottom: 0;"></div>
+        ${min > 0 ? `<div class="limit-line bg-yellow-500/70 border-t-2 border-dashed border-yellow-400" style="bottom: ${minPercent}%;"><span class="text-yellow-300">Min</span></div>` : ''}
+        ${limit > 0 && limit !== Infinity ? `<div class="limit-line bg-green-500/70" style="bottom: 100%;"><span class="text-green-300">Max</span></div>` : ''}
+        ${limit > 0 && limit !== Infinity && /Tagesgeldkonto/i.test(title) ? `<div class="absolute top-1 right-2 text-xs text-gray-400">Sparziel: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(limit)}</div>` : ''}
+        ${editIcon}
+        <div class="relative z-10 flex flex-col items-center justify-center h-full">
+          ${specialContent || icon}
+          <p class="font-bold">${title}</p>
+          <p class="text-lg font-mono">${value}</p>
+          ${subtext ? `<p class="text-xs text-gray-400 mt-1">${subtext}</p>` : ''}
+        </div>
+    `;
+}
+
+let _devDragMode = false;
+function positionCascade() {
+    if (_devDragMode) return;
+    if (!flowContainer) return;
+    const containerWidth = flowContainer.clientWidth;
+    const h_gap_side = LAYOUT.HORIZONTAL_GAP;  // v1.5.4: Use named constant
+    const v_gap = LAYOUT.VERTICAL_GAP;
+    const depotWidth = LAYOUT.DEPOT_WIDTH;
+    const immoWidth = 220;
+    const gapBetweenDepotImmo = 50; // Erhöht von 30 auf 50 für klarere Trennung
+
+    // Größen setzen
+    basins.depot.style.width = `${depotWidth}px`;
+    if (basins.immobilien) {
+        basins.immobilien.style.width = `${immoWidth}px`;
+    }
+    if (basins.vermieterkonto) {
+        basins.vermieterkonto.style.width = `${immoWidth}px`;
+        // Removed inline height = 100px override so it uses the CSS height (140px)
+    }
+
+    // === NEUE ZENTRIERUNG: Immobilien & Depot bilden Außenrahmen ===
+    // Berechne Gesamtbreite des Außenrahmens
+    const outerFrameWidth = immoWidth + gapBetweenDepotImmo + depotWidth; // 220 + 50 + 440 = 710px
+    const vermieterkontoOffset = 180; // Vertikaler Abstand zwischen Vermieterkonto und Immobilien
+
+    // Linker Rand des Außenrahmens (zentriert im Container)
+    const outerFrameLeft = (containerWidth - outerFrameWidth) / 2;
+
+    // Neuer Mittelpunkt X: Mitte zwischen Immobilien-Links und Depot-Rechts
+    const newCenterX = outerFrameLeft + outerFrameWidth / 2;
+
+    // === GIROKONTO-BEREICH: Ausrichtung an Depot & Immobilien ===
+    const giroBasinWidth = 200; // Standard Basin-Breite
+
+    // Berechne Positionen basierend auf Depot & Immobilien:
+    // 1. Fixkostenkonto: Mitte über rechtem Rand des Depot-Basins
+    const depotRightEdge = outerFrameLeft + immoWidth + gapBetweenDepotImmo + depotWidth;
+    const giroLeft3 = depotRightEdge - (giroBasinWidth / 2); // Mitte über rechtem Depot-Rand
+
+    // 2. Vermieterkonto: Mitte über linkem Rand des Immobilien-Basins
+    const immobilienLeftEdge = outerFrameLeft;
+    const giroLeft1 = immobilienLeftEdge - (giroBasinWidth / 2); // Mitte über linkem Immobilien-Rand
+
+    // 3. Konsumkonto: Mittig zwischen rechtem Rand Vermieterkonto und linkem Rand Fixkosten
+    const vermieterkontoRightEdge = giroLeft1 + giroBasinWidth;
+    const fixkostenLeftEdge = giroLeft3;
+    const giroLeft2 = (vermieterkontoRightEdge + fixkostenLeftEdge) / 2 - (giroBasinWidth / 2);
+
+    // Höhen-Differenz: Vermieterkonto ist 100px, normale Basins sind größer (~150px?)
+    // Um Untergrenze anzugleichen: Vermieterkonto muss TIEFER positioniert werden
+    const normalBasinHeight = basins.konsum ? basins.konsum.offsetHeight : 150;
+    const vermieterkontoHeight = LAYOUT.VERMIETERKONTO_HEIGHT;  // v1.5.4: Use named constant
+    const heightDiff = normalBasinHeight - vermieterkontoHeight; // Differenz ausgleichen
+
+    let positions;
+    if (currentVariant === 'B') {
+        // Variante B: Offsets direkt von newCenterX (einziger Referenzpunkt!)
+        // Ermittelt per Drag-Tool bei containerWidth ~1510, newCenterX ~755
+        positions = {
+            einkommen: { top: 0, left: newCenterX - basins.einkommen.offsetWidth / 2 },
+            konsum: { top: v_gap, left: newCenterX - 395 },
+            fixkosten: { top: v_gap * 2, left: newCenterX + 181 },
+            vermieterkonto: { top: v_gap * 2 + 280, left: newCenterX + 173 },
+            tagesgeld: { top: v_gap * 3, left: newCenterX - 251 },
+            depot: { top: v_gap * 4, left: outerFrameLeft },
+            immobilien: { top: v_gap * 4, left: outerFrameLeft + depotWidth + gapBetweenDepotImmo },
+        };
+    } else { // Variante A
+        // Variante A (Fixkosten-first): Einkommen -> Fixkosten -> (Konsum + Vermieterkonto) -> Tagesgeld -> Depot
+        // Ebene 1: Fixkosten
+        // Ebene 2: Konsum + Vermieterkonto (beide UNTERKANTE bündig!)
+        positions = {
+            einkommen: { top: 0, left: newCenterX - basins.einkommen.offsetWidth / 2 },
+            fixkosten: { top: v_gap, left: giroLeft3 }, // Rechts (weiter rechts!)
+            // Ebene 2: UNTERKANTEN bündig (Vermieterkonto tiefer wegen kleinerer Höhe)
+            vermieterkonto: { top: v_gap * 2 + heightDiff, left: giroLeft1 }, // Links, tiefer!
+            konsum: { top: v_gap * 2, left: giroLeft2 }, // Mitte
+            tagesgeld: { top: v_gap * 3, left: newCenterX - basins.tagesgeld.offsetWidth / 2 + 40 },
+            depot: { top: v_gap * 4.0, left: outerFrameLeft + immoWidth + gapBetweenDepotImmo },
+            immobilien: { top: v_gap * 4.0, left: outerFrameLeft },
+        };
+    }
+
+    // Positionen anwenden
+    for (const key in basins) {
+        if (basins[key]) {
+            basins[key].style.top = `${positions[key].top}px`;
+            basins[key].style.left = `${positions[key].left}px`;
+        }
+    }
+}
+
+function attachFlowDot(pathId, radius = 4, speedSec = 3) {
+    const dotGroupId = `${pathId}-dot`;
+    let g = document.getElementById(dotGroupId);
+    if (!g) {
+        g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('id', dotGroupId);
+        document.getElementById('flow-svg').appendChild(g);
+    }
+    // Clear existing content
+    g.innerHTML = '';
+    // Create circle + animateMotion referencing the path
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('class', 'flow-dot');
+    circle.setAttribute('r', String(radius));
+    const animateMotion = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+    animateMotion.setAttribute('dur', `${Math.max(1.2, speedSec)}s`);
+    animateMotion.setAttribute('repeatCount', 'indefinite');
+    const mpath = document.createElementNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${pathId}`);
+    animateMotion.appendChild(mpath);
+    circle.appendChild(animateMotion);
+    g.appendChild(circle);
+}
+
+function drawFlow(pathId, fromBasin, toBasin, value, maxFlowValue, labelText = '', flowOpacity = 1.0) {
+    if (!fromBasin || !toBasin) return;
+    const path = getEl(pathId), pathAnim = getEl(`${pathId}-anim`);
+    const fromRect = fromBasin.getBoundingClientRect(), toRect = toBasin.getBoundingClientRect(), containerRect = flowContainer.getBoundingClientRect();
+    let fromX = fromRect.left - containerRect.left + fromRect.width / 2;
+    let fromY = fromRect.bottom - containerRect.top;
+    const toX = toRect.left - containerRect.left + toRect.width / 2;
+    const toY = toRect.top - containerRect.top;
+    const minWidth = LAYOUT.MIN_FLOW_WIDTH, maxWidth = LAYOUT.MAX_FLOW_WIDTH;  // v1.5.4: Use named constants
+    const normalizedValue = Math.max(0, value) / maxFlowValue;
+    const strokeWidth = minWidth + normalizedValue * (maxWidth - minWidth);
+    path.style.strokeWidth = `${value > 0 ? Math.max(minWidth, strokeWidth) : 0}px`;
+    // Nur für spezielle Flows (z.B. Deficitline) opacity setzen, sonst CSS-Animation überschreiben
+    if (flowOpacity !== 1.0) {
+        path.style.opacity = flowOpacity; // Opacity für dezente Flows
+    } else {
+        path.style.opacity = ''; // CSS-Default verwenden (für Animationen)
+    }
+
+    let pathData;
+    const EXIT_OFFSET_Y = 8;
+    fromY -= EXIT_OFFSET_Y;
+
+    // --- NEW DYNAMIC SVG ENGINE (V2.0) ---
+    // 1. Determine Anchor Points based on flow logic
+    let fx = fromX, fy = fromY, tx = toX, ty = toY;
+
+    if (pathId === 'fixkosten-depot-flow') {
+        fx = fromRect.left - containerRect.left + fromRect.width * (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? 0.25 : 0.75);
+        tx = toRect.left - containerRect.left + toRect.width * 0.75;
+    } else if (pathId === 'tagesgeld-depot-flow') {
+        tx = toRect.left - containerRect.left + (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? toRect.width * 0.5 : toRect.width * 0.25);
+    } else if (pathId === 'konsum-tagesgeld-flow') {
+        fx = fromRect.left - containerRect.left + (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? fromRect.width * 0.20 : fromRect.width * 0.80);
+    } else if (pathId === 'flow-path-2') {
+        // Dauerauftrag (horizontal component)
+        if (typeof currentVariant !== 'undefined' && currentVariant === 'A') {
+            fx = fromRect.left - containerRect.left + fromRect.width * 0.20;
+            tx = toRect.left - containerRect.left + toRect.width * 0.80;
+        } else {
+            fx = fromRect.left - containerRect.left + fromRect.width * 0.80;
+            tx = toRect.left - containerRect.left + toRect.width * 0.50;
+        }
+    } else if (pathId === 'vermieterkonto-einkommen-flow') {
+        fx = fromRect.left - containerRect.left + fromRect.width * 0.75;
+        fy = fromRect.top - containerRect.top; // exit TOP
+        tx = toRect.left - containerRect.left + toRect.width * 0.25;
+        ty = toRect.bottom - containerRect.top; // enter BOTTOM
+    } else if (pathId === 'fixkosten-vermieterkonto-flow') {
+        const isPositiveFlow = fromBasin.id === 'vermieterkonto-basin';
+        if (isPositiveFlow) {
+            fx = fromRect.left - containerRect.left + fromRect.width * 0.50;
+            fy = fromRect.top - containerRect.top; // upwards
+            tx = toRect.left - containerRect.left + toRect.width * (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? 0.50 : 0.10);
+            ty = typeof currentVariant !== 'undefined' && currentVariant === 'B' ? toRect.bottom - containerRect.top : toRect.top - containerRect.top + toRect.height * 0.5;
+        } else { // negative flow
+            fx = fromRect.left - containerRect.left + fromRect.width * (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? 0.50 : 0.10);
+            fy = typeof currentVariant !== 'undefined' && currentVariant === 'B' ? fromRect.bottom - containerRect.top : fromRect.top - containerRect.top + fromRect.height * 0.5;
+            tx = toRect.left - containerRect.left + toRect.width * 0.5;
+            ty = toRect.top - containerRect.top;
+        }
+    }
+
+    // 2. Compute dynamic cubic bezier control points based on distance (Sanftere Beziers)
+    const dx = tx - fx;
+    const dy = ty - fy;
+
+    let c1x, c1y, c2x, c2y;
+
+    if (pathId === 'vermieterkonto-einkommen-flow' || pathId === 'fixkosten-vermieterkonto-flow') {
+        // Custom Meander for specific flows (Flow upwards or sidewards)
+        c1x = fx + (dx * 0.35);
+        c1y = fy + (dy * 0.35);
+        c2x = tx - (dx * 0.35);
+        c2y = ty - (dy * 0.35);
+    } else if (pathId === 'flow-path-2') {
+        // Mostly horizontal flow Dauerauftrag
+        c1x = fx + (dx * 0.4);
+        c1y = fy + Math.min(80, Math.max(0, dy * 0.5));
+        c2x = tx - (dx * 0.4);
+        c2y = ty - Math.min(80, Math.max(0, dy * 0.5));
+    } else {
+        // Standard Flow downwards: dynamically scaled tension
+        const strength = Math.max(50, Math.abs(dy) * 0.45);
+        c1x = fx;
+        c1y = fy + strength;
+        c2x = tx;
+        c2y = ty - strength;
+    }
+
+    pathData = `M ${fx},${fy} C ${c1x},${c1y} ${c2x},${c2y} ${tx},${ty}`;
+    path.setAttribute('d', pathData);
+
+    // --- V2.0: Linienfarben & Glow (Reverted to Uniform) ---
+    // User requested uniform flows. We use the flow-gradient as defined in SVG.
+    const isUeberlauf = value >= maxFlowValue * 0.9 && value > 0;
+
+    // We remove explicit inline stroke to let the CSS rule (stroke: url(#flow-gradient)) apply.
+    path.style.stroke = '';
+
+    if (isUeberlauf) {
+        // Red glow warning if overflow
+        path.style.filter = 'drop-shadow(0px 0px 8px var(--color-error))';
+    } else {
+        path.style.filter = '';
+    }
+    // ---------------------------------
+
+    pathAnim.setAttribute('d', pathData);
+    // Reset inline opacity to allow CSS to control animation visibility
+    pathAnim.style.opacity = '';
+
+    // Update mask stroke to define visible river area
+    const pathMask = getEl(`${pathId}-mask`);
+    if (pathMask) {
+        pathMask.setAttribute('d', pathData);
+        const maskWidth = Math.max(0, parseFloat(path.style.strokeWidth || "0") + 2);
+        pathMask.style.strokeWidth = `${maskWidth}px`;
+    }
+
+    // Eraser path covers any legacy underlay (stroke slightly wider than main)
+    const pathErase = getEl(`${pathId}-erase`);
+    if (pathErase) {
+        pathErase.setAttribute('d', pathData);
+        const eraseWidth = Math.max(0, parseFloat(path.style.strokeWidth || "0") + 40); // extra wide to fully cover any underlay, even at tight bends
+        pathErase.style.strokeWidth = `${eraseWidth}px`;
+    }
+
+    // Add/update moving dot for direction cue
+    const radius = Math.max(2, Math.min(5, parseFloat(path.style.strokeWidth) / 6));
+    const speed = 6 + Math.max(0, (parseFloat(path.style.strokeWidth) - 10) / 8); // overall slower, more uniform
+    attachFlowDot(pathId, radius, speed);
+
+    const valueLabelId = `${pathId}-value`, textLabelId = `${pathId}-text`;
+    let valueLabel = getEl(valueLabelId), textLabel = getEl(textLabelId);
+    if (!valueLabel) { valueLabel = document.createElement('div'); valueLabel.className = 'flow-value'; valueLabel.id = valueLabelId; flowContainer.appendChild(valueLabel); }
+    if (labelText && !textLabel) { textLabel = document.createElement('div'); textLabel.className = 'flow-label'; textLabel.id = textLabelId; flowContainer.appendChild(textLabel); }
+
+    valueLabel.textContent = formatCurrency(value);
+    if (textLabel) textLabel.textContent = labelText;
+
+    // Spezielle Label-Positionierung für Vermieterkonto-Flows (näher am Vermieterkonto)
+    let labelPosition = 0.5; // Standard: 50% (Mitte)
+    if (pathId === 'vermieterkonto-einkommen-flow') {
+        labelPosition = 0.35; // 35% - näher am Vermieterkonto (Start)
+    } else if (pathId === 'fixkosten-vermieterkonto-flow') {
+        labelPosition = 0.67; // 67% - im ersten Drittel vom Vermieterkonto aus (= letztes Drittel vom Start)
+    }
+
+    const midPoint = path.getPointAtLength(path.getTotalLength() * labelPosition);
+    valueLabel.style.left = `${midPoint.x}px`; valueLabel.style.top = `${midPoint.y}px`;
+    if (textLabel) {
+        textLabel.style.left = `${midPoint.x}px`;
+        textLabel.style.top = `${midPoint.y - 22}px`; // closer spacing above the amount pill
+    }
+    path.classList.toggle('active', value > 0);
+    valueLabel.style.display = (value > 0) ? 'block' : 'none';
+    if (textLabel) textLabel.style.display = (value > 0) ? 'block' : 'none';
+}
+
+function hideFlow(pathId) {
+    const path = getEl(pathId);
+    const pathAnim = getEl(`${pathId}-anim`);
+    const valueLbl = getEl(`${pathId}-value`);
+    const textLbl = getEl(`${pathId}-text`);
+    const pathErase = getEl(`${pathId}-erase`);
+    const pathMask = getEl(`${pathId}-mask`);
+    const dotGroup = getEl(`${pathId}-dot`);
+    if (path) {
+        path.classList.remove('active');
+        path.style.strokeWidth = '0px';
+    }
+    if (pathAnim) {
+        pathAnim.style.opacity = '0';
+    }
+    if (valueLbl) valueLbl.style.display = 'none';
+    if (textLbl) textLbl.style.display = 'none';
+    if (pathErase) pathErase.style.strokeWidth = '0px';
+    if (pathMask) pathMask.style.strokeWidth = '0px';
+    if (dotGroup) dotGroup.innerHTML = '';
+}
+
+function drawConnectionLine(lineId, fromBasin, toBasin) {
+    // Zeichnet eine gestrichelte vertikale Verbindungslinie (kein Flow, nur Visualisierung)
+    if (!fromBasin || !toBasin) return;
+
+    let line = getEl(lineId);
+    if (!line) {
+        line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        line.id = lineId;
+        line.setAttribute('stroke', '#60a5fa'); // blue-400
+        line.setAttribute('stroke-width', '1.5'); // Reduziert von 2 auf 1.5
+        line.setAttribute('stroke-dasharray', '8,4'); // gestrichelt
+        line.setAttribute('fill', 'none');
+        line.setAttribute('opacity', '0.25'); // Reduziert von 0.5 auf 0.25 für dezentere Darstellung
+        flowSvg.appendChild(line);
+    }
+
+    const fromRect = fromBasin.getBoundingClientRect();
+    const toRect = toBasin.getBoundingClientRect();
+    const containerRect = flowContainer.getBoundingClientRect();
+
+    // Vertikale Linie von der Mitte des oberen Basins zur Mitte des unteren Basins
+    const centerX = fromRect.left - containerRect.left + fromRect.width / 2;
+    const fromY = fromRect.bottom - containerRect.top;
+    const toY = toRect.top - containerRect.top;
+
+    const pathData = `M ${centerX},${fromY} L ${centerX},${toY}`;
+    line.setAttribute('d', pathData);
+}
+
+function drawSchutzschirm(fromBasin, toBasin) {
+    if (!fromBasin || !toBasin) return;
+    const path = getEl('schutzschirm-path');
+    const toRect = toBasin.getBoundingClientRect(), containerRect = flowContainer.getBoundingClientRect();
+    const toLeftX = toRect.left - containerRect.left, toRightX = toRect.right - containerRect.left, toY = toRect.top - containerRect.top;
+    const controlX = toLeftX + toRect.width / 2;
+    const controlY = toY - 80;
+    const pathData = `M ${toLeftX}, ${toY} Q ${controlX}, ${controlY} ${toRightX}, ${toY}`;
+    path.setAttribute('d', pathData);
+}
+
+// ===== v1.6.1: SCHUTZSCHILD INFO-BADGE FUNCTIONS =====
+
+/**
+ * Update Schutzschild Info-Badge (v1.6.1 Redesigned)
+ * Calculation: Tagesgeld / (Einkommen - Alle Sparraten)
+ */
+function updateSchutzschildBadge(tagesgeldAmount, data) {
+    const badge = getEl('schutzschild-badge');
+    if (!badge) return;
+
+    // Calculate: Einkommen - Alle Sparraten
+    const income = inputs.income ? parseFloat(inputs.income.value) || 0 : 0;
+    const depotSparplanTotal = data && data.depotSparplanTotal ? data.depotSparplanTotal : 0;
+
+    // Monthly available = Einkommen - Sparraten
+    const monthlyAvailable = income - depotSparplanTotal;
+
+    // Calculate buffer in months: Tagesgeld / (Einkommen - Sparraten)
+    const pufferMonths = monthlyAvailable > 0 && tagesgeldAmount > 0
+        ? Math.floor(tagesgeldAmount / monthlyAvailable)
+        : 0;
+
+    // Update content
+    const monthsEl = getEl('schutzschild-puffer-months');
+    const amountEl = getEl('schutzschild-puffer-amount');
+
+    if (monthsEl) {
+        monthsEl.textContent = pufferMonths >= 1
+            ? `Puffer: ${pufferMonths} M`
+            : `<1 M`;
+    }
+    if (amountEl) {
+        amountEl.textContent = `(${formatCurrency(tagesgeldAmount)})`;
+    }
+
+    // Remove all color classes
+    badge.classList.remove('schutzschild-badge--green', 'schutzschild-badge--yellow', 'schutzschild-badge--red');
+
+    // Apply color coding
+    let colorClass = '';
+    let shieldColor = '';
+    let shieldStroke = '';
+
+    if (pufferMonths >= 3) {
+        colorClass = 'schutzschild-badge--green';
+        shieldColor = 'rgba(16, 185, 129, 0.15)';
+        shieldStroke = 'rgba(16, 185, 129, 0.4)';
+    } else if (pufferMonths >= 1) {
+        colorClass = 'schutzschild-badge--yellow';
+        shieldColor = 'rgba(251, 191, 36, 0.15)';
+        shieldStroke = 'rgba(251, 191, 36, 0.4)';
+    } else {
+        colorClass = 'schutzschild-badge--red';
+        shieldColor = 'rgba(239, 68, 68, 0.15)';
+        shieldStroke = 'rgba(239, 68, 68, 0.4)';
+    }
+
+    badge.classList.add(colorClass);
+
+    // Update shield SVG colors
+    const shield = getEl('schutzschirm-path');
+    if (shield && shield.style.opacity !== '0') {
+        shield.style.fill = shieldColor;
+        shield.style.stroke = shieldStroke;
+    }
+
+    // Position badge on the RIGHT side, next to shield (higher)
+    const depotBasin = basins.depot;
+    if (depotBasin) {
+        const depotRect = depotBasin.getBoundingClientRect();
+        const containerRect = flowContainer.getBoundingClientRect();
+
+        const badgeX = (depotRect.right - containerRect.left) + 16; // 16px right of depot
+        const badgeY = (depotRect.top - containerRect.top) - 40; // Higher - next to shield arc
+
+        badge.style.left = `${badgeX}px`;
+        badge.style.top = `${badgeY}px`;
+    }
+
+    // v1.6.1 Level 2: Update tooltip content
+    updateTooltipContent(tagesgeldAmount, pufferMonths);
+}
+
+// Click handler for shield - will trigger Level 3 Demo later
+function initSchutzschildClickHandler() {
+    const shield = getEl('schutzschirm-path');
+
+    if (shield) {
+        shield.style.pointerEvents = 'auto'; // Enable clicks
+        shield.style.cursor = 'pointer';
+
+        shield.addEventListener('click', function (e) {
+            e.stopPropagation();
+            // TODO: Level 3 - Start 5-second demo animation
+            console.log('Shield clicked - Level 3 Demo will go here');
+        });
+    }
+}
+
+// v1.6.1 Level 2: Hover-Tooltip functionality with visual connections
+function initSchutzschildTooltip() {
+    const shield = getEl('schutzschirm-path');
+    const tooltip = getEl('schutzschild-tooltip');
+    const connectionSvg = getEl('tooltip-connection-svg');
+
+    if (shield && tooltip && connectionSvg) {
+        // Show tooltip and connections on hover + start shield pulsing
+        shield.addEventListener('mouseenter', function () {
+            // Update tooltip content FIRST
+            updateTooltipOnHover();
+
+            tooltip.classList.add('schutzschild-tooltip--visible');
+            connectionSvg.style.display = 'block';
+            positionTooltip();
+            startShieldPulsing(); // Start continuous pulsing
+        });
+
+        // Hide tooltip on mouse leave + stop shield pulsing
+        shield.addEventListener('mouseleave', function () {
+            tooltip.classList.remove('schutzschild-tooltip--visible');
+            connectionSvg.style.display = 'none';
+            stopShieldPulsing(); // Stop pulsing
+        });
+
+        // Keep visible when hovering over tooltip
+        tooltip.addEventListener('mouseenter', function () {
+            tooltip.classList.add('schutzschild-tooltip--visible');
+            connectionSvg.style.display = 'block';
+            startShieldPulsing(); // Keep pulsing
+        });
+
+        // Hide when leaving tooltip
+        tooltip.addEventListener('mouseleave', function () {
+            tooltip.classList.remove('schutzschild-tooltip--visible');
+            connectionSvg.style.display = 'none';
+            stopShieldPulsing(); // Stop pulsing
+        });
+    }
+}
+
+function updateTooltipOnHover() {
+    const pufferMonths = calculatePufferMonths();
+    const tooltipText = getEl('tooltip-puffer-text');
+    const tooltip = getEl('schutzschild-tooltip');
+
+    console.log('Puffer Monate berechnet:', pufferMonths); // Debug
+
+    if (tooltipText) {
+        const monthsText = pufferMonths >= 1 ? `${pufferMonths} M` : '<1 M';
+        tooltipText.textContent = `Puffer: ${monthsText}`;
+    }
+
+    // Update tooltip color
+    if (tooltip) {
+        tooltip.classList.remove('schutzschild-tooltip--green', 'schutzschild-tooltip--yellow', 'schutzschild-tooltip--red');
+
+        if (pufferMonths >= 3) {
+            tooltip.classList.add('schutzschild-tooltip--green');
+        } else if (pufferMonths >= 1) {
+            tooltip.classList.add('schutzschild-tooltip--yellow');
+        } else {
+            tooltip.classList.add('schutzschild-tooltip--red');
+        }
+    }
+
+    // Update connection line color
+    const tagesgeldLine = getEl('tagesgeld-tooltip-line');
+    if (tagesgeldLine) {
+        let lineColor = '';
+        if (pufferMonths >= 3) {
+            lineColor = 'rgba(16, 185, 129, 0.9)';
+        } else if (pufferMonths >= 1) {
+            lineColor = 'rgba(251, 191, 36, 0.9)';
+        } else {
+            lineColor = 'rgba(239, 68, 68, 0.9)';
+        }
+        tagesgeldLine.setAttribute('stroke', lineColor);
+    }
+}
+
+function startShieldPulsing() {
+    const shield = getEl('schutzschirm-path');
+    if (!shield) return;
+
+    // Get current puffer months from tooltip
+    const pufferMonths = calculatePufferMonths();
+
+    // Remove any existing impact classes
+    shield.classList.remove('shield--impact-green', 'shield--impact-yellow', 'shield--impact-red');
+
+    // Add appropriate impact flash based on puffer months (Enterprise-style)
+    if (pufferMonths >= 3) {
+        shield.classList.add('shield--impact-green'); // Slow green flash
+    } else if (pufferMonths >= 1) {
+        shield.classList.add('shield--impact-yellow'); // Medium yellow flash
+    } else {
+        shield.classList.add('shield--impact-red'); // Fast red flash (warning)
+    }
+}
+
+function stopShieldPulsing() {
+    const shield = getEl('schutzschirm-path');
+    if (!shield) return;
+
+    shield.classList.remove('shield--impact-green', 'shield--impact-yellow', 'shield--impact-red');
+}
+
+function calculatePufferMonths() {
+    // Get values from input fields in modals (NOT from basins!)
+    // 1. Tagesgeld: "Aktueller Stand" from Tagesgeld modal
+    const tagesgeldAmount = inputs.tagesgeldCurrent ? parseFloat(inputs.tagesgeldCurrent.value) || 0 : 0;
+
+    // 2. Einkommen from Einkommen field
+    const einkommen = inputs.income ? parseFloat(inputs.income.value) || 0 : 0;
+
+    // 3. Depot Sparrate from Fixkosten modal (items with target='depot')
+    const depotSparrate = fixkostenItems
+        .filter(i => i.target === 'depot')
+        .reduce((sum, i) => sum + getMonthlyAmount(i), 0);
+
+    console.log('Tagesgeld:', tagesgeldAmount, 'Einkommen:', einkommen, 'Sparrate:', depotSparrate); // Debug
+
+    // Calculation: Einkommen - Alle Sparraten
+    const monthlyAvailable = einkommen - depotSparrate;
+
+    if (monthlyAvailable <= 0 || tagesgeldAmount <= 0) {
+        console.log('Ungültige Werte - monthlyAvailable:', monthlyAvailable, 'tagesgeld:', tagesgeldAmount);
+        return 0; // Kein verfügbares Einkommen oder kein Tagesgeld
+    }
+
+    // Puffer in Monaten = Tagesgeld / (Einkommen - Sparraten)
+    const months = Math.floor(tagesgeldAmount / monthlyAvailable);
+    console.log('Berechnete Monate:', months);
+    return months;
+}
+
+function positionTooltip() {
+    const tooltip = getEl('schutzschild-tooltip');
+    const tagesgeldBasin = basins.tagesgeld;
+    const depotBasin = basins.depot;
+
+    if (tooltip && tagesgeldBasin && depotBasin) {
+        const tagesgeldRect = tagesgeldBasin.getBoundingClientRect();
+        const depotRect = depotBasin.getBoundingClientRect();
+        const containerRect = flowContainer.getBoundingClientRect();
+
+        // Position tooltip HIGHER - between Tagesgeld and Shield (clear of depot)
+        const tooltipX = (tagesgeldRect.right - containerRect.left) + 24; // 24px right of tagesgeld
+        const tooltipY = (depotRect.top - containerRect.top) - 110; // Higher position, clear of depot
+
+        tooltip.style.left = `${tooltipX}px`;
+        tooltip.style.top = `${tooltipY}px`;
+
+        // Draw connection lines
+        drawTooltipConnections();
+    }
+}
+
+// ===== FLOW-LINE HELPER (v1.6.1) =====
+// Einfache Syntax: "element-id.position -> element-id.position"
+// Positionen: top, bottom, left, right, center, top-left, top-right, bottom-left, bottom-right
+
+function getElementPosition(elementId, position) {
+    const element = getEl(elementId) || basins[elementId.replace('-basin', '')];
+    if (!element) {
+        console.error(`Element nicht gefunden: ${elementId}`);
+        return null;
+    }
+
+    const rect = element.getBoundingClientRect();
+    const containerRect = flowContainer.getBoundingClientRect();
+
+    // Relative coordinates zum Flow-Container
+    const x = rect.left - containerRect.left;
+    const y = rect.top - containerRect.top;
+    const w = rect.width;
+    const h = rect.height;
+
+    const positions = {
+        'center': { x: x + w / 2, y: y + h / 2 },
+        'top': { x: x + w / 2, y: y },
+        'bottom': { x: x + w / 2, y: y + h },
+        'left': { x: x, y: y + h / 2 },
+        'right': { x: x + w, y: y + h / 2 },
+        'top-left': { x: x, y: y },
+        'top-right': { x: x + w, y: y },
+        'bottom-left': { x: x, y: y + h },
+        'bottom-right': { x: x + w, y: y + h }
+    };
+
+    return positions[position] || positions['center'];
+}
+
+function drawFlowLine(pathElement, fromSpec, toSpec) {
+    // Parse: "element-id.position -> element-id.position"
+    const [fromPart, toPart] = fromSpec.includes('->')
+        ? fromSpec.split('->').map(s => s.trim())
+        : [fromSpec, toSpec];
+
+    const [fromElement, fromPos] = fromPart.split('.');
+    const [toElement, toPos] = toPart.split('.');
+
+    const start = getElementPosition(fromElement.trim(), fromPos.trim());
+    const end = getElementPosition(toElement.trim(), toPos.trim());
+
+    if (!start || !end) {
+        console.error(`Flow-Line konnte nicht gezeichnet werden: ${fromSpec} -> ${toSpec}`);
+        return;
+    }
+
+    pathElement.setAttribute('d', `M ${start.x} ${start.y} L ${end.x} ${end.y}`);
+}
+
+function drawTooltipConnections() {
+    const connectionSvg = getEl('tooltip-connection-svg');
+    const tooltip = getEl('schutzschild-tooltip');
+
+    if (!connectionSvg || !tooltip) return;
+
+    const containerRect = flowContainer.getBoundingClientRect();
+
+    // Set SVG size to cover the whole container
+    connectionSvg.setAttribute('width', containerRect.width);
+    connectionSvg.setAttribute('height', containerRect.height);
+    connectionSvg.style.left = '0';
+    connectionSvg.style.top = '0';
+
+    // Draw Flow-Line using new syntax: Tagesgeld rechts -> Tooltip top-left
+    const tagesgeldLine = getEl('tagesgeld-tooltip-line');
+    if (tagesgeldLine) {
+        drawFlowLine(tagesgeldLine, "tagesgeld-basin.right", "schutzschild-tooltip.top-left");
+    }
+
+    // Hide the second line (not needed anymore)
+    const shieldLine = getEl('tooltip-shield-line');
+    if (shieldLine) {
+        shieldLine.setAttribute('d', '');
+    }
+}
+
+function updateTooltipContent(tagesgeldAmount, pufferMonths) {
+    const tooltip = getEl('schutzschild-tooltip');
+    const tooltipText = getEl('tooltip-puffer-text');
+
+    if (tooltipText) {
+        const monthsText = pufferMonths >= 1
+            ? `${pufferMonths} M`
+            : '<1 M';
+        tooltipText.textContent = `Puffer: ${monthsText}`;
+    }
+
+    // Apply color coding to tooltip and connection lines
+    if (tooltip) {
+        tooltip.classList.remove('schutzschild-tooltip--green', 'schutzschild-tooltip--yellow', 'schutzschild-tooltip--red');
+
+        let colorClass = '';
+        let lineColor = '';
+
+        if (pufferMonths >= 3) {
+            colorClass = 'schutzschild-tooltip--green';
+            lineColor = 'rgba(16, 185, 129, 0.9)';
+        } else if (pufferMonths >= 1) {
+            colorClass = 'schutzschild-tooltip--yellow';
+            lineColor = 'rgba(251, 191, 36, 0.9)';
+        } else {
+            colorClass = 'schutzschild-tooltip--red';
+            lineColor = 'rgba(239, 68, 68, 0.9)';
+        }
+
+        tooltip.classList.add(colorClass);
+
+        // Update connection line colors (both dashed, organic style)
+        const tagesgeldLine = getEl('tagesgeld-tooltip-line');
+        const shieldLine = getEl('tooltip-shield-line');
+
+        if (tagesgeldLine) {
+            tagesgeldLine.setAttribute('stroke', lineColor);
+        }
+        if (shieldLine) {
+            shieldLine.setAttribute('stroke', lineColor);
+        }
+    }
+}
+
+// ===== INLINE EDITOR FUNCTIONS (v1.4.0) =====
+
+/**
+ * Open inline editor for a specific basin
+ * @param {Event} event - Click event (to stop propagation)
+ * @param {string} basinType - 'einkommen', 'konsum', 'tagesgeld'
+ */
+function openInlineEditor(event, basinType) {
+    // Stop event propagation to prevent immediate close
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    const basin = basins[basinType];
+    if (!basin) return;
+
+    // Prevent opening if already editing
+    if (basin.querySelector('.basin-inline-editor')) return;
+
+    let editorHTML = '';
+
+    switch (basinType) {
+        case 'einkommen':
+            editorHTML = `
+                    <div class="basin-inline-editor">
+                        <div class="basin-inline-label">Nettoeinkommen</div>
+                        <input type="number"
+                               class="basin-inline-input"
+                               id="inline-income"
+                               value="${inputs.income ? inputs.income.value : 3000}"
+                               placeholder="3000"
+                               inputmode="decimal"
+                               step="100"
+                               min="0"
+                               max="1000000">
+                        <div class="basin-inline-hint">Enter zum Speichern • Esc zum Abbrechen</div>
+                        <div class="basin-inline-buttons">
+                            <button class="basin-inline-btn" onclick="closeInlineEditor('${basinType}')">Abbrechen</button>
+                            <button class="basin-inline-btn basin-inline-btn--primary" onclick="saveInlineEditor('${basinType}')">Speichern</button>
+                        </div>
+                    </div>
+                `;
+            break;
+
+        case 'konsum':
+            editorHTML = `
+                    <div class="basin-inline-editor">
+                        <div class="basin-inline-label">Konsumkonto</div>
+                        <div class="basin-inline-grid">
+                            <div class="basin-inline-field">
+                                <label class="basin-inline-label" style="font-size: 0.75rem;">Mindestbestand</label>
+                                <input type="number"
+                                       class="basin-inline-input"
+                                       id="inline-konsum-min"
+                                       value="${inputs.konsumMin ? inputs.konsumMin.value : 100}"
+                                       placeholder="100"
+                                       inputmode="decimal"
+                                       step="50"
+                                       min="0">
+                            </div>
+                            <div class="basin-inline-field">
+                                <label class="basin-inline-label" style="font-size: 0.75rem;">Überschuss</label>
+                                <input type="number"
+                                       class="basin-inline-input"
+                                       id="inline-konsum-leftover"
+                                       value="${inputs.konsumLeftover ? inputs.konsumLeftover.value : 250}"
+                                       placeholder="250"
+                                       inputmode="decimal"
+                                       step="50"
+                                       min="0">
+                            </div>
+                        </div>
+                        <div class="basin-inline-hint">Enter zum Speichern • Esc zum Abbrechen</div>
+                        <div class="basin-inline-buttons">
+                            <button class="basin-inline-btn" onclick="closeInlineEditor('${basinType}')">Abbrechen</button>
+                            <button class="basin-inline-btn basin-inline-btn--primary" onclick="saveInlineEditor('${basinType}')">Speichern</button>
+                        </div>
+                    </div>
+                `;
+            break;
+
+        case 'tagesgeld':
+            editorHTML = `
+                    <div class="basin-inline-editor">
+                        <div class="basin-inline-label">Tagesgeldkonto</div>
+                        <div class="basin-inline-grid">
+                            <div class="basin-inline-field">
+                                <label class="basin-inline-label" style="font-size: 0.75rem;">Aktueller Stand</label>
+                                <input type="number"
+                                       class="basin-inline-input"
+                                       id="inline-tagesgeld-current"
+                                       value="${inputs.tagesgeldCurrent ? inputs.tagesgeldCurrent.value : 4800}"
+                                       placeholder="4800"
+                                       inputmode="decimal"
+                                       step="100"
+                                       min="0">
+                            </div>
+                            <div class="basin-inline-field">
+                                <label class="basin-inline-label" style="font-size: 0.75rem;">Sparziel</label>
+                                <input type="number"
+                                       class="basin-inline-input"
+                                       id="inline-tagesgeld-limit"
+                                       value="${inputs.tagesgeldLimit ? inputs.tagesgeldLimit.value : 5000}"
+                                       placeholder="5000"
+                                       inputmode="decimal"
+                                       step="100"
+                                       min="0">
+                            </div>
+                        </div>
+
+                        <!-- v1.6.3: Kriegskasse Info-Button -->
+                        <button onclick="closeInlineEditor('${basinType}'); openKriegskasseModal();" class="mt-3 w-full px-3 py-2 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-md shadow-md transition-colors flex items-center justify-center gap-2" title="Warum ist eine Investitionsreserve wichtig?">
+                            <span>Warum Tagesgeld?</span>
+                        </button>
+
+                        <div class="basin-inline-hint">Enter zum Speichern • Esc zum Abbrechen</div>
+                        <div class="basin-inline-buttons">
+                            <button class="basin-inline-btn" onclick="closeInlineEditor('${basinType}')">Abbrechen</button>
+                            <button class="basin-inline-btn basin-inline-btn--primary" onclick="saveInlineEditor('${basinType}')">Speichern</button>
+                        </div>
+                    </div>
+                `;
+            break;
+    }
+
+    // Create backdrop
+    const backdrop = document.createElement('div');
+    backdrop.className = 'basin-inline-backdrop';
+    backdrop.dataset.basinType = basinType;
+    backdrop.addEventListener('click', () => closeInlineEditor(basinType));
+    document.body.appendChild(backdrop);
+
+    // Insert editor overlay into body (not basin)
+    document.body.insertAdjacentHTML('beforeend', editorHTML);
+
+    // Get editor element
+    const editor = document.body.querySelector('.basin-inline-editor:last-child');
+    if (!editor) return;
+
+    // Store basin type on editor for cleanup
+    editor.dataset.basinType = basinType;
+
+    // Prevent clicks inside editor from closing it
+    editor.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    // Focus first input
+    const firstInput = editor.querySelector('.basin-inline-input');
+    if (firstInput) {
+        setTimeout(() => firstInput.focus(), 100);
+    }
+
+    // Add keyboard handlers
+    editor.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveInlineEditor(basinType);
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeInlineEditor(basinType);
+        }
+    });
+}
+
+/**
+ * Validate and clamp numeric input to safe ranges
+ */
+function validateAmount(value, min = 0, max = 1000000) {
+    let num = parseFloat(value);
+    if (!Number.isFinite(num)) return min;
+    return Math.max(min, Math.min(max, num));
+}
+
+/**
+ * Close inline editor without saving
+ */
+function closeInlineEditor(basinType) {
+    // Find editor and backdrop by data attribute
+    const editor = document.querySelector(`.basin-inline-editor[data-basin-type="${basinType}"]`);
+    const backdrop = document.querySelector(`.basin-inline-backdrop[data-basin-type="${basinType}"]`);
+
+    if (editor) {
+        editor.style.animation = 'smoothFadeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+        setTimeout(() => editor.remove(), 250);
+    }
+
+    if (backdrop) {
+        backdrop.style.animation = 'backdropFadeOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+        setTimeout(() => backdrop.remove(), 250);
+    }
+}
+
+/**
+ * Save inline editor values and update
+ */
+function saveInlineEditor(basinType) {
+    const basin = basins[basinType];
+    if (!basin) return;
+
+    switch (basinType) {
+        case 'einkommen':
+            const incomeInput = getEl('inline-income');
+            if (incomeInput && inputs.income) {
+                inputs.income.value = validateAmount(incomeInput.value, 0, 1000000);
+            }
+            break;
+
+        case 'konsum':
+            const konsumMinInput = getEl('inline-konsum-min');
+            const konsumLeftoverInput = getEl('inline-konsum-leftover');
+            if (konsumMinInput && inputs.konsumMin) {
+                inputs.konsumMin.value = validateAmount(konsumMinInput.value, 0, 500000);
+            }
+            if (konsumLeftoverInput && inputs.konsumLeftover) {
+                inputs.konsumLeftover.value = validateAmount(konsumLeftoverInput.value, 0, 100000);
+            }
+            break;
+
+        case 'tagesgeld':
+            const tagesgeldCurrentInput = getEl('inline-tagesgeld-current');
+            const tagesgeldLimitInput = getEl('inline-tagesgeld-limit');
+            if (tagesgeldCurrentInput && inputs.tagesgeldCurrent) {
+                inputs.tagesgeldCurrent.value = validateAmount(tagesgeldCurrentInput.value, 0, 1000000);
+            }
+            if (tagesgeldLimitInput && inputs.tagesgeldLimit) {
+                inputs.tagesgeldLimit.value = validateAmount(tagesgeldLimitInput.value, 0, 1000000);
+            }
+            break;
+    }
+
+    // Close editor and recalculate
+    closeInlineEditor(basinType);
+    calculateAndUpdate();
+}
+
+// Add fadeOut animation
+const style = document.createElement('style');
+style.textContent = `
+        @keyframes fadeOutScale {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+    `;
+document.head.appendChild(style);
+
+// ===== END INLINE EDITOR =====
+
+// ===== BOOKING MODAL (v1.4.0) =====
+
+/**
+ * Open booking modal
+ */
+function openBookingModal() {
+    const modal = getEl('booking-modal');
+    const modalBody = getEl('booking-modal-body');
+
+    if (!modal || !modalBody) {
+        console.error('❌ Modal or modalBody not found');
+        return;
+    }
+
+    // Generate booking content directly in modal (v1.4.0: no sidebar)
+    modalBody.innerHTML = `
+            <div class="booking-section">
+                <div style="margin-bottom: 32px;">
+                    <h3 style="font-size: 0.875rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Buchungstyp wählen</h3>
+                    <div class="booking-types" id="booking-type-buttons"></div>
+                </div>
+                <div class="booking-calendar" id="booking-calendar"></div>
+                <div class="booking-hint" id="booking-hint" style="margin-top: 16px;"></div>
+            </div>
+        `;
+
+    // Re-initialize booking planner with new modal elements
+    setupBookingPlanner();
+
+    // Show modal
+    modal.classList.add('active');
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Close booking modal
+ */
+function closeBookingModal() {
+    const modal = getEl('booking-modal');
+    const modalBody = getEl('booking-modal-body');
+    const bookingSection = getEl('sec-booking-plan');
+    const sidebarContainer = document.querySelector('.panel-body'); // Original location
+
+    if (!modal) return;
+
+    // Move content back to sidebar (if needed for future use)
+    if (bookingSection && sidebarContainer) {
+        // Keep in modal for now, can be moved back if sidebar is restored
+    }
+
+    // Hide modal
+    modal.classList.remove('active');
+
+    // Restore body scroll
+    document.body.style.overflow = '';
+}
+
+// ===== END BOOKING MODAL =====
+
+/**
+ * Calculate all financial data (pure calculation, no rendering)
+ * @returns {Object} All calculated financial values
+ */
+function calculateFinancialData() {
+    // Vermieterkonto-Daten holen
+    const vermieterData = getVermieterkontoData();
+
+    // Basiswerte
+    const income = parseFloat(inputs.income?.value) || 0;
+    const konsumMin = parseFloat(inputs.konsumMin?.value) || 0;
+    const konsumLeftover = parseFloat(inputs.konsumLeftover?.value) || 0;
+    const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent?.value) || 0;
+    const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit?.value) || 0;
+
+    // v1.5.2: Single-pass reduce for fixkostenItems (optimized from 2 filter passes)
+    const { fixkostenTotal, depotTotal } = fixkostenItems.reduce((acc, item) => {
+        const amount = getMonthlyAmount(item);
+        if (item.target === 'fixkosten') {
+            acc.fixkostenTotal += amount;
+        } else if (item.target === 'depot') {
+            acc.depotTotal += amount;
+        }
+        return acc;
+    }, { fixkostenTotal: 0, depotTotal: 0 });
+
+    let fixkostenOnlyTotal = fixkostenTotal;
+    const depotSparplanTotal = depotTotal;
+
+    // Vermieterkonto-Integration Variante A:
+    // - Negativer Saldo: erhöht Fixkosten (Deckung)
+    // - Positiver Saldo: reduziert Fixkosten (Miete senkt Abgänge)
+    if (currentVariant === 'A') {
+        if (vermieterData.saldo < 0) {
+            fixkostenOnlyTotal += Math.abs(vermieterData.saldo);
+        } else {
+            fixkostenOnlyTotal = Math.max(0, fixkostenOnlyTotal - vermieterData.saldo);
+        }
+    } else {
+        // Variante B: Negativer Saldo erhöht Fixkosten
+        if (vermieterData.saldo < 0) {
+            fixkostenOnlyTotal += Math.abs(vermieterData.saldo);
+        }
+    }
+
+    const totalAbgang = fixkostenOnlyTotal + depotSparplanTotal;
+    // Zufluss (Inflow) in das Konsumkonto zur Skalierung der Min-Linie
+    const konsumInflow = (currentVariant === 'A')
+        ? Math.max(0, income - totalAbgang)   // Variante A: nach Abzug aller Abgänge (Fix + Sparplan)
+        : Math.max(0, income);                // Variante B: Einkommen geht direkt auf Konsum
+
+    const { tagesgeldInflow, depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
+    const finalTagesgeld = tagesgeldCurrent + tagesgeldInflow;
+    const totalDepotInflow = depotSparplanTotal + depotOverflow;
+
+    let konsumValue;
+    if (currentVariant === 'A') {
+        konsumValue = income - totalAbgang;
+    } else {
+        // Variante B: Konsum wird bei positivem Vermieterkonto-Saldo erhöht
+        konsumValue = income - totalAbgang;
+        if (vermieterData.saldo > 0) {
+            konsumValue += vermieterData.saldo;
+        }
+    }
+
+    // Immobilien-Daten berechnen
+    const gesamtwert = immobilienData.reduce((sum, immo) => sum + (immo.wert || 0), 0);
+    const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
+    const immoNettovermoegen = gesamtwert - gesamtdarlehen;
+    const anzahlImmobilien = immobilienAnzahl;
+
+    return {
+        income,
+        konsumMin,
+        konsumLeftover,
+        konsumInflow,
+        konsumValue,
+        tagesgeldCurrent,
+        tagesgeldLimit,
+        tagesgeldInflow,
+        finalTagesgeld,
+        fixkostenOnlyTotal,
+        totalAbgang,
+        depotSparplanTotal,
+        depotOverflow,
+        totalDepotInflow,
+        vermieterData,
+        gesamtwert,
+        gesamtdarlehen,
+        immoNettovermoegen,
+        anzahlImmobilien
+    };
+}
+
+/**
+ * Render all basin elements with calculated data
+ * @param {Object} data - Financial data from calculateFinancialData()
+ */
+function renderAllBasins(data) {
+    const {
+        income,
+        konsumMin,
+        konsumLeftover,
+        konsumInflow,
+        konsumValue,
+        finalTagesgeld,
+        tagesgeldLimit,
+        tagesgeldInflow,
+        totalAbgang,
+        vermieterData,
+        gesamtwert,
+        gesamtdarlehen,
+        immoNettovermoegen,
+        anzahlImmobilien
+    } = data;
+
+    renderBasin(basins.einkommen, 'Einkommen', formatCurrency(income), '<svg class="w-7 h-7 mb-1 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>');
+    renderBasin(basins.fixkosten, 'Fixkostenkonto', formatCurrency(totalAbgang), '<svg class="w-7 h-7 mb-1 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>', '(Klick zum Bearbeiten)');
+
+    // Scale the yellow min line relative to the available monthly surplus (Überschuss).
+    renderBasin(
+        basins.konsum,
+        'Konsumkonto',
+        formatCurrency(konsumValue),
+        '<svg class="w-7 h-7 mb-1 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>',
+        `Überschuss: ${formatCurrency(konsumLeftover)}`,
+        { current: konsumValue, min: konsumMin, limit: Infinity, minScaleBase: konsumInflow }
+    );
+
+    renderBasin(basins.tagesgeld, 'Tagesgeldkonto', formatCurrency(finalTagesgeld), '<svg class="w-7 h-7 mb-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>', `Zufluss: ${formatCurrency(tagesgeldInflow)}`, { current: finalTagesgeld, min: 0, limit: tagesgeldLimit });
+
+    // Use custom renderDepotBasin instead of renderBasin for fund blocks visualization
+    renderDepotBasin();
+
+    // Vermieterkonto-Basin rendern
+    renderBasin(
+        basins.vermieterkonto,
+        'Vermieterkonto',
+        formatCurrency(vermieterData.saldo),
+        '',
+        `Ein: ${formatCurrency(vermieterData.einnahmen)} | Aus: ${formatCurrency(vermieterData.ausgaben)}`,
+        {},
+        createAccountSVG()
+    );
+
+    // Immobilien-Basin rendern (Equity Meter mit Fallback)
+    try {
+        if (gesamtwert > 0 || gesamtdarlehen > 0) {
+            const eqPct = gesamtwert > 0 ? Math.max(0, Math.min(100, ((gesamtwert - gesamtdarlehen) / gesamtwert) * 100)) : 0;
+            const nColor = immoNettovermoegen >= 0 ? '#13853E' : '#C1293D';
+            const immoTitle = anzahlImmobilien > 1 ? '\u{1F3E0} ' + anzahlImmobilien + ' Immobilien' : '\u{1F3E0} Immobilie';
+            basins.immobilien.innerHTML =
+                '<div class="relative z-10 flex flex-col items-center justify-center h-full w-full" style="padding:0 12px;">' +
+                '<p class="font-bold" style="font-size:14px;margin-bottom:4px;">' + immoTitle + '</p>' +
+                '<p class="font-mono font-bold" style="font-size:18px;color:' + nColor + ';">' + formatCurrency(immoNettovermoegen) + '</p>' +
+                '<p style="font-size:10px;color:#6b7280;margin-top:-2px;margin-bottom:4px;">Netto</p>' +
+                '<div style="width:100%;height:12px;border-radius:9999px;overflow:hidden;background:rgba(227,105,30,0.3);">' +
+                '<div style="height:100%;border-radius:9999px;width:' + eqPct + '%;background:#47A190;transition:width 0.5s;"></div>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;width:100%;margin-top:4px;">' +
+                '<span style="font-size:10px;font-family:ui-monospace,monospace;color:#47A190;">' + formatCompact(gesamtwert) + '</span>' +
+                '<span style="font-size:10px;font-family:ui-monospace,monospace;color:#E3691E;">' + formatCompact(gesamtdarlehen) + '</span>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;width:100%;">' +
+                '<span style="font-size:10px;color:#6b7280;">Wert</span>' +
+                '<span style="font-size:10px;color:#6b7280;">Darlehen</span>' +
+                '</div>' +
+                '</div>';
+        } else {
+            renderBasin(basins.immobilien, 'Immobilien', '', '', '(Klick zum Bearbeiten)', {}, createHouseSVG());
+        }
+    } catch (e) {
+        console.error('Immobilien Basin render error:', e);
+        renderBasin(basins.immobilien, 'Immobilien', formatCurrency(immoNettovermoegen), '', '', {}, createHouseSVG());
+    }
+}
+
+/**
+ * Update all flow visualizations based on calculated data
+ * @param {Object} data - Financial data from calculateFinancialData()
+ */
+function updateAllFlows(data) {
+    const {
+        income,
+        konsumLeftover,
+        totalAbgang,
+        depotSparplanTotal,
+        depotOverflow,
+        vermieterData,
+        finalTagesgeld,
+        tagesgeldLimit
+    } = data;
+
+    const bothVisible = (a, b) => isVisible(a) && isVisible(b);
+
+    // v1.5.2 FIX: Calculate actual maxFlow across all potential flows for proper scaling
+    const maxFlow = Math.max(
+        income || 0,
+        Math.abs(income - totalAbgang) || 0,
+        konsumLeftover || 0,
+        depotSparplanTotal || 0,
+        depotOverflow || 0,
+        totalAbgang || 0,
+        Math.abs(vermieterData?.saldo || 0),
+        1 // Minimum to prevent division by zero
+    );
+    let show1 = false, show2 = false, showKTG = false, showTGDepot = false, showFixDepot = false;
+
+    // === Flow visibility control (consultation-aware) ===
+    if (currentVariant === 'A') {
+        // A: Einkommen -> Fixkosten -> Konsum -> Tagesgeld -> Depot; Sparrate erst Step 5
+        show1 = bothVisible(basins.einkommen, basins.fixkosten);                                      // Step 1+
+        show2 = bothVisible(basins.fixkosten, basins.konsum) && (!consultationMode || consultationStep >= 2);
+        showKTG = bothVisible(basins.konsum, basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
+        showTGDepot = bothVisible(basins.tagesgeld, basins.depot) && (!consultationMode || consultationStep >= 4);
+        showFixDepot = bothVisible(basins.fixkosten, basins.depot) && (!consultationMode || (consultationMode && allowDepotStream === true)); // Step 5 in consultation
+
+        if (show1) drawFlow('flow-path-1', basins.einkommen, basins.fixkosten, income, maxFlow);
+        else hideFlow('flow-path-1');
+
+        if (show2) drawFlow('flow-path-2', basins.fixkosten, basins.konsum, Math.max(0, income - totalAbgang), maxFlow, 'Dauerauftrag');
+        else hideFlow('flow-path-2');
+
+        if (showKTG) drawFlow('konsum-tagesgeld-flow', basins.konsum, basins.tagesgeld, konsumLeftover, maxFlow);
+        else hideFlow('konsum-tagesgeld-flow');
+
+        if (showTGDepot) drawFlow('tagesgeld-depot-flow', basins.tagesgeld, basins.depot, depotOverflow, maxFlow);
+        else hideFlow('tagesgeld-depot-flow');
+
+        if (showFixDepot) drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+        else hideFlow('fixkosten-depot-flow');
+
+    } else {
+        // B: Einkommen -> Konsum -> Fixkosten -> Tagesgeld -> Depot; Sparrate erst Step 5
+        show1 = bothVisible(basins.einkommen, basins.konsum);                                        // Step 1+
+        show2 = bothVisible(basins.konsum, basins.fixkosten) && (!consultationMode || consultationStep >= 2);
+        showKTG = bothVisible(basins.konsum, basins.tagesgeld) && (!consultationMode || consultationStep >= 3);
+        showTGDepot = bothVisible(basins.tagesgeld, basins.depot) && (!consultationMode || consultationStep >= 4);
+        showFixDepot = bothVisible(basins.fixkosten, basins.depot) && (!consultationMode || (consultationMode && allowDepotStream === true)); // Step 5 in consultation
+
+        if (show1) drawFlow('flow-path-1', basins.einkommen, basins.konsum, income, maxFlow);
+        else hideFlow('flow-path-1');
+
+        if (show2) drawFlow('flow-path-2', basins.konsum, basins.fixkosten, totalAbgang, maxFlow, 'Dauerauftrag');
+        else hideFlow('flow-path-2');
+
+        if (showKTG) drawFlow('konsum-tagesgeld-flow', basins.konsum, basins.tagesgeld, konsumLeftover, maxFlow);
+        else hideFlow('konsum-tagesgeld-flow');
+
+        if (showTGDepot) drawFlow('tagesgeld-depot-flow', basins.tagesgeld, basins.depot, depotOverflow, maxFlow);
+        else hideFlow('tagesgeld-depot-flow');
+
+        if (showFixDepot) drawFlow('fixkosten-depot-flow', basins.fixkosten, basins.depot, depotSparplanTotal, maxFlow, 'Sparrate');
+        else hideFlow('fixkosten-depot-flow');
+    }
+
+    // === Vermieterkonto Flows ===
+    const hasVermieterkontoCashflow = Math.abs(vermieterData.saldo) > 0;
+
+    if (hasVermieterkontoCashflow) {
+        if (vermieterData.saldo > 0) {
+            // Positiv: Vermieterkonto → Fixkosten (Variante A) oder Konsum (Variante B)
+            hideFlow('vermieterkonto-einkommen-flow');
+
+            if (currentVariant === 'A') {
+                if (bothVisible(basins.vermieterkonto, basins.fixkosten)) {
+                    drawFlow('fixkosten-vermieterkonto-flow', basins.vermieterkonto, basins.fixkosten, vermieterData.saldo, maxFlow, 'Miete', 0.3);
+                } else {
+                    hideFlow('fixkosten-vermieterkonto-flow');
+                }
+            } else {
+                if (bothVisible(basins.vermieterkonto, basins.konsum)) {
+                    drawFlow('fixkosten-vermieterkonto-flow', basins.vermieterkonto, basins.konsum, vermieterData.saldo, maxFlow, 'Miete', 0.3);
+                } else {
+                    hideFlow('fixkosten-vermieterkonto-flow');
+                }
+            }
+        } else {
+            // Negativ: Fixkosten → Vermieterkonto (Deckung)
+            hideFlow('vermieterkonto-einkommen-flow');
+            if (bothVisible(basins.fixkosten, basins.vermieterkonto)) {
+                drawFlow('fixkosten-vermieterkonto-flow', basins.fixkosten, basins.vermieterkonto, Math.abs(vermieterData.saldo), maxFlow, 'Deckung', 1.0);
+                const deficitPath = getEl('fixkosten-vermieterkonto-flow');
+                if (deficitPath) deficitPath.style.filter = 'opacity(0.5)';
+            } else {
+                hideFlow('fixkosten-vermieterkonto-flow');
+            }
+        }
+    } else {
+        hideFlow('vermieterkonto-einkommen-flow');
+        hideFlow('fixkosten-vermieterkonto-flow');
+    }
+
+    // Visuelle Verbindung: Immobilien <-> Vermieterkonto
+    const showImmoVermieterbindung = bothVisible(basins.immobilien, basins.vermieterkonto);
+    if (showImmoVermieterbindung) {
+        drawConnectionLine('immobilien-vermieterkonto-connection', basins.immobilien, basins.vermieterkonto);
+    } else {
+        hideFlow('immobilien-vermieterkonto-connection');
+    }
+
+    // Schutzschirm visualization
+    drawSchutzschirm(basins.tagesgeld, basins.depot);
+    const shield = getEl('schutzschirm-path');
+    if (shield) {
+        const liquidity = Math.max(0, finalTagesgeld);
+        let strength = 0;
+        if (isFinite(tagesgeldLimit) && tagesgeldLimit > 0) {
+            strength = Math.min(1, liquidity / tagesgeldLimit);
+        } else {
+            strength = liquidity > 0 ? 1 : 0;
+        }
+        if (strength > 0) {
+            const opacity = Math.max(0.25, 0.15 + 0.85 * strength);
+            shield.style.opacity = String(opacity);
+            shield.style.strokeWidth = `${2 + 2 * strength}px`;
+        } else {
+            shield.style.opacity = '0';
+        }
+    }
+
+    // v1.6.1: Update Schutzschild Info-Badge
+    updateSchutzschildBadge(finalTagesgeld, {
+        vermieterkonto: vermieterData,
+        depotSparplanTotal: depotSparplanTotal
+    });
+}
+
+/**
+ * Main update function - orchestrates calculation and rendering
+ * v1.5.2: Refactored from monolithic calculateAndUpdate()
+ */
+function calculateAndUpdate() {
+    requestAnimationFrame(() => {
+        positionCascade();
+
+        // Safety: Check if all required basin elements exist
+        if (!basins.einkommen || !basins.fixkosten || !basins.konsum ||
+            !basins.tagesgeld || !basins.depot || !basins.vermieterkonto || !basins.immobilien) {
+            console.error('[MLP ERROR] Basin elements not found. Cannot update visualization.');
+            return;
+        }
+
+        // v1.5.2: Decomposed into three focused functions
+        const data = calculateFinancialData();
+        renderAllBasins(data);
+        updateAllFlows(data);
+    });
+}
+
+// --- Projection Logic ---
+function calculateProjection() {
+    const initialDepot = parseFloat(inputs.depotCurrent.value) || 0;
+    const years = parseInt(inputs.anlagezeitraum.value, 10);
+    const depotSparplanTotal = fixkostenItems
+        .filter(i => i.target === 'depot')
+        .reduce((sum, i) => sum + getMonthlyAmount(i), 0);
+    const tagesgeldCurrent = parseFloat(inputs.tagesgeldCurrent.value) || 0;
+    const tagesgeldLimit = parseFloat(inputs.tagesgeldLimit.value) || 0;
+    const konsumLeftover = parseFloat(inputs.konsumLeftover.value) || 0;
+    const { depotOverflow } = calculateOverflow(konsumLeftover, tagesgeldCurrent, tagesgeldLimit);
+    const monthlyInvestment = depotSparplanTotal + depotOverflow;
+
+    const dataRangeRaw = (renditeExtremes && renditeExtremes[years]) || getRenditeDataForPeriod(years);
+    const stats = dataRangeRaw ? (dataRangeRaw.mean === undefined ? buildRenditeStat(dataRangeRaw.min, dataRangeRaw.max) : dataRangeRaw) : null;
+
+    const fallbackMin = stats ? stats.min : 0;
+    const fallbackMax = stats ? stats.max : fallbackMin;
+    const fallbackMean = stats ? stats.mean : (fallbackMin + fallbackMax) / 2;
+
+    const selectedRendite = Number(inputs.rendite.value);
+    const normalizedSelected = Number.isFinite(selectedRendite) ? clamp(selectedRendite, fallbackMin, fallbackMax) : fallbackMean;
+    const returnAvg = normalizedSelected / 100;
+    const returnMin = fallbackMin / 100;
+    const returnMax = fallbackMax / 100;
+
+    const dataAvg = calculateCompoundInterest(initialDepot, monthlyInvestment, years, returnAvg);
+    const dataMin = calculateCompoundInterest(initialDepot, monthlyInvestment, years, returnMin);
+    const dataMax = calculateCompoundInterest(initialDepot, monthlyInvestment, years, returnMax);
+
+    displayProjectionChart({
+        labels: dataAvg.labels,
+        datasets: [
+            { label: 'Pessimistisch', data: dataMin.capitalData, color: '#ef4444' },
+            { label: 'Erwartet', data: dataAvg.capitalData, color: '#3b82f6' },
+            { label: 'Optimistisch', data: dataMax.capitalData, color: '#22c55e' },
+            { label: 'Einzahlungen', data: dataAvg.contributionsData, color: '#6b7280' }
+        ]
+    });
+    const summaryEl = getEl('prognose-summary');
+    if (summaryEl) {
+        summaryEl.innerHTML = `
+            <p>Nach <span class="font-bold">${years} Jahren</span> könnte dein Vermögen zwischen <span class="font-bold text-red-400">${formatCurrency(dataMin.totalCapital)}</span> und <span class="font-bold text-green-400">${formatCurrency(dataMax.totalCapital)}</span> liegen.</p>
+            <p>Deine erwartete Prognose liegt bei <span class="font-bold text-blue-400 text-lg">${formatCurrency(dataAvg.totalCapital)}</span>, basierend auf ${formatCurrency(dataAvg.totalContributions)} Einzahlungen.</p>
+        `;
+    }
+    // NICHT automatisch Modal öffnen (v1.4.0) - nur bei explizitem Button-Klick
+}
+
+// v1.4.0: Separate Funktion um Prognose zu berechnen UND Modal zu öffnen
+function showProjection() {
+    calculateProjection();
+    openModal('prognose-modal');
+}
+
+function calculateCompoundInterest(initial, monthly, years, annualRate) {
+    const monthlyRate = annualRate / 12;
+    let totalCapital = initial;
+    let totalContributions = initial;
+    const labels = ['Start'];
+    const capitalData = [initial];
+    const contributionsData = [initial];
+
+    for (let i = 1; i <= years; i++) {
+        for (let j = 0; j < 12; j++) {
+            totalCapital = totalCapital * (1 + monthlyRate) + monthly;
+            totalContributions += monthly;
+        }
+        labels.push(`Jahr ${i}`);
+        capitalData.push(totalCapital);
+        contributionsData.push(totalContributions);
+    }
+    return { labels, capitalData, contributionsData, totalCapital, totalContributions };
+}
+
+function displayProjectionChart({ labels, datasets }) {
+    const ctx = getEl('prognose-chart')?.getContext('2d');
+    if (!ctx) {
+        console.error('[MLP ERROR] Chart canvas not found');
+        return;
+    }
+
+    // Safety: Check before destroying chart instance
+    if (prognoseChartInstance) {
+        prognoseChartInstance.destroy();
+        prognoseChartInstance = null;
+    }
+
+    const chartDatasets = datasets.map(ds => {
+        // Custom styling for pessimistic and optimistic
+        if (ds.label === 'Pessimistisch') {
+            return {
+                label: ds.label,
+                data: ds.data,
+                borderWidth: 1.5,                // dünner
+                borderColor: 'rgba(239,68,68,0.3)', // rot mit hoher Transparenz
+                borderDash: [6, 6],              // gestrichelt
+                pointRadius: 0,                  // keine Punkte
+                fill: false,
+                tension: 0.1
+            };
+        } else if (ds.label === 'Optimistisch') {
+            return {
+                label: ds.label,
+                data: ds.data,
+                borderWidth: 1.5,                // dünner
+                borderColor: 'rgba(34,197,94,0.3)', // grün mit hoher Transparenz
+                borderDash: [6, 6],              // gestrichelt
+                pointRadius: 0,                  // keine Punkte
+                fill: false,
+                tension: 0.1
+            };
+        } else {
+            // Erwartet (blue), Einzahlungen (gray dashed): unchanged
+            return {
+                label: ds.label,
+                data: ds.data,
+                borderColor: ds.color,
+                borderDash: ds.label.includes('Einzahlungen') ? [5, 5] : [],
+                fill: false,
+                tension: 0.1
+            };
+        }
+    });
+
+    prognoseChartInstance = new Chart(ctx, {
+        type: 'line', data: { labels: labels, datasets: chartDatasets },
+        options: {
+            responsive: true, plugins: { legend: { labels: { color: '#d1d5db' } }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatCurrency(c.raw)}` } } },
+            scales: { x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#9ca3af', callback: (v) => formatCurrency(v) }, grid: { color: 'rgba(255,255,255,0.1)' } } }
+        }
+    });
+}
+
+// --- Other Helpers ---
+function setRendite(value) { inputs.rendite.value = value; }
+
+function getRenditeDataForPeriod(jahre) {
+    const key = [1, 5, 10, 15, 20, 25, 30].reduce((prev, curr) => (Math.abs(curr - jahre) < Math.abs(prev - jahre) ? curr : prev));
+    return renditeData[key];
+}
+
+function updateRenditeSuggestions(jahre) {
+    let source = null;
+    if (renditeExtremes && renditeExtremes[jahre]) {
+        source = renditeExtremes[jahre];
+    } else {
+        source = getRenditeDataForPeriod(jahre);
+    }
+    if (!source) return;
+
+    const stats = source.mean === undefined ? buildRenditeStat(source.min, source.max) : source;
+    const infoEl = getEl('rendite-info');
+    const mostLikely = roundToDecimal(stats.mean);
+
+    // BUGFIX (PDF): NEVER overwrite user's input - only show suggestion
+    // User must manually copy suggestion if they want it
+    // Old behavior: inputs.rendite.value = mostLikely.toFixed(1); // ❌ REMOVED
+
+    const colorClass = (v) => (v < 0 ? 'text-red-400' : (v < 3 ? 'text-yellow-400' : 'text-green-400'));
+    const minSpan = `<span class="font-bold ${colorClass(stats.min)}">${stats.min}%</span>`;
+    const maxSpan = `<span class="font-bold ${colorClass(stats.max)}">${stats.max}%</span>`;
+
+    if (infoEl) {
+        // Show suggestion with "empfohlen" hint, but don't auto-fill
+        infoEl.innerHTML = `Historische Spanne p.a.: ${minSpan} bis ${maxSpan}<br><span class="font-bold text-blue-400">Empfohlen (Normal): ${mostLikely.toFixed(1)}%</span>`;
+    }
+}
+
+function createGrowthChartSVG() { return `<svg viewBox="0 0 100 60" class="w-20 h-12 mb-1"><rect x="10" y="40" width="15" height="20" fill="#3b82f6" opacity="0.6"></rect><rect x="30" y="30" width="15" height="30" fill="#3b82f6" opacity="0.8"></rect><rect x="50" y="20" width="15" height="40" fill="#3b82f6"></rect><rect x="70" y="10" width="15" height="50" fill="#6366f1"></rect></svg>`; }
+
+// Häuschen-SVG für Immobilien-Basin (minimalistisches Design)
+function createHouseSVG() {
+    return `<svg viewBox="0 0 100 100" class="w-16 h-16 mb-1">
+            <!-- Dach -->
+            <path d="M 10 50 L 50 20 L 90 50 Z" fill="#f59e0b" opacity="0.9"/>
+            <!-- Haus -->
+            <rect x="20" y="50" width="60" height="45" fill="#3b82f6" opacity="0.8"/>
+            <!-- Tür -->
+            <rect x="55" y="70" width="15" height="25" fill="#1e3a8a" opacity="0.9"/>
+            <!-- Fenster links -->
+            <rect x="30" y="60" width="12" height="12" fill="#fbbf24" opacity="0.7"/>
+            <!-- Fenster rechts -->
+            <rect x="58" y="60" width="12" height="12" fill="#fbbf24" opacity="0.7"/>
+        </svg>`;
+}
+
+// SVG für Vermieterkonto (Verrechnungskonto-Icon)
+function createAccountSVG() {
+    return `<svg viewBox="0 0 100 60" class="w-16 h-12 mb-1">
+            <!-- Konto-Karte -->
+            <rect x="10" y="15" width="80" height="30" rx="4" fill="#3b82f6" opacity="0.85" stroke="#60a5fa" stroke-width="2"/>
+            <!-- Magnetstreifen -->
+            <rect x="10" y="25" width="80" height="8" fill="#1e3a8a" opacity="0.9"/>
+            <!-- Chip -->
+            <rect x="20" y="35" width="12" height="10" rx="2" fill="#fbbf24" opacity="0.8"/>
+            <!-- Flow-Pfeile (rein/raus) -->
+            <path d="M 5 30 L 10 30" stroke="#10b981" stroke-width="2" opacity="0.7"/>
+            <path d="M 90 30 L 95 30" stroke="#ef4444" stroke-width="2" opacity="0.7"/>
+        </svg>`;
+}
+
+function calculateOverflow(inflow, current, limit) { if (limit <= 0) return { tagesgeldInflow: inflow, depotOverflow: 0 }; const potential = current + inflow; if (potential <= limit) return { tagesgeldInflow: inflow, depotOverflow: 0 }; const overflow = potential - limit; return { tagesgeldInflow: inflow - overflow, depotOverflow: overflow }; }
+const modalFocusableSelectors = 'a[href], area[href], button:not([disabled]), input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])';
+const modalFocusState = { activeModal: null, lastFocusedElement: null };
+
+function openModal(modalId) {
+    const modal = getEl(modalId);
+    if (!modal) {
+        console.error('Modal not found:', modalId);
+        return;
+    }
+
+    console.log('Opening modal:', modalId);
+
+    const activeElement = document.activeElement;
+    modalFocusState.lastFocusedElement = (activeElement && typeof activeElement.focus === 'function') ? activeElement : null;
+
+    modal.classList.add('modal-active');
+    modal.removeAttribute('aria-hidden');
+    modalFocusState.activeModal = modal;
+
+    const mainRegion = getEl('main-content');
+    if (mainRegion) mainRegion.setAttribute('aria-hidden', 'true');
+
+    const focusable = getFocusableElements(modal);
+    const focusTarget = modal.querySelector('[tabindex="-1"]') || focusable[0] || modal;
+    window.requestAnimationFrame(() => {
+        if (focusTarget && typeof focusTarget.focus === 'function') focusTarget.focus();
+    });
+
+    document.addEventListener('keydown', handleModalKeydown, true);
+}
+
+function closeModal(modalId) {
+    const modal = getEl(modalId);
+    if (!modal) return;
+
+    modal.classList.remove('modal-active');
+    modal.setAttribute('aria-hidden', 'true');
+
+    if (modalFocusState.activeModal && modalFocusState.activeModal.id === modalId) {
+        const mainRegion = getEl('main-content');
+        if (mainRegion) mainRegion.removeAttribute('aria-hidden');
+
+        document.removeEventListener('keydown', handleModalKeydown, true);
+        modalFocusState.activeModal = null;
+
+        const returnFocus = modalFocusState.lastFocusedElement;
+        modalFocusState.lastFocusedElement = null;
+        if (returnFocus && typeof returnFocus.focus === 'function') returnFocus.focus();
+    }
+}
+
+function handleModalKeydown(event) {
+    const modal = modalFocusState.activeModal;
+    if (!modal) return;
+
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        closeModal(modal.id);
+        return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const focusable = getFocusableElements(modal);
+    if (!focusable.length) {
+        event.preventDefault();
+        const fallback = modal.querySelector('[tabindex="-1"]') || modal;
+        if (fallback && typeof fallback.focus === 'function') fallback.focus();
+        return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const activeElement = document.activeElement;
+
+    if (event.shiftKey) {
+        if (activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        }
+    } else if (activeElement === last) {
+        event.preventDefault();
+        first.focus();
+    }
+}
+
+function getFocusableElements(modal) {
+    return Array.from(modal.querySelectorAll(modalFocusableSelectors)).filter(isElementFocusable);
+}
+
+function isElementFocusable(el) {
+    if (!el || el.hasAttribute('disabled')) return false;
+    if (el.getAttribute('tabindex') === '-1') return false;
+    if (el.getAttribute('aria-hidden') === 'true') return false;
+    return isVisible(el);
+}
+
+// ===== v1.6.2: COST-AVERAGE-EFFEKT ERKLÄRER (REDESIGNED) =====
+
+// Kursdaten (aus Excel-Tool)
+const courseData = {
+    A: [10.0, 13.0, 13.5, 16.0, 17.0, 16.0, 17.0, 16.5, 18.0, 18.9], // Stabil steigend
+    B: [9.0, 10.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]  // Volatil schwankend mit CRASH (10 Jahre: J0-J9)
+};
+
+// v1.7.1: Default course data for reset functionality
+const defaultCourseData = {
+    A: [10.0, 13.0, 13.5, 16.0, 17.0, 16.0, 17.0, 16.5, 18.0, 18.9],
+    B: [9.0, 10.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]
+};
+
+let caChartA = null;
+let caChartB = null;
+let animationRunning = false;
+let currentMonth = 0; // Track current animation step
+let totalSharesA = 0;
+let totalSharesB = 0;
+let totalInvestedA = 0;
+let totalInvestedB = 0;
+
+// v1.7.1: Edit mode state
+let editModeEnabled = false;
+
+function openCostAverageModal() {
+    // v1.7.2: Mark as visited for PDF inclusion
+    markErklaererBesucht('costAverage');
+
+    // Reset to Phase 1
+    document.getElementById('ca-phase-1').style.display = 'block';
+    document.getElementById('ca-phase-3').style.display = 'none';
+
+    // Reset animation state
+    currentMonth = 0;
+    totalSharesA = 0;
+    totalSharesB = 0;
+    totalInvestedA = 0;
+    totalInvestedB = 0;
+    animationRunning = false;
+
+    // Reset counters
+    resetCounters();
+
+    // Clear share bars
+    document.getElementById('ca-share-bars-a').innerHTML = '';
+    document.getElementById('ca-share-bars-b').innerHTML = '';
+
+    // Initialize both charts
+    initSideBySideCharts();
+
+    // Add click handlers to boxes (instead of button)
+    const boxA = document.getElementById('ca-box-a');
+    const boxB = document.getElementById('ca-box-b');
+    if (boxA) boxA.onclick = startCostAverageAnimation;
+    if (boxB) boxB.onclick = startCostAverageAnimation;
+
+    // Open modal
+    openModal('cost-average-modal');
+}
+
+function closeCostAverageModal() {
+    closeModal('cost-average-modal');
+    // Destroy charts to free memory
+    if (caChartA) { caChartA.destroy(); caChartA = null; }
+    if (caChartB) { caChartB.destroy(); caChartB = null; }
+}
+
+function resetCounters() {
+    ['a', 'b'].forEach(course => {
+        document.getElementById(`ca-month-${course}`).textContent = '0 / 10';
+        document.getElementById(`ca-invested-${course}`).textContent = '0 €';
+        document.getElementById(`ca-shares-${course}`).textContent = '0';
+    });
+}
+
+function initSideBySideCharts() {
+    // Chart A (Stable)
+    const ctxA = document.getElementById('ca-chart-a');
+    if (ctxA) {
+        if (caChartA) caChartA.destroy();
+
+        caChartA = new Chart(ctxA, {
+            type: 'line',
+            data: {
+                labels: ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
+                datasets: [{
+                    label: 'Kurs A',
+                    data: courseData.A,
+                    borderColor: '#033D5D',
+                    backgroundColor: 'rgba(3, 61, 93, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: editModeEnabled ? 8 : 4,
+                    pointHoverRadius: editModeEnabled ? 10 : 6,
+                    // v1.7.1: dragData plugin configuration
+                    dragData: editModeEnabled
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `Kurs: ${context.parsed.y.toFixed(2)} €`;
+                            }
+                        }
+                    },
+                    // v1.7.1: dragData plugin options
+                    dragData: {
+                        round: 2,
+                        showTooltip: true,
+                        dragX: false,
+                        onDragStart: function (e, datasetIndex, index, value) {
+                            // Show save button when drag starts
+                            document.getElementById('save-course-btn').style.display = 'inline-block';
+                        },
+                        onDrag: function (e, datasetIndex, index, value) {
+                            // Update courseData in real-time
+                            courseData.A[index] = Math.max(0, Math.min(20, value));
+                        },
+                        onDragEnd: function (e, datasetIndex, index, value) {
+                            // Clamp to 0-20 range
+                            const clampedValue = Math.max(0, Math.min(20, value));
+                            courseData.A[index] = clampedValue;
+                            caChartA.data.datasets[0].data[index] = clampedValue;
+                            caChartA.update();
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 0,
+                        max: 20,
+                        title: { display: true, text: 'Kurs in €' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Jahr' }
+                    }
+                },
+                // v1.7.1: Change cursor when in edit mode
+                onHover: function (event, activeElements) {
+                    event.native.target.style.cursor = editModeEnabled && activeElements.length ? 'grab' : 'pointer';
+                }
+            }
+        });
+    }
+
+    // Chart B (Volatile)
+    const ctxB = document.getElementById('ca-chart-b');
+    if (ctxB) {
+        if (caChartB) caChartB.destroy();
+
+        caChartB = new Chart(ctxB, {
+            type: 'line',
+            data: {
+                labels: ['J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10'],
+                datasets: [{
+                    label: 'Kurs B',
+                    data: courseData.B,
+                    borderColor: '#C1293D',
+                    backgroundColor: 'rgba(193, 41, 61, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: editModeEnabled ? 8 : 4,
+                    pointHoverRadius: editModeEnabled ? 10 : 6,
+                    // v1.7.1: dragData plugin configuration
+                    dragData: editModeEnabled
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `Kurs: ${context.parsed.y.toFixed(2)} €`;
+                            }
+                        }
+                    },
+                    // v1.7.1: dragData plugin options
+                    dragData: {
+                        round: 2,
+                        showTooltip: true,
+                        dragX: false,
+                        onDragStart: function (e, datasetIndex, index, value) {
+                            // Show save button when drag starts
+                            document.getElementById('save-course-btn').style.display = 'inline-block';
+                        },
+                        onDrag: function (e, datasetIndex, index, value) {
+                            // Update courseData in real-time
+                            courseData.B[index] = Math.max(0, Math.min(20, value));
+                        },
+                        onDragEnd: function (e, datasetIndex, index, value) {
+                            // Clamp to 0-20 range
+                            const clampedValue = Math.max(0, Math.min(20, value));
+                            courseData.B[index] = clampedValue;
+                            caChartB.data.datasets[0].data[index] = clampedValue;
+                            caChartB.update();
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 0,
+                        max: 20,
+                        title: { display: true, text: 'Kurs in €' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Jahr' }
+                    }
+                },
+                // v1.7.1: Change cursor when in edit mode
+                onHover: function (event, activeElements) {
+                    event.native.target.style.cursor = editModeEnabled && activeElements.length ? 'grab' : 'pointer';
+                }
+            }
+        });
+    }
+}
+
+function startCostAverageAnimation() {
+    // NEW: Click-by-click animation instead of automatic
+    if (currentMonth >= 10) {
+        // All months done, show results
+        document.getElementById('ca-phase-1').style.display = 'none';
+        document.getElementById('ca-phase-3').style.display = 'block';
+        showResults();
+        return;
+    }
+
+    currentMonth++;
+    animateNextMonth(currentMonth);
+
+    // Update button text
+    const btn = document.getElementById('ca-start-btn');
+    if (currentMonth < 10) {
+        btn.textContent = `▶ Monat ${currentMonth + 1} starten`;
+    } else {
+        btn.textContent = '✅ Ergebnis anzeigen';
+    }
+}
+
+function animateNextMonth(month) {
+    const monthlyRate = 1200;
+
+    // Course A
+    const priceA = courseData.A[month - 1];
+    const sharesBoughtA = monthlyRate / priceA;
+    totalInvestedA += monthlyRate;
+    totalSharesA += sharesBoughtA;
+
+    // Course B
+    const priceB = courseData.B[month - 1];
+    const sharesBoughtB = monthlyRate / priceB;
+    totalInvestedB += monthlyRate;
+    totalSharesB += sharesBoughtB;
+
+    // Update counters
+    document.getElementById('ca-month-a').textContent = `${month} / 10`;
+    document.getElementById('ca-invested-a').textContent = `${totalInvestedA.toLocaleString('de-DE')} €`;
+    document.getElementById('ca-shares-a').textContent = totalSharesA.toFixed(0);
+
+    document.getElementById('ca-month-b').textContent = `${month} / 10`;
+    document.getElementById('ca-invested-b').textContent = `${totalInvestedB.toLocaleString('de-DE')} €`;
+    document.getElementById('ca-shares-b').textContent = totalSharesB.toFixed(0);
+
+    // Update share bars (fixed positions, not scrolling)
+    updateShareBar('a', month, priceA, sharesBoughtA);
+    updateShareBar('b', month, priceB, sharesBoughtB, month === 2); // Highlight crash month
+
+    // Highlight current month in charts
+    highlightMonthInCharts(month);
+}
+
+function updateShareBar(course, month, price, shares, isCrash = false) {
+    const container = document.getElementById(`ca-share-bars-${course}`);
+    if (!container) return;
+
+    // Check if bar for this month already exists
+    let bar = container.querySelector(`[data-month="${month}"]`);
+    if (!bar) {
+        // Create placeholder bars for all 10 years on first call
+        if (container.children.length === 0) {
+            for (let m = 1; m <= 10; m++) {
+                const placeholderBar = document.createElement('div');
+                placeholderBar.setAttribute('data-month', m);
+                placeholderBar.className = 'flex items-center gap-2 text-sm';
+                placeholderBar.style.opacity = '0.3';
+                placeholderBar.style.minHeight = '32px';
+
+                const color = course === 'a' ? '#033D5D' : '#C1293D';
+                placeholderBar.innerHTML = `
+                        <span class="text-gray-400 w-16">J${m}:</span>
+                        <div class="flex-1 bg-gray-100 rounded-full h-6"></div>
+                        <span class="w-24 text-right text-gray-400">— 🛒</span>
+                    `;
+                container.appendChild(placeholderBar);
+            }
+        }
+        bar = container.querySelector(`[data-month="${month}"]`);
+    }
+
+    // Calculate bar width (relative to max possible shares ~600)
+    const maxWidth = 100;
+    const barWidth = Math.min((shares / 600) * maxWidth, maxWidth);
+
+    const color = course === 'a' ? '#033D5D' : '#C1293D';
+
+    // Update bar with actual data
+    bar.style.opacity = '1';
+    bar.style.minHeight = '32px';
+
+    // Update bar HTML (NO crash background, just emoji highlight)
+    bar.innerHTML = `
+            <span class="text-gray-600 w-16">J${month}:</span>
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative overflow-hidden">
+                <div style="width: ${barWidth}%; background: ${color}; height: 100%; border-radius: 9999px; transition: width 0.5s ease;"></div>
+            </div>
+            <span class="w-24 text-right font-bold" style="color: ${color};">${shares.toFixed(0)} 🛒</span>
+            ${isCrash ? '<span class="text-lg">💥</span>' : ''}
+        `;
+}
+
+function highlightMonthInCharts(month) {
+    // Highlight current month point in both charts
+    if (caChartA && caChartA.data.datasets[0]) {
+        // Reset all point radii
+        caChartA.data.datasets[0].pointRadius = new Array(10).fill(4);
+        caChartA.data.datasets[0].pointBackgroundColor = new Array(10).fill('#033D5D');
+
+        // Highlight current month
+        caChartA.data.datasets[0].pointRadius[month - 1] = 10;
+        caChartA.data.datasets[0].pointBackgroundColor[month - 1] = '#47A190';
+        caChartA.update();
+    }
+
+    if (caChartB && caChartB.data.datasets[0]) {
+        // Reset all point radii
+        caChartB.data.datasets[0].pointRadius = new Array(10).fill(4);
+        caChartB.data.datasets[0].pointBackgroundColor = new Array(10).fill('#C1293D');
+
+        // Highlight current month (extra emphasis on crash month)
+        caChartB.data.datasets[0].pointRadius[month - 1] = month === 2 ? 12 : 10;
+        caChartB.data.datasets[0].pointBackgroundColor[month - 1] = month === 2 ? '#E3691E' : '#47A190';
+        caChartB.update();
+    }
+}
+
+function showResults() {
+    // Calculate results for both courses
+    const results = {};
+    ['A', 'B'].forEach(course => {
+        const monthlyRate = 1200;
+        const courseValues = courseData[course];
+        const finalPrice = courseValues[courseValues.length - 1];
+        let totalShares = 0;
+
+        courseValues.forEach(price => {
+            totalShares += monthlyRate / price;
+        });
+
+        const totalInvested = 12000;
+        const endValue = totalShares * finalPrice;
+        const profit = endValue - totalInvested;
+        const returnPercent = ((profit / totalInvested) * 100).toFixed(1);
+
+        results[course] = {
+            shares: totalShares.toFixed(2),
+            endPrice: finalPrice.toFixed(2),
+            endValue: endValue.toFixed(2),
+            profit: profit.toFixed(2),
+            returnPercent
+        };
+    });
+
+    // Update HTML
+    document.getElementById('ca-result-shares-a').textContent = results.A.shares;
+    document.getElementById('ca-result-endprice-a').textContent = `${results.A.endPrice} €`;
+    document.getElementById('ca-result-value-a').textContent = `${parseFloat(results.A.endValue).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+    document.getElementById('ca-result-profit-a').textContent = `${parseFloat(results.A.profit).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+    document.getElementById('ca-result-return-a').textContent = `${results.A.returnPercent}%`;
+
+    document.getElementById('ca-result-shares-b').textContent = results.B.shares;
+    document.getElementById('ca-result-endprice-b').textContent = `${results.B.endPrice} €`;
+    document.getElementById('ca-result-value-b').textContent = `${parseFloat(results.B.endValue).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+    document.getElementById('ca-result-profit-b').textContent = `${parseFloat(results.B.profit).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+    document.getElementById('ca-result-return-b').textContent = `${results.B.returnPercent}%`;
+}
+
+// ===== v1.7.1: EDIT MODE FUNCTIONS =====
+
+function toggleEditMode() {
+    editModeEnabled = !editModeEnabled;
+
+    const toggleBtn = document.getElementById('edit-mode-toggle-btn');
+    const saveBtn = document.getElementById('save-course-btn');
+    const hint = document.getElementById('edit-mode-hint');
+
+    if (editModeEnabled) {
+        // Enable edit mode
+        toggleBtn.textContent = '🔒 Bearbeitung beenden';
+        toggleBtn.style.background = '#ef4444'; // red
+        hint.style.display = 'inline';
+
+        // Reinit charts with drag enabled
+        initSideBySideCharts();
+    } else {
+        // Disable edit mode
+        toggleBtn.textContent = '📝 Bearbeitungsmodus';
+        toggleBtn.style.background = 'var(--mlp-corporate-blue)';
+        hint.style.display = 'none';
+        saveBtn.style.display = 'none';
+
+        // Reinit charts with drag disabled
+        initSideBySideCharts();
+    }
+}
+
+function saveCourseData() {
+    // Validate all values are within range
+    const validateRange = (arr) => arr.every(v => v >= 0 && v <= 20);
+
+    if (!validateRange(courseData.A) || !validateRange(courseData.B)) {
+        alert('Fehler: Alle Kurswerte müssen zwischen 0€ und 20€ liegen!');
+        return;
+    }
+
+    // Reset animation to start fresh with new data
+    currentMonth = 0;
+    totalSharesA = 0;
+    totalSharesB = 0;
+    totalInvestedA = 0;
+    totalInvestedB = 0;
+    animationRunning = false;
+
+    // Clear share bars
+    document.getElementById('ca-share-bars-a').innerHTML = '';
+    document.getElementById('ca-share-bars-b').innerHTML = '';
+
+    // Reset counters
+    resetCounters();
+
+    // Reinit charts with new data
+    initSideBySideCharts();
+
+    // Hide save button
+    document.getElementById('save-course-btn').style.display = 'none';
+
+    // Show success message
+    alert('✅ Kursverlauf gespeichert! Animation wurde zurückgesetzt.');
+
+    console.log('📊 Course data saved:', {
+        A: courseData.A,
+        B: courseData.B
+    });
+}
+
+function resetToDefaultCourse() {
+    if (!confirm('Möchten Sie die Kursverläufe wirklich zurücksetzen?')) {
+        return;
+    }
+
+    // Reset to default values
+    courseData.A = [...defaultCourseData.A];
+    courseData.B = [...defaultCourseData.B];
+
+    // Reset animation
+    currentMonth = 0;
+    totalSharesA = 0;
+    totalSharesB = 0;
+    totalInvestedA = 0;
+    totalInvestedB = 0;
+    animationRunning = false;
+
+    // Clear share bars
+    document.getElementById('ca-share-bars-a').innerHTML = '';
+    document.getElementById('ca-share-bars-b').innerHTML = '';
+
+    // Reset counters
+    resetCounters();
+
+    // Reinit charts
+    initSideBySideCharts();
+
+    // Hide save button
+    document.getElementById('save-course-btn').style.display = 'none';
+
+    alert('✅ Kursverläufe wurden zurückgesetzt!');
+
+    console.log('🔄 Course data reset to defaults');
+}
+
+// ===== END v1.7.1: EDIT MODE FUNCTIONS =====
+
+// ===== END COST-AVERAGE-EFFEKT ERKLÄRER =====
+
+// ===== v1.6.3: KRIEGSKASSE (INVESTITIONSRESERVE) ERKLÄRER =====
+
+// Market data: Reuse courseData.B (volatile with crash)
+// Year progression: [10, 2, 4, 6.5, 8, 10.5, 9, 11, 10, 10.5]
+// Crash at year 2: 10 → 2 (-80%), then recovery
+
+let kriegskasseChart = null;
+let kriegskasseCurrentYear = 0;
+let kriegskasseAnimRunning = false;
+let kriegskasseInflowEnabled = true; // Toggle for 6k/year inflow
+
+// Scenario A: WITHOUT Tagesgeld (panic sell + late re-entry) - All 40k in market
+let scenarioA = {
+    portfolio: 40000, // All 40k invested (no reserve)
+    tagesgeld: 0,     // No Tagesgeld reserve
+    soldAt: null,     // Price when sold
+    reentryAt: null,  // Price when re-entered
+    cashFromSale: 0,  // Cash after panic sell
+    timeline: []
+};
+
+// Scenario B: WITH Tagesgeld (hold through) - 10k market + 30k reserve
+let scenarioB = {
+    portfolio: 10000,
+    tagesgeld: 30000,
+    tagesgeldInflow: 6000,  // 500€/month = 6000€/year
+    timeline: []
+};
+
+// Scenario C: WITH Tagesgeld + Active buying in crash - 10k market + 30k reserve
+let scenarioC = {
+    portfolio: 10000,       // Initial portfolio
+    tagesgeld: 30000,       // Tagesgeld reserve
+    tagesgeldInflow: 6000,  // 500€/month = 6000€/year
+    boughtInCrash: false,   // Track if already bought
+    crashBuyAmount: 0,      // Amount bought in crash
+    timeline: []
+};
+
+function openKriegskasseModal() {
+    // Reset to Phase 1
+    document.getElementById('kriegskasse-phase-1').style.display = 'block';
+    document.getElementById('kriegskasse-phase-2').style.display = 'none';
+
+    // Reset animation state
+    kriegskasseCurrentYear = 0;
+    kriegskasseAnimRunning = false;
+
+    // Reset scenarios
+    scenarioA = {
+        portfolio: 40000,
+        tagesgeld: 0,
+        soldAt: null,
+        reentryAt: null,
+        cashFromSale: 0,
+        timeline: []
+    };
+    scenarioB = {
+        portfolio: 10000,
+        tagesgeld: 30000,
+        tagesgeldInflow: 6000,
+        timeline: []
+    };
+    scenarioC = {
+        portfolio: 10000,
+        tagesgeld: 30000,
+        tagesgeldInflow: 6000,
+        boughtInCrash: false,
+        crashBuyAmount: 0,
+        timeline: []
+    };
+
+    // Reset counters
+    document.getElementById('kriegskasse-year-a').textContent = '0 / 9';
+    document.getElementById('kriegskasse-year-b').textContent = '0 / 9';
+    document.getElementById('kriegskasse-year-c').textContent = '0 / 9';
+
+    // Clear timelines
+    document.getElementById('kriegskasse-timeline-a').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+    document.getElementById('kriegskasse-timeline-b').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+    document.getElementById('kriegskasse-timeline-c').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+
+    // Initialize all three charts
+    initKriegskasseCharts();
+
+    // Add click handlers to boxes
+    const boxA = document.getElementById('kriegskasse-box-a');
+    const boxB = document.getElementById('kriegskasse-box-b');
+    const boxC = document.getElementById('kriegskasse-box-c');
+    if (boxA) boxA.onclick = startKriegskasseAnimation;
+    if (boxB) boxB.onclick = startKriegskasseAnimation;
+    if (boxC) boxC.onclick = startKriegskasseAnimation;
+
+    // Add toggle handler (remove old one first to prevent duplicates)
+    const inflowToggle = document.getElementById('kriegskasse-inflow-toggle');
+    if (inflowToggle) {
+        // Remove any existing listener by cloning and replacing the element
+        const newToggle = inflowToggle.cloneNode(true);
+        inflowToggle.parentNode.replaceChild(newToggle, inflowToggle);
+
+        newToggle.addEventListener('change', function () {
+            kriegskasseInflowEnabled = this.checked;
+            // Reset animation when toggled
+            resetKriegskasseAnimation();
+        });
+    }
+
+    // Open modal
+    openModal('kriegskasse-modal');
+}
+
+function resetKriegskasseAnimation() {
+    // Reset to initial state
+    kriegskasseCurrentYear = 0;
+    kriegskasseAnimRunning = false;
+
+    // Reset scenarios
+    scenarioA = {
+        portfolio: 40000,
+        tagesgeld: 0,
+        soldAt: null,
+        reentryAt: null,
+        cashFromSale: 0,
+        timeline: []
+    };
+    scenarioB = {
+        portfolio: 10000,
+        tagesgeld: 30000,
+        tagesgeldInflow: kriegskasseInflowEnabled ? 6000 : 0,
+        timeline: []
+    };
+    scenarioC = {
+        portfolio: 10000,
+        tagesgeld: 30000,
+        tagesgeldInflow: kriegskasseInflowEnabled ? 6000 : 0,
+        boughtInCrash: false,
+        crashBuyAmount: 0,
+        timeline: []
+    };
+
+    // Reset counters
+    document.getElementById('kriegskasse-year-a').textContent = '0 / 9';
+    document.getElementById('kriegskasse-year-b').textContent = '0 / 9';
+    document.getElementById('kriegskasse-year-c').textContent = '0 / 9';
+
+    // Clear timelines
+    document.getElementById('kriegskasse-timeline-a').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+    document.getElementById('kriegskasse-timeline-b').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+    document.getElementById('kriegskasse-timeline-c').innerHTML = '<div class="text-xs text-gray-500">Klick zum Start...</div>';
+
+    // Reinitialize chart
+    initKriegskasseCharts();
+}
+
+function closeKriegskasseModal() {
+    closeModal('kriegskasse-modal');
+    // Destroy chart to free memory
+    if (kriegskasseChart) { kriegskasseChart.destroy(); kriegskasseChart = null; }
+}
+
+function initKriegskasseCharts() {
+    const ctx = document.getElementById('kriegskasse-chart-combined');
+    if (ctx) {
+        if (kriegskasseChart) kriegskasseChart.destroy();
+
+        kriegskasseChart = new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['J0', 'J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9'],
+                datasets: [
+                    {
+                        label: 'Kursverlauf (Markt)',
+                        data: [...courseData.B], // v1.7.1: Use dynamic courseData.B
+                        borderColor: 'rgba(200, 200, 200, 0.5)',
+                        backgroundColor: 'rgba(220, 220, 220, 0.15)',
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(150, 150, 150, 0.6)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: true,
+                        yAxisID: 'y2',
+                        order: 10
+                    },
+                    {
+                        label: 'Ohne Reserve (Panikverkauf)',
+                        data: [40000, null, null, null, null, null, null, null, null, null],
+                        borderColor: '#C1293D',
+                        backgroundColor: 'rgba(193, 41, 61, 0.1)',
+                        tension: 0.3,
+                        pointRadius: Array(10).fill(5),
+                        pointBackgroundColor: Array(10).fill('#C1293D'),
+                        borderWidth: 3,
+                        fill: false,
+                        order: 1
+                    },
+                    {
+                        label: 'Mit Reserve (Durchhalten)',
+                        data: [40000, null, null, null, null, null, null, null, null, null],
+                        borderColor: '#033D5D',
+                        backgroundColor: 'rgba(3, 61, 93, 0.1)',
+                        tension: 0.3,
+                        pointRadius: Array(10).fill(5),
+                        pointBackgroundColor: Array(10).fill('#033D5D'),
+                        borderWidth: 3,
+                        fill: false,
+                        order: 2
+                    },
+                    {
+                        label: 'Mit Reserve + Nachkauf',
+                        data: [40000, null, null, null, null, null, null, null, null, null],
+                        borderColor: '#A6A8AB',
+                        backgroundColor: 'rgba(166, 168, 171, 0.1)',
+                        tension: 0.3,
+                        pointRadius: Array(10).fill(5),
+                        pointBackgroundColor: Array(10).fill('#A6A8AB'),
+                        borderWidth: 3,
+                        fill: false,
+                        order: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: { size: 13, weight: 'bold' },
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    if (context.datasetIndex === 0) {
+                                        // Kursverlauf: Show as unit price
+                                        label += context.parsed.y.toFixed(1) + ' € (Kurs)';
+                                    } else {
+                                        // Portfolio values
+                                        label += context.parsed.y.toFixed(0) + ' €';
+                                    }
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Jahr',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    },
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Gesamtvermögen (€)',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        min: 0,
+                        max: 150000,
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                        ticks: {
+                            callback: function (value) {
+                                return value.toLocaleString('de-DE') + ' €';
+                            }
+                        }
+                    },
+                    y2: {
+                        type: 'linear',
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Kursverlauf (€)',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        min: 0,
+                        max: 12,
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                return value.toFixed(0) + ' €';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        });
+    }
+}
+
+function startKriegskasseAnimation() {
+    if (kriegskasseCurrentYear > 9) {
+        // Animation done, show results
+        document.getElementById('kriegskasse-phase-1').style.display = 'none';
+        document.getElementById('kriegskasse-phase-2').style.display = 'block';
+        showKriegskasseResults();
+        return;
+    }
+
+    animateKriegskasseYear(kriegskasseCurrentYear);
+
+    // Update year counters
+    document.getElementById('kriegskasse-year-a').textContent = `${kriegskasseCurrentYear} / 9`;
+    document.getElementById('kriegskasse-year-b').textContent = `${kriegskasseCurrentYear} / 9`;
+    document.getElementById('kriegskasse-year-c').textContent = `${kriegskasseCurrentYear} / 9`;
+
+    kriegskasseCurrentYear++;
+}
+
+function animateKriegskasseYear(year) {
+    const marketPrices = courseData.B; // [9, 10, 2, 5, 4, 6, 8, 4, 7, 9]
+    const currentPrice = marketPrices[year];
+    const initialPrice = marketPrices[0]; // 9
+
+    // === SCENARIO A: WITHOUT Tagesgeld (All 40k in market, panic sell) ===
+    let portfolioValueA = 0;
+    let totalWealthA = 0;
+    let eventTextA = '';
+
+    if (year === 0) {
+        // Year 0: 40k invested, 4444 shares @ 9€
+        scenarioA.shares = scenarioA.portfolio / initialPrice;
+        portfolioValueA = scenarioA.shares * currentPrice;
+        totalWealthA = portfolioValueA + scenarioA.tagesgeld;
+        eventTextA = `📊 Jahr ${year}: Start - Alles investiert: ${totalWealthA.toFixed(0)} €`;
+        scenarioA.timeline.push(eventTextA);
+    } else if (year === 1) {
+        portfolioValueA = scenarioA.shares * currentPrice;
+        totalWealthA = portfolioValueA + scenarioA.tagesgeld;
+        eventTextA = `📊 Jahr ${year}: Markt bei ${currentPrice} € → ${totalWealthA.toFixed(0)} €`;
+        scenarioA.timeline.push(eventTextA);
+    } else if (year === 2) {
+        // CRASH! Panic sell
+        scenarioA.soldAt = currentPrice;
+        scenarioA.cashFromSale = scenarioA.shares * currentPrice;
+        scenarioA.shares = 0;
+        totalWealthA = scenarioA.cashFromSale;
+        eventTextA = `💥 Jahr ${year}: CRASH! Panik-Verkauf bei ${currentPrice} € → ${totalWealthA.toFixed(0)} € Cash`;
+        scenarioA.timeline.push(eventTextA);
+    } else if (year >= 3 && year <= 5) {
+        totalWealthA = scenarioA.cashFromSale;
+        eventTextA = `⏸️ Jahr ${year}: Außerhalb Markt → ${totalWealthA.toFixed(0)} € Cash`;
+        scenarioA.timeline.push(eventTextA);
+    } else if (year === 6) {
+        // Re-entry too late
+        scenarioA.reentryAt = currentPrice;
+        scenarioA.shares = scenarioA.cashFromSale / currentPrice;
+        portfolioValueA = scenarioA.shares * currentPrice;
+        totalWealthA = portfolioValueA;
+        eventTextA = `🔄 Jahr ${year}: Wiedereinstieg bei ${currentPrice} € (zu spät!)`;
+        scenarioA.timeline.push(eventTextA);
+    } else {
+        portfolioValueA = scenarioA.shares * currentPrice;
+        totalWealthA = portfolioValueA;
+        eventTextA = `📈 Jahr ${year}: Markt ${currentPrice} € → ${totalWealthA.toFixed(0)} €`;
+        scenarioA.timeline.push(eventTextA);
+    }
+
+    // === SCENARIO B: WITH Tagesgeld (10k market + 30k reserve, hold through) ===
+    let portfolioValueB = 0;
+    let totalWealthB = 0;
+    let eventTextB = '';
+
+    if (year === 0) {
+        scenarioB.shares = scenarioB.portfolio / initialPrice;
+        portfolioValueB = scenarioB.shares * currentPrice;
+        totalWealthB = portfolioValueB + scenarioB.tagesgeld;
+        eventTextB = `📊 Jahr ${year}: Start - Depot: ${portfolioValueB.toFixed(0)} € | TG: ${scenarioB.tagesgeld.toFixed(0)} €`;
+    } else {
+        // Add yearly inflow to Tagesgeld
+        scenarioB.tagesgeld += scenarioB.tagesgeldInflow;
+
+        // Check for overflow (> 30k)
+        if (scenarioB.tagesgeld > 30000) {
+            const overflow = scenarioB.tagesgeld - 30000;
+            scenarioB.tagesgeld = 30000;
+            // Buy shares with overflow
+            const newShares = overflow / currentPrice;
+            scenarioB.shares += newShares;
+        }
+
+        portfolioValueB = scenarioB.shares * currentPrice;
+        totalWealthB = portfolioValueB + scenarioB.tagesgeld;
+
+        if (year === 1) {
+            eventTextB = `📊 Jahr ${year}: +6k TG → Depot: ${portfolioValueB.toFixed(0)} € | TG: ${scenarioB.tagesgeld.toFixed(0)} €`;
+        } else if (year === 2) {
+            eventTextB = `💥 Jahr ${year}: CRASH auf ${currentPrice} € - DURCHGEHALTEN! 🛡️`;
+        } else {
+            eventTextB = `📈 Jahr ${year}: Depot: ${portfolioValueB.toFixed(0)} € | TG: ${scenarioB.tagesgeld.toFixed(0)} € | Σ: ${totalWealthB.toFixed(0)} €`;
+        }
+    }
+    scenarioB.timeline.push(eventTextB);
+
+    // === SCENARIO C: WITH Tagesgeld + Active crash buying ===
+    let portfolioValueC = 0;
+    let totalWealthC = 0;
+    let eventTextC = '';
+
+    if (year === 0) {
+        scenarioC.shares = scenarioC.portfolio / initialPrice;
+        portfolioValueC = scenarioC.shares * currentPrice;
+        totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+        eventTextC = `📊 Jahr ${year}: Start - Depot: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} €`;
+    } else if (year === 1) {
+        scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+        if (scenarioC.tagesgeld > 30000) {
+            const overflow = scenarioC.tagesgeld - 30000;
+            scenarioC.tagesgeld = 30000;
+            scenarioC.shares += overflow / currentPrice;
+        }
+        portfolioValueC = scenarioC.shares * currentPrice;
+        totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+        eventTextC = `📊 Jahr ${year}: +6k TG → Depot: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} €`;
+    } else if (year === 2) {
+        // CRASH! Buy 12k from Tagesgeld
+        if (!scenarioC.boughtInCrash) {
+            scenarioC.crashBuyAmount = 12000;
+            const boughtShares = scenarioC.crashBuyAmount / currentPrice;
+            scenarioC.shares += boughtShares;
+            scenarioC.tagesgeld -= scenarioC.crashBuyAmount;
+            scenarioC.boughtInCrash = true;
+            portfolioValueC = scenarioC.shares * currentPrice;
+            totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+            eventTextC = `🚀 Jahr ${year}: CRASH! Nachkauf 12k bei ${currentPrice} € = ${boughtShares.toFixed(0)} Anteile!`;
+        }
+    } else if (year >= 3 && year <= 4) {
+        // Refill Tagesgeld
+        scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+        portfolioValueC = scenarioC.shares * currentPrice;
+        totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+        eventTextC = `💰 Jahr ${year}: TG auffüllen → TG: ${scenarioC.tagesgeld.toFixed(0)} € | Depot: ${portfolioValueC.toFixed(0)} €`;
+    } else if (year === 5 || year === 6) {
+        // Year 5-6: Normal with overflow
+        scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+        if (scenarioC.tagesgeld > 30000) {
+            const overflow = scenarioC.tagesgeld - 30000;
+            scenarioC.tagesgeld = 30000;
+            scenarioC.shares += overflow / currentPrice;
+        }
+        portfolioValueC = scenarioC.shares * currentPrice;
+        totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+        eventTextC = `📈 Jahr ${year}: Depot: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} € | Σ: ${totalWealthC.toFixed(0)} €`;
+    } else if (year === 7) {
+        // Year 7: Second crash buy opportunity!
+        scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+        const secondBuyAmount = 12000;
+        const boughtShares = secondBuyAmount / currentPrice;
+        scenarioC.shares += boughtShares;
+        scenarioC.tagesgeld -= secondBuyAmount;
+        portfolioValueC = scenarioC.shares * currentPrice;
+        totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+        eventTextC = `🚀 Jahr ${year}: Nochmal 12k nachgekauft bei ${currentPrice} € = ${boughtShares.toFixed(0)} Anteile!`;
+    } else {
+        // Year 8+: Normal with overflow
+        scenarioC.tagesgeld += scenarioC.tagesgeldInflow;
+        if (scenarioC.tagesgeld > 30000) {
+            const overflow = scenarioC.tagesgeld - 30000;
+            scenarioC.tagesgeld = 30000;
+            scenarioC.shares += overflow / currentPrice;
+        }
+        portfolioValueC = scenarioC.shares * currentPrice;
+        totalWealthC = portfolioValueC + scenarioC.tagesgeld;
+        eventTextC = `📈 Jahr ${year}: Depot: ${portfolioValueC.toFixed(0)} € | TG: ${scenarioC.tagesgeld.toFixed(0)} € | Σ: ${totalWealthC.toFixed(0)} €`;
+    }
+    scenarioC.timeline.push(eventTextC);
+
+    // Update Combined Chart with TOTAL WEALTH (TG + Depot)
+    if (kriegskasseChart && kriegskasseChart.data.datasets) {
+        kriegskasseChart.data.datasets[1].data[year] = totalWealthA;
+        kriegskasseChart.data.datasets[2].data[year] = totalWealthB;
+        kriegskasseChart.data.datasets[3].data[year] = totalWealthC;
+
+        // Reset all point sizes
+        kriegskasseChart.data.datasets[1].pointRadius = Array(10).fill(5);
+        kriegskasseChart.data.datasets[2].pointRadius = Array(10).fill(5);
+        kriegskasseChart.data.datasets[3].pointRadius = Array(10).fill(5);
+
+        // Highlight current year
+        kriegskasseChart.data.datasets[1].pointRadius[year] = 10;
+        kriegskasseChart.data.datasets[2].pointRadius[year] = 10;
+        kriegskasseChart.data.datasets[3].pointRadius[year] = 10;
+
+        // Highlight current year on Kursverlauf
+        kriegskasseChart.data.datasets[0].pointRadius = Array(10).fill(3);
+        kriegskasseChart.data.datasets[0].pointRadius[year] = 6;
+
+        // Extra emphasis on crash year
+        if (year === 2) {
+            kriegskasseChart.data.datasets[1].pointRadius[year] = 12;
+            kriegskasseChart.data.datasets[1].pointBackgroundColor[year] = '#E3691E';
+            kriegskasseChart.data.datasets[2].pointRadius[year] = 12;
+            kriegskasseChart.data.datasets[2].pointBackgroundColor[year] = '#E3691E';
+            kriegskasseChart.data.datasets[3].pointRadius[year] = 14;
+            kriegskasseChart.data.datasets[3].pointBackgroundColor[year] = '#47A190';
+            kriegskasseChart.data.datasets[0].pointRadius[year] = 8;
+        }
+
+        kriegskasseChart.update();
+    }
+
+    // Update timeline displays
+    updateKriegskasseTimeline('a', scenarioA.timeline);
+    updateKriegskasseTimeline('b', scenarioB.timeline);
+    updateKriegskasseTimeline('c', scenarioC.timeline);
+}
+
+function updateKriegskasseTimeline(scenario, timeline) {
+    const container = document.getElementById(`kriegskasse-timeline-${scenario}`);
+    if (!container) return;
+
+    container.innerHTML = '';
+    timeline.slice(-5).forEach(event => { // Show last 5 events
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'text-sm text-gray-700 py-1';
+        eventDiv.textContent = event;
+        container.appendChild(eventDiv);
+    });
+}
+
+function showKriegskasseResults() {
+    const marketPrices = courseData.B;
+    const finalPrice = marketPrices[marketPrices.length - 1]; // 9
+    const initialWealth = 40000; // All start with 40k
+
+    // Scenario A: Final TOTAL wealth (Depot only, no Tagesgeld)
+    const finalPortfolioA = scenarioA.shares * finalPrice;
+    const finalWealthA = finalPortfolioA + scenarioA.tagesgeld; // 0 TG
+    const resultA = finalWealthA - initialWealth;
+
+    // Scenario B: Final TOTAL wealth (Depot + Tagesgeld)
+    const finalPortfolioB = scenarioB.shares * finalPrice;
+    const finalWealthB = finalPortfolioB + scenarioB.tagesgeld;
+    const resultB = finalWealthB - initialWealth;
+
+    // Scenario C: Final TOTAL wealth (Depot + Tagesgeld)
+    const finalPortfolioC = scenarioC.shares * finalPrice;
+    const finalWealthC = finalPortfolioC + scenarioC.tagesgeld;
+    const resultC = finalWealthC - initialWealth;
+
+    // Calculate differences
+    const differenceC_vs_B = finalWealthC - finalWealthB;
+
+    // Update HTML
+    document.getElementById('kriegskasse-result-sold-a').textContent = `${scenarioA.cashFromSale.toFixed(0)} €`;
+    document.getElementById('kriegskasse-result-reentry-a').textContent = `${scenarioA.reentryAt.toFixed(2)} €`;
+    document.getElementById('kriegskasse-result-value-a').textContent = `${finalWealthA.toFixed(0)} €`;
+    document.getElementById('kriegskasse-result-loss-a').textContent = `${resultA.toFixed(0)} €`;
+
+    document.getElementById('kriegskasse-result-value-b').textContent = `${finalWealthB.toFixed(0)} €`;
+    document.getElementById('kriegskasse-result-profit-b').textContent = `${resultB >= 0 ? '+' : ''}${resultB.toFixed(0)} €`;
+
+    document.getElementById('kriegskasse-result-buy-c').textContent = `12000 €`;
+    document.getElementById('kriegskasse-result-value-c').textContent = `${finalWealthC.toFixed(0)} €`;
+    document.getElementById('kriegskasse-result-profit-c').textContent = `${resultC >= 0 ? '+' : ''}${resultC.toFixed(0)} €`;
+    document.getElementById('kriegskasse-difference-c').textContent = `${differenceC_vs_B.toFixed(0)} € mehr`;
+}
+
+// ===== END KRIEGSKASSE ERKLÄRER =====
+
+// ===== v1.7.2: SEQUENCE OF RETURNS RISK (SoRR) SIMULATOR =====
+
+// MSCI World historical returns (2005-2024)
+const msciWorldReturns = [
+    { year: 2005, return: 9.49 },
+    { year: 2006, return: 20.07 },
+    { year: 2007, return: 9.04 },
+    { year: 2008, return: -40.71 },
+    { year: 2009, return: 29.99 },
+    { year: 2010, return: 11.76 },
+    { year: 2011, return: -5.54 },
+    { year: 2012, return: 15.83 },
+    { year: 2013, return: 26.68 },
+    { year: 2014, return: 4.94 },
+    { year: 2015, return: -0.87 },
+    { year: 2016, return: 7.51 },
+    { year: 2017, return: 22.40 },
+    { year: 2018, return: -8.71 },
+    { year: 2019, return: 27.67 },
+    { year: 2020, return: 15.90 },
+    { year: 2021, return: 21.82 },
+    { year: 2022, return: -18.14 },
+    { year: 2023, return: 23.79 },
+    { year: 2024, return: 18.67 }
+];
+
+let sorrChart = null;
+let sorrSortConfig = { key: 'year', direction: 'ascending' };
+let sorrCurrentData = { history: [], reverse: [], worst: [] };
+let sorrShowAll = false;
+
+function openSoRRModal() {
+    // v1.7.2: Mark as visited for PDF inclusion
+    markErklaererBesucht('sorr');
+
+    openModal('sorr-modal');
+
+    // Initialize table
+    renderSoRRTable();
+
+    // Calculate average return
+    const avgReturn = msciWorldReturns.reduce((sum, item) => sum + item.return, 0) / msciWorldReturns.length;
+    document.getElementById('sorr-avg-return').textContent = `Ø ${avgReturn.toFixed(2)}% p.a.`;
+
+    // Run initial simulation
+    runSoRRSimulation();
+}
+
+function closeSoRRModal() {
+    closeModal('sorr-modal');
+    if (sorrChart) {
+        sorrChart.destroy();
+        sorrChart = null;
+    }
+}
+
+function renderSoRRTable() {
+    const tbody = document.getElementById('sorr-returns-table');
+    tbody.innerHTML = '';
+
+    const sortedData = sortSoRRData(msciWorldReturns, sorrSortConfig);
+
+    sortedData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-100';
+        tr.innerHTML = `
+                <td class="px-4 py-2 font-mono text-gray-600">${row.year}</td>
+                <td class="px-4 py-2 text-right font-semibold ${row.return >= 0 ? 'text-green-600' : 'text-red-600'}">
+                    ${row.return > 0 ? '+' : ''}${row.return.toFixed(2)} %
+                </td>
+            `;
+        tbody.appendChild(tr);
+    });
+}
+
+function sortSoRRData(data, sortConfig) {
+    const sorted = [...data];
+    sorted.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+            return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+            return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+    });
+    return sorted;
+}
+
+function sortSoRRTable(key) {
+    // Toggle direction if same key
+    if (sorrSortConfig.key === key) {
+        sorrSortConfig.direction = sorrSortConfig.direction === 'ascending' ? 'descending' : 'ascending';
+    } else {
+        sorrSortConfig.key = key;
+        sorrSortConfig.direction = 'ascending';
+    }
+
+    // Update icons
+    const yearIcon = document.getElementById('sorr-sort-icon-year');
+    const returnIcon = document.getElementById('sorr-sort-icon-return');
+
+    yearIcon.className = 'w-4 h-4 text-gray-400';
+    returnIcon.className = 'w-4 h-4 text-gray-400';
+
+    if (key === 'year') {
+        yearIcon.className = `w-4 h-4 text-blue-600`;
+    } else {
+        returnIcon.className = `w-4 h-4 text-blue-600`;
+    }
+
+    renderSoRRTable();
+
+    // Sync active scenario state based on new sort
+    let newScenario = 'history';
+    if (sorrSortConfig.key === 'year' && sorrSortConfig.direction === 'ascending') {
+        newScenario = 'history';
+    } else if (sorrSortConfig.key === 'year' && sorrSortConfig.direction === 'descending') {
+        newScenario = 'reverse'; // Not perfect mapping, but works
+    } else if (sorrSortConfig.key === 'return' && sorrSortConfig.direction === 'ascending') {
+        newScenario = 'worst';
+    } else if (sorrSortConfig.key === 'return' && sorrSortConfig.direction === 'descending') {
+        newScenario = 'reverse';
+    }
+
+    sorrActiveScenarioState = newScenario;
+
+    const subtitle = document.getElementById('sorr-chart-subtitle');
+    if (subtitle) {
+        if (newScenario === 'history') subtitle.textContent = 'Reihenfolge wie sie tatsächlich war: 2005, 2006, 2007...';
+        else if (newScenario === 'reverse') subtitle.textContent = 'Fiktive Reihenfolge: Die renditestärksten Jahre zuerst.';
+        else if (newScenario === 'worst') subtitle.textContent = 'Fiktive Reihenfolge: Die schwächsten Jahre (-40%) direkt zum Rentenstart.';
+    }
+
+    // Bei Sortierungswechsel: Einzelansicht + Chart/Cards aktualisieren
+    if (sorrShowAll) {
+        sorrShowAll = false;
+        var btn = document.getElementById('sorr-compare-btn');
+        if (btn) {
+            btn.className = 'text-xs font-semibold py-2 px-4 rounded-lg border-2 transition-all duration-200 border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50';
+            btn.textContent = 'Alle Szenarien vergleichen';
+        }
+    }
+    if (sorrCurrentData.history.length > 0) {
+        updateSoRRChart();
+        updateSoRRResultCards();
+    }
+}
+
+function simulatePortfolio(orderType) {
+    const initialCapital = parseFloat(document.getElementById('sorr-initial-capital').value) || 500000;
+    const annualWithdrawal = parseFloat(document.getElementById('sorr-annual-withdrawal').value) || 25000;
+    const inflationRate = parseFloat(document.getElementById('sorr-inflation').value) || 2.0;
+
+    let currentBalance = initialCapital;
+    let currentWithdrawal = annualWithdrawal;
+    let dataSequence = [...msciWorldReturns];
+
+    // Manipulate sequence based on type
+    if (orderType === 'reverse') {
+        dataSequence.sort((a, b) => b.return - a.return); // Best-First: beste Rendite zuerst (absteigend)
+    } else if (orderType === 'worst-first') {
+        dataSequence.sort((a, b) => a.return - b.return); // Worst-First: schlechteste Rendite zuerst (aufsteigend)
+    }
+    // 'history' is default, no change needed
+
+    const history = [];
+
+    // Initial point
+    history.push({
+        period: 0,
+        yearLabel: 'Start',
+        balance: currentBalance,
+        returnPct: 0,
+        withdrawal: 0
+    });
+
+    dataSequence.forEach((item, index) => {
+        // 1. Market Move
+        const growth = currentBalance * (item.return / 100);
+        let newBalance = currentBalance + growth;
+
+        // 2. Withdrawal (End of Year)
+        if (newBalance <= 0) {
+            newBalance = 0;
+        } else {
+            newBalance -= currentWithdrawal;
+            if (newBalance < 0) newBalance = 0;
+        }
+
+        history.push({
+            period: index + 1,
+            yearLabel: orderType === 'history' ? item.year : `Jahr ${index + 1}`,
+            returnPct: item.return,
+            balance: Math.round(newBalance),
+            withdrawal: Math.round(currentWithdrawal)
+        });
+
+        // Prepare next year
+        currentBalance = newBalance;
+        currentWithdrawal = currentWithdrawal * (1 + inflationRate / 100);
+    });
+
+    return history;
+}
+
+function calculateDuration(portfolioHistory) {
+    // Find the year when portfolio reaches zero (or return "Endlos" if it never does)
+    for (let i = 0; i < portfolioHistory.length; i++) {
+        if (portfolioHistory[i].balance <= 0) {
+            return `${i} Jahre`;
+        }
+    }
+    return 'Endlos';
+}
+
+function updateSoRRWithdrawalRate() {
+    // Update withdrawal rate percentage when capital or withdrawal changes
+    const capital = parseFloat(document.getElementById('sorr-initial-capital').value) || 500000;
+    const withdrawal = parseFloat(document.getElementById('sorr-annual-withdrawal').value) || 20000;
+    const rate = (withdrawal / capital * 100).toFixed(1);
+    document.getElementById('sorr-withdrawal-rate').textContent = rate;
+}
+
+function runSoRRSimulation() {
+    // Update withdrawal rate display
+    updateSoRRWithdrawalRate();
+
+    // Run simulations
+    sorrCurrentData.history = simulatePortfolio('history');
+    sorrCurrentData.reverse = simulatePortfolio('reverse');
+    sorrCurrentData.worst = simulatePortfolio('worst-first');
+
+    // Update result cards - balance
+    const historyEnd = sorrCurrentData.history[sorrCurrentData.history.length - 1].balance;
+    const reverseEnd = sorrCurrentData.reverse[sorrCurrentData.reverse.length - 1].balance;
+    const worstEnd = sorrCurrentData.worst[sorrCurrentData.worst.length - 1].balance;
+
+    document.getElementById('sorr-result-history').textContent = formatMoney(historyEnd);
+    document.getElementById('sorr-result-reverse').textContent = formatMoney(reverseEnd);
+    document.getElementById('sorr-result-worst').textContent = formatMoney(worstEnd);
+
+    // Update result cards - duration
+    document.getElementById('sorr-duration-history').textContent = calculateDuration(sorrCurrentData.history);
+    document.getElementById('sorr-duration-reverse').textContent = calculateDuration(sorrCurrentData.reverse);
+    document.getElementById('sorr-duration-worst').textContent = calculateDuration(sorrCurrentData.worst);
+
+    // Update chart + cards visibility
+    updateSoRRChart();
+    updateSoRRResultCards();
+}
+
+window.sorrActiveScenarioState = 'history';
+
+function setSoRRScenario(scenario) {
+    sorrActiveScenarioState = scenario;
+    sorrShowAll = false; // Disable compare mode when picking a single scenario
+
+    // Auto-sort the table based on selected scenario
+    if (scenario === 'history') {
+        sorrSortConfig.key = 'year';
+        sorrSortConfig.direction = 'ascending';
+    } else if (scenario === 'reverse') {
+        sorrSortConfig.key = 'return';
+        sorrSortConfig.direction = 'descending';
+    } else if (scenario === 'worst') {
+        sorrSortConfig.key = 'return';
+        sorrSortConfig.direction = 'ascending';
+    }
+
+    // Update sort icons in table
+    const yearIcon = document.getElementById('sorr-sort-icon-year');
+    const returnIcon = document.getElementById('sorr-sort-icon-return');
+    if (yearIcon && returnIcon) {
+        yearIcon.className = 'w-4 h-4 text-gray-400';
+        returnIcon.className = 'w-4 h-4 text-gray-400';
+        if (sorrSortConfig.key === 'year') yearIcon.className = `w-4 h-4 text-blue-600`;
+        else returnIcon.className = `w-4 h-4 text-blue-600`;
+    }
+
+    // Update title
+    const subtitle = document.getElementById('sorr-chart-subtitle');
+    if (subtitle) {
+        if (scenario === 'history') subtitle.textContent = 'Reihenfolge wie sie tatsächlich war: 2005, 2006, 2007...';
+        else if (scenario === 'reverse') subtitle.textContent = 'Fiktive Reihenfolge: Die renditestärksten Jahre zuerst.';
+        else if (scenario === 'worst') subtitle.textContent = 'Fiktive Reihenfolge: Die schwächsten Jahre (-40%) direkt zum Rentenstart.';
+    }
+
+    // Reset compare button text
+    const btn = document.getElementById('sorr-compare-btn');
+    if (btn) {
+        btn.className = 'text-xs font-semibold py-2 px-4 rounded-lg border transition-all duration-200 border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800 hover:bg-gray-50';
+        btn.textContent = 'Alle Szenarien vergleichen';
+    }
+
+    renderSoRRTable();
+    updateSoRRChart();
+    updateSoRRResultCards();
+}
+window.setSoRRScenario = setSoRRScenario;
+
+function updateSoRRResultCards() {
+    var cardHistory = document.getElementById('sorr-card-history');
+    var cardReverse = document.getElementById('sorr-card-reverse');
+    var cardWorst = document.getElementById('sorr-card-worst');
+    if (!cardHistory || !cardReverse || !cardWorst) return;
+
+    var active = sorrActiveScenarioState;
+
+    // Reset base classes
+    const defaultClasses = "text-left px-4 py-3 rounded-xl border transition-all duration-200 flex flex-col justify-center border-gray-200 bg-white hover:bg-gray-50";
+    cardHistory.className = defaultClasses;
+    cardReverse.className = defaultClasses;
+    cardWorst.className = defaultClasses;
+
+    // Apply active highlight styling
+    if (sorrShowAll) {
+        // If showing all, highlight all slightly or leave default? Let's leave them default but maybe add a blue tint to the borders
+        cardHistory.className = "text-left px-4 py-3 rounded-xl border transition-all duration-200 flex flex-col justify-center border-blue-300 bg-blue-50/30";
+        cardReverse.className = "text-left px-4 py-3 rounded-xl border transition-all duration-200 flex flex-col justify-center border-blue-300 bg-blue-50/30";
+        cardWorst.className = "text-left px-4 py-3 rounded-xl border transition-all duration-200 flex flex-col justify-center border-blue-300 bg-blue-50/30";
+    } else {
+        if (active === 'history') cardHistory.className = "text-left px-4 py-3 rounded-xl border-2 transition-all duration-200 flex flex-col justify-center border-green-500 bg-green-50/50";
+        if (active === 'reverse') cardReverse.className = "text-left px-4 py-3 rounded-xl border-2 transition-all duration-200 flex flex-col justify-center border-blue-500 bg-blue-50/50";
+        if (active === 'worst') cardWorst.className = "text-left px-4 py-3 rounded-xl border-2 transition-all duration-200 flex flex-col justify-center border-red-500 bg-red-50/50";
+    }
+}
+
+function getActiveSoRRScenario() {
+    return sorrActiveScenarioState;
+}
+
+function toggleSoRRCompare() {
+    sorrShowAll = !sorrShowAll;
+    updateSoRRChart();
+    updateSoRRResultCards();
+    // Button-Style aktualisieren
+    var btn = document.getElementById('sorr-compare-btn');
+    if (btn) {
+        if (sorrShowAll) {
+            btn.className = 'text-xs font-semibold py-2 px-4 rounded-lg border-2 transition-all duration-200 border-blue-500 text-white bg-blue-500 hover:bg-blue-600';
+            btn.textContent = 'Einzelansicht';
+        } else {
+            btn.className = 'text-xs font-semibold py-2 px-4 rounded-lg border-2 transition-all duration-200 border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50';
+            btn.textContent = 'Alle Szenarien vergleichen';
+        }
+    }
+}
+
+function updateSoRRChart() {
+    const ctx = document.getElementById('sorr-chart');
+    if (!ctx) return;
+
+    // Prepare chart data
+    const chartData = sorrCurrentData.history.map((item, index) => ({
+        period: item.period,
+        History: item.balance,
+        Reverse: sorrCurrentData.reverse[index]?.balance || 0,
+        Worst: sorrCurrentData.worst[index]?.balance || 0
+    }));
+
+    // Dataset-Definitionen
+    const allDatasets = {
+        history: {
+            label: 'Historischer Verlauf (2005-2024)',
+            data: chartData.map(d => d.History),
+            borderColor: '#16a34a',
+            backgroundColor: 'rgba(22, 163, 74, 0.15)',
+            borderWidth: 3,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5
+        },
+        reverse: {
+            label: 'Best-First (2009\u21922008)',
+            data: chartData.map(d => d.Reverse),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.15)',
+            borderWidth: 3,
+            borderDash: [5, 5],
+            tension: 0.3,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5
+        },
+        worst: {
+            label: 'Schlechteste Jahre zuerst',
+            data: chartData.map(d => d.Worst),
+            borderColor: '#dc2626',
+            backgroundColor: 'rgba(220, 38, 38, 0.15)',
+            borderWidth: 3,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5
+        }
+    };
+
+    // Datasets auswählen
+    var datasets;
+    var titleEl = document.getElementById('sorr-chart-title');
+    var subtitleEl = document.getElementById('sorr-chart-subtitle');
+    if (sorrShowAll) {
+        // Alle 3 Szenarien, kein Fill
+        datasets = [
+            Object.assign({}, allDatasets.history, { fill: false }),
+            Object.assign({}, allDatasets.reverse, { fill: false }),
+            Object.assign({}, allDatasets.worst, { fill: false, borderWidth: 2 })
+        ];
+        if (titleEl) titleEl.textContent = 'Vermögensentwicklung im Vergleich';
+        if (subtitleEl) subtitleEl.textContent = 'Drei Szenarien mit identischer Durchschnittsrendite \u2013 nur die Reihenfolge unterscheidet sich!';
+    } else {
+        var active = getActiveSoRRScenario();
+        datasets = [allDatasets[active]];
+        var titles = { history: 'Historischer Verlauf (2005\u20132024)', reverse: 'Best-First (2009\u21922008)', worst: 'Schlechteste Jahre zuerst' };
+        var subtitles = { history: 'Reihenfolge wie sie tats\u00e4chlich war: 2005, 2006, 2007...', reverse: 'Beste Renditen zuerst: Von den guten in die schlechten Jahre.', worst: 'Schlechteste Renditen zuerst: Crash direkt zu Beginn der Entnahme.' };
+        if (titleEl) titleEl.textContent = titles[active];
+        if (subtitleEl) subtitleEl.textContent = subtitles[active];
+    }
+
+    // Destroy previous chart
+    if (sorrChart) {
+        sorrChart.destroy();
+    }
+
+    // Create new chart
+    sorrChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.map(d => 'Jahr ' + d.period),
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: sorrShowAll,
+                    position: 'top',
+                    labels: { padding: 20, font: { size: 12 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return context.dataset.label + ': ' + formatMoney(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Verm\u00f6gen (\u20ac)' },
+                    ticks: { callback: function (value) { return formatMoney(value); } }
+                },
+                x: {
+                    title: { display: true, text: 'Jahre' }
+                }
+            },
+            interaction: { mode: 'index', intersect: false }
+        }
+    });
+}
+
+function formatMoney(value) {
+    return new Intl.NumberFormat('de-DE', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0
+    }).format(value);
+}
+
+// ===== END SoRR SIMULATOR =====
+
+// ===== AKTIEN & ANLEIHEN ERKLÄRER (v1.7.8) =====
+
+let anleihenDurationChart = null;
+let anleihenActiveTab = 'duration';
+
+function openAnleihenModal() {
+    markErklaererBesucht('anleihen');
+    openModal('anleihen-modal');
+    anleihenActiveTab = 'duration';
+    switchAnleihenTab('duration');
+}
+
+function closeAnleihenModal() {
+    closeModal('anleihen-modal');
+    if (anleihenDurationChart) { anleihenDurationChart.destroy(); anleihenDurationChart = null; }
+}
+
+function switchAnleihenTab(tab) {
+    anleihenActiveTab = tab;
+    var tabs = ['duration', 'seesaw', 'spread'];
+    tabs.forEach(function (t) {
+        var panel = document.getElementById('anleihen-tab-' + t);
+        var btn = document.getElementById('anleihen-tab-btn-' + t);
+        if (panel) panel.style.display = (t === tab) ? '' : 'none';
+        if (btn) {
+            if (t === tab) {
+                btn.style.background = '#033D5D';
+                btn.style.color = 'white';
+                btn.style.border = 'none';
+            } else {
+                btn.style.background = '#F8F8F8';
+                btn.style.color = '#2B2B2B';
+                btn.style.border = '1px solid #BEB6AA';
+            }
+        }
+    });
+
+    if (tab === 'duration') {
+        updateDurationChart();
+    } else if (tab === 'seesaw') {
+        // Sync parameters from Tab 1
+        var kupon = parseFloat(document.getElementById('anleihen-kupon').value) || 3;
+        var laufzeit = parseInt(document.getElementById('anleihen-laufzeit').value) || 10;
+        document.getElementById('seesaw-kupon').textContent = kupon.toFixed(1) + '%';
+        document.getElementById('seesaw-laufzeit').textContent = laufzeit + ' Jahre';
+        updateSeesawVis();
+    } else if (tab === 'spread') {
+        updateEquityFlow();
+    }
+}
+
+// Bond price calculation: PV = Σ(Kupon/(1+r)^t) + 100/(1+r)^n
+function calculateBondPrice(kuponRate, laufzeit, marktzins) {
+    var pv = 0;
+    for (var t = 1; t <= laufzeit; t++) {
+        pv += kuponRate / Math.pow(1 + marktzins, t);
+    }
+    pv += 100 / Math.pow(1 + marktzins, laufzeit);
+    return pv; // Returns price as % of par
+}
+
+// Duration sensitivity: price change at each remaining year when rates change by delta
+function calculateDurationSensitivity() {
+    var kupon = parseFloat(document.getElementById('anleihen-kupon').value) || 3;
+    var laufzeit = parseInt(document.getElementById('anleihen-laufzeit').value) || 10;
+    var nennwert = parseFloat(document.getElementById('anleihen-nennwert').value) || 10000;
+    var zinsDelta = parseFloat(document.getElementById('anleihen-zinsdelta').value);
+    if (isNaN(zinsDelta)) zinsDelta = 1;
+
+    var kuponRate = kupon / 100;
+    var marktzinsBase = kupon / 100; // Base = Kupon → Kurs = 100%
+    var marktzinsShocked = marktzinsBase + zinsDelta / 100;
+
+    var labels = [];
+    var changes = [];
+
+    for (var remainingYears = laufzeit; remainingYears >= 1; remainingYears--) {
+        var priceBase = calculateBondPrice(kuponRate * 100, remainingYears, marktzinsBase);
+        var priceShocked = calculateBondPrice(kuponRate * 100, remainingYears, marktzinsShocked);
+        var change = priceShocked - priceBase; // negative = price drop
+
+        labels.push(remainingYears + (remainingYears === 1 ? ' Jahr' : ' Jahre'));
+        changes.push(parseFloat(change.toFixed(2)));
+    }
+
+    // Update result card: show current price at shocked rate for full laufzeit
+    var currentPrice = calculateBondPrice(kupon, laufzeit, marktzinsShocked);
+    var kursEuro = (currentPrice / 100) * nennwert;
+    document.getElementById('anleihen-kurs-wert').textContent = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(kursEuro);
+    document.getElementById('anleihen-kurs-prozent').textContent = currentPrice.toFixed(2).replace('.', ',') + '% vom Nennwert';
+
+    return { labels: labels, changes: changes };
+}
+
+function updateDurationChart() {
+    var data = calculateDurationSensitivity();
+
+    if (anleihenDurationChart) {
+        anleihenDurationChart.destroy();
+        anleihenDurationChart = null;
+    }
+
+    var ctx = document.getElementById('anleihen-duration-chart');
+    if (!ctx) return;
+
+    var zinsDelta = parseFloat(document.getElementById('anleihen-zinsdelta').value);
+    if (isNaN(zinsDelta)) zinsDelta = 1;
+
+    var titleText = zinsDelta === 0 ? 'Keine Zinsänderung (Kurs = Par)' :
+        zinsDelta > 0 ? 'Kursänderung bei +' + zinsDelta.toFixed(1) + '% Zinsanstieg' :
+            'Kursänderung bei ' + zinsDelta.toFixed(1) + '% Zinssenkung';
+
+    anleihenDurationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Kursänderung (%)',
+                data: data.changes,
+                backgroundColor: data.changes.map(function (v) {
+                    return v < 0 ? 'rgba(3, 61, 93, 0.7)' : 'rgba(71, 161, 144, 0.7)';
+                }),
+                borderColor: data.changes.map(function (v) {
+                    return v < 0 ? '#033D5D' : '#47A190';
+                }),
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: titleText,
+                    font: { size: 14, weight: 'bold' },
+                    color: '#033D5D'
+                },
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return 'Kursänderung: ' + context.parsed.y.toFixed(2) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Restlaufzeit', color: '#717171' },
+                    grid: { display: false }
+                },
+                y: {
+                    title: { display: true, text: 'Kursänderung (%)', color: '#717171' },
+                    grid: { color: 'rgba(190,182,170,0.3)' },
+                    min: -25,
+                    max: 25
+                }
+            }
+        }
+    });
+}
+
+// Tab 2: Inverse Beziehung — Füllstands-Visualisierung
+function updateSeesawVis() {
+    var marktzinsRaw = parseFloat(document.getElementById('anleihen-marktzins').value);
+    var marktzins = isNaN(marktzinsRaw) ? 3 : marktzinsRaw;
+    var kupon = parseFloat(document.getElementById('anleihen-kupon').value) || 3;
+    var laufzeit = parseInt(document.getElementById('anleihen-laufzeit').value) || 10;
+    var nennwert = parseFloat(document.getElementById('anleihen-nennwert').value) || 10000;
+
+    // Calculate bond price
+    var kursPercent = calculateBondPrice(kupon, laufzeit, marktzins / 100);
+    var kursEuro = (kursPercent / 100) * nennwert;
+
+    // Update result card
+    document.getElementById('seesaw-kurs-wert').textContent = kursPercent.toFixed(2).replace('.', ',') + '%';
+    document.getElementById('seesaw-kurs-euro').textContent = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(kursEuro);
+
+    // Tank fill levels
+    // Left tank: Marktzins 0-5% → 0-100% height
+    var zinsFill = (marktzins / 5) * 100;
+    document.getElementById('seesaw-tank-zins').style.height = zinsFill + '%';
+    document.getElementById('seesaw-tank-zins-label').textContent = marktzins.toFixed(1) + '%';
+
+    // Right tank: Kurs range 80%-120% → map to 0-100% height
+    var kursFill = Math.max(0, Math.min(100, (kursPercent - 80) / 40 * 100));
+    document.getElementById('seesaw-tank-kurs').style.height = kursFill + '%';
+    document.getElementById('seesaw-tank-kurs-label').textContent = kursPercent.toFixed(0) + '%';
+
+    // Par line position: 100% in 80-120 range = 50% from bottom
+    var parLinePos = ((100 - 80) / 40) * 100; // = 50%
+
+    // Update label color — white text when fill is behind it
+    var kursLabel = document.getElementById('seesaw-tank-kurs-label');
+    if (kursFill > 55) {
+        kursLabel.style.color = 'white';
+        kursLabel.style.textShadow = 'none';
+    } else {
+        kursLabel.style.color = '#033D5D';
+        kursLabel.style.textShadow = '0 1px 2px rgba(255,255,255,0.8)';
+    }
+
+    var zinsLabel = document.getElementById('seesaw-tank-zins-label');
+    if (zinsFill > 55) {
+        zinsLabel.style.color = 'white';
+        zinsLabel.style.textShadow = 'none';
+    } else {
+        zinsLabel.style.color = '#033D5D';
+        zinsLabel.style.textShadow = '0 1px 2px rgba(255,255,255,0.8)';
+    }
+
+    // Dynamic explanation text
+    var explainEl = document.getElementById('seesaw-explain-text');
+    var diff = marktzins - kupon;
+    if (Math.abs(diff) < 0.3) {
+        explainEl.innerHTML = 'Marktzins und Kupon sind nahezu gleich. Die Anleihe steht <strong>bei Par</strong> (100%) — kein Grund, mehr oder weniger zu zahlen.';
+    } else if (diff > 0) {
+        explainEl.innerHTML = 'Der Marktzins liegt bei <strong>' + marktzins.toFixed(1) + '%</strong>, der Kupon nur bei ' + kupon.toFixed(1) + '%. Neue Anleihen bieten bessere Konditionen — warum sollte jemand Ihre ' + kupon.toFixed(1) + '%-Anleihe zum vollen Preis kaufen? <strong>Der Kurs sinkt auf ' + kursPercent.toFixed(1) + '%.</strong>';
+    } else {
+        explainEl.innerHTML = 'Der Marktzins liegt nur bei <strong>' + marktzins.toFixed(1) + '%</strong>, Ihr Kupon bei ' + kupon.toFixed(1) + '%. Ihre Anleihe zahlt mehr als der Markt — ein begehrtes Papier! <strong>Der Kurs steigt auf ' + kursPercent.toFixed(1) + '%.</strong>';
+    }
+}
+
+// Tab 3: Equity Risk Premium — Kapitalfluss-Visualisierung
+function updateEquityFlow() {
+    var rendite = parseFloat(document.getElementById('equity-rendite-slider').value) || 0;
+    var zins = parseFloat(document.getElementById('equity-zins-slider').value) || 0;
+    var spread = rendite - zins;
+
+    // Update display labels
+    document.getElementById('equity-rendite-display').textContent = rendite.toFixed(1) + '%';
+    document.getElementById('equity-zins-display').textContent = zins.toFixed(1) + '%';
+
+    // SVG texts
+    document.getElementById('equity-company-text').textContent = 'erwirtschaftet ' + rendite.toFixed(1) + '%';
+    document.getElementById('equity-zins-flow').textContent = zins.toFixed(1) + '% Zinsen';
+
+    // Bars — total width = 400px for max 15%
+    var barTotal = 400;
+    var maxRate = 15;
+    var zinsWidth = Math.max(0, (zins / maxRate) * barTotal);
+    var gewinnWidth = Math.max(0, (spread / maxRate) * barTotal);
+
+    var zinsBar = document.getElementById('equity-bar-zins');
+    var gewinnBar = document.getElementById('equity-bar-gewinn');
+    var zinsText = document.getElementById('equity-bar-zins-text');
+    var gewinnText = document.getElementById('equity-bar-gewinn-text');
+
+    zinsBar.setAttribute('width', zinsWidth);
+    zinsText.setAttribute('x', 80 + zinsWidth / 2);
+    zinsText.textContent = zins.toFixed(1) + '%';
+
+    document.getElementById('equity-bar-label-zins').setAttribute('x', 80 + zinsWidth / 2);
+
+    if (spread > 0) {
+        gewinnBar.setAttribute('x', 80 + zinsWidth);
+        gewinnBar.setAttribute('width', gewinnWidth);
+        gewinnBar.setAttribute('fill', '#47A190');
+        gewinnText.setAttribute('x', 80 + zinsWidth + gewinnWidth / 2);
+        gewinnText.textContent = '+' + spread.toFixed(1) + '%';
+        document.getElementById('equity-bar-label-gewinn').setAttribute('x', 80 + zinsWidth + gewinnWidth / 2);
+        document.getElementById('equity-bar-label-gewinn').textContent = 'Aktionärsgewinn';
+        document.getElementById('equity-bar-label-gewinn').setAttribute('fill', '#3a8474');
+    } else if (spread < 0) {
+        var lossWidth = Math.max(0, (Math.abs(spread) / maxRate) * barTotal);
+        gewinnBar.setAttribute('x', 80 + zinsWidth - lossWidth);
+        gewinnBar.setAttribute('width', lossWidth);
+        gewinnBar.setAttribute('fill', '#C1293D');
+        gewinnText.setAttribute('x', 80 + zinsWidth - lossWidth / 2);
+        gewinnText.textContent = spread.toFixed(1) + '%';
+        document.getElementById('equity-bar-label-gewinn').setAttribute('x', 80 + zinsWidth - lossWidth / 2);
+        document.getElementById('equity-bar-label-gewinn').textContent = 'Verlust!';
+        document.getElementById('equity-bar-label-gewinn').setAttribute('fill', '#C1293D');
+    } else {
+        gewinnBar.setAttribute('width', 0);
+        gewinnText.textContent = '';
+        document.getElementById('equity-bar-label-gewinn').textContent = '';
+    }
+
+    // Profit arrow & text
+    var profitArrow = document.getElementById('equity-profit-arrow');
+    var profitFlow = document.getElementById('equity-profit-flow');
+    var profitLabel = document.getElementById('equity-profit-label');
+    var profitBg = document.getElementById('equity-profit-bg');
+    var aktionaerBox = document.getElementById('equity-aktionaer-box');
+
+    if (spread > 0) {
+        profitArrow.setAttribute('stroke', '#47A190');
+        profitArrow.setAttribute('marker-end', 'url(#arrow-tuerkis)');
+        profitFlow.textContent = '+' + spread.toFixed(1) + '% Gewinn';
+        profitFlow.setAttribute('fill', '#3a8474');
+        profitLabel.textContent = 'Wertsteigerung';
+        profitLabel.setAttribute('fill', '#3a8474');
+        profitBg.setAttribute('stroke', '#47A190');
+        aktionaerBox.setAttribute('fill', '#47A190');
+        aktionaerBox.setAttribute('stroke', '#3a8474');
+    } else if (spread < 0) {
+        profitArrow.setAttribute('stroke', '#C1293D');
+        profitArrow.setAttribute('marker-end', 'url(#arrow-warn)');
+        profitFlow.textContent = spread.toFixed(1) + '% Verlust';
+        profitFlow.setAttribute('fill', '#C1293D');
+        profitLabel.textContent = 'Substanzverlust';
+        profitLabel.setAttribute('fill', '#C1293D');
+        profitBg.setAttribute('stroke', '#C1293D');
+        aktionaerBox.setAttribute('fill', '#C1293D');
+        aktionaerBox.setAttribute('stroke', '#9e1f2f');
+    } else {
+        profitArrow.setAttribute('stroke', '#BEB6AA');
+        profitFlow.textContent = '0% — Break Even';
+        profitFlow.setAttribute('fill', '#717171');
+        profitLabel.textContent = 'Kein Gewinn';
+        profitLabel.setAttribute('fill', '#717171');
+        profitBg.setAttribute('stroke', '#BEB6AA');
+        aktionaerBox.setAttribute('fill', '#BEB6AA');
+        aktionaerBox.setAttribute('stroke', '#a89e90');
+    }
+
+    // Result card
+    var resultCard = document.getElementById('equity-result-card');
+    var resultLabel = document.getElementById('equity-result-label');
+    var resultValue = document.getElementById('equity-result-value');
+    var resultText = document.getElementById('equity-result-text');
+
+    if (spread > 0) {
+        resultCard.style.background = 'rgba(71,161,144,0.08)';
+        resultCard.style.border = '1px solid rgba(71,161,144,0.3)';
+        resultLabel.textContent = 'Gewinn der Aktionäre';
+        resultLabel.style.color = '#47A190';
+        resultValue.textContent = '+' + spread.toFixed(1) + '%';
+        resultValue.style.color = '#033D5D';
+        resultText.textContent = 'Equity Risk Premium';
+        resultText.style.color = '#47A190';
+    } else if (spread < 0) {
+        resultCard.style.background = 'rgba(193,41,61,0.06)';
+        resultCard.style.border = '1px solid rgba(193,41,61,0.3)';
+        resultLabel.textContent = 'Verlust der Aktionäre';
+        resultLabel.style.color = '#C1293D';
+        resultValue.textContent = spread.toFixed(1) + '%';
+        resultValue.style.color = '#C1293D';
+        resultText.textContent = 'Unternehmen verbrennt Kapital';
+        resultText.style.color = '#C1293D';
+    } else {
+        resultCard.style.background = '#F8F8F8';
+        resultCard.style.border = '1px solid #BEB6AA';
+        resultLabel.textContent = 'Break Even';
+        resultLabel.style.color = '#717171';
+        resultValue.textContent = '±0%';
+        resultValue.style.color = '#2B2B2B';
+        resultText.textContent = 'Kein Mehrwert für Aktionäre';
+        resultText.style.color = '#717171';
+    }
+
+    // Warning
+    var warning = document.getElementById('equity-warning');
+    warning.style.display = spread < 0 ? '' : 'none';
+
+    // Fazit text
+    var fazit = document.getElementById('equity-fazit');
+    var fazitText = document.getElementById('equity-fazit-text');
+    if (spread > 2) {
+        fazit.style.background = '#F8F8F8';
+        fazit.style.border = '1px solid #BEB6AA';
+        fazitText.innerHTML = '<strong>Ergebnis:</strong> Das Unternehmen verdient ' + spread.toFixed(1) + '% mehr als es für das geliehene Geld zahlt. Dieser Überschuss steigert den Unternehmenswert und gehört den Aktionären.';
+        fazitText.style.color = '#2B2B2B';
+    } else if (spread > 0) {
+        fazit.style.background = 'rgba(227,105,30,0.06)';
+        fazit.style.border = '1px solid rgba(227,105,30,0.3)';
+        fazitText.innerHTML = '<strong>Knapp:</strong> Der Spread von nur ' + spread.toFixed(1) + '% reicht kaum, um das höhere Risiko der Aktionäre zu kompensieren. Aktien wären hier wenig attraktiv.';
+        fazitText.style.color = '#2B2B2B';
+    } else if (spread === 0) {
+        fazit.style.background = '#F8F8F8';
+        fazit.style.border = '1px solid #BEB6AA';
+        fazitText.innerHTML = '<strong>Break Even:</strong> Das Unternehmen verdient exakt so viel wie es an Zinsen zahlt. Für Aktionäre gibt es keinen Mehrwert — warum sollte jemand das Risiko tragen?';
+        fazitText.style.color = '#717171';
+    } else {
+        fazit.style.background = 'rgba(193,41,61,0.06)';
+        fazit.style.border = '1px solid rgba(193,41,61,0.3)';
+        fazitText.innerHTML = '<strong>Achtung:</strong> Das Unternehmen verdient weniger als es an Zinsen zahlt. Es verliert ' + Math.abs(spread).toFixed(1) + '% pro Jahr an Substanz. Langfristig führt das zur Insolvenz — die Anleihe wird wertlos, die Aktie auch.';
+        fazitText.style.color = '#C1293D';
+    }
+}
+
+// ===== END AKTIEN & ANLEIHEN ERKLÄRER =====
+
+// Toast Notification System
+function showToast(message, type = 'success', duration = 4000) {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            min-width: 300px;
+            max-width: 500px;
+            font-size: 14px;
+            line-height: 1.5;
+            animation: slideIn 0.3s ease-out;
+            cursor: pointer;
+        `;
+    toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>' :
+            type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>' :
+                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
+                </svg>
+                <span>${message}</span>
+            </div>
+        `;
+
+    // Add animation styles if not already present
+    if (!document.getElementById('toast-animations')) {
+        const style = document.createElement('style');
+        style.id = 'toast-animations';
+        style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(400px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(400px); opacity: 0; }
+                }
+            `;
+        document.head.appendChild(style);
+    }
+
+    // Add toast to container
+    toastContainer.appendChild(toast);
+
+    // Remove toast on click
+    toast.addEventListener('click', () => removeToast(toast));
+
+    // Auto-remove after duration
+    if (duration > 0) {
+        setTimeout(() => removeToast(toast), duration);
+    }
+
+    return toast;
+}
+
+function removeToast(toast) {
+    toast.style.animation = 'slideOut 0.3s ease-in';
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 300);
+}
+const fixkostenModal = { list: getEl('fixkosten-list'), total: getEl('modal-total') };
+
+function openFixkostenModal() {
+    // Lade Vermieterkonto-Daten aus sessionStorage bevor Modal geöffnet wird
+    const saved = sessionStorage.getItem('vermieterkontoData');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            Object.assign(vermieterkontoData, parsed);
+        } catch (e) {
+            console.error('Fehler beim Laden der Vermieterkonto-Daten:', e);
+        }
+    }
+    openModal('fixkosten-modal');
+    // Render list AFTER modal is opened to ensure DOM is ready
+    renderFixkostenList();
+}
+
+function saveFixkosten() { calculateAndUpdate(); closeModal('fixkosten-modal'); }
+function renderFixkostenList() {
+    fixkostenModal.list.innerHTML = '';
+    let total = 0;
+
+    // Vermieterkonto-Daten holen
+    const vermieterData = getVermieterkontoData();
+
+    // Automatische Zeile für Vermieterkonto (nur in Variante A)
+    if (currentVariant === 'A' && vermieterData.saldo !== 0) {
+        const autoItemEl = document.createElement('div');
+
+        if (vermieterData.saldo < 0) {
+            // Negativ: Zusätzliche Ausgabe (gelb/warnung)
+            autoItemEl.className = 'grid grid-cols-12 gap-3 items-center bg-gray-800/80 p-3 rounded-lg border border-yellow-600/50 shadow-sm';
+            autoItemEl.innerHTML = `
+                    <div class="col-span-4 text-yellow-400 text-sm flex items-center gap-1 font-medium">
+                        <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        Vermieterkonto-Deckung
+                    </div>
+                    <div class="col-span-3 text-yellow-400 font-bold text-right pr-4">${formatCurrency(Math.abs(vermieterData.saldo))}</div>
+                    <div class="col-span-2 text-gray-400 text-sm">mtl.</div>
+                    <div class="col-span-2 text-gray-500 text-sm italic">automatisch</div>
+                    <div class="col-span-1"></div>
+                `;
+            total += Math.abs(vermieterData.saldo);
+        } else {
+            // Positiv: Einsparung (grün)
+            autoItemEl.className = 'grid grid-cols-12 gap-3 items-center bg-gray-800/80 p-3 rounded-lg border border-green-600/50 shadow-sm';
+            autoItemEl.innerHTML = `
+                    <div class="col-span-4 text-green-400 text-sm flex items-center gap-1 font-medium">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Mieteinnahmen
+                    </div>
+                    <div class="col-span-3 text-green-400 font-bold text-right pr-4">-${formatCurrency(vermieterData.saldo)}</div>
+                    <div class="col-span-2 text-gray-400 text-sm">mtl.</div>
+                    <div class="col-span-2 text-gray-500 text-sm italic">automatisch</div>
+                    <div class="col-span-1"></div>
+                `;
+            total -= vermieterData.saldo; // Reduziert die Fixkosten
+        }
+
+        fixkostenModal.list.appendChild(autoItemEl);
+    }
+
+    // Reguläre Fixkosten-Items
+    fixkostenItems.forEach((item, index) => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'grid grid-cols-12 gap-3 items-center group bg-gray-800/40 hover:bg-gray-800/70 p-2 md:p-3 rounded-lg border border-transparent hover:border-gray-700 transition-all';
+        itemEl.innerHTML = `
+            <div class="col-span-4">
+                <input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten Bezeichnung" class="w-full bg-gray-900/50 border border-gray-700 focus:border-mlp-corporate-blue text-white p-2.5 rounded-lg transition-colors text-sm">
+            </div>
+            <div class="col-span-3 relative">
+                <input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="0.00" class="w-full bg-gray-900/50 border border-gray-700 focus:border-mlp-corporate-blue text-white p-2.5 pr-8 rounded-lg transition-colors text-sm text-right">
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
+            </div>
+            <div class="col-span-2">
+                <select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="w-full bg-gray-900/50 border border-gray-700 focus:border-mlp-corporate-blue text-white p-2.5 rounded-lg transition-colors text-sm">
+                    ${['monthly', 'quarterly', 'annually'].map(i => `<option value="${i}" ${item.interval === i ? 'selected' : ''}>${i === 'monthly' ? 'mtl.' : i === 'quarterly' ? 'viertelj.' : 'jährl.'}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-span-2">
+                <select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="w-full bg-gray-900/50 border border-gray-700 focus:border-mlp-corporate-blue text-white p-2.5 rounded-lg transition-colors text-sm">
+                    <option value="fixkosten" ${item.target === 'fixkosten' ? 'selected' : ''}>Fixkosten</option>
+                    <option value="depot" ${item.target === 'depot' ? 'selected' : ''}>Sparplan</option>
+                </select>
+            </div>
+            <div class="col-span-1 flex justify-center">
+                <button onclick="removeFixkostenItem(${index})" class="text-gray-500 hover:text-red-400 hover:bg-white/5 p-2 rounded-lg transition-colors flex items-center justify-center group-hover:opacity-100 opacity-60" aria-label="Entfernen">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+        `;
+        fixkostenModal.list.appendChild(itemEl);
+        total += getMonthlyAmount(item);
+    });
+
+    fixkostenModal.total.textContent = formatCurrency(total);
+}
+function updateFixkostenItem(index, key, value) {
+    // Normalize types per field
+    if (key === 'amount') {
+        value = parseFloat(value);
+        if (!Number.isFinite(value)) value = 0;
+        // Allow negative values (for additional income items)
+        if (value < -1000000) value = -1000000; // min realistic amount (-1M EUR)
+        if (value > 1000000) value = 1000000; // max realistic amount (1M EUR)
+    }
+    // Persist change in model
+    if (fixkostenItems[index]) {
+        fixkostenItems[index][key] = value;
+    }
+    // Re-render modal list & totals (debounced for performance)
+    debouncedRenderFixkostenList();
+}
+function addFixkostenItem() { fixkostenItems.push({ name: '', amount: 0, interval: 'monthly', target: 'fixkosten' }); renderFixkostenList(); }
+function removeFixkostenItem(index) { fixkostenItems.splice(index, 1); renderFixkostenList(); }
+const depotModal = { list: getEl('depot-list'), total: getEl('depot-total'), warning: getEl('depot-warning'), saveButton: getEl('depot-save-button') };
+function saveDepot() { if (checkDepotTotal()) { calculateAndUpdate(); closeModal('depot-modal'); } }
+function renderDepotList() {
+    depotModal.list.innerHTML = '';
+    let total = 0;
+    depotItems.forEach((item, index) => {
+        total += item.allocation;
+        // Ensure risk property exists (backward compatibility)
+        if (!item.risk) item.risk = 'conservative';
+
+        const itemEl = document.createElement('div');
+        itemEl.className = 'grid grid-cols-12 gap-2 items-center mb-2';
+        itemEl.innerHTML = `
+                <input type="color" value="${item.color}" onchange="updateDepotItem(${index}, 'color', this.value)"
+                       class="col-span-1 h-8 bg-gray-700 p-0 rounded" title="Fonds-Farbe">
+                <input type="text" value="${item.name}" onchange="updateDepotItem(${index}, 'name', this.value)"
+                       placeholder="Fonds / ETF Name" class="col-span-5 bg-gray-700 p-1 rounded text-sm">
+                <div class="relative col-span-2">
+                    <input type="number" value="${item.allocation}" onchange="updateDepotItem(${index}, 'allocation', this.value)"
+                           class="w-full text-right pr-6 bg-gray-700 p-1 rounded text-sm">
+                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+                </div>
+                <div class="col-span-3 risk-toggle ${item.risk}" onclick="updateDepotItem(${index}, 'risk', '${item.risk === 'conservative' ? 'aggressive' : 'conservative'}')" title="${item.risk === 'conservative' ? 'Konservativ' : 'Chancenreich'}">
+                    <span class="risk-dot conservative"></span>
+                    <span class="risk-dot aggressive"></span>
+                </div>
+                <button type="button" onclick="removeDepotItem(${index})"
+                        class="col-span-1 text-red-400 hover:text-red-300 text-xl" title="Entfernen">&times;</button>
+            `;
+        depotModal.list.appendChild(itemEl);
+    });
+    checkDepotTotal();
+}
+
+function updateDepotItem(index, key, value) {
+    if (key === 'allocation') value = parseInt(value, 10) || 0;
+    depotItems[index][key] = value;
+    debouncedRenderDepotList();
+    renderDepotBasin(); // Update basin visualization
+}
+
+function addDepotItem() {
+    depotItems.push({
+        name: '',
+        allocation: 0,
+        color: '#' + Math.floor(Math.random() * 16777215).toString(16),
+        risk: 'conservative'
+    });
+    renderDepotList();
+}
+function removeDepotItem(index) {
+    depotItems.splice(index, 1);
+    renderDepotList();
+    renderDepotBasin(); // Update basin visualization
+}
+
+function checkDepotTotal() {
+    const total = depotItems.reduce((sum, i) => sum + i.allocation, 0);
+    depotModal.total.textContent = `${total} %`;
+    if (total === 100) {
+        depotModal.total.className = "text-2xl font-bold text-green-400";
+        depotModal.warning.textContent = "";
+        depotModal.saveButton.disabled = false;
+        depotModal.saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        return true;
+    } else {
+        depotModal.total.className = "text-2xl font-bold text-red-400";
+        depotModal.warning.textContent = "Die Summe der Verteilung muss 100% ergeben.";
+        depotModal.saveButton.disabled = true;
+        depotModal.saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+        return false;
+    }
+}
+
+function renderDepotBasin() {
+    if (!basins.depot) return;
+
+    // MLP Design Palette - Blue scale for conservative, Red scale for aggressive
+    const mlpColors = {
+        conservative: [
+            '#002f6c', // MLP Blue (darkest)
+            '#0047a0', // MLP Blue medium
+            '#3b82f6', // Blue-500
+            '#60a5fa', // Blue-400
+            '#93c5fd'  // Blue-300 (lightest)
+        ],
+        aggressive: [
+            '#991b1b', // Red-800 (darkest)
+            '#dc2626', // Red-600
+            '#ef4444', // Red-500
+            '#f87171', // Red-400
+            '#fca5a5'  // Red-300 (lightest)
+        ]
+    };
+
+    // Filter active funds (allocation > 0)
+    const conservative = depotItems.filter(i => i.risk === 'conservative' && i.allocation > 0);
+    const aggressive = depotItems.filter(i => i.risk === 'aggressive' && i.allocation > 0);
+
+    // Generate fund blocks HTML - SQUARES (width = height)
+    // Better scaling: 10% → 24px, 50% → 40px, 100% → 56px
+    const calculateSize = (allocation) => {
+        const baseSize = 24; // Minimum size
+        const scaleFactor = 0.32; // Better visibility of differences
+        return Math.round(baseSize + (allocation * scaleFactor));
+    };
+
+    const leftBlocks = conservative.map((item, index) => {
+        const size = calculateSize(item.allocation);
+        const color = mlpColors.conservative[index % mlpColors.conservative.length];
+        return `<div class="fund-block" style="background: ${color}; width: ${size}px; height: ${size}px" title="${item.name} (${item.allocation}%)"></div>`;
+    }).join('');
+
+    const rightBlocks = aggressive.map((item, index) => {
+        const size = calculateSize(item.allocation);
+        const color = mlpColors.aggressive[index % mlpColors.aggressive.length];
+        return `<div class="fund-block" style="background: ${color}; width: ${size}px; height: ${size}px" title="${item.name} (${item.allocation}%)"></div>`;
+    }).join('');
+
+    // Debug logs removed in v1.5.2
+
+    // Render basin with fund blocks
+    basins.depot.innerHTML = `
+            <div class="depot-basin-content">
+                <div class="fund-blocks left">${leftBlocks || '<div style="width: 8px"></div>'}</div>
+                <div class="depot-info">
+                    <div class="text-sm font-semibold">Vermögensaufbau</div>
+                    <div class="text-2xl font-bold">${formatCurrency(inputs.depotCurrent.value)}</div>
+                    <div class="text-xs text-gray-400">(Klick zum Bearbeiten)</div>
+                </div>
+                <div class="fund-blocks right">${rightBlocks || '<div style="width: 8px"></div>'}</div>
+            </div>
+        `;
+}
+
+
+// === MSCI RENDITEDREIECK FUNCTIONS ===
+let msciZoomState = {
+    zoomed: false,
+    scale: 1,
+    translateX: 0,
+    translateY: 0
+};
+
+function openMsciRenditedreieck() {
+    resetMsciZoom();
+    openModal('msci-modal');
+}
+
+function closeMsciRenditedreieck() {
+    closeModal('msci-modal');
+    resetMsciZoom();
+}
+
+function resetMsciZoom() {
+    msciZoomState = { zoomed: false, scale: 1, translateX: 0, translateY: 0 };
+    const img = getEl('msci-image');
+    const container = getEl('msci-container');
+    if (img) {
+        img.style.transform = 'scale(1) translate(0, 0)';
+        img.style.cursor = 'zoom-in';
+    }
+    if (container) {
+        container.style.cursor = 'zoom-in';
+    }
+}
+
+function toggleMsciZoom(event) {
+    const img = getEl('msci-image');
+    const container = getEl('msci-container');
+    if (!img || !container) return;
+
+    if (!msciZoomState.zoomed) {
+        // Zoom in: Berechne Position relativ zum Klick
+        const rect = container.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Prozentuale Position (0-1)
+        const xPercent = x / rect.width;
+        const yPercent = y / rect.height;
+
+        // Zoom-Level
+        const zoomScale = 2.5;
+
+        // Berechne Translation um den Klickpunkt zu zentrieren
+        const translateX = (0.5 - xPercent) * 100 * (zoomScale - 1);
+        const translateY = (0.5 - yPercent) * 100 * (zoomScale - 1);
+
+        msciZoomState = {
+            zoomed: true,
+            scale: zoomScale,
+            translateX: translateX,
+            translateY: translateY
+        };
+
+        img.style.transform = `scale(${zoomScale}) translate(${translateX}%, ${translateY}%)`;
+        img.style.cursor = 'zoom-out';
+        container.style.cursor = 'zoom-out';
+    } else {
+        // Zoom out
+        resetMsciZoom();
+    }
+}
+
+// Filter-Funktionen entfernt - nur Zoom bleibt aktiv
+
+// === IMMOBILIEN FUNCTIONS ===
+// Immobilien-Daten Objekt (wird in localStorage gespeichert)
+// === IMMOBILIEN-DATENMODELL ===
+// Liste von Immobilien mit Wert und Darlehen
+let immobilienData = [];
+let immobilienAnzahl = 0;
+
+// === VERMIETERKONTO-DATENMODELL ===
+// Separates Datenmodell für Einnahmen und Ausgaben
+let vermieterkontoData = {
+    miete: 0,                   // Monatliche Mieteinnahmen
+    sonstigeEinnahmen: 0,       // Sonstige monatliche Einnahmen
+    rate: 0,                    // Monatliche Darlehensrate (kann auto-berechnet oder manuell sein)
+    zinssatz: 0,                // Zinssatz in % (für Annuitätenberechnung)
+    tilgungssatz: 0,            // Tilgungssatz in % (für Annuitätenberechnung)
+    wertsteigerung: 0,          // Wertsteigerung in % pro Jahr
+    instandhaltung: 0,          // Monatliche Instandhaltungsrücklage
+    steuern: 0,                 // Monatliche Steuern & Nebenkosten
+    cashflowIntegration: false  // Toggle: Flows ins Gesamtsystem integrieren
+};
+
+function getVermieterkontoData() {
+    const einnahmen = vermieterkontoData.miete + vermieterkontoData.sonstigeEinnahmen;
+    const ausgaben = vermieterkontoData.rate + vermieterkontoData.instandhaltung + vermieterkontoData.steuern;
+    const saldo = einnahmen - ausgaben;
+
+    // Berechne Gesamtdarlehen aus allen Immobilien
+    const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
+
+    return {
+        einnahmen,      // Gesamt-Einnahmen
+        ausgaben,       // Gesamt-Ausgaben
+        saldo,          // Netto-Cashflow (kann positiv oder negativ sein)
+        // Zur Info: Wie viel davon ist Tilgung? (später für Tooltip)
+        tilgung: calculateTilgungsanteil(vermieterkontoData.rate, gesamtdarlehen)
+    };
+}
+
+// Berechnet monatliche Darlehensrate (Annuität)
+function berechneDarlehensrate(darlehen, zinssatz, tilgungssatz) {
+    if (!darlehen || darlehen === 0) return { gesamt: 0, zinsen: 0, tilgung: 0 };
+    if (!zinssatz && !tilgungssatz) return { gesamt: 0, zinsen: 0, tilgung: 0 };
+
+    const jahresrate = darlehen * (zinssatz + tilgungssatz) / 100;
+    const monatsrate = jahresrate / 12;
+
+    const zinsenMonatlich = (darlehen * zinssatz / 100) / 12;
+    const tilgungMonatlich = monatsrate - zinsenMonatlich;
+
+    return {
+        gesamt: monatsrate,
+        zinsen: zinsenMonatlich,
+        tilgung: tilgungMonatlich
+    };
+}
+
+// Hilfsfunktion: Berechnet ungefähren Tilgungsanteil (vereinfacht: 1-2% Zinsen angenommen)
+function calculateTilgungsanteil(rate, restdarlehen) {
+    if (restdarlehen === 0 || rate === 0) return 0;
+    // Wenn wir Zinssatz haben, nutze echte Berechnung
+    if (vermieterkontoData.zinssatz > 0) {
+        const zinsenMonatlich = (restdarlehen * vermieterkontoData.zinssatz / 100) / 12;
+        return Math.max(0, rate - zinsenMonatlich);
+    }
+    // Fallback: Annahme 2% Zinsen
+    const geschaetzterZins = restdarlehen * 0.02 / 12;
+    return Math.max(0, rate - geschaetzterZins);
+}
+
+// Lädt Immobilien-Daten aus sessionStorage
+function loadImmobilienData() {
+    const saved = sessionStorage.getItem('immobilienData');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            // Kompatibilität: Altes Objekt-Format in Array konvertieren
+            if (!Array.isArray(parsed)) {
+                immobilienData = [{ wert: parsed.wert || 0, darlehen: parsed.darlehen || 0 }];
+            } else {
+                immobilienData = parsed;
+            }
+        } catch (e) {
+            console.warn('Fehler beim Laden der Immobilien-Daten', e);
+        }
+    }
+    const savedAnzahl = sessionStorage.getItem('immobilienAnzahl');
+    immobilienAnzahl = savedAnzahl ? parseInt(savedAnzahl) : (immobilienData.length > 0 && immobilienData[0].wert > 0 ? 1 : 0);
+    updateImmobilienInputs();
+    updateImmobilienSummary();
+}
+
+// Aktualisiert die Eingabefelder im Modal mit den gespeicherten Werten
+function updateImmobilienInputs() {
+    // Quick-Fix: Zeige erste Immobilie im Modal
+    const immo = immobilienData[0] || { wert: 0, darlehen: 0, darlehenOriginal: 0, zinssatz: 0, tilgungssatz: 0, wertsteigerung: 0 };
+
+    if (getEl('immo-wert')) getEl('immo-wert').value = immo.wert || 0;
+    if (getEl('immo-darlehen')) getEl('immo-darlehen').value = immo.darlehen || 0;
+    if (getEl('immo-darlehen-original')) getEl('immo-darlehen-original').value = immo.darlehenOriginal || 0;
+    if (getEl('immo-zinssatz')) getEl('immo-zinssatz').value = immo.zinssatz || 0;
+    if (getEl('immo-tilgungssatz')) getEl('immo-tilgungssatz').value = immo.tilgungssatz || 0;
+    if (getEl('immo-wertsteigerung')) getEl('immo-wertsteigerung').value = immo.wertsteigerung || 0;
+    if (getEl('immo-anzahl')) getEl('immo-anzahl').value = immobilienAnzahl;
+
+    // Trigger Darlehensberechnung wenn Werte vorhanden
+    if (immo.zinssatz > 0 || immo.tilgungssatz > 0) {
+        updateImmoDarlehensrateBerechnung();
+    }
+}
+
+// Berechnet und zeigt Nettovermögen an (Cashflow jetzt im Vermieterkonto)
+function updateImmobilienSummary() {
+    const wert = parseFloat(getEl('immo-wert')?.value || 0);
+    const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+    const nettovermoegen = wert - darlehen;
+
+    const nettoEl = getEl('immo-nettovermoegen');
+
+    if (nettoEl) {
+        nettoEl.textContent = formatCurrency(nettovermoegen);
+        nettoEl.className = `text-2xl font-bold ${nettovermoegen >= 0 ? 'text-green-400' : 'text-red-400'}`;
+    }
+
+    // Cashflow-Element ausblenden (jetzt im Vermieterkonto)
+    const cashflowContainer = getEl('immo-cashflow')?.parentElement;
+    if (cashflowContainer) {
+        cashflowContainer.style.display = 'none';
+    }
+}
+
+// Speichert Immobilien-Daten und schließt Modal
+function saveImmobilien() {
+    // Quick-Fix: Erstelle/Update erste Immobilie aus Modal-Daten
+    // TODO: Später erweitern für mehrere Immobilien
+    const wert = parseFloat(getEl('immo-wert')?.value || 0);
+    const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+    const darlehenOriginal = parseFloat(getEl('immo-darlehen-original')?.value || 0);
+    const zinssatz = parseFloat(getEl('immo-zinssatz')?.value || 0);
+    const tilgungssatz = parseFloat(getEl('immo-tilgungssatz')?.value || 0);
+    const wertsteigerung = parseFloat(getEl('immo-wertsteigerung')?.value || 0);
+
+    if (immobilienData.length === 0) {
+        immobilienData.push({ wert, darlehen, darlehenOriginal, zinssatz, tilgungssatz, wertsteigerung });
+    } else {
+        immobilienData[0] = { wert, darlehen, darlehenOriginal, zinssatz, tilgungssatz, wertsteigerung };
+    }
+
+    // Übertrage berechnete Rate ins Vermieterkonto
+    // WICHTIG: Verwende darlehenOriginal für Berechnung (Annuität bleibt konstant!)
+    // Falls darlehenOriginal nicht gesetzt, fallback auf aktuelles Restdarlehen
+    const darlehenFuerBerechnung = darlehenOriginal > 0 ? darlehenOriginal : darlehen;
+
+    if ((zinssatz > 0 || tilgungssatz > 0) && darlehenFuerBerechnung > 0) {
+        const result = berechneDarlehensrate(darlehenFuerBerechnung, zinssatz, tilgungssatz);
+        vermieterkontoData.rate = Math.round(result.gesamt); // Auf volle Euro runden
+        vermieterkontoData.zinssatz = zinssatz;
+        vermieterkontoData.tilgungssatz = tilgungssatz;
+        vermieterkontoData.wertsteigerung = wertsteigerung;
+        sessionStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
+    }
+
+    immobilienAnzahl = parseInt(getEl('immo-anzahl')?.value || 0);
+    sessionStorage.setItem('immobilienData', JSON.stringify(immobilienData));
+    sessionStorage.setItem('immobilienAnzahl', immobilienAnzahl.toString());
+    calculateAndUpdate(); // Aktualisiert alle Basins inkl. Vermieterkonto
+    closeModal('immobilien-modal');
+}
+
+// Event Listener für Immobilien-Inputs (Live-Update der Zusammenfassung)
+function setupImmobilienListeners() {
+    const fields = ['wert', 'darlehen'];
+    fields.forEach(field => {
+        const input = getEl('immo-' + field);
+        if (input) {
+            input.addEventListener('input', updateImmobilienSummary);
+        }
+    });
+
+    // Darlehens-Felder: Auto-Berechnung der Rate
+    const darlehensFields = ['zinssatz', 'tilgungssatz', 'darlehen-original'];
+    darlehensFields.forEach(field => {
+        const input = getEl('immo-' + field);
+        if (input) {
+            input.addEventListener('input', updateImmoDarlehensrateBerechnung);
+        }
+    });
+
+    // Wertsteigerung: Update Tilgungsplan
+    const wertsteigerungInput = getEl('immo-wertsteigerung');
+    if (wertsteigerungInput) {
+        wertsteigerungInput.addEventListener('input', updateImmoTilgungsplan);
+    }
+
+    // Tilgungsplan-Slider
+    const slider = getEl('immo-tilgungsplan-slider');
+    if (slider) {
+        slider.addEventListener('input', updateImmoTilgungsplan);
+    }
+}
+
+// Darlehensberechnung für Immobilien-Modal
+function updateImmoDarlehensrateBerechnung() {
+    const zinssatz = parseFloat(getEl('immo-zinssatz')?.value || 0);
+    const tilgungssatz = parseFloat(getEl('immo-tilgungssatz')?.value || 0);
+    const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+    const darlehenOriginal = parseFloat(getEl('immo-darlehen-original')?.value || 0);
+
+    // WICHTIG: Verwende ursprüngliches Darlehen für Berechnung (Annuität bleibt konstant!)
+    // Falls nicht gesetzt, fallback auf aktuelles Restdarlehen
+    const darlehenFuerBerechnung = darlehenOriginal > 0 ? darlehenOriginal : darlehen;
+
+    if (darlehenFuerBerechnung === 0 || (zinssatz === 0 && tilgungssatz === 0)) {
+        // Verstecke Anzeige, wenn keine Berechnung möglich
+        const display = getEl('immo-rate-berechnet-display');
+        if (display) display.classList.add('hidden');
+
+        const tilgungsplanSection = getEl('immo-tilgungsplan-section');
+        if (tilgungsplanSection) tilgungsplanSection.classList.add('hidden');
+        return;
+    }
+
+    // Berechne Rate mit ursprünglichem Darlehen
+    const result = berechneDarlehensrate(darlehenFuerBerechnung, zinssatz, tilgungssatz);
+
+    // Zeige berechnete Rate
+    const display = getEl('immo-rate-berechnet-display');
+    const wertEl = getEl('immo-rate-berechnet-wert');
+    const zinsenEl = getEl('immo-rate-zinsen');
+    const tilgungEl = getEl('immo-rate-tilgung');
+
+    if (display) display.classList.remove('hidden');
+    if (wertEl) wertEl.textContent = formatCurrency(result.gesamt);
+    if (zinsenEl) zinsenEl.textContent = formatCurrency(result.zinsen);
+    if (tilgungEl) tilgungEl.textContent = formatCurrency(result.tilgung);
+
+    // Zeige Tilgungsplan
+    const tilgungsplanSection = getEl('immo-tilgungsplan-section');
+    if (tilgungsplanSection) tilgungsplanSection.classList.remove('hidden');
+
+    // Initial Tilgungsplan aktualisieren
+    updateImmoTilgungsplan();
+}
+
+// Tilgungsplan-Berechnung für Immobilien-Modal
+function updateImmoTilgungsplan() {
+    const jahre = parseInt(getEl('immo-tilgungsplan-slider')?.value || 10);
+    const jahreEl = getEl('immo-tilgungsplan-jahre');
+    if (jahreEl) jahreEl.textContent = jahre;
+
+    const zinssatz = parseFloat(getEl('immo-zinssatz')?.value || 0);
+    const tilgungssatz = parseFloat(getEl('immo-tilgungssatz')?.value || 0);
+    const wertsteigerung = parseFloat(getEl('immo-wertsteigerung')?.value || 0);
+    const darlehen = parseFloat(getEl('immo-darlehen')?.value || 0);
+    const darlehenOriginal = parseFloat(getEl('immo-darlehen-original')?.value || 0);
+    const immowert = parseFloat(getEl('immo-wert')?.value || 0);
+
+    if (darlehen === 0) return;
+
+    // WICHTIG: Verwende ursprüngliches Darlehen für Ratenberechnung (Annuität konstant!)
+    const darlehenFuerBerechnung = darlehenOriginal > 0 ? darlehenOriginal : darlehen;
+
+    // Berechnung über Jahre (Tilgung beginnt bei aktuellem Restdarlehen)
+    let restschuld = darlehen;
+    let gezahlteZinsen = 0;
+    const result = berechneDarlehensrate(darlehenFuerBerechnung, zinssatz, tilgungssatz);
+    const monatsrate = result.gesamt;
+
+    for (let monat = 1; monat <= jahre * 12; monat++) {
+        const zinsenDiesenMonat = (restschuld * zinssatz / 100) / 12;
+        const tilgungDiesenMonat = monatsrate - zinsenDiesenMonat;
+
+        gezahlteZinsen += zinsenDiesenMonat;
+        restschuld = Math.max(0, restschuld - tilgungDiesenMonat);
+
+        if (restschuld === 0) break;
+    }
+
+    // Wertsteigerung der Immobilie
+    const wertMitSteigerung = immowert * Math.pow(1 + wertsteigerung / 100, jahre);
+    const eigenkapital = wertMitSteigerung - restschuld;
+
+    // Anzeige aktualisieren
+    const restschuldEl = getEl('immo-tilgungsplan-restschuld');
+    const zinsenEl = getEl('immo-tilgungsplan-zinsen');
+    const eigenkapitalEl = getEl('immo-tilgungsplan-eigenkapital');
+    const wertEl = getEl('immo-tilgungsplan-wert');
+
+    if (restschuldEl) restschuldEl.textContent = formatCurrency(restschuld);
+    if (zinsenEl) zinsenEl.textContent = formatCurrency(gezahlteZinsen);
+    if (eigenkapitalEl) eigenkapitalEl.textContent = formatCurrency(eigenkapital);
+    if (wertEl) wertEl.textContent = formatCurrency(wertMitSteigerung);
+}
+
+// === END IMMOBILIEN FUNCTIONS ===
+
+// === VERMIETERKONTO FUNCTIONS ===
+function saveVermieterkonto() {
+    // Zinssatz, Tilgungssatz, Wertsteigerung werden jetzt im Immobilien-Modal verwaltet
+    // und automatisch beim Speichern der Immobilie ins vermieterkontoData übertragen
+    vermieterkontoData.miete = parseFloat(getEl('vk-miete')?.value || 0);
+    vermieterkontoData.sonstigeEinnahmen = parseFloat(getEl('vk-sonstige-einnahmen')?.value || 0);
+    vermieterkontoData.rate = parseFloat(getEl('vk-rate')?.value || 0);
+    vermieterkontoData.instandhaltung = parseFloat(getEl('vk-instandhaltung')?.value || 0);
+    vermieterkontoData.steuern = parseFloat(getEl('vk-steuern')?.value || 0);
+    vermieterkontoData.cashflowIntegration = getEl('vk-cashflow-integration')?.checked || false;
+
+    sessionStorage.setItem('vermieterkontoData', JSON.stringify(vermieterkontoData));
+    calculateAndUpdate();
+    closeModal('vermieterkonto-modal');
+}
+
+// Event Listener für Vermieterkonto-Inputs (Live-Update der Zusammenfassung)
+function setupVermieterkontoListeners() {
+    const fields = ['miete', 'sonstige-einnahmen', 'rate', 'instandhaltung', 'steuern'];
+    fields.forEach(field => {
+        const input = getEl('vk-' + field);
+        if (input) {
+            input.addEventListener('input', updateVermieterkontoSummary);
+        }
+    });
+}
+
+function updateVermieterkontoSummary() {
+    const miete = parseFloat(getEl('vk-miete')?.value || 0);
+    const sonstigeEinnahmen = parseFloat(getEl('vk-sonstige-einnahmen')?.value || 0);
+    const rate = parseFloat(getEl('vk-rate')?.value || 0);
+    const instandhaltung = parseFloat(getEl('vk-instandhaltung')?.value || 0);
+    const steuern = parseFloat(getEl('vk-steuern')?.value || 0);
+
+    const einnahmen = miete + sonstigeEinnahmen;
+    const ausgaben = rate + instandhaltung + steuern;
+    const saldo = einnahmen - ausgaben;
+
+    // Zusammenfassung aktualisieren
+    const einnahmenEl = getEl('vk-einnahmen-total');
+    const ausgabenEl = getEl('vk-ausgaben-total');
+    const saldoEl = getEl('vk-saldo');
+
+    if (einnahmenEl) einnahmenEl.textContent = formatCurrency(einnahmen);
+    if (ausgabenEl) ausgabenEl.textContent = formatCurrency(ausgaben);
+    if (saldoEl) {
+        saldoEl.textContent = formatCurrency(saldo);
+        // Farbe je nach Saldo
+        saldoEl.className = saldo >= 0
+            ? 'text-2xl font-bold text-green-400'
+            : 'text-2xl font-bold text-red-400';
+    }
+}
+
+function loadVermieterkontoData() {
+    const saved = sessionStorage.getItem('vermieterkontoData');
+    if (saved) {
+        try {
+            vermieterkontoData = JSON.parse(saved);
+        } catch (e) {
+            console.error('Failed to load vermieterkonto data:', e);
+        }
+    }
+
+    // Felder im Modal befüllen
+    if (getEl('vk-miete')) getEl('vk-miete').value = vermieterkontoData.miete || 0;
+    if (getEl('vk-sonstige-einnahmen')) getEl('vk-sonstige-einnahmen').value = vermieterkontoData.sonstigeEinnahmen || 0;
+    if (getEl('vk-rate')) getEl('vk-rate').value = vermieterkontoData.rate || 0;
+    if (getEl('vk-instandhaltung')) getEl('vk-instandhaltung').value = vermieterkontoData.instandhaltung || 0;
+    if (getEl('vk-steuern')) getEl('vk-steuern').value = vermieterkontoData.steuern || 0;
+    if (getEl('vk-cashflow-integration')) getEl('vk-cashflow-integration').checked = vermieterkontoData.cashflowIntegration || false;
+
+    updateVermieterkontoSummary();
+}
+// === END VERMIETERKONTO FUNCTIONS ===
+
+// --- Helpers: Export current SVG flow and Chart.js chart as images ---
+async function svgToPngDataUrl(svgElement, scale = 2, bg = '#ffffff') {
+    const rect = svgElement.getBoundingClientRect();
+
+    // Get actual viewBox or use bounding box to ensure complete SVG capture
+    const viewBox = svgElement.getAttribute('viewBox');
+    let width = rect.width;
+    let height = rect.height;
+
+    if (viewBox) {
+        const parts = viewBox.split(/\s+|,/);
+        width = parseFloat(parts[2]) || rect.width;
+        height = parseFloat(parts[3]) || rect.height;
+    }
+
+    // 1) Clone the on-screen SVG so we can preprocess without affecting UI
+    const clone = svgElement.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+    clone.setAttribute('width', width);
+    clone.setAttribute('height', height);
+    if (viewBox) clone.setAttribute('viewBox', viewBox);
+    clone.removeAttribute('style');
+
+    // 2) Remove mask for export (avoids black rectangle in rasterization)
+    const visuals = clone.querySelector('#flow-visuals');
+    if (visuals) visuals.removeAttribute('mask');
+
+    // 3) Inject background rect (theme-aware)
+    const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bgRect.setAttribute('x', '0');
+    bgRect.setAttribute('y', '0');
+    bgRect.setAttribute('width', '100%');
+    bgRect.setAttribute('height', '100%');
+    bgRect.setAttribute('fill', bg);
+    clone.insertBefore(bgRect, clone.firstChild);
+
+    // 4) Inline stroke colors on cloned paths (in case CSS vars don't carry over)
+    try {
+        const originalPaths = svgElement.querySelectorAll('.flow-path, .flow-path-animation, .flow-erase');
+        const clonedPaths = clone.querySelectorAll('.flow-path, .flow-path-animation, .flow-erase');
+        clonedPaths.forEach((node, i) => {
+            const src = originalPaths[i];
+            if (!src) return;
+            const cs = getComputedStyle(src);
+            if (cs && cs.stroke && cs.stroke !== 'none') node.setAttribute('stroke', cs.stroke);
+        });
+    } catch (_) { }
+
+    // 5) Serialize the prepared clone and draw it onto a canvas
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(clone);
+    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(800, Math.floor(width * scale));
+    canvas.height = Math.max(600, Math.floor(height * scale));
+
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    await new Promise((resolve, reject) => {
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(url);
+            resolve();
+        };
+        img.onerror = reject;
+        img.src = url;
+    });
+
+    return canvas.toDataURL('image/jpeg', 0.95);
+}
+function getFlowSnapshotDataUrl() {
+    const svg = document.getElementById('flow-svg');
+    if (!svg) return null;
+    return svgToPngDataUrl(svg, 2, '#ffffff');
+}
+function getChartImageDataUrl() {
+    // existierende Instanz nutzen
+    if (prognoseChartInstance && typeof prognoseChartInstance.toBase64Image === 'function') {
+        try { return prognoseChartInstance.toBase64Image('image/png', 1.0); } catch (_) { }
+    }
+    // Fallback: temporären Chart rendern
+    try {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 1000;
+        tempCanvas.height = 420;
+        const ctx = tempCanvas.getContext('2d');
+
+        const years = parseInt(inputs.anlagezeitraum.value, 10) || 15;
+        const dataRangeRaw = (renditeExtremes && renditeExtremes[years]) || getRenditeDataForPeriod(years);
+        const dataRange = dataRangeRaw ? (dataRangeRaw.mean === undefined ? buildRenditeStat(dataRangeRaw.min, dataRangeRaw.max) : dataRangeRaw) : null;
+        const initialDepot = parseFloat(inputs.depotCurrent.value) || 0;
+
+        const depotSparplanTotal = fixkostenItems
+            .filter(i => i.target === 'depot')
+            .reduce((s, it) => s + getMonthlyAmount(it), 0);
+
+        const { depotOverflow } = calculateOverflow(
+            parseFloat(inputs.tagesgeldCurrent.value) || 0,
+            parseFloat(inputs.tagesgeldLimit.value) || 0
+        );
+        const monthlyInvestment = depotSparplanTotal + depotOverflow;
+
+        const toSeries = (rate) => calculateCompoundInterest(initialDepot, monthlyInvestment, years, rate / 100);
+        const derivedMin = dataRange ? dataRange.min : (dataRangeRaw ? dataRangeRaw.min : 0);
+        const derivedMax = dataRange ? dataRange.max : (dataRangeRaw ? dataRangeRaw.max : derivedMin);
+        const derivedMean = dataRange ? dataRange.mean : ((Number.isFinite(derivedMin) && Number.isFinite(derivedMax)) ? (derivedMin + derivedMax) / 2 : derivedMin);
+
+        const sMin = toSeries(derivedMin);
+        const sAvg = toSeries(derivedMean);
+        const sMax = toSeries(derivedMax);
+
+        const tmpChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sAvg.labels, datasets: [
+                    { label: 'Pessimistisch', data: sMin.capitalData, borderColor: '#ef4444', fill: false, tension: 0.1 },
+                    { label: 'Erwartet', data: sAvg.capitalData, borderColor: '#3b82f6', fill: false, tension: 0.1 },
+                    { label: 'Optimistisch', data: sMax.capitalData, borderColor: '#22c55e', fill: false, tension: 0.1 }
+                ]
+            },
+            options: { responsive: false, animation: false, plugins: { legend: { display: false } } }
+        });
+        // Sicherstellen, dass gezeichnet wurde
+        tmpChart.update();
+        const url = tempCanvas.toDataURL('image/png');
+        tmpChart.destroy();
+        return url;
+    } catch (_) {
+        return null;
+    }
+}
+
+// Helper: wait for one or more animation frames (lets layout/theme settle)
+async function waitFrames(n = 1) {
+    for (let i = 0; i < n; i++) {
+        await new Promise(res => requestAnimationFrame(res));
+    }
+}
+
+async function waitForImages(container, timeout = 2500) {
+    const imgs = Array.from(container.querySelectorAll('img'));
+    const pending = imgs.filter(img => !img.complete || img.naturalWidth === 0);
+
+    if (pending.length === 0) return;
+
+    await Promise.race([
+        Promise.all(pending.map(img => new Promise(res => {
+            img.addEventListener('load', res, { once: true });
+            img.addEventListener('error', res, { once: true }); // not blocking on error
+            // Falls das Bild bereits „complete“ ist, sofort auflösen:
+            if (img.complete && img.naturalWidth > 0) res();
+        }))),
+        new Promise(res => setTimeout(res, timeout))
+    ]);
+}
+
+
+function buildBookingPlanPrintHtml() {
+    const plan = bookingPlan || {};
+    const bucket = plan[String(selectedBookingMonth)] || plan[BOOKING_KEY] || {};
+    const days = Object.keys(bucket)
+        .map(key => parseInt(key, 10))
+        .filter(num => Number.isInteger(num))
+        .sort((a, b) => a - b);
+    if (!days.length) {
+        return `
+      <h2>Buchungskalender</h2>
+      <p class="muted">Aktuell sind keine Buchungstage hinterlegt.</p>
+    `;
+    }
+    const rows = days.map(dayNum => {
+        const key = String(dayNum);
+        const entries = Array.isArray(bucket[key]) ? bucket[key] : [];
+        const content = entries
+            .map(typeId => {
+                const type = getBookingType(typeId);
+                if (!type) return '';
+                const color = type.badgeColor || '#111827';
+                const iconMarkup = getActiveBookingIcon(type) || type.icon || '';
+                const label = getActiveBookingLabel(type) || type.label || '';
+                return `<div class="print-booking-entry"><span class="print-booking-icon" style="color:${color};">${iconMarkup}</span><span>${label}</span></div>`;
+            })
+            .filter(Boolean)
+            .join('') || '<div class="print-booking-entry">-</div>';
+        return `<tr><td>Tag ${dayNum}</td><td>${content}</td></tr>`;
+    }).join('');
+    return `<h2>Buchungskalender</h2><table class="print-table print-table-bookings"><thead><tr><th>Tag</th><th>Aktion</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function prepareAndPrint() {
+    const report = getEl('printable-report');
+
+    // --- Force LIGHT THEME for export/print snapshot ---
+    const prevTheme = loadTheme();           // 'dark' | 'light'
+    applyTheme('light');                     // switch UI tokens
+    saveTheme('light');
+
+    // Re-render flows so computed styles & erase strokes match light mode
+    calculateAndUpdate();
+    await waitFrames(3);                     // let DOM/layout settle
+
+    const themeNote = 'MLP Hell';
+
+    // 1) Gather current inputs (after potential UI changes)
+    const incomeVal = formatCurrency(inputs.income.value);
+    const konsumMinVal = formatCurrency(inputs.konsumMin.value);
+    const konsumLeftoverVal = formatCurrency(inputs.konsumLeftover.value);
+    const tgCurVal = formatCurrency(inputs.tagesgeldCurrent.value);
+    const tgLimitVal = formatCurrency(inputs.tagesgeldLimit.value);
+    const depotCurVal = formatCurrency(inputs.depotCurrent.value);
+    const jahre = parseInt(inputs.anlagezeitraum.value, 10);
+    const renditeAnn = parseFloat(inputs.rendite.value).toFixed(1) + ' %';
+
+    // 2) Export visualizations (always white background)
+    const flowImg = await svgToPngDataUrl(getEl('flow-svg'), 1.2, '#ffffff');
+    const chartImg = getChartImageDataUrl();
+
+    // 3) Build Fixkosten & Depot tables
+    const fixRows = fixkostenItems.map(i => `<tr><td>${i.name}</td><td>${formatCurrency(i.amount)}</td><td>${i.interval}</td><td>${i.target}</td></tr>`).join('');
+
+    // Calculate sum of fixkosten (convert to monthly)
+    const fixkostenSumme = fixkostenItems.reduce((sum, i) => {
+        const amount = i.amount || 0;
+        const monthly = i.interval === 'quarterly' ? amount / 3 : (i.interval === 'annually' ? amount / 12 : amount);
+        return sum + monthly;
+    }, 0);
+
+    // Get Vermieterkonto data if exists
+    const vermieterData = getVermieterkontoData();
+    const hasVermieterData = vermieterData && (vermieterData.einnahmen > 0 || vermieterData.ausgaben > 0);
+
+    // Add Vermieterkonto cashflow row if exists
+    let vermieterRow = '';
+    let vermieterMonthly = 0;
+    if (hasVermieterData) {
+        const cashflow = vermieterData.saldo;
+        vermieterMonthly = Math.abs(cashflow);
+        const cashflowText = cashflow >= 0
+            ? `<span class="text-positive">+${formatCurrency(cashflow)}</span>`
+            : `<span class="text-negative">-${formatCurrency(Math.abs(cashflow))}</span>`;
+        const ziel = currentVariant === 'A' ? 'fixkosten' : 'konsum';
+        vermieterRow = `<tr><td>Cashflow Vermieterkonto</td><td>${cashflowText}</td><td>monatlich</td><td>${ziel}</td></tr>`;
+    }
+
+    // Calculate total including Vermieterkonto
+    const fixkostenTotal = fixkostenSumme + (hasVermieterData && vermieterData.saldo < 0 ? Math.abs(vermieterData.saldo) : 0);
+    const sumRow = `<tr class="sum-row"><th>Summe (monatlich)</th><th>${formatCurrency(fixkostenTotal)}</th><th colspan="2"></th></tr>`;
+
+    const depRows = depotItems.map(i => {
+        const riskLabel = i.risk === 'conservative' ? 'Konservativ' : 'Chancenreich';
+        const riskColor = i.risk === 'conservative' ? '#3b82f6' : '#ef4444';
+        return `<tr>
+                <td><span style="display: inline-block; width: 12px; height: 12px; background: ${i.color}; border-radius: 3px; margin-right: 6px; vertical-align: middle;"></span>${i.name}</td>
+                <td>${i.allocation}%</td>
+                <td><span style="color: ${riskColor}; font-weight: 600;">${riskLabel}</span></td>
+            </tr>`;
+    }).join('');
+
+    // 4) Get session data
+    const session = getCurrentSession();
+    const kundenKuerzel = session?.kundenKuerzel || 'N/A';
+    const berater = session?.berater || 'N/A';
+
+    // 5) Compose report HTML (theme-neutral for print)
+    let html = `
+          <h1>Zusammenfassung: Das intelligente Vermögensmanagement</h1>
+          <p class="muted">Planung für: <strong>${kundenKuerzel}</strong> • von: <strong>${berater}</strong></p>
+          <p class="muted">Variante: <strong>${currentVariant}</strong> • Theme: <strong>${themeNote}</strong> • Datum: ${new Date().toLocaleDateString('de-DE')}</p>
+
+          <h2>Ihre Planung</h2>
+          <table class="print-table">
+            <tbody>
+              <tr><th style="width:40%">Nettoeinkommen</th><td>${incomeVal}</td></tr>
+              <tr><th>Konsumkonto Mindestbestand</th><td>${konsumMinVal}</td></tr>
+              <tr><th>Geschätzter monatlicher Überschuss</th><td>${konsumLeftoverVal}</td></tr>
+              <tr><th>Tagesgeldkonto (aktuell)</th><td>${tgCurVal}</td></tr>
+              <tr><th>Tagesgeldkonto (Sparziel)</th><td>${tgLimitVal}</td></tr>
+              <tr><th>Depotstand (aktuell)</th><td>${depotCurVal}</td></tr>
+              <tr><th>Anlagezeitraum</th><td>${jahre} Jahre</td></tr>
+              <tr><th>Rendite-Annahme</th><td>${renditeAnn}</td></tr>
+            </tbody>
+          </table>
+
+          <h2>Fixkosten &amp; Sparpläne</h2>
+          <table class="print-table"><thead><tr><th>Posten</th><th>Betrag</th><th>Intervall</th><th>Ziel</th></tr></thead><tbody>${fixRows}${vermieterRow}${sumRow}</tbody></table>
+
+          <h2>Depot-Aufteilung</h2>
+          <table class="print-table"><thead><tr><th>Fonds/ETF</th><th>Verteilung</th><th>Strategie</th></tr></thead><tbody>${depRows}</tbody></table>
+        `;
+
+    // Add Immobilien section if data exists
+    if (immobilienData && immobilienData.length > 0) {
+        const immoRows = immobilienData.map(immo => {
+            const wert = immo.wert || 0;
+            const darlehen = immo.darlehen || 0;
+            const eigenkapital = wert - darlehen;
+            return `<tr><td>${immo.name || 'Objekt'}</td><td>${formatCurrency(wert)}</td><td>${formatCurrency(darlehen)}</td><td>${formatCurrency(eigenkapital)}</td></tr>`;
+        }).join('');
+
+        const gesamtwert = immobilienData.reduce((sum, immo) => sum + (immo.wert || 0), 0);
+        const gesamtdarlehen = immobilienData.reduce((sum, immo) => sum + (immo.darlehen || 0), 0);
+        const gesamtEigenkapital = gesamtwert - gesamtdarlehen;
+
+        const sumRowImmo = `<tr class="sum-row"><th>Gesamt</th><th>${formatCurrency(gesamtwert)}</th><th>${formatCurrency(gesamtdarlehen)}</th><th>${formatCurrency(gesamtEigenkapital)}</th></tr>`;
+
+        html += `
+              <h2>Immobilien-Portfolio</h2>
+              <table class="print-table">
+                <thead><tr><th>Objekt</th><th>Marktwert</th><th>Darlehen</th><th>Eigenkapital</th></tr></thead>
+                <tbody>${immoRows}${sumRowImmo}</tbody>
+              </table>
+            `;
+
+        // Add details about rates and appreciation if available
+        if (vermieterkontoData.zinssatz > 0 || vermieterkontoData.wertsteigerung > 0) {
+            const details = [];
+            if (vermieterkontoData.wertsteigerung > 0) {
+                details.push(`Wertsteigerung: ${vermieterkontoData.wertsteigerung}% p.a.`);
+            }
+            if (vermieterkontoData.zinssatz > 0) {
+                details.push(`Zinssatz: ${vermieterkontoData.zinssatz}%`);
+            }
+            if (vermieterkontoData.tilgungssatz > 0) {
+                details.push(`Tilgung: ${vermieterkontoData.tilgungssatz}%`);
+            }
+            if (details.length > 0) {
+                html += `<p class="muted">${details.join(' • ')}</p>`;
+            }
+        }
+    }
+
+    // Add Vermieterkonto section if data exists
+    if (hasVermieterData) {
+        const einnahmenRows = [];
+        if (vermieterkontoData.miete > 0) {
+            einnahmenRows.push(`<tr><td>Mieteinnahmen</td><td class="text-positive">+${formatCurrency(vermieterkontoData.miete)}</td></tr>`);
+        }
+        if (vermieterkontoData.sonstigeEinnahmen > 0) {
+            einnahmenRows.push(`<tr><td>Sonstige Einnahmen</td><td class="text-positive">+${formatCurrency(vermieterkontoData.sonstigeEinnahmen)}</td></tr>`);
+        }
+        einnahmenRows.push(`<tr class="sum-row"><th>Gesamt-Einnahmen</th><th class="text-positive">+${formatCurrency(vermieterData.einnahmen)}</th></tr>`);
+
+        const ausgabenRows = [];
+        if (vermieterkontoData.rate > 0) {
+            ausgabenRows.push(`<tr><td>Darlehensrate</td><td class="text-negative">-${formatCurrency(vermieterkontoData.rate)}</td></tr>`);
+        }
+        if (vermieterkontoData.instandhaltung > 0) {
+            ausgabenRows.push(`<tr><td>Instandhaltung</td><td class="text-negative">-${formatCurrency(vermieterkontoData.instandhaltung)}</td></tr>`);
+        }
+        if (vermieterkontoData.steuern > 0) {
+            ausgabenRows.push(`<tr><td>Steuern &amp; Nebenkosten</td><td class="text-negative">-${formatCurrency(vermieterkontoData.steuern)}</td></tr>`);
+        }
+        ausgabenRows.push(`<tr class="sum-row"><th>Gesamt-Ausgaben</th><th class="text-negative">-${formatCurrency(vermieterData.ausgaben)}</th></tr>`);
+
+        const saldoClass = vermieterData.saldo >= 0 ? 'text-positive' : 'text-negative';
+        const saldoSign = vermieterData.saldo >= 0 ? '+' : '-';
+        const cashflowRow = `<tr class="sum-row" style="background-color: #f9fafb;"><th>Netto-Cashflow (monatlich)</th><th class="${saldoClass}">${saldoSign}${formatCurrency(Math.abs(vermieterData.saldo))}</th></tr>`;
+
+        html += `
+              <h2>Vermieterkonto (Cashflow-Analyse)</h2>
+              <table class="print-table">
+                <tbody>
+                  ${einnahmenRows.join('')}
+                  ${ausgabenRows.join('')}
+                  ${cashflowRow}
+                </tbody>
+              </table>
+            `;
+
+        // Integration status
+        if (vermieterkontoData.cashflowIntegration) {
+            html += `<p class="muted">✅ Cashflows sind ins Gesamtsystem integriert</p>`;
+        }
+
+        // Tilgung info
+        if (vermieterData.tilgung > 0) {
+            html += `<p class="muted">ℹ️ Davon Tilgung (Vermögensaufbau): ${formatCurrency(vermieterData.tilgung)}/Monat</p>`;
+        }
+    }
+
+    html += buildBookingPlanPrintHtml(); // (Überschrift wird unten im <section> gesetzt)
+    report.innerHTML = html;
+
+    // Eigene Seite vorbereiten
+    const section = document.createElement('section');
+    section.className = 'print-finanzfluss';
+    // Fallbacks für Browser, die die CSS-Regel ignorieren
+    section.style.breakBefore = 'page';
+    section.style.pageBreakBefore = 'always';
+    section.innerHTML = `<h2>Dein Finanzfluss (aktueller Stand)</h2>`;
+
+    // Live-DOM klonen: Ströme + Konten + Werte
+    const live = getEl('flow-container');
+    if (live) {
+        const clone = live.cloneNode(true);
+        clone.id = 'flow-container-print';
+
+        // Interaktivität entfernen (keine Modals im Print)
+        clone.querySelectorAll('[onclick]').forEach(n => n.removeAttribute('onclick'));
+
+        // Deterministische Größe wie im Live-UI
+        const cs = getComputedStyle(live);
+        clone.style.position = 'relative';
+        clone.style.minHeight = cs.minHeight || '1150px';
+        clone.style.height = cs.height || '1150px';
+        // NO width constraint - let print CSS handle scaling
+
+        const holder = document.createElement('div');
+        holder.style.marginTop = '8px';
+        holder.appendChild(clone);
+        section.appendChild(holder);
+    }
+
+    // Abschnitt (eigene Seite) anhängen
+    report.appendChild(section);
+
+    // v1.7.2: Add educational modules if they were discussed
+    const currentSession = getCurrentSession();
+    if (currentSession?.erklaererBesucht) {
+        // Cost-Average-Effekt Erklärer
+        if (currentSession.erklaererBesucht.costAverage) {
+            const caSection = document.createElement('section');
+            caSection.className = 'print-erklaerer';
+            caSection.style.breakBefore = 'page';
+            caSection.style.pageBreakBefore = 'always';
+            caSection.innerHTML = `
+                    <h2>✅ Besprochenes Thema: Cost-Average-Effekt</h2>
+                    <p class="muted">Dieses Thema wurde in der Beratung erklärt und demonstriert.</p>
+                    <div class="erklaerer-summary">
+                        <h3>Kernaussage</h3>
+                        <p>Der Cost-Average-Effekt (Durchschnittskosteneffekt) zeigt, dass regelmäßiges Sparen in volatilen Märkten
+                        oft bessere Ergebnisse liefert als eine einmalige Investition. Bei fallenden Kursen kaufen Sie automatisch
+                        mehr Anteile, bei steigenden Kursen weniger - Ihr Durchschnittspreis sinkt.</p>
+
+                        <h3>Vergleich der Szenarien</h3>
+                        <ul>
+                            <li><strong>Szenario A (Konstanter Kurs):</strong> Baseline-Vergleich mit stabilem Markt</li>
+                            <li><strong>Szenario B (Volatiler Kurs):</strong> Zeigt den Vorteil bei Kursschwankungen</li>
+                        </ul>
+
+                        <h3>Praktische Anwendung</h3>
+                        <p>✓ Monatliche Sparrate ins Depot einrichten<br>
+                        ✓ Nicht bei Crashs verkaufen - weiter sparen!<br>
+                        ✓ Langfristiger Anlagehorizont (10+ Jahre)<br>
+                        ✓ Emotionen ausschalten, System beibehalten</p>
+                    </div>
+                `;
+            report.appendChild(caSection);
+        }
+
+        // Sequence of Returns Risk Erklärer
+        if (currentSession.erklaererBesucht.sorr) {
+            const sorrSection = document.createElement('section');
+            sorrSection.className = 'print-erklaerer';
+            sorrSection.style.breakBefore = 'page';
+            sorrSection.style.pageBreakBefore = 'always';
+            sorrSection.innerHTML = `
+                    <h2>✅ Besprochenes Thema: Sequence of Returns Risk</h2>
+                    <p class="muted">Dieses Thema wurde in der Beratung erklärt und demonstriert.</p>
+                    <div class="erklaerer-summary">
+                        <h3>Kernaussage</h3>
+                        <p>Das Reihenfolge-Risiko (Sequence of Returns Risk) ist eines der größten Risiken in der Entnahmephase.
+                        Selbst bei identischer Durchschnittsrendite kann die <strong>Reihenfolge</strong> der Renditen über
+                        "Reichtum" oder "Pleite" entscheiden.</p>
+
+                        <h3>Vergleich der Szenarien</h3>
+                        <ul>
+                            <li><strong>Historisch (2005-2024):</strong> Crash am Anfang (2008), starke Erholung</li>
+                            <li><strong>Best-First (2009→2008):</strong> Beste Renditen zuerst, schlechteste am Ende</li>
+                            <li><strong>Worst-First:</strong> Schlechteste Jahre zuerst (-40% im ersten Jahr!)</li>
+                        </ul>
+
+                        <h3>Praktische Lösung</h3>
+                        <p><strong>Liquiditätsreserve aufbauen:</strong><br>
+                        ✓ Tagesgeld/Festgeld für 2-3 Jahre Entnahmen<br>
+                        ✓ Bei Crash: Aus Reserve leben, Depot erholen lassen<br>
+                        ✓ Bei guten Jahren: Reserve wieder auffüllen<br>
+                        ✓ So vermeiden Sie Verkäufe zu ungünstigen Zeitpunkten</p>
+
+                        <p class="muted"><strong>Wichtig:</strong> Frühe Verluste in der Entnahmephase wiegen doppelt schwer,
+                        da sich das entnommene Geld nie wieder erholen kann. Eine Kriegskasse schützt Sie vor diesem Risiko.</p>
+                    </div>
+                `;
+            report.appendChild(sorrSection);
+        }
+    }
+
+    // NEU: sicherstellen, dass die <img>-Tags wirklich fertig sind
+    await waitForImages(report, 2500);
+    await waitFrames(1); // ein Frame für Layout
+
+    // 5) Print
+    const restoreTheme = () => {
+        // Restore theme
+        applyTheme(prevTheme || 'dark');
+        saveTheme(prevTheme || 'dark');
+        calculateAndUpdate();
+    };
+    const onAfterPrint = () => { window.removeEventListener('afterprint', onAfterPrint); restoreTheme(); };
+    window.addEventListener('afterprint', onAfterPrint);
+    window.print();
+}
+
+// --- THEME HANDLING (Dark/MLP Light) ---
+function applyTheme(theme) {
+    const root = document.getElementById('theme-root');
+    if (!root) return;
+    root.classList.remove('theme-dark', 'theme-light');
+    root.classList.add(theme === 'light' ? 'theme-light' : 'theme-dark');
+
+    // Flow gradient colors adapt to theme
+    const grad = document.querySelector('#flow-gradient');
+    if (grad) {
+        const stops = grad.querySelectorAll('stop');
+        if (stops.length >= 2) {
+            if (theme === 'light') {
+                // Pure MLP blue stream
+                stops[0].setAttribute('style', 'stop-color: var(--mlp-blue-1);');
+                stops[1].setAttribute('style', 'stop-color: var(--mlp-blue-1);');
+            } else {
+                // force classic dark gradient
+                stops[0].setAttribute('style', 'stop-color: #3b82f6;');
+                stops[1].setAttribute('style', 'stop-color: #6366f1;');
+            }
+        }
+    }
+}
+function loadTheme() {
+    try { return localStorage.getItem('vd_theme') || 'dark'; } catch (_) { return 'dark'; }
+}
+function saveTheme(theme) {
+    try { localStorage.setItem('vd_theme', theme); } catch (_) { }
+}
+
+// ===== KEYBOARD SHORTCUTS & EMERGENCY ACCESS (v1.3.8) =====
+
+// Global keyboard shortcuts for critical functions
+document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + Shift + E = Emergency JSON Export
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+        e.preventDefault();
+        console.log('🚨 Emergency Export triggered via keyboard');
+        exportAsJSON(false);
+        showToast('Notfall-Export erstellt!', 'success', 3000);
+    }
+
+    // Ctrl/Cmd + Shift + D = Emergency Print/PDF (D wie Druck)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        console.log('🚨 Emergency Print triggered via keyboard');
+        prepareAndPrint();
+    }
+
+    // Ctrl/Cmd + Shift + S = Show Session Menu (even if hidden)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        const buttonContainer = getEl('session-button-container');
+        if (buttonContainer) {
+            buttonContainer.style.display = 'block';
+            toggleSessionMenu();
+            console.log('🚨 Session-Menü erzwungen (Notfall-Zugriff)');
+        }
+    }
+
+    // Ctrl/Cmd + Shift + C = Export CSV
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        console.log('🚨 Emergency CSV Export triggered via keyboard');
+        exportAsCSV();
+        showToast('CSV-Export erstellt!', 'success', 3000);
+    }
+});
+
+// Console helper functions (accessible via browser console)
+window.mlpEmergency = {
+    exportJSON: () => {
+        exportAsJSON(false);
+        console.log('✅ JSON-Export erstellt');
+    },
+    exportCSV: () => {
+        exportAsCSV();
+        console.log('✅ CSV-Export erstellt');
+    },
+    print: () => {
+        prepareAndPrint();
+        console.log('✅ Druck-Dialog geöffnet');
+    },
+    showSession: () => {
+        const buttonContainer = getEl('session-button-container');
+        if (buttonContainer) buttonContainer.style.display = 'block';
+        toggleSessionMenu();
+        console.log('✅ Session-Menü angezeigt');
+    },
+    help: () => {
+        console.log(`
+🚨 MLP NOTFALL-FUNKTIONEN:
+
+Keyboard-Shortcuts:
+- Ctrl+Shift+E: JSON-Export
+- Ctrl+Shift+C: CSV-Export
+- Ctrl+Shift+D: PDF drucken (D = Druck)
+- Ctrl+Shift+S: Session-Menü öffnen
+
+Console-Commands:
+- mlpEmergency.exportJSON()  → JSON exportieren
+- mlpEmergency.exportCSV()   → CSV exportieren
+- mlpEmergency.print()       → PDF drucken
+- mlpEmergency.showSession() → Session-Menü zeigen
+- mlpEmergency.help()        → Diese Hilfe
+
+Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
+            `);
+    }
+};
+
+// Show help on load
+console.log('💡 Notfall-Zugriff: mlpEmergency.help() für Hilfe');
+
+// INITIALIZATION
+document.addEventListener('DOMContentLoaded', () => {
+    // === SESSION INITIALIZATION (v1.2.0) ===
+
+    // Initialize File System Access API (v1.3.7)
+    restoreAutoExportDirectory();
+
+    // Check for existing session or show start dialog
+    const existingSession = getCurrentSession();
+
+    // Check if we just imported a backup (skip recovery dialog)
+    const skipRecovery = sessionStorage.getItem('skipRecoveryDialog');
+    if (skipRecovery) {
+        sessionStorage.removeItem('skipRecoveryDialog');
+        // Imported session - continue directly without asking
+        if (existingSession) {
+            updateSessionInfoBar();
+            startSessionTimer();
+            resetInactivityTimers();
+            console.log('📥 Importierte Session fortgesetzt:', existingSession.id);
+        }
+    } else if (existingSession) {
+        // Session found - show recovery dialog
+        const sessionAge = new Date() - new Date(existingSession.startzeit);
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (sessionAge > maxAge) {
+            // Session too old, discard and start new
+            sessionStorage.clear();
+            showSessionStartDialog();
+        } else {
+            // Session valid, offer recovery
+            showSessionRecoveryDialog(existingSession);
+        }
+    } else {
+        // No session, show start dialog
+        showSessionStartDialog();
+    }
+    // === END SESSION INITIALIZATION ===
+
+    inputs = { income: getEl('income'), konsumMin: getEl('konsumMin'), konsumLeftover: getEl('konsumLeftover'), tagesgeldCurrent: getEl('tagesgeldCurrent'), tagesgeldLimit: getEl('tagesgeldLimit'), depotCurrent: getEl('depotCurrent'), anlagezeitraum: getEl('anlagezeitraum'), rendite: getEl('rendite') };
+
+    // Restore input values from sessionStorage (after import reload)
+    try {
+        const savedInputs = sessionStorage.getItem('mlp_inputs');
+        if (savedInputs) {
+            const inputValues = JSON.parse(savedInputs);
+            if (inputs.income) inputs.income.value = inputValues.income || 3000;
+            if (inputs.konsumMin) inputs.konsumMin.value = inputValues.konsumMin || 100;
+            if (inputs.konsumLeftover) inputs.konsumLeftover.value = inputValues.konsumLeftover || 250;
+            if (inputs.tagesgeldCurrent) inputs.tagesgeldCurrent.value = inputValues.tagesgeldCurrent || 4800;
+            if (inputs.tagesgeldLimit) inputs.tagesgeldLimit.value = inputValues.tagesgeldLimit || 5000;
+            if (inputs.depotCurrent) inputs.depotCurrent.value = inputValues.depotCurrent || 25000;
+            if (inputs.anlagezeitraum) inputs.anlagezeitraum.value = inputValues.anlagezeitraum || 15;
+            if (inputs.rendite) inputs.rendite.value = inputValues.rendite || 7;
+            console.log('✅ Input-Werte aus sessionStorage wiederhergestellt');
+            // Clear after restore to prevent stale data
+            sessionStorage.removeItem('mlp_inputs');
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden der Input-Werte aus sessionStorage:', e);
+    }
+
+    basins = { einkommen: getEl('einkommen-basin'), fixkosten: getEl('fixkosten-basin'), konsum: getEl('konsum-basin'), tagesgeld: getEl('tagesgeld-basin'), depot: getEl('depot-basin'), vermieterkonto: getEl('vermieterkonto-basin'), immobilien: getEl('immobilien-basin') };
+    flowContainer = getEl('flow-container');
+    flowSvg = getEl('flow-svg');
+    setupBookingPlanner();
+
+    // v1.6.1: Initialize Schutzschild click handler
+    initSchutzschildClickHandler();
+
+    // v1.6.1 Level 2: Initialize Schutzschild hover tooltip
+    initSchutzschildTooltip();
+
+    // THEME init
+    const themeSwitch = getEl('theme-switch');
+    const initialTheme = loadTheme(); // 'dark' | 'light'
+    applyTheme(initialTheme);
+    if (themeSwitch) {
+        // checked == Dark (rechts), unchecked == MLP Light (links)
+        themeSwitch.checked = (initialTheme === 'dark');
+        themeSwitch.addEventListener('change', (e) => {
+            const t = e.target.checked ? 'dark' : 'light';
+            applyTheme(t);
+            saveTheme(t);
+            // Nach Themewechsel neu zeichnen
+            calculateAndUpdate();
+        });
+    }
+
+    // AUTO-SAVE TOGGLE init
+    const autoSaveToggle = getEl('auto-save-toggle');
+    if (autoSaveToggle) {
+        // Initialize UI based on saved preference
+        updateAutoSaveUI();
+
+        // Add event listener
+        autoSaveToggle.addEventListener('change', (e) => {
+            toggleAutoSave(e.target.checked);
+        });
+    }
+
+    const anlagezeitraumLabel = getEl('anlagezeitraum-label');
+    const variantSwitch = getEl('variant-switch');
+    const varianteALabel = getEl('variante-a-label');
+    const varianteBLabel = getEl('variante-b-label');
+    const variantInfo = getEl('variant-info');
+
+    function setVariantUI() {
+        if (variantSwitch) {
+            variantSwitch.checked = (currentVariant === 'B');
+        }
+        // Sync control bar switch
+        const barSwitch = getEl('variant-switch-bar');
+        if (barSwitch) barSwitch.checked = (currentVariant === 'B');
+        // Sync control bar labels
+        const aBar = getEl('variante-a-label-bar');
+        const bBar = getEl('variante-b-label-bar');
+        if (aBar && bBar) {
+            if (currentVariant === 'A') {
+                aBar.classList.add('bar-state--active');
+                bBar.classList.remove('bar-state--active');
+            } else {
+                bBar.classList.add('bar-state--active');
+                aBar.classList.remove('bar-state--active');
+            }
+        }
+        if (currentVariant === 'A') {
+            if (varianteALabel) varianteALabel.classList.add('chip-state--active');
+            if (varianteBLabel) varianteBLabel.classList.remove('chip-state--active');
+            if (variantInfo) variantInfo.textContent = 'Variante A: Einkommen geht auf das Fixkostenkonto.';
+        } else {
+            if (varianteBLabel) varianteBLabel.classList.add('chip-state--active');
+            if (varianteALabel) varianteALabel.classList.remove('chip-state--active');
+            if (variantInfo) variantInfo.textContent = 'Variante B: Einkommen geht auf das Konsumkonto.';
+        }
+        renderBookingTypeButtons();
+        renderBookingCalendar();
+        updateBookingHint();
+        renderBookingTimeline(); // v1.7.3
+        // Keep consultation view consistent when variant changes
+        applyConsultationVisibility();
+        calculateAndUpdate();
+    }
+
+    if (variantSwitch) {
+        variantSwitch.addEventListener('change', (e) => {
+            currentVariant = e.target.checked ? 'B' : 'A';
+            sessionStorage.setItem('mlp_current_variant', currentVariant);
+            setVariantUI();
+        });
+    }
+
+    const observer = new ResizeObserver(() => calculateAndUpdate());
+    observer.observe(flowContainer);
+
+    setTimeout(() => {
+        renderFixkostenList();
+        renderDepotList();
+        loadImmobilienData();        // Immobilien-Daten laden
+        setupImmobilienListeners();  // Event-Listener für Immobilien-Inputs
+        loadVermieterkontoData();    // Vermieterkonto-Daten laden
+        setupVermieterkontoListeners(); // Event-Listener für Vermieterkonto-Inputs
+        setVariantUI();
+        updateRenditeSuggestions(parseInt(inputs.anlagezeitraum.value, 10));
+        calculateAndUpdate();
+        renderBookingTimeline(); // v1.7.3: Initial timeline render
+
+        // Load fine-grained min/max ranges from TXT (MLP-Dreieck)
+        loadRenditeExtremes();
+
+        // Helper function to update range slider fill (v1.5.0)
+        function updateRangeSliderFill(slider) {
+            if (!slider) return;
+            const min = parseInt(slider.min) || 0;
+            const max = parseInt(slider.max) || 100;
+            const value = parseInt(slider.value) || 0;
+            const percentage = ((value - min) / (max - min)) * 100;
+
+            const color1 = getComputedStyle(document.documentElement).getPropertyValue('--mlp-blue').trim() || '#002f6c';
+            const color2 = document.body.classList.contains('theme-light') ? '#e5e7eb' : 'rgba(100, 116, 139, 0.3)';
+
+            slider.style.background = `linear-gradient(to right, ${color1} 0%, ${color1} ${percentage}%, ${color2} ${percentage}%, ${color2} 100%)`;
+        }
+
+        // Keep info live while sliding (v1.5.0 - with null-check)
+        if (inputs.anlagezeitraum) {
+            inputs.anlagezeitraum.addEventListener('input', () => {
+                const jahre = parseInt(inputs.anlagezeitraum.value, 10);
+                const label = getEl('anlagezeitraum-label');
+                if (label) label.textContent = `${jahre} Jahre`;
+                updateRenditeSuggestions(jahre);
+                // Update slider fill dynamically
+                updateRangeSliderFill(inputs.anlagezeitraum);
+                // Auto-Prognose (v1.4.0)
+                debouncedProjection();
+            });
+
+            // Initialize slider fill AND label on load (v1.5.0 fix)
+            const currentValue = parseInt(inputs.anlagezeitraum.value, 10);
+            const label = getEl('anlagezeitraum-label');
+            if (label) label.textContent = `${currentValue} Jahre`;
+            updateRangeSliderFill(inputs.anlagezeitraum);
+        } else {
+            console.error('[MLP ERROR] Anlagezeitraum slider not found!');
+        }
+
+        // ===== AUTO-PROGNOSE (v1.4.0) =====
+        // Auto-calculate projection on depot input changes
+        if (inputs.depotCurrent) {
+            inputs.depotCurrent.addEventListener('input', () => {
+                debouncedProjection();
+            });
+        }
+        if (inputs.rendite) {
+            inputs.rendite.addEventListener('input', () => {
+                debouncedProjection();
+            });
+        }
+
+        // Beratungsansicht Buttons (Old - Sidebar)
+        const consultToggle = getEl('consult-toggle-btn');
+        const consultNext = getEl('consult-next-btn');
+        if (consultToggle) consultToggle.addEventListener('click', () => setConsultationMode(!consultationMode));
+        if (consultNext) consultNext.addEventListener('click', () => nextConsultationStep());
+
+        // ===== INLINE EDITOR EVENT LISTENERS (v1.4.0) =====
+        // Add click listeners to editable basins
+        if (basins.einkommen) {
+            basins.einkommen.addEventListener('click', (e) => {
+                // Only open if not already editing
+                if (!basins.einkommen.querySelector('.basin-inline-editor')) {
+                    openInlineEditor(e, 'einkommen');
+                }
+            });
+        }
+        if (basins.konsum) {
+            basins.konsum.addEventListener('click', (e) => {
+                if (!basins.konsum.querySelector('.basin-inline-editor')) {
+                    openInlineEditor(e, 'konsum');
+                }
+            });
+        }
+        if (basins.tagesgeld) {
+            basins.tagesgeld.addEventListener('click', (e) => {
+                if (!basins.tagesgeld.querySelector('.basin-inline-editor')) {
+                    openInlineEditor(e, 'tagesgeld');
+                }
+            });
+        }
+
+        // ===== CONTROL BAR EVENT LISTENERS (v1.4.0) =====
+        // Theme Toggle
+        const themeSwitchBar = getEl('theme-switch-bar');
+        if (themeSwitchBar) {
+            themeSwitchBar.checked = (initialTheme === 'dark');
+            themeSwitchBar.addEventListener('change', (e) => {
+                const t = e.target.checked ? 'dark' : 'light';
+                applyTheme(t);
+                saveTheme(t);
+                calculateAndUpdate();
+                // Sync with old sidebar switch
+                if (themeSwitch) themeSwitch.checked = e.target.checked;
+            });
+        }
+
+        // Variant Toggle
+        const variantSwitchBar = getEl('variant-switch-bar');
+        const varianteALabelBar = getEl('variante-a-label-bar');
+        const varianteBLabelBar = getEl('variante-b-label-bar');
+        if (variantSwitchBar) {
+            variantSwitchBar.addEventListener('change', (e) => {
+                currentVariant = e.target.checked ? 'B' : 'A';
+                sessionStorage.setItem('mlp_current_variant', currentVariant);
+                // Update Control Bar UI
+                if (varianteALabelBar && varianteBLabelBar) {
+                    if (currentVariant === 'A') {
+                        varianteALabelBar.classList.add('bar-state--active');
+                        varianteBLabelBar.classList.remove('bar-state--active');
+                    } else {
+                        varianteBLabelBar.classList.add('bar-state--active');
+                        varianteALabelBar.classList.remove('bar-state--active');
+                    }
+                }
+                // Update old sidebar UI
+                setVariantUI();
+                // Sync with old sidebar switch
+                if (variantSwitch) variantSwitch.checked = e.target.checked;
+            });
+        }
+
+        // Consultation Buttons
+        const consultToggleBar = getEl('consult-toggle-btn-bar');
+        const consultNextBar = getEl('consult-next-btn-bar');
+        if (consultToggleBar) {
+            consultToggleBar.addEventListener('click', () => {
+                setConsultationMode(!consultationMode);
+            });
+        }
+        if (consultNextBar) {
+            consultNextBar.addEventListener('click', () => {
+                nextConsultationStep();
+            });
+        }
+
+        // ===== BOOKING FAB (v1.4.0) =====
+        const bookingFab = getEl('booking-fab');
+        const bookingModal = getEl('booking-modal');
+
+        if (bookingFab) {
+            bookingFab.addEventListener('click', () => {
+                console.log('📅 Booking FAB clicked');
+                openBookingModal();
+            });
+        } else {
+            console.error('❌ Booking FAB not found!');
+        }
+
+        // Close modal on backdrop click
+        if (bookingModal) {
+            bookingModal.addEventListener('click', (e) => {
+                if (e.target === bookingModal) {
+                    closeBookingModal();
+                }
+            });
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && bookingModal && bookingModal.classList.contains('active')) {
+                closeBookingModal();
+            }
+        });
+    }, 100);
+});
+
+// ===== DEV TOOL: Basin Drag-and-Drop Positionierung (Ctrl+Alt+F12) =====
+(function () {
+    let dragMode = false;
+    let dragTarget = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let overlay = null;
+    let infoPanel = null;
+
+    function toggleDragMode() {
+        dragMode = !dragMode;
+        if (dragMode) { enableDragMode(); } else { disableDragMode(); }
+    }
+
+    function enableDragMode() {
+        const fc = document.getElementById('flow-container');
+        if (!fc) return;
+        _devDragMode = true;
+        overlay = document.createElement('div');
+        overlay.id = 'dev-grid-overlay';
+        overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:5;' +
+            'background-image:linear-gradient(rgba(96,165,250,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(96,165,250,0.08) 1px,transparent 1px);' +
+            'background-size:40px 40px;';
+        fc.appendChild(overlay);
+        infoPanel = document.createElement('div');
+        infoPanel.id = 'dev-info-panel';
+        infoPanel.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:9999;' +
+            'background:#1e293b;border:2px solid #60a5fa;border-radius:12px;padding:16px 24px;' +
+            'font-family:ui-monospace,monospace;font-size:13px;color:#e2e8f0;max-width:700px;width:90%;';
+        infoPanel.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+            '<span style="font-weight:bold;color:#60a5fa;">Basin Positionierung (Drag & Drop)</span>' +
+            '<div>' +
+            '<button id="dev-copy-btn" style="background:#3b82f6;color:white;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;margin-right:8px;font-size:13px;">Positionen kopieren</button>' +
+            '<button id="dev-close-btn" style="background:#ef4444;color:white;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;">Schlie\u00dfen</button>' +
+            '</div></div>' +
+            '<div id="dev-positions" style="font-size:12px;line-height:1.8;color:#94a3b8;"></div>';
+        document.body.appendChild(infoPanel);
+        document.getElementById('dev-copy-btn').addEventListener('click', copyPositions);
+        document.getElementById('dev-close-btn').addEventListener('click', toggleDragMode);
+        var basinIds = ['einkommen-basin', 'fixkosten-basin', 'konsum-basin', 'tagesgeld-basin', 'depot-basin', 'vermieterkonto-basin', 'immobilien-basin'];
+        basinIds.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.style.cursor = 'grab';
+            el.style.outline = '2px dashed rgba(96,165,250,0.5)';
+            el.setAttribute('data-draggable', 'true');
+        });
+        fc.addEventListener('mousedown', onMouseDown);
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        updatePositionDisplay();
+    }
+
+    function disableDragMode() {
+        _devDragMode = false;
+        if (overlay) { overlay.remove(); overlay = null; }
+        if (infoPanel) { infoPanel.remove(); infoPanel = null; }
+        var els = document.querySelectorAll('[data-draggable]');
+        els.forEach(function (el) { el.style.cursor = ''; el.style.outline = ''; el.removeAttribute('data-draggable'); });
+        var fc = document.getElementById('flow-container');
+        if (fc) fc.removeEventListener('mousedown', onMouseDown);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
+
+    function onMouseDown(e) {
+        var el = e.target.closest('[data-draggable]');
+        if (!el) return;
+        e.preventDefault();
+        dragTarget = el;
+        el.style.cursor = 'grabbing';
+        el.style.zIndex = '100';
+        dragOffsetX = e.clientX - el.getBoundingClientRect().left;
+        dragOffsetY = e.clientY - el.getBoundingClientRect().top;
+    }
+
+    function onMouseMove(e) {
+        if (!dragTarget) return;
+        var fc = document.getElementById('flow-container');
+        if (!fc) return;
+        var fcRect = fc.getBoundingClientRect();
+        var newLeft = Math.round((e.clientX - fcRect.left - dragOffsetX) / 8) * 8;
+        var newTop = Math.round((e.clientY - fcRect.top - dragOffsetY) / 8) * 8;
+        dragTarget.style.left = newLeft + 'px';
+        dragTarget.style.top = newTop + 'px';
+        updatePositionDisplay();
+    }
+
+    function onMouseUp() {
+        if (dragTarget) { dragTarget.style.cursor = 'grab'; dragTarget.style.zIndex = '10'; dragTarget = null; }
+    }
+
+    function getBasinPositions() {
+        var fc = document.getElementById('flow-container');
+        if (!fc) return {};
+        var names = { 'einkommen-basin': 'einkommen', 'fixkosten-basin': 'fixkosten', 'konsum-basin': 'konsum', 'tagesgeld-basin': 'tagesgeld', 'depot-basin': 'depot', 'vermieterkonto-basin': 'vermieterkonto', 'immobilien-basin': 'immobilien' };
+        var result = {};
+        Object.keys(names).forEach(function (id) { var el = document.getElementById(id); if (el) result[names[id]] = { top: parseInt(el.style.top) || 0, left: parseInt(el.style.left) || 0 }; });
+        return result;
+    }
+
+    function updatePositionDisplay() {
+        var posDiv = document.getElementById('dev-positions');
+        if (!posDiv) return;
+        var pos = getBasinPositions();
+        var lines = [];
+        ['einkommen', 'konsum', 'fixkosten', 'vermieterkonto', 'tagesgeld', 'depot', 'immobilien'].forEach(function (name) {
+            if (pos[name]) lines.push('<span style="color:#60a5fa;font-weight:600;">' + name + '</span>: top: <span style="color:#fbbf24;">' + pos[name].top + '</span>, left: <span style="color:#fbbf24;">' + pos[name].left + '</span>');
+        });
+        posDiv.innerHTML = lines.join('<br>');
+    }
+
+    function copyPositions() {
+        var pos = getBasinPositions();
+        var code = 'positions = {\n';
+        ['einkommen', 'konsum', 'fixkosten', 'vermieterkonto', 'tagesgeld', 'depot', 'immobilien'].forEach(function (name) {
+            if (pos[name]) code += '                ' + name + ': '.padEnd(16 - name.length) + '{ top: ' + pos[name].top + ', left: ' + pos[name].left + ' },\n';
+        });
+        code += '            };';
+        navigator.clipboard.writeText(code).then(function () {
+            var btn = document.getElementById('dev-copy-btn');
+            btn.textContent = 'Kopiert!';
+            btn.style.background = '#22c55e';
+            setTimeout(function () { btn.textContent = 'Positionen kopieren'; btn.style.background = '#3b82f6'; }, 2000);
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey && e.altKey && e.key === 'F12') {
+            e.preventDefault();
+            toggleDragMode();
+        }
+    });
+})();
+
+// Fallback exports
+
+if (typeof generateSessionId !== 'undefined') window.generateSessionId = generateSessionId;
+if (typeof getCurrentSession !== 'undefined') window.getCurrentSession = getCurrentSession;
+if (typeof saveSession !== 'undefined') window.saveSession = saveSession;
+if (typeof startSession !== 'undefined') window.startSession = startSession;
+if (typeof markErklaererBesucht !== 'undefined') window.markErklaererBesucht = markErklaererBesucht;
+if (typeof wasErklaererBesucht !== 'undefined') window.wasErklaererBesucht = wasErklaererBesucht;
+if (typeof endSession !== 'undefined') window.endSession = endSession;
+if (typeof updateSessionInfoBar !== 'undefined') window.updateSessionInfoBar = updateSessionInfoBar;
+if (typeof toggleSessionMenu !== 'undefined') window.toggleSessionMenu = toggleSessionMenu;
+if (typeof startSessionTimer !== 'undefined') window.startSessionTimer = startSessionTimer;
+if (typeof resetInactivityTimers !== 'undefined') window.resetInactivityTimers = resetInactivityTimers;
+if (typeof clearInactivityTimers !== 'undefined') window.clearInactivityTimers = clearInactivityTimers;
+if (typeof showInactivityWarning !== 'undefined') window.showInactivityWarning = showInactivityWarning;
+if (typeof confirmSessionActive !== 'undefined') window.confirmSessionActive = confirmSessionActive;
+if (typeof showInactivityTimeout !== 'undefined') window.showInactivityTimeout = showInactivityTimeout;
+if (typeof showSessionStartDialog !== 'undefined') window.showSessionStartDialog = showSessionStartDialog;
+if (typeof showSessionRecoveryDialog !== 'undefined') window.showSessionRecoveryDialog = showSessionRecoveryDialog;
+if (typeof continueSession !== 'undefined') window.continueSession = continueSession;
+if (typeof startNewSessionAndDiscard !== 'undefined') window.startNewSessionAndDiscard = startNewSessionAndDiscard;
+if (typeof showSessionEndDialog !== 'undefined') window.showSessionEndDialog = showSessionEndDialog;
+if (typeof trackActivity !== 'undefined') window.trackActivity = trackActivity;
+if (typeof startSessionFromDialog !== 'undefined') window.startSessionFromDialog = startSessionFromDialog;
+if (typeof exportAsCSV !== 'undefined') window.exportAsCSV = exportAsCSV;
+if (typeof exportAsExcel !== 'undefined') window.exportAsExcel = exportAsExcel;
+if (typeof createOverviewSheet !== 'undefined') window.createOverviewSheet = createOverviewSheet;
+if (typeof createCashflowSheet !== 'undefined') window.createCashflowSheet = createCashflowSheet;
+if (typeof createImmobilienSheet !== 'undefined') window.createImmobilienSheet = createImmobilienSheet;
+if (typeof createDepotSheet !== 'undefined') window.createDepotSheet = createDepotSheet;
+if (typeof applyOverviewFormatting !== 'undefined') window.applyOverviewFormatting = applyOverviewFormatting;
+if (typeof applyCashflowFormatting !== 'undefined') window.applyCashflowFormatting = applyCashflowFormatting;
+if (typeof applyImmobilienFormatting !== 'undefined') window.applyImmobilienFormatting = applyImmobilienFormatting;
+if (typeof applyDepotFormatting !== 'undefined') window.applyDepotFormatting = applyDepotFormatting;
+if (typeof openHandleDB !== 'undefined') window.openHandleDB = openHandleDB;
+if (typeof saveDirectoryHandle !== 'undefined') window.saveDirectoryHandle = saveDirectoryHandle;
+if (typeof loadDirectoryHandle !== 'undefined') window.loadDirectoryHandle = loadDirectoryHandle;
+if (typeof verifyHandlePermission !== 'undefined') window.verifyHandlePermission = verifyHandlePermission;
+if (typeof checkFileSystemAPISupport !== 'undefined') window.checkFileSystemAPISupport = checkFileSystemAPISupport;
+if (typeof selectAutoExportDirectory !== 'undefined') window.selectAutoExportDirectory = selectAutoExportDirectory;
+if (typeof restoreAutoExportDirectory !== 'undefined') window.restoreAutoExportDirectory = restoreAutoExportDirectory;
+if (typeof updateAutoExportFolderDisplay !== 'undefined') window.updateAutoExportFolderDisplay = updateAutoExportFolderDisplay;
+if (typeof writeToDirectory !== 'undefined') window.writeToDirectory = writeToDirectory;
+if (typeof generateAutoExportFilename !== 'undefined') window.generateAutoExportFilename = generateAutoExportFilename;
+if (typeof exportAsJSON !== 'undefined') window.exportAsJSON = exportAsJSON;
+if (typeof isAutoSaveEnabled !== 'undefined') window.isAutoSaveEnabled = isAutoSaveEnabled;
+if (typeof setAutoSaveEnabled !== 'undefined') window.setAutoSaveEnabled = setAutoSaveEnabled;
+if (typeof startAutoExport !== 'undefined') window.startAutoExport = startAutoExport;
+if (typeof stopAutoExport !== 'undefined') window.stopAutoExport = stopAutoExport;
+if (typeof toggleAutoSave !== 'undefined') window.toggleAutoSave = toggleAutoSave;
+if (typeof updateAutoSaveUI !== 'undefined') window.updateAutoSaveUI = updateAutoSaveUI;
+if (typeof updateAutoExportStatus !== 'undefined') window.updateAutoExportStatus = updateAutoExportStatus;
+if (typeof importSessionBackup !== 'undefined') window.importSessionBackup = importSessionBackup;
+if (typeof downloadFile !== 'undefined') window.downloadFile = downloadFile;
+if (typeof getActiveBookingLabel !== 'undefined') window.getActiveBookingLabel = getActiveBookingLabel;
+if (typeof getActiveBookingDescription !== 'undefined') window.getActiveBookingDescription = getActiveBookingDescription;
+if (typeof getActiveBookingIcon !== 'undefined') window.getActiveBookingIcon = getActiveBookingIcon;
+if (typeof loadBookingPlan !== 'undefined') window.loadBookingPlan = loadBookingPlan;
+if (typeof saveBookingPlan !== 'undefined') window.saveBookingPlan = saveBookingPlan;
+if (typeof pruneEmptyMonths !== 'undefined') window.pruneEmptyMonths = pruneEmptyMonths;
+if (typeof createDefaultBookingPlan !== 'undefined') window.createDefaultBookingPlan = createDefaultBookingPlan;
+if (typeof determineInitialBookingMonth !== 'undefined') window.determineInitialBookingMonth = determineInitialBookingMonth;
+if (typeof hasEntriesForMonth !== 'undefined') window.hasEntriesForMonth = hasEntriesForMonth;
+if (typeof ensureMonthPlan !== 'undefined') window.ensureMonthPlan = ensureMonthPlan;
+if (typeof renderBookingTypeButtons !== 'undefined') window.renderBookingTypeButtons = renderBookingTypeButtons;
+if (typeof handleBookingTypeSelect !== 'undefined') window.handleBookingTypeSelect = handleBookingTypeSelect;
+if (typeof renderBookingCalendar !== 'undefined') window.renderBookingCalendar = renderBookingCalendar;
+if (typeof getTypeOrder !== 'undefined') window.getTypeOrder = getTypeOrder;
+if (typeof toggleDayBooking !== 'undefined') window.toggleDayBooking = toggleDayBooking;
+if (typeof removeBookingFromDay !== 'undefined') window.removeBookingFromDay = removeBookingFromDay;
+if (typeof updateBookingHint !== 'undefined') window.updateBookingHint = updateBookingHint;
+if (typeof clearCurrentMonthPlan !== 'undefined') window.clearCurrentMonthPlan = clearCurrentMonthPlan;
+if (typeof updateClearButtonState !== 'undefined') window.updateClearButtonState = updateClearButtonState;
+if (typeof getBookingType !== 'undefined') window.getBookingType = getBookingType;
+if (typeof getTimelineLabel !== 'undefined') window.getTimelineLabel = getTimelineLabel;
+if (typeof renderBookingTimeline !== 'undefined') window.renderBookingTimeline = renderBookingTimeline;
+if (typeof openBookingModalToDay !== 'undefined') window.openBookingModalToDay = openBookingModalToDay;
+if (typeof setupBookingPlanner !== 'undefined') window.setupBookingPlanner = setupBookingPlanner;
+if (typeof debounce !== 'undefined') window.debounce = debounce;
+if (typeof setConsultationMode !== 'undefined') window.setConsultationMode = setConsultationMode;
+if (typeof nextConsultationStep !== 'undefined') window.nextConsultationStep = nextConsultationStep;
+if (typeof isVisible !== 'undefined') window.isVisible = isVisible;
+if (typeof show !== 'undefined') window.show = show;
+if (typeof applyConsultationVisibility !== 'undefined') window.applyConsultationVisibility = applyConsultationVisibility;
+if (typeof inverseStandardNormal !== 'undefined') window.inverseStandardNormal = inverseStandardNormal;
+if (typeof buildRenditeStat !== 'undefined') window.buildRenditeStat = buildRenditeStat;
+if (typeof loadRenditeExtremes !== 'undefined') window.loadRenditeExtremes = loadRenditeExtremes;
+if (typeof parseRenditeExtremesTSV !== 'undefined') window.parseRenditeExtremesTSV = parseRenditeExtremesTSV;
+if (typeof renderBasin !== 'undefined') window.renderBasin = renderBasin;
+if (typeof positionCascade !== 'undefined') window.positionCascade = positionCascade;
+if (typeof attachFlowDot !== 'undefined') window.attachFlowDot = attachFlowDot;
+if (typeof drawFlow !== 'undefined') window.drawFlow = drawFlow;
+if (typeof hideFlow !== 'undefined') window.hideFlow = hideFlow;
+if (typeof drawConnectionLine !== 'undefined') window.drawConnectionLine = drawConnectionLine;
+if (typeof drawSchutzschirm !== 'undefined') window.drawSchutzschirm = drawSchutzschirm;
+if (typeof updateSchutzschildBadge !== 'undefined') window.updateSchutzschildBadge = updateSchutzschildBadge;
+if (typeof initSchutzschildClickHandler !== 'undefined') window.initSchutzschildClickHandler = initSchutzschildClickHandler;
+if (typeof initSchutzschildTooltip !== 'undefined') window.initSchutzschildTooltip = initSchutzschildTooltip;
+if (typeof updateTooltipOnHover !== 'undefined') window.updateTooltipOnHover = updateTooltipOnHover;
+if (typeof startShieldPulsing !== 'undefined') window.startShieldPulsing = startShieldPulsing;
+if (typeof stopShieldPulsing !== 'undefined') window.stopShieldPulsing = stopShieldPulsing;
+if (typeof calculatePufferMonths !== 'undefined') window.calculatePufferMonths = calculatePufferMonths;
+if (typeof positionTooltip !== 'undefined') window.positionTooltip = positionTooltip;
+if (typeof getElementPosition !== 'undefined') window.getElementPosition = getElementPosition;
+if (typeof drawFlowLine !== 'undefined') window.drawFlowLine = drawFlowLine;
+if (typeof drawTooltipConnections !== 'undefined') window.drawTooltipConnections = drawTooltipConnections;
+if (typeof updateTooltipContent !== 'undefined') window.updateTooltipContent = updateTooltipContent;
+if (typeof openInlineEditor !== 'undefined') window.openInlineEditor = openInlineEditor;
+if (typeof validateAmount !== 'undefined') window.validateAmount = validateAmount;
+if (typeof closeInlineEditor !== 'undefined') window.closeInlineEditor = closeInlineEditor;
+if (typeof saveInlineEditor !== 'undefined') window.saveInlineEditor = saveInlineEditor;
+if (typeof openBookingModal !== 'undefined') window.openBookingModal = openBookingModal;
+if (typeof closeBookingModal !== 'undefined') window.closeBookingModal = closeBookingModal;
+if (typeof calculateFinancialData !== 'undefined') window.calculateFinancialData = calculateFinancialData;
+if (typeof renderAllBasins !== 'undefined') window.renderAllBasins = renderAllBasins;
+if (typeof updateAllFlows !== 'undefined') window.updateAllFlows = updateAllFlows;
+if (typeof calculateAndUpdate !== 'undefined') window.calculateAndUpdate = calculateAndUpdate;
+if (typeof calculateProjection !== 'undefined') window.calculateProjection = calculateProjection;
+if (typeof showProjection !== 'undefined') window.showProjection = showProjection;
+if (typeof calculateCompoundInterest !== 'undefined') window.calculateCompoundInterest = calculateCompoundInterest;
+if (typeof displayProjectionChart !== 'undefined') window.displayProjectionChart = displayProjectionChart;
+if (typeof setRendite !== 'undefined') window.setRendite = setRendite;
+if (typeof getRenditeDataForPeriod !== 'undefined') window.getRenditeDataForPeriod = getRenditeDataForPeriod;
+if (typeof updateRenditeSuggestions !== 'undefined') window.updateRenditeSuggestions = updateRenditeSuggestions;
+if (typeof createGrowthChartSVG !== 'undefined') window.createGrowthChartSVG = createGrowthChartSVG;
+if (typeof createHouseSVG !== 'undefined') window.createHouseSVG = createHouseSVG;
+if (typeof createAccountSVG !== 'undefined') window.createAccountSVG = createAccountSVG;
+if (typeof calculateOverflow !== 'undefined') window.calculateOverflow = calculateOverflow;
+if (typeof openModal !== 'undefined') window.openModal = openModal;
+if (typeof closeModal !== 'undefined') window.closeModal = closeModal;
+if (typeof handleModalKeydown !== 'undefined') window.handleModalKeydown = handleModalKeydown;
+if (typeof getFocusableElements !== 'undefined') window.getFocusableElements = getFocusableElements;
+if (typeof isElementFocusable !== 'undefined') window.isElementFocusable = isElementFocusable;
+if (typeof openCostAverageModal !== 'undefined') window.openCostAverageModal = openCostAverageModal;
+if (typeof closeCostAverageModal !== 'undefined') window.closeCostAverageModal = closeCostAverageModal;
+if (typeof resetCounters !== 'undefined') window.resetCounters = resetCounters;
+if (typeof initSideBySideCharts !== 'undefined') window.initSideBySideCharts = initSideBySideCharts;
+if (typeof startCostAverageAnimation !== 'undefined') window.startCostAverageAnimation = startCostAverageAnimation;
+if (typeof animateNextMonth !== 'undefined') window.animateNextMonth = animateNextMonth;
+if (typeof updateShareBar !== 'undefined') window.updateShareBar = updateShareBar;
+if (typeof highlightMonthInCharts !== 'undefined') window.highlightMonthInCharts = highlightMonthInCharts;
+if (typeof showResults !== 'undefined') window.showResults = showResults;
+if (typeof toggleEditMode !== 'undefined') window.toggleEditMode = toggleEditMode;
+if (typeof saveCourseData !== 'undefined') window.saveCourseData = saveCourseData;
+if (typeof resetToDefaultCourse !== 'undefined') window.resetToDefaultCourse = resetToDefaultCourse;
+if (typeof openKriegskasseModal !== 'undefined') window.openKriegskasseModal = openKriegskasseModal;
+if (typeof resetKriegskasseAnimation !== 'undefined') window.resetKriegskasseAnimation = resetKriegskasseAnimation;
+if (typeof closeKriegskasseModal !== 'undefined') window.closeKriegskasseModal = closeKriegskasseModal;
+if (typeof initKriegskasseCharts !== 'undefined') window.initKriegskasseCharts = initKriegskasseCharts;
+if (typeof startKriegskasseAnimation !== 'undefined') window.startKriegskasseAnimation = startKriegskasseAnimation;
+if (typeof animateKriegskasseYear !== 'undefined') window.animateKriegskasseYear = animateKriegskasseYear;
+if (typeof updateKriegskasseTimeline !== 'undefined') window.updateKriegskasseTimeline = updateKriegskasseTimeline;
+if (typeof showKriegskasseResults !== 'undefined') window.showKriegskasseResults = showKriegskasseResults;
+if (typeof openSoRRModal !== 'undefined') window.openSoRRModal = openSoRRModal;
+if (typeof closeSoRRModal !== 'undefined') window.closeSoRRModal = closeSoRRModal;
+if (typeof renderSoRRTable !== 'undefined') window.renderSoRRTable = renderSoRRTable;
+if (typeof sortSoRRData !== 'undefined') window.sortSoRRData = sortSoRRData;
+if (typeof sortSoRRTable !== 'undefined') window.sortSoRRTable = sortSoRRTable;
+if (typeof simulatePortfolio !== 'undefined') window.simulatePortfolio = simulatePortfolio;
+if (typeof calculateDuration !== 'undefined') window.calculateDuration = calculateDuration;
+if (typeof updateSoRRWithdrawalRate !== 'undefined') window.updateSoRRWithdrawalRate = updateSoRRWithdrawalRate;
+if (typeof runSoRRSimulation !== 'undefined') window.runSoRRSimulation = runSoRRSimulation;
+if (typeof updateSoRRResultCards !== 'undefined') window.updateSoRRResultCards = updateSoRRResultCards;
+if (typeof getActiveSoRRScenario !== 'undefined') window.getActiveSoRRScenario = getActiveSoRRScenario;
+if (typeof toggleSoRRCompare !== 'undefined') window.toggleSoRRCompare = toggleSoRRCompare;
+if (typeof updateSoRRChart !== 'undefined') window.updateSoRRChart = updateSoRRChart;
+if (typeof formatMoney !== 'undefined') window.formatMoney = formatMoney;
+if (typeof openAnleihenModal !== 'undefined') window.openAnleihenModal = openAnleihenModal;
+if (typeof closeAnleihenModal !== 'undefined') window.closeAnleihenModal = closeAnleihenModal;
+if (typeof switchAnleihenTab !== 'undefined') window.switchAnleihenTab = switchAnleihenTab;
+if (typeof calculateBondPrice !== 'undefined') window.calculateBondPrice = calculateBondPrice;
+if (typeof calculateDurationSensitivity !== 'undefined') window.calculateDurationSensitivity = calculateDurationSensitivity;
+if (typeof updateDurationChart !== 'undefined') window.updateDurationChart = updateDurationChart;
+if (typeof updateSeesawVis !== 'undefined') window.updateSeesawVis = updateSeesawVis;
+if (typeof updateEquityFlow !== 'undefined') window.updateEquityFlow = updateEquityFlow;
+if (typeof showToast !== 'undefined') window.showToast = showToast;
+if (typeof removeToast !== 'undefined') window.removeToast = removeToast;
+if (typeof openFixkostenModal !== 'undefined') window.openFixkostenModal = openFixkostenModal;
+if (typeof saveFixkosten !== 'undefined') window.saveFixkosten = saveFixkosten;
+if (typeof renderFixkostenList !== 'undefined') window.renderFixkostenList = renderFixkostenList;
+if (typeof updateFixkostenItem !== 'undefined') window.updateFixkostenItem = updateFixkostenItem;
+if (typeof addFixkostenItem !== 'undefined') window.addFixkostenItem = addFixkostenItem;
+if (typeof removeFixkostenItem !== 'undefined') window.removeFixkostenItem = removeFixkostenItem;
+if (typeof saveDepot !== 'undefined') window.saveDepot = saveDepot;
+if (typeof renderDepotList !== 'undefined') window.renderDepotList = renderDepotList;
+if (typeof updateDepotItem !== 'undefined') window.updateDepotItem = updateDepotItem;
+if (typeof addDepotItem !== 'undefined') window.addDepotItem = addDepotItem;
+if (typeof removeDepotItem !== 'undefined') window.removeDepotItem = removeDepotItem;
+if (typeof checkDepotTotal !== 'undefined') window.checkDepotTotal = checkDepotTotal;
+if (typeof renderDepotBasin !== 'undefined') window.renderDepotBasin = renderDepotBasin;
+if (typeof openMsciRenditedreieck !== 'undefined') window.openMsciRenditedreieck = openMsciRenditedreieck;
+if (typeof closeMsciRenditedreieck !== 'undefined') window.closeMsciRenditedreieck = closeMsciRenditedreieck;
+if (typeof resetMsciZoom !== 'undefined') window.resetMsciZoom = resetMsciZoom;
+if (typeof toggleMsciZoom !== 'undefined') window.toggleMsciZoom = toggleMsciZoom;
+if (typeof getVermieterkontoData !== 'undefined') window.getVermieterkontoData = getVermieterkontoData;
+if (typeof berechneDarlehensrate !== 'undefined') window.berechneDarlehensrate = berechneDarlehensrate;
+if (typeof calculateTilgungsanteil !== 'undefined') window.calculateTilgungsanteil = calculateTilgungsanteil;
+if (typeof loadImmobilienData !== 'undefined') window.loadImmobilienData = loadImmobilienData;
+if (typeof updateImmobilienInputs !== 'undefined') window.updateImmobilienInputs = updateImmobilienInputs;
+if (typeof updateImmobilienSummary !== 'undefined') window.updateImmobilienSummary = updateImmobilienSummary;
+if (typeof saveImmobilien !== 'undefined') window.saveImmobilien = saveImmobilien;
+if (typeof setupImmobilienListeners !== 'undefined') window.setupImmobilienListeners = setupImmobilienListeners;
+if (typeof updateImmoDarlehensrateBerechnung !== 'undefined') window.updateImmoDarlehensrateBerechnung = updateImmoDarlehensrateBerechnung;
+if (typeof updateImmoTilgungsplan !== 'undefined') window.updateImmoTilgungsplan = updateImmoTilgungsplan;
+if (typeof saveVermieterkonto !== 'undefined') window.saveVermieterkonto = saveVermieterkonto;
+if (typeof setupVermieterkontoListeners !== 'undefined') window.setupVermieterkontoListeners = setupVermieterkontoListeners;
+if (typeof updateVermieterkontoSummary !== 'undefined') window.updateVermieterkontoSummary = updateVermieterkontoSummary;
+if (typeof loadVermieterkontoData !== 'undefined') window.loadVermieterkontoData = loadVermieterkontoData;
+if (typeof svgToPngDataUrl !== 'undefined') window.svgToPngDataUrl = svgToPngDataUrl;
+if (typeof getFlowSnapshotDataUrl !== 'undefined') window.getFlowSnapshotDataUrl = getFlowSnapshotDataUrl;
+if (typeof getChartImageDataUrl !== 'undefined') window.getChartImageDataUrl = getChartImageDataUrl;
+if (typeof waitFrames !== 'undefined') window.waitFrames = waitFrames;
+if (typeof waitForImages !== 'undefined') window.waitForImages = waitForImages;
+if (typeof buildBookingPlanPrintHtml !== 'undefined') window.buildBookingPlanPrintHtml = buildBookingPlanPrintHtml;
+if (typeof prepareAndPrint !== 'undefined') window.prepareAndPrint = prepareAndPrint;
+if (typeof applyTheme !== 'undefined') window.applyTheme = applyTheme;
+if (typeof loadTheme !== 'undefined') window.loadTheme = loadTheme;
+if (typeof saveTheme !== 'undefined') window.saveTheme = saveTheme;
+if (typeof setVariantUI !== 'undefined') window.setVariantUI = setVariantUI;
+if (typeof updateRangeSliderFill !== 'undefined') window.updateRangeSliderFill = updateRangeSliderFill;
+if (typeof toggleDragMode !== 'undefined') window.toggleDragMode = toggleDragMode;
+if (typeof enableDragMode !== 'undefined') window.enableDragMode = enableDragMode;
+if (typeof disableDragMode !== 'undefined') window.disableDragMode = disableDragMode;
+if (typeof onMouseDown !== 'undefined') window.onMouseDown = onMouseDown;
+if (typeof onMouseMove !== 'undefined') window.onMouseMove = onMouseMove;
+if (typeof onMouseUp !== 'undefined') window.onMouseUp = onMouseUp;
+if (typeof getBasinPositions !== 'undefined') window.getBasinPositions = getBasinPositions;
+if (typeof updatePositionDisplay !== 'undefined') window.updatePositionDisplay = updatePositionDisplay;
+if (typeof copyPositions !== 'undefined') window.copyPositions = copyPositions;
+if (typeof switchVariant !== 'undefined') window.switchVariant = switchVariant;
+if (typeof toggleConsultationMode !== 'undefined') window.toggleConsultationMode = toggleConsultationMode;
+if (typeof toggleTheme !== 'undefined') window.toggleTheme = toggleTheme;
