@@ -82,12 +82,12 @@
         .skip-link { position: absolute; left: -1000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
         .skip-link:focus { left: 50%; top: 1rem; width: auto; height: auto; padding: 0.75rem 1rem; background: var(--mlp-blue-primary); color: #ffffff; border-radius: 999px; transform: translateX(-50%); z-index: 9999; box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
         .account-basin {
-            background-color: var(--gray-800); border: 1px solid var(--gray-700); padding: 1rem; border-radius: 0.75rem;
+            background-color: var(--card); border: 1px solid var(--border); padding: 1rem; border-radius: 0.75rem;
             text-align: center; width: 220px; height: 140px; display: flex; flex-direction: column;
             justify-content: center; align-items: center; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.1);
             transition: all 0.3s ease-in-out; position: absolute; z-index: 10; overflow: hidden;
         }
-        button.account-basin { appearance: none; background-color: var(--gray-800); color: inherit; border: 1px solid var(--gray-700); }
+        button.account-basin { appearance: none; background-color: var(--card); color: inherit; border: 1px solid var(--border); }
         button.account-basin:focus { outline: none; }
         button.account-basin:focus-visible { outline: 3px solid var(--mlp-blue-primary); outline-offset: 4px; }
         .flow-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; }
@@ -123,7 +123,7 @@
           line-height: 1.1;
           box-shadow: 0 1px 2px rgba(0,0,0,.06);
         }
-        .flow-value { position: absolute; background-color: var(--gray-900); color: var(--gray-300); padding: 4px 10px; border-radius: 9999px; font-size: 0.9rem; font-weight: 600; z-index: 15; border: 1px solid var(--gray-600); white-space: nowrap; transform: translate(-50%, -50%); transition: top 0.3s, left 0.3s; }
+        .flow-value { position: absolute; background-color: var(--bg); color: var(--muted); padding: 4px 10px; border-radius: 9999px; font-size: 0.9rem; font-weight: 600; z-index: 15; border: 1px solid var(--border); white-space: nowrap; transform: translate(-50%, -50%); transition: top 0.3s, left 0.3s; }
         .limit-line { position: absolute; width: 100%; height: 2px; left: 0; z-index: 12; }
         .limit-line span { position: absolute; right: 4px; transform: translateY(-50%); font-size: 10px; background: var(--gray-800); padding: 0 3px; font-weight: 500;}
         .modal { display: none !important; }
@@ -512,14 +512,14 @@
           }
 
           .print-erklaerer h2 {
-            color: #002F6C;
+            color: #033D5D;
             margin-bottom: 10px;
             break-after: avoid;
             page-break-after: avoid;
           }
 
           .print-erklaerer h3 {
-            color: #002F6C;
+            color: #033D5D;
             margin-top: 20px;
             margin-bottom: 10px;
             font-size: 1.1em;
@@ -528,7 +528,7 @@
           .erklaerer-summary {
             background: #f8f9fa;
             padding: 20px;
-            border-left: 4px solid #002F6C;
+            border-left: 4px solid #033D5D;
             border-radius: 4px;
           }
 
@@ -1426,9 +1426,81 @@
         .theme-light .text-white { color: var(--fg) !important; }
         .theme-light .text-gray-400 { color: var(--muted) !important; }
 
+        /* ═══════════════════════════════════════════════════════
+           v2.0 Global Component Classes
+           ═══════════════════════════════════════════════════════ */
+
+        /* ── Buttons ── */
+        .mlp-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            font-family: var(--font-family); font-size: 14px; font-weight: 600;
+            padding: 10px 20px; border-radius: var(--radius-sm); border: none;
+            cursor: pointer; transition: all 0.2s ease; text-decoration: none;
+            line-height: 1.2;
+        }
+        .mlp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .mlp-btn-primary {
+            background: var(--mlp-primary); color: var(--mlp-text-light);
+        }
+        .mlp-btn-primary:hover:not(:disabled) { background: #024a72; box-shadow: var(--shadow-subtle); }
+        .mlp-btn-primary:active:not(:disabled) { background: #02334f; }
+        .mlp-btn-secondary {
+            background: var(--mlp-secondary); color: var(--mlp-text-dark);
+        }
+        .mlp-btn-secondary:hover:not(:disabled) { background: #aea69a; }
+        .mlp-btn-tertiary {
+            background: transparent; color: var(--mlp-primary);
+            border: 1px solid var(--mlp-secondary);
+        }
+        .mlp-btn-tertiary:hover:not(:disabled) { background: rgba(3,61,93,0.06); border-color: var(--mlp-primary); }
+        .mlp-btn-danger {
+            background: var(--mlp-error); color: var(--mlp-text-light);
+        }
+        .mlp-btn-danger:hover:not(:disabled) { background: #A1223A; }
+
+        /* ── Input Fields v2 ── */
+        .mlp-input-field-v2 {
+            width: 100%; padding: 10px 14px; font-size: 14px; font-family: var(--font-family);
+            background: var(--input-bg); color: var(--fg);
+            border: 1px solid var(--input-border); border-radius: var(--radius-sm);
+            outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .mlp-input-field-v2:focus {
+            border-color: var(--mlp-primary);
+            box-shadow: 0 0 0 3px rgba(3,61,93,0.15);
+        }
+        .mlp-input-field-v2::placeholder { color: var(--mlp-text-medium); }
+
+        /* ── Slider ── */
+        .mlp-slider {
+            -webkit-appearance: none; appearance: none; width: 100%;
+            height: 6px; border-radius: 3px; background: var(--mlp-secondary);
+            outline: none;
+        }
+        .mlp-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--mlp-primary); cursor: pointer;
+            border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .mlp-slider::-moz-range-thumb {
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--mlp-primary); cursor: pointer;
+            border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        /* ── Cards ── */
+        .mlp-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius-md); padding: var(--space-sm);
+        }
+        .mlp-card--elevated {
+            border: none; box-shadow: var(--shadow-elevated);
+        }
+
         /* Flow labels/pills harmonisieren */
         .flow-label { color: var(--muted); }
-        .flow-value { background-color: #111827; color: #d1d5db; border-color: #4b5563; }
+        /* v2.0: .flow-value base now uses theme vars (--bg, --muted, --border) */
         .theme-light .flow-value { background-color: rgba(255,255,255,0.85); border-color: var(--border); color: var(--fg); }
 
         /* Mini Theme Toggle (Header) */
@@ -1456,10 +1528,10 @@
             color: #9ca3af;  /* Dark mode: gray-400 */
         }
         .theme-light .app-heading {
-            color: #033D5D;  /* Light mode: MLP Blau Dark */
+            color: var(--mlp-primary);
         }
         .theme-light .app-subheading {
-            color: #717171;  /* Light mode: Text Medium */
+            color: var(--mlp-text-medium);
         }
 
         /* Panels / cards / modals */
@@ -1592,7 +1664,7 @@
 
         /* v1.5.3: Focus indicator for keyboard navigation */
         input[type="range"]:focus-visible {
-            outline: 3px solid var(--accent1, #3b82f6);
+            outline: 3px solid var(--accent1, #033D5D);
             outline-offset: 4px;
             border-radius: 6px;
         }
@@ -1716,8 +1788,8 @@
         }
 
         .risk-dot.conservative {
-            background: #3b82f6;
-            box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+            background: var(--mlp-primary);
+            box-shadow: 0 0 8px rgba(3, 61, 93, 0.4);
         }
 
         .risk-dot.aggressive {
@@ -1747,13 +1819,13 @@
         }
 
         .risk-toggle.conservative::before {
-            background: linear-gradient(135deg, #93c5fd, #3b82f6);
+            background: linear-gradient(135deg, #47A190, var(--mlp-primary));
         }
 
         /* Highlight active dot */
         .risk-toggle.conservative .risk-dot.conservative {
             transform: scale(1.3);
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
+            box-shadow: 0 0 12px rgba(3, 61, 93, 0.8);
         }
 
         .risk-toggle.aggressive .risk-dot.aggressive {
@@ -2438,7 +2510,7 @@
         }
     </style>
 </head>
-<body class="theme-dark bg-gray-900 text-white p-4 lg:p-8 overflow-x-hidden" id="theme-root" style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+<body class="theme-light p-4 lg:p-8 overflow-x-hidden" id="theme-root">
 
     <a class="skip-link" href="#main-content">Zum Hauptinhalt springen</a>
 
@@ -2534,8 +2606,8 @@
                 <svg id="flow-svg" class="flow-svg">
                     <defs>
                       <linearGradient id="flow-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stop-color="#3b82f6" />
-                        <stop offset="100%" stop-color="#6366f1" />
+                        <stop offset="0%" stop-color="#033D5D" />
+                        <stop offset="100%" stop-color="#033D5D" />
                       </linearGradient>
                       <filter id="flow-glow" x="-50%" y="-50%" width="200%" height="200%">
                         <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -3254,7 +3326,7 @@
             appearance: none;
             height: 6px;
             border-radius: 3px;
-            background: #BEB6AA;
+            background: var(--mlp-secondary);
             outline: none;
         }
         #anleihen-modal input[type="range"]::-webkit-slider-thumb {
@@ -3263,7 +3335,7 @@
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            background: #033D5D;
+            background: var(--mlp-primary);
             cursor: pointer;
             border: 2px solid white;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
@@ -3272,7 +3344,7 @@
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            background: #033D5D;
+            background: var(--mlp-primary);
             cursor: pointer;
             border: 2px solid white;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
@@ -3280,7 +3352,7 @@
         #anleihen-modal input[type="range"]::-moz-range-track {
             height: 6px;
             border-radius: 3px;
-            background: #BEB6AA;
+            background: var(--mlp-secondary);
         }
     </style>
 
@@ -5078,7 +5150,7 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
                 currentVariant: currentVariant,
                 consultationMode: consultationMode,
                 consultationStep: consultationStep,
-                theme: localStorage.getItem('theme') || 'dark'
+                theme: localStorage.getItem('vd_theme') || 'light'
             },
 
             // All financial input data
@@ -11388,8 +11460,8 @@ function updateFixkostenItem(index, key, value) {
         // 5) Print
         const restoreTheme = () => {
           // Restore theme
-          applyTheme(prevTheme || 'dark');
-          saveTheme(prevTheme || 'dark');
+          applyTheme(prevTheme || 'light');
+          saveTheme(prevTheme || 'light');
           calculateAndUpdate();
         };
         const onAfterPrint = () => { window.removeEventListener('afterprint', onAfterPrint); restoreTheme(); };
@@ -11414,15 +11486,15 @@ function updateFixkostenItem(index, key, value) {
                     stops[0].setAttribute('style', 'stop-color: var(--mlp-blue-1);');
                     stops[1].setAttribute('style', 'stop-color: var(--mlp-blue-1);');
                 } else {
-                    // force classic dark gradient
-                    stops[0].setAttribute('style', 'stop-color: #3b82f6;');
-                    stops[1].setAttribute('style', 'stop-color: #6366f1;');
+                    // v2.0: MLP Blau Dark + Türkis statt Tailwind Blue/Indigo
+                    stops[0].setAttribute('style', 'stop-color: #033D5D;');
+                    stops[1].setAttribute('style', 'stop-color: #47A190;');
                 }
             }
         }
     }
     function loadTheme() {
-        try { return localStorage.getItem('vd_theme') || 'dark'; } catch(_) { return 'dark'; }
+        try { return localStorage.getItem('vd_theme') || 'light'; } catch(_) { return 'light'; }
     }
     function saveTheme(theme) {
         try { localStorage.setItem('vd_theme', theme); } catch(_) {}
