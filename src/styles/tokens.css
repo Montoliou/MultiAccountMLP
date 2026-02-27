@@ -12,6 +12,14 @@
   --mlp-titanium-dark: rgba(190, 182, 170, 0.3);
   --mlp-turkis: #47A190;
 
+  /* Accent Color (Subbrand-specific, switchable) */
+  --mlp-accent: #9ED0B7;
+  /* Default: MLP Med Mint */
+  --mlp-accent-light: rgba(158, 208, 183, 0.15);
+  /* Icon background */
+  --mlp-accent-border: rgba(158, 208, 183, 0.35);
+  /* Icon border */
+  --mlp-accent-gradient: linear-gradient(90deg, var(--mlp-accent), #033D5D, var(--mlp-accent));
   /* Semantic Colors */
   --color-success: #10b981;
   --color-warning: #fbbf24;
@@ -150,6 +158,32 @@
   --elevation-2: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
   --elevation-3: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --elevation-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* =========================================
+   MLP Subbrand Accent Themes
+   ========================================= */
+
+/* Default: Mediziner (Mint Green) */
+.theme-med,
+:root {
+  --mlp-accent: #9ED0B7;
+  --mlp-accent-light: rgba(158, 208, 183, 0.15);
+  --mlp-accent-border: rgba(158, 208, 183, 0.35);
+}
+
+/* Core / Wirtschaftswissenschaftler (Türkis) */
+.theme-core {
+  --mlp-accent: #47A190;
+  --mlp-accent-light: rgba(71, 161, 144, 0.15);
+  --mlp-accent-border: rgba(71, 161, 144, 0.35);
+}
+
+/* SOFE / School of Financial Education (Petrol) */
+.theme-sofe {
+  --mlp-accent: #009880;
+  --mlp-accent-light: rgba(0, 152, 128, 0.15);
+  --mlp-accent-border: rgba(0, 152, 128, 0.35);
 }
 
 /* Baseline Resets */
@@ -468,6 +502,56 @@ p {
 
 .border-mlp-blue {
   border-color: var(--mlp-corporate-blue);
+}
+
+/* =========================================
+   MLP Modal Header System (Glassmorphism)
+   ========================================= */
+
+.mlp-modal-accent-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--mlp-accent), #033D5D, var(--mlp-accent));
+}
+
+.mlp-modal-header {
+  background: rgba(3, 61, 93, 0.55);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(190, 182, 170, 0.35);
+}
+
+.mlp-modal-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--mlp-accent-light);
+  border: 1px solid var(--mlp-accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--mlp-accent);
+}
+
+.mlp-modal-icon-box svg {
+  stroke: var(--mlp-accent);
+}
+
+.mlp-accent-color {
+  color: var(--mlp-accent);
+}
+
+.mlp-accent-border-left {
+  border-left: 3px solid var(--mlp-accent);
+}
+
+.mlp-accent-focus:focus {
+  border-color: var(--mlp-accent) !important;
 }
 
 

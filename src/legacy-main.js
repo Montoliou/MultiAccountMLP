@@ -1,3 +1,6 @@
+// ===== Flow Engine 2.0 (Modular SVG Drawing) =====
+import { drawFlow as _drawFlowEngine, hideFlow as _hideFlowEngine, attachFlowDot as _attachFlowDotEngine } from './flow-engine.js';
+
 // ===== SESSION MANAGEMENT SYSTEM (v1.2.0) =====
 // Implements DSGVO-compliant session-based data storage
 
@@ -204,6 +207,34 @@ document.addEventListener('click', (e) => {
         if (chevron) chevron.style.transform = 'rotate(0deg)';
     }
 });
+
+// Theme Switcher Logic
+function setTheme(themeName) {
+    // Remove existing theme classes
+    document.documentElement.classList.remove('theme-med', 'theme-core', 'theme-sofe');
+
+    // Add selected theme class
+    document.documentElement.classList.add(themeName);
+
+    // Save to localStorage
+    localStorage.setItem('mlp-theme-preference', themeName);
+
+    // Close session menu if open
+    const dropdown = getEl('session-dropdown');
+    const chevron = getEl('session-menu-chevron');
+    if (dropdown && dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+    }
+
+    console.log(`[ThemeEngine] Applied ${themeName}`);
+}
+
+// Ensure theme is loaded from local storage on start
+const savedTheme = localStorage.getItem('mlp-theme-preference');
+if (savedTheme) {
+    setTheme(savedTheme);
+}
 
 // Start session duration timer
 function startSessionTimer() {
@@ -2474,210 +2505,24 @@ function positionCascade() {
     }
 }
 
+// ===== Flow Engine 2.0 Wrappers =====
+// These thin wrappers delegate to the modular flow-engine.js
+// while injecting global state (currentVariant, flowContainer).
+
 function attachFlowDot(pathId, radius = 4, speedSec = 3) {
-    const dotGroupId = `${pathId}-dot`;
-    let g = document.getElementById(dotGroupId);
-    if (!g) {
-        g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('id', dotGroupId);
-        document.getElementById('flow-svg').appendChild(g);
-    }
-    // Clear existing content
-    g.innerHTML = '';
-    // Create circle + animateMotion referencing the path
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('class', 'flow-dot');
-    circle.setAttribute('r', String(radius));
-    const animateMotion = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
-    animateMotion.setAttribute('dur', `${Math.max(1.2, speedSec)}s`);
-    animateMotion.setAttribute('repeatCount', 'indefinite');
-    const mpath = document.createElementNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${pathId}`);
-    animateMotion.appendChild(mpath);
-    circle.appendChild(animateMotion);
-    g.appendChild(circle);
+    _attachFlowDotEngine(pathId, radius, speedSec);
 }
 
 function drawFlow(pathId, fromBasin, toBasin, value, maxFlowValue, labelText = '', flowOpacity = 1.0) {
-    if (!fromBasin || !toBasin) return;
-    const path = getEl(pathId), pathAnim = getEl(`${pathId}-anim`);
-    const fromRect = fromBasin.getBoundingClientRect(), toRect = toBasin.getBoundingClientRect(), containerRect = flowContainer.getBoundingClientRect();
-    let fromX = fromRect.left - containerRect.left + fromRect.width / 2;
-    let fromY = fromRect.bottom - containerRect.top;
-    const toX = toRect.left - containerRect.left + toRect.width / 2;
-    const toY = toRect.top - containerRect.top;
-    const minWidth = LAYOUT.MIN_FLOW_WIDTH, maxWidth = LAYOUT.MAX_FLOW_WIDTH;  // v1.5.4: Use named constants
-    const normalizedValue = Math.max(0, value) / maxFlowValue;
-    const strokeWidth = minWidth + normalizedValue * (maxWidth - minWidth);
-    path.style.strokeWidth = `${value > 0 ? Math.max(minWidth, strokeWidth) : 0}px`;
-    // Nur für spezielle Flows (z.B. Deficitline) opacity setzen, sonst CSS-Animation überschreiben
-    if (flowOpacity !== 1.0) {
-        path.style.opacity = flowOpacity; // Opacity für dezente Flows
-    } else {
-        path.style.opacity = ''; // CSS-Default verwenden (für Animationen)
-    }
-
-    let pathData;
-    const EXIT_OFFSET_Y = 8;
-    fromY -= EXIT_OFFSET_Y;
-
-    // --- NEW DYNAMIC SVG ENGINE (V2.0) ---
-    // 1. Determine Anchor Points based on flow logic
-    let fx = fromX, fy = fromY, tx = toX, ty = toY;
-
-    if (pathId === 'fixkosten-depot-flow') {
-        fx = fromRect.left - containerRect.left + fromRect.width * (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? 0.25 : 0.75);
-        tx = toRect.left - containerRect.left + toRect.width * 0.75;
-    } else if (pathId === 'tagesgeld-depot-flow') {
-        tx = toRect.left - containerRect.left + (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? toRect.width * 0.5 : toRect.width * 0.25);
-    } else if (pathId === 'konsum-tagesgeld-flow') {
-        fx = fromRect.left - containerRect.left + (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? fromRect.width * 0.20 : fromRect.width * 0.80);
-    } else if (pathId === 'flow-path-2') {
-        // Dauerauftrag (horizontal component)
-        if (typeof currentVariant !== 'undefined' && currentVariant === 'A') {
-            fx = fromRect.left - containerRect.left + fromRect.width * 0.20;
-            tx = toRect.left - containerRect.left + toRect.width * 0.80;
-        } else {
-            fx = fromRect.left - containerRect.left + fromRect.width * 0.80;
-            tx = toRect.left - containerRect.left + toRect.width * 0.50;
-        }
-    } else if (pathId === 'vermieterkonto-einkommen-flow') {
-        fx = fromRect.left - containerRect.left + fromRect.width * 0.75;
-        fy = fromRect.top - containerRect.top; // exit TOP
-        tx = toRect.left - containerRect.left + toRect.width * 0.25;
-        ty = toRect.bottom - containerRect.top; // enter BOTTOM
-    } else if (pathId === 'fixkosten-vermieterkonto-flow') {
-        const isPositiveFlow = fromBasin.id === 'vermieterkonto-basin';
-        if (isPositiveFlow) {
-            fx = fromRect.left - containerRect.left + fromRect.width * 0.50;
-            fy = fromRect.top - containerRect.top; // upwards
-            tx = toRect.left - containerRect.left + toRect.width * (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? 0.50 : 0.10);
-            ty = typeof currentVariant !== 'undefined' && currentVariant === 'B' ? toRect.bottom - containerRect.top : toRect.top - containerRect.top + toRect.height * 0.5;
-        } else { // negative flow
-            fx = fromRect.left - containerRect.left + fromRect.width * (typeof currentVariant !== 'undefined' && currentVariant === 'B' ? 0.50 : 0.10);
-            fy = typeof currentVariant !== 'undefined' && currentVariant === 'B' ? fromRect.bottom - containerRect.top : fromRect.top - containerRect.top + fromRect.height * 0.5;
-            tx = toRect.left - containerRect.left + toRect.width * 0.5;
-            ty = toRect.top - containerRect.top;
-        }
-    }
-
-    // 2. Compute dynamic cubic bezier control points based on distance (Sanftere Beziers)
-    const dx = tx - fx;
-    const dy = ty - fy;
-
-    let c1x, c1y, c2x, c2y;
-
-    if (pathId === 'vermieterkonto-einkommen-flow' || pathId === 'fixkosten-vermieterkonto-flow') {
-        // Custom Meander for specific flows (Flow upwards or sidewards)
-        c1x = fx + (dx * 0.35);
-        c1y = fy + (dy * 0.35);
-        c2x = tx - (dx * 0.35);
-        c2y = ty - (dy * 0.35);
-    } else if (pathId === 'flow-path-2') {
-        // Mostly horizontal flow Dauerauftrag
-        c1x = fx + (dx * 0.4);
-        c1y = fy + Math.min(80, Math.max(0, dy * 0.5));
-        c2x = tx - (dx * 0.4);
-        c2y = ty - Math.min(80, Math.max(0, dy * 0.5));
-    } else {
-        // Standard Flow downwards: dynamically scaled tension
-        const strength = Math.max(50, Math.abs(dy) * 0.45);
-        c1x = fx;
-        c1y = fy + strength;
-        c2x = tx;
-        c2y = ty - strength;
-    }
-
-    pathData = `M ${fx},${fy} C ${c1x},${c1y} ${c2x},${c2y} ${tx},${ty}`;
-    path.setAttribute('d', pathData);
-
-    // --- V2.0: Linienfarben & Glow (Reverted to Uniform) ---
-    // User requested uniform flows. We use the flow-gradient as defined in SVG.
-    const isUeberlauf = value >= maxFlowValue * 0.9 && value > 0;
-
-    // We remove explicit inline stroke to let the CSS rule (stroke: url(#flow-gradient)) apply.
-    path.style.stroke = '';
-
-    if (isUeberlauf) {
-        // Red glow warning if overflow
-        path.style.filter = 'drop-shadow(0px 0px 8px var(--color-error))';
-    } else {
-        path.style.filter = '';
-    }
-    // ---------------------------------
-
-    pathAnim.setAttribute('d', pathData);
-    // Reset inline opacity to allow CSS to control animation visibility
-    pathAnim.style.opacity = '';
-
-    // Update mask stroke to define visible river area
-    const pathMask = getEl(`${pathId}-mask`);
-    if (pathMask) {
-        pathMask.setAttribute('d', pathData);
-        const maskWidth = Math.max(0, parseFloat(path.style.strokeWidth || "0") + 2);
-        pathMask.style.strokeWidth = `${maskWidth}px`;
-    }
-
-    // Eraser path covers any legacy underlay (stroke slightly wider than main)
-    const pathErase = getEl(`${pathId}-erase`);
-    if (pathErase) {
-        pathErase.setAttribute('d', pathData);
-        const eraseWidth = Math.max(0, parseFloat(path.style.strokeWidth || "0") + 40); // extra wide to fully cover any underlay, even at tight bends
-        pathErase.style.strokeWidth = `${eraseWidth}px`;
-    }
-
-    // Add/update moving dot for direction cue
-    const radius = Math.max(2, Math.min(5, parseFloat(path.style.strokeWidth) / 6));
-    const speed = 6 + Math.max(0, (parseFloat(path.style.strokeWidth) - 10) / 8); // overall slower, more uniform
-    attachFlowDot(pathId, radius, speed);
-
-    const valueLabelId = `${pathId}-value`, textLabelId = `${pathId}-text`;
-    let valueLabel = getEl(valueLabelId), textLabel = getEl(textLabelId);
-    if (!valueLabel) { valueLabel = document.createElement('div'); valueLabel.className = 'flow-value'; valueLabel.id = valueLabelId; flowContainer.appendChild(valueLabel); }
-    if (labelText && !textLabel) { textLabel = document.createElement('div'); textLabel.className = 'flow-label'; textLabel.id = textLabelId; flowContainer.appendChild(textLabel); }
-
-    valueLabel.textContent = formatCurrency(value);
-    if (textLabel) textLabel.textContent = labelText;
-
-    // Spezielle Label-Positionierung für Vermieterkonto-Flows (näher am Vermieterkonto)
-    let labelPosition = 0.5; // Standard: 50% (Mitte)
-    if (pathId === 'vermieterkonto-einkommen-flow') {
-        labelPosition = 0.35; // 35% - näher am Vermieterkonto (Start)
-    } else if (pathId === 'fixkosten-vermieterkonto-flow') {
-        labelPosition = 0.67; // 67% - im ersten Drittel vom Vermieterkonto aus (= letztes Drittel vom Start)
-    }
-
-    const midPoint = path.getPointAtLength(path.getTotalLength() * labelPosition);
-    valueLabel.style.left = `${midPoint.x}px`; valueLabel.style.top = `${midPoint.y}px`;
-    if (textLabel) {
-        textLabel.style.left = `${midPoint.x}px`;
-        textLabel.style.top = `${midPoint.y - 22}px`; // closer spacing above the amount pill
-    }
-    path.classList.toggle('active', value > 0);
-    valueLabel.style.display = (value > 0) ? 'block' : 'none';
-    if (textLabel) textLabel.style.display = (value > 0) ? 'block' : 'none';
+    _drawFlowEngine(pathId, fromBasin, toBasin, value, maxFlowValue, labelText, flowOpacity,
+        typeof currentVariant !== 'undefined' ? currentVariant : 'A',
+        flowContainer);
 }
 
 function hideFlow(pathId) {
-    const path = getEl(pathId);
-    const pathAnim = getEl(`${pathId}-anim`);
-    const valueLbl = getEl(`${pathId}-value`);
-    const textLbl = getEl(`${pathId}-text`);
-    const pathErase = getEl(`${pathId}-erase`);
-    const pathMask = getEl(`${pathId}-mask`);
-    const dotGroup = getEl(`${pathId}-dot`);
-    if (path) {
-        path.classList.remove('active');
-        path.style.strokeWidth = '0px';
-    }
-    if (pathAnim) {
-        pathAnim.style.opacity = '0';
-    }
-    if (valueLbl) valueLbl.style.display = 'none';
-    if (textLbl) textLbl.style.display = 'none';
-    if (pathErase) pathErase.style.strokeWidth = '0px';
-    if (pathMask) pathMask.style.strokeWidth = '0px';
-    if (dotGroup) dotGroup.innerHTML = '';
+    _hideFlowEngine(pathId);
 }
+
 
 function drawConnectionLine(lineId, fromBasin, toBasin) {
     // Zeichnet eine gestrichelte vertikale Verbindungslinie (kein Flow, nur Visualisierung)
@@ -6158,28 +6003,34 @@ function renderFixkostenList() {
     // Reguläre Fixkosten-Items
     fixkostenItems.forEach((item, index) => {
         const itemEl = document.createElement('div');
-        itemEl.className = 'grid grid-cols-12 gap-3 items-center group bg-gray-800/40 hover:bg-gray-800/70 p-2 md:p-3 rounded-lg border border-transparent hover:border-gray-700 transition-all';
+        itemEl.className = 'grid grid-cols-12 gap-3 items-center group p-2 md:p-3 rounded-lg transition-all';
+        itemEl.style.cssText = 'background: rgba(3, 61, 93, 0.12); border: 1px solid rgba(190, 182, 170, 0.2); border-left: 3px solid var(--mlp-accent); margin-bottom: 0.5rem;';
+
+        const inputStyle = 'background: rgba(3, 61, 93, 0.25); border: 1px solid rgba(190, 182, 170, 0.25); padding: 0.625rem; border-radius: 0.5rem; font-size: 0.875rem; outline: none; width: 100%; transition: border-color 0.2s;';
+        const selectStyle = inputStyle + ' appearance: auto;';
+        const numberInputStyle = inputStyle + ' text-align: right; padding-right: 2.8rem;';
+
         itemEl.innerHTML = `
             <div class="col-span-4">
-                <input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten Bezeichnung" class="w-full bg-gray-900/50 border border-gray-700 focus:border-mlp-corporate-blue text-white p-2.5 rounded-lg transition-colors text-sm">
+                <input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten Bezeichnung" class="text-white placeholder-gray-400" style="${inputStyle}" onfocus="this.style.borderColor='var(--mlp-accent)'" onblur="this.style.borderColor='rgba(190,182,170,0.25)'">
             </div>
             <div class="col-span-3 relative">
-                <input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="0.00" class="w-full bg-gray-900/50 border border-gray-700 focus:border-mlp-corporate-blue text-white p-2.5 pr-8 rounded-lg transition-colors text-sm text-right">
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
+                <input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="0" class="text-white placeholder-gray-400" style="${numberInputStyle}" onfocus="this.style.borderColor='var(--mlp-accent)'" onblur="this.style.borderColor='rgba(190,182,170,0.25)'">
+                <span class="text-mlp-accent" style="position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 0.875rem; font-weight: 600; pointer-events: none;">€</span>
             </div>
             <div class="col-span-2">
-                <select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="w-full bg-gray-900/50 border border-gray-700 focus:border-mlp-corporate-blue text-white p-2.5 rounded-lg transition-colors text-sm">
+                <select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="text-white" style="${selectStyle}" onfocus="this.style.borderColor='var(--mlp-accent)'" onblur="this.style.borderColor='rgba(190,182,170,0.25)'">
                     ${['monthly', 'quarterly', 'annually'].map(i => `<option value="${i}" ${item.interval === i ? 'selected' : ''}>${i === 'monthly' ? 'mtl.' : i === 'quarterly' ? 'viertelj.' : 'jährl.'}</option>`).join('')}
                 </select>
             </div>
             <div class="col-span-2">
-                <select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="w-full bg-gray-900/50 border border-gray-700 focus:border-mlp-corporate-blue text-white p-2.5 rounded-lg transition-colors text-sm">
+                <select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="text-white" style="${selectStyle}" onfocus="this.style.borderColor='var(--mlp-accent)'" onblur="this.style.borderColor='rgba(190,182,170,0.25)'">
                     <option value="fixkosten" ${item.target === 'fixkosten' ? 'selected' : ''}>Fixkosten</option>
                     <option value="depot" ${item.target === 'depot' ? 'selected' : ''}>Sparplan</option>
                 </select>
             </div>
             <div class="col-span-1 flex justify-center">
-                <button onclick="removeFixkostenItem(${index})" class="text-gray-500 hover:text-red-400 hover:bg-white/5 p-2 rounded-lg transition-colors flex items-center justify-center group-hover:opacity-100 opacity-60" aria-label="Entfernen">
+                <button onclick="removeFixkostenItem(${index})" class="p-2 rounded-lg transition-colors flex items-center justify-center group-hover:opacity-100 opacity-60 text-gray-400 hover:text-red-400 hover:bg-white/5" aria-label="Entfernen">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
             </div>
