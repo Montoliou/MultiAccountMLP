@@ -6,7 +6,7 @@ Ein **Beratungs-Werkzeug für MLP-Finanzberater** — optimiert für Live-Gespr�
 Kein Self-Service-Tool. Kein Backend. Kein Login.
 
 **Live-URL:** https://montolio.de
-**Aktuell:** v1.7.8 | **Nächstes Ziel:** v2.0 (Design-Overhaul)
+**Aktuell:** v1.9.3 | **Nächstes Ziel:** v2.0 (Design-Overhaul)
 
 ---
 
@@ -34,11 +34,42 @@ Kein Build-System, kein Framework, kein npm. Reines Vanilla JS + Tailwind CDN + 
 - **Variante B**: Konsum-first (Giro → Konsum → Fixkosten)
 - Toggle über `currentVariant` Variable
 
+### SVG-Flow Engine (Herzstück der Visualisierung)
+
+Jeder Flow zwischen Basins besteht aus 5 SVG-Elementen:
+1. `flow-path` — Hauptfluss (Bézier-Kurve, eingefärbt via `url(#flow-gradient)`)
+2. `flow-path-anim` — Animiertes Duplikat (CSS dashoffset → "Fließen"-Effekt)
+3. `flow-mask` — Maskierungspfad
+4. `flow-erase` — Breiter Eraser-Pfad (verdeckt Untergründe)
+5. `flow-dot` — Fließendes Partikel (`<animateMotion>` entlang des Pfades)
+
+**`drawFlow()` Logik:** Berechnet Bézier-Kurven in Echtzeit basierend auf `getBoundingClientRect()` der Basin-Container. Stroke-Width skaliert dynamisch mit Geldwert.
+
+**KRITISCH:** Hardcoded Sonderfälle pro Flow und Variante (A/B) für Austritts-/Andockwinkel. Wenn CSS Basin-Dimensionen ändert → `positionCascade()` muss rekalibriert werden, aber SVG-Flows passen sich über `getBoundingClientRect()` an.
+
+### UI-Zonen (Hintergrund-Metapher)
+
+| Zone | Metapher | Bereich |
+|------|----------|---------|
+| Wolken | Einkommen (kommt von oben) | Top |
+| Horizont | Girokonten (Alltagslevel) | Mitte-oben |
+| Schuppen | Liquidität / Tagesgeld | Mitte |
+| Felder | Vermögensaufbau (wächst) | Unten |
+
+Diese Zonen unterlegen die "Water-Flow"-Metapher und müssen bei Design-Änderungen respektiert werden.
+
 ### Session-System
 
 - `sessionStorage` (nicht localStorage!) — Daten leben nur im Tab
 - `erklaererBesucht: { costAverage, sorr, anleihen }` — Status für Session-Menü-Icons
 - Session-ID, Kundenkürzel, Berater werden beim Start erfasst
+
+### Crash-Resilienz
+
+`calculateAndUpdate()` → `calculateFinancialData()` ist eine **sequenzielle Pipeline**. Ein Fehler stoppt alles danach. Deshalb:
+- `try/catch` um jedes Basin-Rendering
+- `try/catch` um ChartJS-Instanzen
+- Ein Crash beim letzten Basin → ALLE nachfolgenden Flows fehlen
 
 ---
 

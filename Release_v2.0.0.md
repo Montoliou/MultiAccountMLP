@@ -3,8 +3,9 @@
 **Status:** In Planung
 **ETA:** Q1-Q2 2026 (4-6 Sessions)
 **Prioritaet:** HIGH
-**Vorgaenger:** v1.7.8 (Aktien & Anleihen Erklaerer-Modal)
+**Vorgaenger:** v1.9.3 (Rot/Blau-Fondsklassifizierung + Dropdown-Fix)
 **Design-Preview:** `dev-tools/design-preview.html`
+**Antigravity-Branch:** `V2.0_Antigravity` (Design-Referenz, nicht Merge-Basis)
 
 ---
 
@@ -29,7 +30,7 @@ Die App ist funktional ausgereift (Basins, Flows, Erklaerer, Exporte). Aber das 
 | Referenz-Design | **Anleihen-Modal** (v1.7.8) als Vorlage fuer Premium-Aesthetik |
 | Visual Style | **Selective Glassmorphism** + konsistentes Radius-System (4/8/12/16px) |
 | Erklaerer-Buttons | **Dezent & serioes** — Text-Links/Outline statt lauter Gradient-Buttons |
-| Architektur | Single-File bleibt bis Phase 7, dann optionale Modularisierung |
+| Architektur | **Single-File bleibt** — Modularisierung fruehestens v3.0 (Antigravity-Learnings) |
 
 ## Design-Prinzipien
 
@@ -132,36 +133,25 @@ Neu:        Aktien & Anleihen erklaert  →        ← Text-Link mit Pfeil, deze
 }
 ```
 
-**Einsatz:** Phase 2 (Component-Klassen definieren) + Phase 3 (Sidebar/Depot-Modal migrieren)
+**Einsatz:** Phase 2 (Component-Klassen definieren) + Phase 3 (Modals migrieren) + Phase 4 (Sidebar migrieren)
 
 ---
 
-## Architektur: Single-File vs. Multi-File
+## Architektur: Single-File bleibt (Antigravity-Learning)
 
-**Entscheidung:** Single-File bleibt bis Phase 7. Design-Overhaul erst, Modularisierung danach.
+**Entscheidung:** Single-File bleibt fuer v2.0. Modularisierung fruehestens v3.0.
 
-| Aspekt | Single-File (jetzt) | Multi-File (Phase 7) |
-|--------|---------------------|---------------------|
-| Ladezeit | ~550KB, <1s | Aehnlich, aber cachebar |
-| CSS aendern | Ganzes File neu laden | Nur CSS-File |
-| Wartbarkeit | Schwer bei 11.900 Zeilen | Deutlich besser |
-| Deploy | 1 File uploaden | Mehrere, gleicher SFTP |
+**Begruendung:** Antigravity hat in `V2.0_Antigravity` eine Aufteilung versucht
+(index.html + src/legacy-main.js + Vite). Ergebnis: Die Aufteilung funktioniert technisch,
+aber der 8K-Zeilen `legacy-main.js` ist immer noch ein Monolith. Echte Modularisierung
+erfordert ein eigenes Refactoring-Projekt — gleichzeitig mit Design-Overhaul zu machen
+verdoppelt die Fehlerquellen.
+
+| Aspekt | Jetzt (Single-File) | Spaeter (v3.0) |
+|--------|---------------------|----------------|
+| Deploy | 1 File → SFTP | Mehrere Files → gleicher SFTP |
 | Build-Step | Keiner | Keiner (ES Modules) |
-| Risiko | Bekannt | Doppeltes Risiko wenn gleichzeitig mit Design |
-
-**Moegliche Aufteilung in Phase 7:**
-```
-index.html           ← HTML-Struktur + Inline-Scripts (Basins, Flows)
-css/mlp-tokens.css   ← Design Tokens (:root)
-css/mlp-components.css ← Buttons, Inputs, Cards, Modals
-css/mlp-layout.css   ← App-Chrome, Basins, Flow-Positionen
-js/erklaerer-anleihen.js  ← Anleihen-Modal (lazy-loadable)
-js/erklaerer-sorr.js      ← SoRR-Modal (lazy-loadable)
-js/erklaerer-cost-avg.js  ← Cost-Average-Modal (lazy-loadable)
-```
-
-**Vorteil Lazy Loading:** Erklaerer-Modals (~3.000 Zeilen JS) werden erst geladen wenn geoeffnet.
-Kein Build-Step noetig — native ES Modules (`<script type="module">`) reichen.
+| Risiko | Bekannt | Eigenes Projekt, nicht gleichzeitig mit Design |
 
 ---
 
@@ -358,21 +348,27 @@ Kein Build-Step noetig — native ES Modules (`<script type="module">`) reichen.
 - Auf MacBook Air: Modal nutzt 95% des Viewports statt 85%
 - Charts/Slider passen besser durch reduzierten Padding
 
-**Umsetzung:** Phase 2 (`.mlp-modal` Basisklasse) + Phase 5 (Erklaerer-Migration)
+**Umsetzung:** Phase 2 (`.mlp-modal` Basisklasse) + Phase 3 (Erklaerer-Migration)
 
 ---
 
 ## Phasen-Uebersicht
 
-| Phase | Inhalt | Session | Abhaengigkeit |
-|-------|--------|---------|---------------|
-| **1** | CSS Design Tokens & Foundation | 1 | keine |
-| **2** | Globale Komponenten-Styles | 1-2 | Phase 1 |
-| **3** | App-Chrome Redesign | 2 | Phase 1+2 |
-| **4** | Basin & Flow Redesign | 3 | Phase 1+2 |
-| **5** | Erklaerer-Modals vereinheitlichen | 3-4 | Phase 1+2 |
-| **6** | Export & Print | 4 | Phase 1 |
-| **7** | Architektur-Entschuldung (optional) | 5-6 | Phase 1 |
+| Phase | Inhalt | Session | Abhaengigkeit | Risiko |
+|-------|--------|---------|---------------|--------|
+| **1** | CSS Design Tokens & Foundation | 1 | keine | Niedrig |
+| **2** | Globale Komponenten-Styles + Glassmorphism | 1-2 | Phase 1 | Niedrig |
+| **3** | Erklaerer-Modals vereinheitlichen | 2-3 | Phase 1+2 | Mittel |
+| **4** | App-Chrome Redesign | 3 | Phase 1+2 | Mittel |
+| **5** | Basin & Flow Redesign | 4 | Phase 1+2 | **Hoch** |
+| **6** | Export & Print | 4-5 | Phase 1 | Niedrig |
+
+> **Phase 7 (Architektur-Modernisierung) gestrichen** — siehe "Antigravity Learnings" unten.
+> Modularisierung fruehestens v3.0, nachdem Design stabil ist.
+
+**Reihenfolge-Logik:** Aufsteigend nach Risiko. Erklaerer-Modals (Phase 3) sind isolierte
+Komponenten mit wenig Seiteneffekten. Basin & Flow (Phase 5) ist am riskantesten weil SVG-Flows,
+Positionen und Animationen eng gekoppelt sind — ein Fehler killt die gesamte Visualisierung.
 
 ---
 
@@ -418,15 +414,16 @@ Kein Build-Step noetig — native ES Modules (`<script type="module">`) reichen.
 
 ### Nicht in Scope (Phase 1)
 - Inline `style="color: #033D5D"` in JS-generiertem HTML (~28 Stellen) -> Phase 2+
-- Chart.js Farbwerte in JS-Objekten -> Phase 4
+- Chart.js Farbwerte in JS-Objekten -> Phase 5
 - Animation rgba-Werte (Shield/Basin Pulse) -> niedrige Prioritaet
-- Tailwind CDN Entfernung -> Phase 7
+- Tailwind CDN Entfernung -> v3.0 (mit Architektur-Modernisierung)
 
 ---
 
-## Phase 2: Globale Komponenten-Styles
+## Phase 2: Globale Komponenten-Styles + Glassmorphism
 
-**Ziel:** Einheitliche Buttons, Inputs, Slider, Cards, Modals
+**Ziel:** Einheitliche Buttons, Inputs, Slider, Cards, Modals + Glassmorphism-System
+**Inspiration:** Antigravity's `V2.0_Antigravity` Branch (Glassmorphism, Premium-Modal-Header)
 
 ### Buttons
 - [ ] `.mlp-btn-primary` — MLP Blau Dark bg, weiss text, hover/active/focus states
@@ -445,7 +442,13 @@ Kein Build-Step noetig — native ES Modules (`<script type="module">`) reichen.
 - [ ] `.mlp-card` — Titanium border ODER subtle shadow, nie beides
 - [ ] `.mlp-section` — F8F8F8 bg, 8px-Grid padding
 - [ ] `.mlp-modal` — Einheitliche Modal-Basis (aktuell 4+ verschiedene Stile)
-- [ ] `.mlp-glass` — Glassmorphism-Klasse fuer Overlays, Panels, Modals
+- [ ] `.mlp-glass` — Glassmorphism-Klasse (portiert von Antigravity, angepasst ans MLP Light-Theme)
+
+### Glassmorphism (von Antigravity inspiriert)
+- [ ] Light-Theme Variante: `rgba(255,255,255,0.75)` + `blur(12px)` + Titanium-Border
+- [ ] Dark-Theme Variante: `rgba(31,41,55,0.8)` + `blur(12px)` + subtile Border
+- [ ] Fallback fuer schwache Geraete (solider Hintergrund ohne Blur)
+- [ ] Einsatz: Modals, Sidebar-Overlays, Tooltips — NICHT fuer Basins/Flows/Tabellen
 
 ### Erklaerer-Trigger-Buttons
 - [ ] `.mlp-link-subtle` — Dezenter Text-Link mit Pfeil statt Gradient-Button
@@ -454,15 +457,45 @@ Kein Build-Step noetig — native ES Modules (`<script type="module">`) reichen.
 
 ---
 
-## Phase 3: App-Chrome Redesign
+## Phase 3: Erklaerer-Modals vereinheitlichen
+
+**Ziel:** Alle Modals auf Anleihen-Modal-Qualitaet bringen
+**Risiko:** Mittel — isolierte Komponenten, wenig Seiteneffekte auf Hauptansicht
+
+**Referenz-Design: Anleihen-Modal (v1.7.8)**
+- Premium MLP-Farben, Inline-Styles, professionelle Aesthetik
+
+### Migration
+- [ ] Cost-Average-Modal: MLP-Farben, Tab-Style, Chart-Farben
+- [ ] SoRR-Modal: MLP-Farben, Slider-Style, Chart-Farben
+- [ ] Immobilien-Modal: MLP-styled Formulare und Ergebnisse
+- [ ] MSCI-Renditedreieck: Farbgebung pruefen
+- [ ] Depot-Modal: Cleanup (v1.9.x Erklaerer-Buttons bereits dezent, Rest angleichen)
+
+### Gemeinsame Elemente
+- [ ] Tab-Navigation: Einheitliches Pattern (wie Anleihen), **sticky auf kleinen Screens**
+- [ ] Lesson-Boxes: MLP-Style (BEB6AA border, nicht gelb)
+- [ ] Result-Cards: Konsistente Darstellung ueber alle Modals
+
+### Responsive Modal-Layout (Bugfix: MacBook Air 13")
+- [ ] Sticky Header + Tabs (immer sichtbar, kein Hochscrollen)
+- [ ] Scrollbarer Body-Bereich (unabhaengig von Header/Tabs)
+- [ ] `@media (max-height: 800px)`: Modal auf 95vh, reduzierter Padding
+- [ ] Charts: Responsive Hoehe (`min-height` statt fixer Hoehe)
+- [ ] Close-Button immer erreichbar
+
+---
+
+## Phase 4: App-Chrome Redesign
 
 **Ziel:** Header, Control Bar, Sidebar, Session-Modals im MLP-Design
+**Risiko:** Mittel — betrifft sichtbare UI-Rahmenelemente, aber nicht die Kern-Visualisierung
 
 ### Header/Control Bar
 - [ ] Obere Leiste: MLP Blau Dark Hintergrund, weiss Text
 - [ ] Varianten-Toggle (A/B): Premium-styled, nicht generic Tailwind
 - [ ] Beratungsmodus-Stepper: MLP-Farben fuer Steps
-- [ ] Session-Info-Dropdown: Glasmorphism beibehalten, MLP-Farben
+- [ ] Session-Info-Dropdown: Glassmorphism, MLP-Farben
 
 ### Session-Start/End Modals
 - [ ] Session-Start: MLP-branded, professioneller erster Eindruck, **Glassmorphism-Overlay**
@@ -476,9 +509,12 @@ Kein Build-Step noetig — native ES Modules (`<script type="module">`) reichen.
 
 ---
 
-## Phase 4: Basin & Flow Redesign
+## Phase 5: Basin & Flow Redesign
 
 **Ziel:** Basins, Flows und Gradient-Zonen im MLP-Design
+**Risiko:** **HOCH** — SVG-Flows, Positionen und Animationen sind eng gekoppelt.
+Ein Fehler in `positionCascade()` oder `drawFlow()` killt die gesamte Visualisierung.
+Deshalb bewusst als LETZTE sichtbare Phase.
 
 ### Basins
 - [ ] Rahmen: Titanium borders statt gemischter Styles
@@ -490,6 +526,7 @@ Kein Build-Step noetig — native ES Modules (`<script type="module">`) reichen.
 - [ ] Flow-Farben: MLP-Palette (aktuell teilweise Tailwind-Defaults)
 - [ ] Flow-Labels: Bessere Lesbarkeit, konsistente Positionierung
 - [ ] Animations: Smooth, professionell, nicht verspielt
+- [ ] **Crash-Resilienz:** try/catch um jeden Flow-Render (Lesson aus v1.7.6!)
 
 ### Gradient-Zonen (Design-Entscheidung: ganzseitig)
 - [ ] **Ganzseitig statt im Rahmen** — Wolken/Erde-Metapher ueber den kompletten Viewport
@@ -497,33 +534,6 @@ Kein Build-Step noetig — native ES Modules (`<script type="module">`) reichen.
 - [ ] Opacity-Werte optimieren fuer Light Theme
 - [ ] Transitions bei Beratungsmodus-Steps verfeinern
 - [ ] Responsiv: Gradient skaliert natuerlich mit Viewport
-
----
-
-## Phase 5: Erklaerer-Modals vereinheitlichen
-
-**Ziel:** Alle Modals auf Anleihen-Modal-Qualitaet bringen
-
-**Referenz-Design: Anleihen-Modal (v1.7.8)**
-- Premium MLP-Farben, Inline-Styles, professionelle Aesthetik
-
-### Migration
-- [ ] Cost-Average-Modal: MLP-Farben, Tab-Style, Chart-Farben
-- [ ] SoRR-Modal: MLP-Farben, Slider-Style, Chart-Farben
-- [ ] Immobilien-Modal: MLP-styled Formulare und Ergebnisse
-- [ ] MSCI-Renditedreieck: Farbgebung pruefen
-
-### Gemeinsame Elemente
-- [ ] Tab-Navigation: Einheitliches Pattern (wie Anleihen), **sticky auf kleinen Screens**
-- [ ] Lesson-Boxes: MLP-Style (BEB6AA border, nicht gelb)
-- [ ] Result-Cards: Konsistente Darstellung ueber alle Modals
-
-### Responsive Modal-Layout (Bugfix: MacBook Air 13")
-- [ ] Sticky Header + Tabs (immer sichtbar, kein Hochscrollen)
-- [ ] Scrollbarer Body-Bereich (unabhaengig von Header/Tabs)
-- [ ] `@media (max-height: 800px)`: Modal auf 95vh, reduzierter Padding
-- [ ] Charts: Responsive Hoehe (`min-height` statt fixer Hoehe)
-- [ ] Close-Button immer erreichbar
 
 ---
 
@@ -543,26 +553,47 @@ Kein Build-Step noetig — native ES Modules (`<script type="module">`) reichen.
 
 ---
 
-## Phase 7: Architektur-Modernisierung (optional)
+## ~~Phase 7: Architektur-Modernisierung~~ → Verschoben auf v3.0
 
-**Ziel:** Single-File aufbrechen, Modularisierung, Codebase aufraumen
+**Status:** GESTRICHEN fuer v2.0 — siehe Antigravity Learnings unten.
 
-### File-Aufteilung (ES Modules, kein Build-Step)
-- [ ] `css/mlp-tokens.css` — Design Tokens (:root)
-- [ ] `css/mlp-components.css` — Buttons, Inputs, Cards, Modals, Glass
-- [ ] `css/mlp-layout.css` — App-Chrome, Basins, Flow-Positionen
-- [ ] `js/erklaerer-anleihen.js` — Anleihen-Modal (lazy-loadable)
-- [ ] `js/erklaerer-sorr.js` — SoRR-Modal (lazy-loadable)
-- [ ] `js/erklaerer-cost-avg.js` — Cost-Average-Modal (lazy-loadable)
-- [ ] Lazy Loading: Erklaerer-Module erst bei Oeffnen laden (`import()`)
-- [ ] Tailwind-Dependencies evaluieren (beibehalten vs. entfernen)
+Modularisierung ist ein eigenes Projekt mit eigenem Risikoprofil.
+Gleichzeitig Design UND Architektur zu aendern verdoppelt die Fehlerquellen.
+Single-File bleibt fuer v2.0 — Modularisierung fruehestens v3.0.
 
-### Code-Hygiene
-- [ ] Auskommentierte Bloecke entfernen (MSCI-Animation etc.)
-- [ ] Console.log-Statements aufraeumen
-- [ ] Konsistente Namenskonventionen (camelCase vs. kebab-case)
-- [ ] Gemeinsame Utility-Functions extrahieren (calculateBondPrice etc.)
-- [ ] Event-Handler konsolidieren
+### Was in v3.0 uebernommen werden koennte:
+- File-Aufteilung (CSS + JS-Module, kein Build-Step noetig)
+- Lazy Loading fuer Erklaerer-Modals (~3.000 Zeilen JS pro Modal)
+- Code-Hygiene (auskommentierte Bloecke, console.log, Dead Code)
+- Tailwind CDN Entfernung (eigene Utility-Klassen stattdessen)
+
+---
+
+## Antigravity Learnings
+
+Antigravity hat parallel in `V2.0_Antigravity` einen eigenen Design-Vorschlag entwickelt.
+Sein Branch dient als **Inspirationsquelle**, nicht als Merge-Basis.
+
+### Was wir uebernehmen
+| Element | Von Antigravity | Unsere Adaption |
+|---------|----------------|-----------------|
+| Glassmorphism | `backdrop-filter: blur()` + semi-transparente BGs | Light-Theme-Variante mit Titanium-Borders |
+| Premium Modal-Header | Gradient-Header mit Icon | MLP Blau Dark Gradient statt Tailwind-Blau |
+| Radius-System | Konsistentes `border-radius` | 4/8/12/16px Token-System |
+| Farbpalette | Nah an MLP, aber nicht exakt | Exakte MLP-Farben aus Design Guide |
+
+### Was wir NICHT uebernehmen
+| Element | Grund |
+|---------|-------|
+| Vite Build-System | Komplexitaet ohne Mehrwert fuer Single-File-App |
+| File-Aufteilung | legacy-main.js ist immer noch 8K-Monolith → echte Modularisierung erst v3.0 |
+| Dark-Theme als Default | MLP Corporate = Light-Theme |
+| Tailwind-Blau (#3b82f6) | Falsches Blau — MLP Blau ist #033D5D |
+
+### Tipps fuer Antigravity (separat kommuniziert)
+- `vite.config.js` fehlt → Build bricht
+- Deploy-Pipeline nicht angepasst (SFTP erwartet 1 File)
+- Rot/Blau-Fondsklassifizierung wurde in seinen Branch portiert (Commit `2b2e65c`)
 
 ---
 
