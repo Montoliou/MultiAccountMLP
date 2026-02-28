@@ -1564,6 +1564,9 @@
             background: var(--bg);
             color: var(--fg);
         }
+        .theme-dark .modal [role="document"] {
+            background: #1e293b;  /* Slate-800: wärmer & lesbarer als var(--bg) #111827 */
+        }
         /* Modal close buttons: theme-aware hover */
         .modal [role="document"] > button[aria-label]:first-of-type {
             color: var(--muted);
@@ -2910,7 +2913,7 @@
                 </svg>
 
                 <!-- Horizontal Gradient Zones für visuelle Ebenen-Trennung -->
-                <div id="gradient-zone-1" class="gradient-zone gradient-zone-1" style="top: 0; height: 240px;"></div>
+                <div id="gradient-zone-1" class="gradient-zone gradient-zone-1" style="top: -200px; height: 440px;"></div>
                 <div id="gradient-zone-2" class="gradient-zone gradient-zone-2" style="top: 240px; height: 480px;"></div>
                 <div id="gradient-zone-3" class="gradient-zone gradient-zone-3" style="top: 720px; height: 240px;"></div>
                 <div id="gradient-zone-4" class="gradient-zone gradient-zone-4" style="top: 960px; height: 300px;"></div>
@@ -3045,7 +3048,7 @@
     </div>
 
     <!-- MSCI Renditedreieck Modal -->
-    <div id="msci-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="msci-modal-title">
+    <div id="msci-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="msci-modal-title">
         <div class="w-full h-full max-w-7xl max-h-screen relative flex flex-col" role="document" tabindex="-1">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="msci-modal-title" class="text-2xl font-bold text-white">MSCI World Renditedreieck</h3>
@@ -3060,7 +3063,7 @@
     </div>
 
     <!-- v1.6.2: Cost-Average-Effekt Erklärer Modal -->
-    <div id="cost-average-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="cost-average-title">
+    <div id="cost-average-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="cost-average-title">
         <div class="w-full max-w-5xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
             <button type="button" onclick="closeCostAverageModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors" aria-label="Cost-Average Erklärer schließen">&times;</button>
 
@@ -3233,7 +3236,7 @@
     </div>
 
     <!-- v1.6.3: Kriegskasse Erklärer Modal -->
-    <div id="kriegskasse-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="kriegskasse-title">
+    <div id="kriegskasse-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="kriegskasse-title">
         <div class="w-full max-w-7xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
             <button type="button" onclick="closeKriegskasseModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors" aria-label="Kriegskasse Erklärer schließen">&times;</button>
 
@@ -3395,7 +3398,7 @@
     </div>
 
     <!-- v1.7.2: Sequence of Returns Risk (SoRR) Simulator Modal -->
-    <div id="sorr-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sorr-title">
+    <div id="sorr-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sorr-title">
         <div class="w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
             <button type="button" onclick="closeSoRRModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors z-10" aria-label="SoRR Simulator schließen">&times;</button>
 
@@ -3611,7 +3614,7 @@
     </style>
 
     <!-- v1.7.8: Aktien & Anleihen Erklärer Modal -->
-    <div id="anleihen-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="anleihen-title">
+    <div id="anleihen-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="anleihen-title">
         <div class="w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
             <button type="button" onclick="closeAnleihenModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors z-10" aria-label="Aktien & Anleihen Modal schließen">&times;</button>
 
