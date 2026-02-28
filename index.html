@@ -1466,12 +1466,12 @@
         .mlp-btn-primary:hover:not(:disabled) { background: #024a72; box-shadow: var(--shadow-subtle); }
         .mlp-btn-primary:active:not(:disabled) { background: #02334f; }
         .mlp-btn-secondary {
-            background: var(--mlp-secondary); color: var(--mlp-text-dark);
+            background: var(--mlp-secondary); color: var(--fg);
         }
         .mlp-btn-secondary:hover:not(:disabled) { background: #aea69a; }
         .mlp-btn-tertiary {
             background: transparent; color: var(--mlp-primary);
-            border: 1px solid var(--mlp-secondary);
+            border: 1px solid var(--border);
         }
         .mlp-btn-tertiary:hover:not(:disabled) { background: rgba(3,61,93,0.06); border-color: var(--mlp-primary); }
         .mlp-btn-danger {
@@ -1490,7 +1490,7 @@
             border-color: var(--mlp-primary);
             box-shadow: 0 0 0 3px rgba(3,61,93,0.15);
         }
-        .mlp-input-field-v2::placeholder { color: var(--mlp-text-medium); }
+        .mlp-input-field-v2::placeholder { color: var(--muted); }
 
         /* ── Slider ── */
         .mlp-slider {
@@ -1557,6 +1557,18 @@
         .theme-dark .mlp-modal-content {
             background: var(--gray-800);
             border: 1px solid var(--gray-700);
+        }
+        /* Modal document panels: theme-aware background */
+        .modal [role="document"] {
+            background: var(--bg);
+            color: var(--fg);
+        }
+        /* Modal close buttons: theme-aware hover */
+        .modal [role="document"] > button[aria-label]:first-of-type {
+            color: var(--muted);
+        }
+        .modal [role="document"] > button[aria-label]:first-of-type:hover {
+            color: var(--fg);
         }
         .mlp-modal-header {
             padding: var(--space-sm) var(--space-md);
@@ -1706,7 +1718,7 @@
             color: var(--mlp-primary);
         }
         .theme-light .app-subheading {
-            color: var(--mlp-text-medium);
+            color: var(--muted);
         }
 
         /* Panels / cards / modals */
@@ -2878,10 +2890,10 @@
     <!-- Modals -->
 
     <div id="prognose-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="prognose-modal-title" aria-describedby="prognose-summary">
-        <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+        <div class="w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('prognose-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Prognose schließen">&times;</button>
             <h3 id="prognose-modal-title" class="text-xl font-bold mb-4">Prognose: Vermögensentwicklung</h3>
-            <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+            <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                 <canvas id="prognose-chart"></canvas>
             </div>
             <div id="prognose-summary" class="mt-4 text-center"></div>
@@ -2890,7 +2902,7 @@
     </div>
 
     <div id="fixkosten-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="fixkosten-modal-title">
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+        <div class="w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('fixkosten-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Fixkostenfenster schließen">&times;</button>
             <h3 id="fixkosten-modal-title" class="text-xl font-bold mb-4">Fixkosten &amp; Sparpläne</h3>
             <div id="fixkosten-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
@@ -2905,10 +2917,10 @@
     </div>
 
     <div id="depot-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="depot-modal-title" aria-describedby="depot-modal-description">
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+        <div class="w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('depot-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Depotfenster schließen">&times;</button>
             <h3 id="depot-modal-title" class="text-xl font-bold mb-4">Depot-Aufteilung</h3>
-            <p id="depot-modal-description" class="text-sm -mt-3 mb-4" style="color: var(--mlp-text-medium);">Lege fest, wie neue Investments verteilt werden.</p>
+            <p id="depot-modal-description" class="text-sm -mt-3 mb-4" style="color: var(--muted);">Lege fest, wie neue Investments verteilt werden.</p>
 
             <!-- v1.9.2: Erklärer-Buttons — edel, gleichmäßig verteilt -->
             <div class="depot-erklaerer-row">
@@ -2988,7 +3000,7 @@
 
     <!-- v1.6.2: Cost-Average-Effekt Erklärer Modal -->
     <div id="cost-average-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="cost-average-title">
-        <div class="bg-white w-full max-w-5xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
+        <div class="w-full max-w-5xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
             <button type="button" onclick="closeCostAverageModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors" aria-label="Cost-Average Erklärer schließen">&times;</button>
 
             <!-- Phase 1: Vergleichsansicht -->
@@ -3161,7 +3173,7 @@
 
     <!-- v1.6.3: Kriegskasse Erklärer Modal -->
     <div id="kriegskasse-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="kriegskasse-title">
-        <div class="bg-white w-full max-w-7xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
+        <div class="w-full max-w-7xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
             <button type="button" onclick="closeKriegskasseModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors" aria-label="Kriegskasse Erklärer schließen">&times;</button>
 
             <!-- Phase 1: Intro -->
@@ -3323,7 +3335,7 @@
 
     <!-- v1.7.2: Sequence of Returns Risk (SoRR) Simulator Modal -->
     <div id="sorr-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sorr-title">
-        <div class="bg-white w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
+        <div class="w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
             <button type="button" onclick="closeSoRRModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors z-10" aria-label="SoRR Simulator schließen">&times;</button>
 
             <h2 id="sorr-title" class="text-3xl font-bold mb-2" style="color: var(--mlp-corporate-blue);">
@@ -3539,7 +3551,7 @@
 
     <!-- v1.7.8: Aktien & Anleihen Erklärer Modal -->
     <div id="anleihen-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="anleihen-title">
-        <div class="bg-white w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
+        <div class="w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
             <button type="button" onclick="closeAnleihenModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors z-10" aria-label="Aktien & Anleihen Modal schließen">&times;</button>
 
             <h2 id="anleihen-title" class="text-3xl font-bold mb-2" style="color: var(--mlp-corporate-blue);">
@@ -3556,11 +3568,11 @@
                     Zinssensitivität
                 </button>
                 <button id="anleihen-tab-btn-seesaw" onclick="switchAnleihenTab('seesaw')"
-                    class="px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--mlp-bg-gray); color: var(--mlp-text-dark); border: 1px solid var(--mlp-secondary);">
+                    class="px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--card); color: var(--fg); border: 1px solid var(--border);">
                     Inverse Beziehung
                 </button>
                 <button id="anleihen-tab-btn-spread" onclick="switchAnleihenTab('spread')"
-                    class="px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--mlp-bg-gray); color: var(--mlp-text-dark); border: 1px solid var(--mlp-secondary);">
+                    class="px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--card); color: var(--fg); border: 1px solid var(--border);">
                     Equity Premium
                 </button>
             </div>
@@ -3570,7 +3582,7 @@
                 <div class="grid grid-cols-12 gap-6">
                     <!-- Left: Inputs (4 cols) -->
                     <div class="col-span-4 space-y-4">
-                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                        <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Anleihe-Parameter</h3>
 
                             <div class="mb-3">
@@ -3604,7 +3616,7 @@
                             </div>
                         </div>
 
-                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                        <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Zinsänderung</h3>
                             <label class="block text-sm font-medium mb-1" style="color: #2B2B2B;">
                                 Marktzins ändert sich um: <span id="anleihen-zinsdelta-display" class="font-bold" style="color: #033D5D;">+1.0%</span>
@@ -3644,7 +3656,7 @@
                 <div class="grid grid-cols-12 gap-6">
                     <!-- Left: Controls (4 cols) -->
                     <div class="col-span-4 space-y-4">
-                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                        <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Marktzins</h3>
                             <label class="block text-sm font-medium mb-1" style="color: #2B2B2B;">
                                 Aktueller Marktzins: <span id="anleihen-marktzins-display" class="font-bold" style="color: #033D5D;">3.0%</span>
@@ -3658,7 +3670,7 @@
                             </div>
                         </div>
 
-                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                        <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Anleihe-Daten</h3>
                             <p class="text-sm mb-1" style="color: #2B2B2B;">Kupon: <span id="seesaw-kupon" class="font-semibold">3.0%</span></p>
                             <p class="text-sm mb-1" style="color: #2B2B2B;">Laufzeit: <span id="seesaw-laufzeit" class="font-semibold">10 Jahre</span></p>
@@ -3734,7 +3746,7 @@
                             </div>
 
                             <!-- Dynamischer Erklärtext -->
-                            <div id="seesaw-explain" class="mt-6 p-4 rounded-lg text-center" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                            <div id="seesaw-explain" class="mt-6 p-4 rounded-lg text-center" style="background: var(--card); border: 1px solid var(--border);">
                                 <p class="text-sm" style="color: #2B2B2B;" id="seesaw-explain-text">
                                     Bei gleichem Marktzins wie Kupon steht die Anleihe <strong>genau bei Par</strong> (100%). Bewegen Sie den Regler, um die inverse Beziehung zu erleben.
                                 </p>
@@ -3751,7 +3763,7 @@
                 <div class="grid grid-cols-12 gap-6">
                     <!-- Left: Slider + Ergebnis (4 cols) -->
                     <div class="col-span-4 space-y-4">
-                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                        <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Unternehmens-Rendite</h3>
                             <label class="block text-sm font-medium mb-1" style="color: #2B2B2B;">
                                 Das Unternehmen erwirtschaftet: <span id="equity-rendite-display" class="font-bold" style="color: #033D5D;">8%</span>
@@ -3765,7 +3777,7 @@
                             </div>
                         </div>
 
-                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                        <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Anleihe-Kosten</h3>
                             <label class="block text-sm font-medium mb-1" style="color: #2B2B2B;">
                                 Zinsen an Anleihegläubiger: <span id="equity-zins-display" class="font-bold" style="color: #BEB6AA;">3%</span>
@@ -3787,7 +3799,7 @@
                         </div>
 
                         <!-- Fazit-Box -->
-                        <div id="equity-fazit" class="p-3 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                        <div id="equity-fazit" class="p-3 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                             <p class="text-xs" style="color: #2B2B2B;" id="equity-fazit-text">
                                 <strong>Ergebnis:</strong> Das Unternehmen verdient 5% mehr als es für das geliehene Geld zahlt. Dieser Überschuss steigert den Unternehmenswert und gehört den Aktionären.
                             </p>
@@ -3894,7 +3906,7 @@
             </div>
 
             <!-- Lesson Box (immer sichtbar) -->
-            <div class="mt-6 p-4 rounded-lg" style="background: rgba(3,61,93,0.04); border-left: 4px solid #BEB6AA;">
+            <div class="mt-6 p-4 rounded-lg" style="background: rgba(3,61,93,0.04); border-left: 4px solid var(--border);">
                 <p class="text-sm" style="color: #2B2B2B;">
                     <strong style="color: #033D5D;">Merke:</strong> Eine Anleihe ist nur dann „sicher", wenn der Emittent zahlungsfähig bleibt
                     und man die Laufzeit aussitzt. Die Schwankungen dazwischen sind lediglich Opportunitätskosten des Marktes.
@@ -3905,14 +3917,14 @@
 
     <!-- Immobilien Modal -->
     <div id="immobilien-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="immobilien-modal-title" aria-describedby="immobilien-modal-description">
-        <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+        <div class="w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('immobilien-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Immobilienfenster schließen">&times;</button>
             <h3 id="immobilien-modal-title" class="text-xl font-bold mb-4">Immobilien-Verwaltung</h3>
             <p id="immobilien-modal-description" class="text-sm text-gray-600 -mt-3 mb-4">Verwalte deine Immobilien, Einnahmen und Ausgaben.</p>
 
             <!-- Anzahl Immobilien -->
-            <div class="mb-4 p-4 rounded-lg flex items-center gap-4" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
-                <label class="text-sm whitespace-nowrap" style="color: var(--mlp-text-medium);">Anzahl Immobilien</label>
+            <div class="mb-4 p-4 rounded-lg flex items-center gap-4" style="background: var(--card); border: 1px solid var(--border);">
+                <label class="text-sm whitespace-nowrap" style="color: var(--muted);">Anzahl Immobilien</label>
                 <input type="number" id="immo-anzahl" value="1" min="0" max="99" class="w-20 mlp-input-field-v2 text-center" inputmode="numeric">
             </div>
 
@@ -3920,57 +3932,57 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- Vermögen (Immobilienwert) -->
-                <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                     <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-success);">Vermögen</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Immobilienwert</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Immobilienwert</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="immo-wert" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Wert der Immobilie">
-                                <span style="color: var(--mlp-text-medium);">€</span>
+                                <span style="color: var(--muted);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Wertsteigerung (optional)</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Wertsteigerung (optional)</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="immo-wertsteigerung" value="0" step="0.1" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="z.B. 2.0">
-                                <span style="color: var(--mlp-text-medium);">% p.a.</span>
+                                <span style="color: var(--muted);">% p.a.</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Verbindlichkeiten -->
-                <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                     <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-error);">Verbindlichkeiten</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Restdarlehen (aktuell)</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Restdarlehen (aktuell)</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="immo-darlehen" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Aktuelle Restschuld">
-                                <span style="color: var(--mlp-text-medium);">€</span>
+                                <span style="color: var(--muted);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Ursprüngliches Darlehen</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Ursprüngliches Darlehen</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="immo-darlehen-original" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Darlehensbetrag bei Aufnahme">
-                                <span style="color: var(--mlp-text-medium);">€</span>
+                                <span style="color: var(--muted);">€</span>
                             </div>
-                            <p class="text-xs mt-1" style="color: var(--mlp-text-medium);">Für korrekte Ratenberechnung (Annuität bleibt konstant)</p>
+                            <p class="text-xs mt-1" style="color: var(--muted);">Für korrekte Ratenberechnung (Annuität bleibt konstant)</p>
                         </div>
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Zinssatz (optional)</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Zinssatz (optional)</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="immo-zinssatz" value="0" step="0.1" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="z.B. 3.5">
-                                <span style="color: var(--mlp-text-medium);">%</span>
+                                <span style="color: var(--muted);">%</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Tilgungssatz (optional)</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Tilgungssatz (optional)</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="immo-tilgungssatz" value="0" step="0.1" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="z.B. 2.0">
-                                <span style="color: var(--mlp-text-medium);">%</span>
+                                <span style="color: var(--muted);">%</span>
                             </div>
                         </div>
                     </div>
@@ -3979,9 +3991,9 @@
             </div>
 
             <!-- Zusammenfassung -->
-            <div class="mt-6 p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+            <div class="mt-6 p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                 <div class="text-center">
-                    <p class="text-sm mb-2" style="color: var(--mlp-text-medium);">Nettovermögen (Wert - Darlehen)</p>
+                    <p class="text-sm mb-2" style="color: var(--muted);">Nettovermögen (Wert - Darlehen)</p>
                     <p id="immo-nettovermoegen" class="text-3xl font-bold" style="color: var(--mlp-success);">0 €</p>
                 </div>
             </div>
@@ -3989,23 +4001,23 @@
             <!-- Berechnete Darlehensrate anzeigen -->
             <div id="immo-rate-berechnet-display" class="mt-6 p-4 rounded-lg hidden" style="background: rgba(3,61,93,0.06); border: 1px solid var(--mlp-primary);">
                 <h4 class="text-sm font-semibold mb-2" style="color: var(--mlp-primary);">📊 Berechnete monatliche Darlehensrate</h4>
-                <p class="text-2xl font-bold" style="color: var(--mlp-text-dark);"><span id="immo-rate-berechnet-wert">0 €</span></p>
-                <p class="text-xs mt-1" style="color: var(--mlp-text-medium);">
+                <p class="text-2xl font-bold" style="color: var(--fg);"><span id="immo-rate-berechnet-wert">0 €</span></p>
+                <p class="text-xs mt-1" style="color: var(--muted);">
                     Zinsen: <span id="immo-rate-zinsen">0 €</span> | Tilgung: <span id="immo-rate-tilgung">0 €</span>
                 </p>
                 <p class="text-xs mt-2" style="color: var(--mlp-primary);">💡 Diese Rate wird automatisch ins Vermieterkonto übertragen.</p>
             </div>
 
             <!-- Tilgungsplan Slider -->
-            <div id="immo-tilgungsplan-section" class="mt-6 p-4 rounded-lg hidden" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+            <div id="immo-tilgungsplan-section" class="mt-6 p-4 rounded-lg hidden" style="background: var(--card); border: 1px solid var(--border);">
                 <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-primary);">📈 Tilgungsplan & Vermögensaufbau</h4>
 
                 <div class="mb-4">
-                    <label class="text-sm block mb-2" style="color: var(--mlp-text-medium);">
-                        Zeitraum: <span id="immo-tilgungsplan-jahre" class="font-bold" style="color: var(--mlp-text-dark);">10</span> Jahre
+                    <label class="text-sm block mb-2" style="color: var(--muted);">
+                        Zeitraum: <span id="immo-tilgungsplan-jahre" class="font-bold" style="color: var(--fg);">10</span> Jahre
                     </label>
                     <input type="range" id="immo-tilgungsplan-slider" min="0" max="20" value="10" step="1" class="w-full mlp-slider">
-                    <div class="flex justify-between text-xs" style="color: var(--mlp-text-medium);">
+                    <div class="flex justify-between text-xs" style="color: var(--muted);">
                         <span>0 Jahre</span>
                         <span>20 Jahre</span>
                     </div>
@@ -4013,27 +4025,27 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <div class="text-center">
-                        <p class="text-xs" style="color: var(--mlp-text-medium);">Restschuld</p>
+                        <p class="text-xs" style="color: var(--muted);">Restschuld</p>
                         <p id="immo-tilgungsplan-restschuld" class="text-lg font-bold" style="color: var(--mlp-error);">0 €</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-xs" style="color: var(--mlp-text-medium);">Gezahlte Zinsen</p>
+                        <p class="text-xs" style="color: var(--muted);">Gezahlte Zinsen</p>
                         <p id="immo-tilgungsplan-zinsen" class="text-lg font-bold" style="color: var(--mlp-warning);">0 €</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-xs" style="color: var(--mlp-text-medium);">Eigenkapital</p>
+                        <p class="text-xs" style="color: var(--muted);">Eigenkapital</p>
                         <p id="immo-tilgungsplan-eigenkapital" class="text-lg font-bold" style="color: var(--mlp-success);">0 €</p>
                     </div>
                 </div>
 
                 <div class="mt-4 text-center">
-                    <p class="text-xs" style="color: var(--mlp-text-medium);">Immobilienwert (mit Wertsteigerung)</p>
+                    <p class="text-xs" style="color: var(--muted);">Immobilienwert (mit Wertsteigerung)</p>
                     <p id="immo-tilgungsplan-wert" class="text-xl font-bold" style="color: var(--mlp-primary);">0 €</p>
                 </div>
             </div>
 
-            <div class="mt-4 p-3 rounded-lg" style="background: rgba(3,61,93,0.04); border-left: 4px solid var(--mlp-secondary);">
-                <p class="text-sm" style="color: var(--mlp-text-dark);">💡 <strong style="color: var(--mlp-primary);">Tipp:</strong> Einnahmen und Ausgaben werden im <strong>Vermieterkonto</strong> verwaltet.</p>
+            <div class="mt-4 p-3 rounded-lg" style="background: rgba(3,61,93,0.04); border-left: 4px solid var(--border);">
+                <p class="text-sm" style="color: var(--fg);">💡 <strong style="color: var(--mlp-primary);">Tipp:</strong> Einnahmen und Ausgaben werden im <strong>Vermieterkonto</strong> verwaltet.</p>
             </div>
 
             <button type="button" onclick="saveImmobilien()" class="mlp-btn mlp-btn-primary mt-6 w-full py-2 px-4">Speichern &amp; Schließen</button>
@@ -4042,58 +4054,58 @@
 
     <!-- Vermieterkonto Modal -->
     <div id="vermieterkonto-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="vermieterkonto-modal-title">
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+        <div class="w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('vermieterkonto-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Vermieterkonto schließen">&times;</button>
             <h3 id="vermieterkonto-modal-title" class="text-xl font-bold mb-4">Vermieterkonto</h3>
-            <p class="text-sm -mt-3 mb-4" style="color: var(--mlp-text-medium);">Alle Einnahmen und Ausgaben deiner Immobilien laufen über dieses kostenlose Konto.</p>
+            <p class="text-sm -mt-3 mb-4" style="color: var(--muted);">Alle Einnahmen und Ausgaben deiner Immobilien laufen über dieses kostenlose Konto.</p>
 
             <!-- Grid für 2 Kategorien -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- Monatliche Einnahmen -->
-                <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                     <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-success);">Monatliche Einnahmen</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Mieteinnahmen</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Mieteinnahmen</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-miete" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Monatliche Miete">
-                                <span style="color: var(--mlp-text-medium);">€</span>
+                                <span style="color: var(--muted);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Sonstige Einnahmen</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Sonstige Einnahmen</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-sonstige-einnahmen" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="z.B. Stellplatz, Garage">
-                                <span style="color: var(--mlp-text-medium);">€</span>
+                                <span style="color: var(--muted);">€</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Monatliche Ausgaben -->
-                <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                     <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-error);">Monatliche Ausgaben</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Darlehensrate</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Darlehensrate</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-rate" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Monatliche Rate">
-                                <span style="color: var(--mlp-text-medium);">€</span>
+                                <span style="color: var(--muted);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Instandhaltung</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Instandhaltung</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-instandhaltung" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Rücklagen">
-                                <span style="color: var(--mlp-text-medium);">€</span>
+                                <span style="color: var(--muted);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Steuern & Nebenkosten</label>
+                            <label class="text-sm block mb-1" style="color: var(--muted);">Steuern & Nebenkosten</label>
                             <div class="flex items-center gap-2">
                                 <input type="number" id="vk-steuern" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Grundsteuer, Versicherung">
-                                <span style="color: var(--mlp-text-medium);">€</span>
+                                <span style="color: var(--muted);">€</span>
                             </div>
                         </div>
                     </div>
@@ -4102,18 +4114,18 @@
             </div>
 
             <!-- Zusammenfassung -->
-            <div class="mt-6 p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+            <div class="mt-6 p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <p class="text-sm" style="color: var(--mlp-text-medium);">Einnahmen</p>
+                        <p class="text-sm" style="color: var(--muted);">Einnahmen</p>
                         <p id="vk-einnahmen-total" class="text-xl font-bold" style="color: var(--mlp-success);">0 €</p>
                     </div>
                     <div>
-                        <p class="text-sm" style="color: var(--mlp-text-medium);">Ausgaben</p>
+                        <p class="text-sm" style="color: var(--muted);">Ausgaben</p>
                         <p id="vk-ausgaben-total" class="text-xl font-bold" style="color: var(--mlp-error);">0 €</p>
                     </div>
                     <div>
-                        <p class="text-sm" style="color: var(--mlp-text-medium);">Monatlicher Saldo</p>
+                        <p class="text-sm" style="color: var(--muted);">Monatlicher Saldo</p>
                         <p id="vk-saldo" class="text-2xl font-bold" style="color: var(--mlp-primary);">0 €</p>
                     </div>
                 </div>
@@ -10380,8 +10392,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         'Vermieterkonto-Deckung' +
                     '</div>' +
                     '<div class="col-span-2 font-bold" style="color: var(--mlp-warning);">' + formatCurrency(Math.abs(vermieterData.saldo)) + '</div>' +
-                    '<div class="col-span-2 text-sm" style="color: var(--mlp-text-medium);">mtl.</div>' +
-                    '<div class="col-span-3 text-sm" style="color: var(--mlp-text-medium);">automatisch</div>' +
+                    '<div class="col-span-2 text-sm" style="color: var(--muted);">mtl.</div>' +
+                    '<div class="col-span-3 text-sm" style="color: var(--muted);">automatisch</div>' +
                     '<div class="col-span-1"></div>';
                 total += Math.abs(vermieterData.saldo);
             } else {
@@ -10393,8 +10405,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         'Mieteinnahmen' +
                     '</div>' +
                     '<div class="col-span-2 font-bold" style="color: var(--mlp-success);">-' + formatCurrency(vermieterData.saldo) + '</div>' +
-                    '<div class="col-span-2 text-sm" style="color: var(--mlp-text-medium);">mtl.</div>' +
-                    '<div class="col-span-3 text-sm" style="color: var(--mlp-text-medium);">automatisch</div>' +
+                    '<div class="col-span-2 text-sm" style="color: var(--muted);">mtl.</div>' +
+                    '<div class="col-span-3 text-sm" style="color: var(--muted);">automatisch</div>' +
                     '<div class="col-span-1"></div>';
                 total -= vermieterData.saldo; // Reduziert die Fixkosten
             }
@@ -10520,7 +10532,7 @@ function updateFixkostenItem(index, key, value) {
                 '<div class="relative col-span-2">' +
                     '<input type="number" value="' + item.allocation + '" onchange="updateDepotItem(' + index + ', \'allocation\', this.value)" ' +
                     'class="w-full text-right pr-6 mlp-input-field-v2 p-1 text-sm">' +
-                    '<span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs" style="color: var(--mlp-text-medium);">%</span>' +
+                    '<span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs" style="color: var(--muted);">%</span>' +
                 '</div>' +
                 '<div class="col-span-3 risk-toggle ' + item.risk + '" onclick="updateDepotItem(' + index + ', \'risk\', \'' + (item.risk === 'conservative' ? 'aggressive' : 'conservative') + '\')" title="' + (item.risk === 'conservative' ? 'Konservativ' : 'Chancenreich') + '">' +
                     '<span class="risk-dot conservative"></span>' +
