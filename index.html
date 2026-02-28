@@ -1576,6 +1576,9 @@
         }
 
         /* ── Dark-Theme Overrides für Erklärer-Modals ── */
+        /* MLP Primary (#033D5D) auf Dark-Bg → helles MLP-Blau */
+        .theme-dark .modal [style*="color: var(--mlp-corporate-blue)"] { color: #7db8d4 !important; }
+        .theme-dark .modal [style*="color: var(--mlp-primary)"] { color: #7db8d4 !important; }
         /* Tailwind gray text classes → readable on dark backgrounds */
         .theme-dark .modal .text-gray-700 { color: #e5e7eb !important; }
         .theme-dark .modal .text-gray-600 { color: #d1d5db !important; }
