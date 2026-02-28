@@ -2931,8 +2931,7 @@
             </div>
 
             <div id="depot-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
-            <!-- v1.9.3: Globales Dropdown AUSSERHALB des scroll-Containers -->
-            <div id="fonds-dropdown-global" class="fonds-autocomplete-list"></div>
+            <!-- v1.9.3: Dropdown jetzt im Body (siehe Ende der Modals) wegen transform-Bug -->
             <button type="button" onclick="addDepotItem()" style="margin-top:10px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:5px; border:1px dashed rgba(156,163,175,0.3); background:transparent; color:#9ca3af; cursor:pointer; transition:all 0.15s;">+ Fonds hinzufügen</button>
             <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:12px; border-top:1px solid rgba(156,163,175,0.12);">
                 <span style="font-size:13px; color:#9ca3af;">Gesamt-Verteilung</span>
@@ -4134,6 +4133,9 @@
             <button type="button" onclick="saveVermieterkonto()" class="mlp-btn mlp-btn-primary mt-6 w-full py-2 px-4">Speichern &amp; Schließen</button>
         </div>
     </div>
+
+    <!-- Fonds-Dropdown: MUSS außerhalb aller Modals liegen (position:fixed + transform-Bug) -->
+    <div id="fonds-dropdown-global" class="fonds-autocomplete-list"></div>
 
     <script>
     // ===== SESSION MANAGEMENT SYSTEM (v1.2.0) =====
