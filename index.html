@@ -127,11 +127,25 @@
         .flow-value { position: absolute; background-color: var(--bg); color: var(--muted); padding: 4px 10px; border-radius: 9999px; font-size: 0.9rem; font-weight: 600; z-index: 15; border: 1px solid var(--border); white-space: nowrap; transform: translate(-50%, -50%); transition: top 0.3s, left 0.3s; }
         .limit-line { position: absolute; width: 100%; height: 2px; left: 0; z-index: 12; }
         .limit-line span { position: absolute; right: 4px; transform: translateY(-50%); font-size: 10px; background: var(--gray-800); padding: 0 3px; font-weight: 500;}
-        .modal { display: none !important; }
-        .modal-active { display: flex !important; }
+        /* v2.0: Smooth Modal Animations */
+        .modal {
+            display: flex !important;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+        }
+        .modal-active {
+            opacity: 1; visibility: visible; pointer-events: auto;
+        }
+        .modal > [role="document"], .modal > div:first-child {
+            transform: translateY(12px) scale(0.98);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-active > [role="document"], .modal-active > div:first-child {
+            transform: translateY(0) scale(1);
+        }
         .schutzschirm {
-            fill: rgba(59, 130, 246, 0.15);
-            stroke: rgba(96, 165, 250, 0.4);
+            fill: rgba(3, 61, 93, 0.12);
+            stroke: rgba(71, 161, 144, 0.4);
             stroke-width: 2px;
             transition: opacity 0.5s, fill 0.5s, stroke 0.5s;
             animation: pulse-shield 4s infinite ease-in-out;
@@ -671,34 +685,40 @@
             );
         }
 
-        /* === SESSION MODAL OVERLAY (v1.2.0) === */
+        /* === SESSION MODAL OVERLAY (v2.0) === */
         .modal-overlay {
             position: fixed;
             inset: 0;
             z-index: 9999;
-            display: none; /* Hidden by default */
+            display: flex;
             align-items: center;
             justify-content: center;
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            animation: fadeIn 0.2s ease-out;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
         }
 
         .modal-overlay.modal-active {
-            display: flex;
+            opacity: 1; visibility: visible; pointer-events: auto;
         }
 
         .modal-content {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             border: 1px solid rgba(148, 163, 184, 0.2);
-            border-radius: 16px;
+            border-radius: var(--radius-lg);
             padding: 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: var(--shadow-modal);
             max-width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            animation: slideUp 0.3s ease-out;
+            transform: translateY(12px) scale(0.98);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.modal-active .modal-content {
+            transform: translateY(0) scale(1);
         }
 
         @keyframes fadeIn {
@@ -1593,6 +1613,68 @@
         }
         .mlp-session-input:focus { border-color: var(--mlp-accent); }
         .mlp-session-input::placeholder { color: var(--gray-500); }
+
+        /* ═══════════════════════════════════════════════════════
+           v2.0 Global Smooth Transitions
+           Premium-feel: alles reagiert geschmeidig auf Interaktion
+           ═══════════════════════════════════════════════════════ */
+
+        /* Buttons & Links — sanfter Hover/Active */
+        button, a, [role="button"], .mlp-btn, .depot-erklaerer-btn, .basin-inline-btn {
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+                        box-shadow 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+        }
+
+        /* Inputs — sanfter Focus-Ring */
+        input, select, textarea, .mlp-input-field, .mlp-input-field-v2, .input-frame {
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        /* Cards & Panels — Hover-Elevation */
+        .mlp-card, .mlp-glass, .planning-panel, .account-basin {
+            transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+        }
+
+        /* Tooltip & Popover fade */
+        [class*="tooltip"], .fab-label {
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+        }
+
+        /* Erklärer-Buttons im Depot — sanfter Hover */
+        .depot-erklaerer-btn {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .depot-erklaerer-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Flow-Values & Labels — sanftere Positionsänderungen */
+        .flow-value, .flow-label {
+            transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1), left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.3s ease;
+        }
+
+        /* Basin-Hover: subtile Elevation statt hartem Border-Change */
+        button.account-basin:hover {
+            transform: translateY(-2px);
+        }
+        button.account-basin:active {
+            transform: translateY(0);
+        }
+
+        /* Schutzschirm sanfter */
+        .schutzschirm {
+            transition: opacity 0.5s ease, fill 0.5s ease, stroke 0.5s ease;
+        }
+
+        /* Reduced motion: alle Animationen aus */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
 
         /* Flow labels/pills harmonisieren */
         .flow-label { color: var(--muted); }
@@ -2801,8 +2883,8 @@
     <!-- Modals -->
 
     <div id="prognose-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="prognose-modal-title" aria-describedby="prognose-summary">
-        <div class="bg-gray-800 w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
-            <button type="button" onclick="closeModal('prognose-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Prognose schließen">&times;</button>
+        <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+            <button type="button" onclick="closeModal('prognose-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Prognose schließen">&times;</button>
             <h3 id="prognose-modal-title" class="text-xl font-bold mb-4">Prognose: Vermögensentwicklung</h3>
             <div class="bg-gray-900 p-4 rounded-lg">
                 <canvas id="prognose-chart"></canvas>
@@ -2813,8 +2895,8 @@
     </div>
 
     <div id="fixkosten-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="fixkosten-modal-title">
-        <div class="bg-gray-800 w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
-            <button type="button" onclick="closeModal('fixkosten-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Fixkostenfenster schließen">&times;</button>
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+            <button type="button" onclick="closeModal('fixkosten-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Fixkostenfenster schließen">&times;</button>
             <h3 id="fixkosten-modal-title" class="text-xl font-bold mb-4">Fixkosten &amp; Sparpläne</h3>
             <div id="fixkosten-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
             <button type="button" onclick="addFixkostenItem()" class="mlp-btn mlp-btn-tertiary mt-4 text-sm px-3 py-1">+ Posten hinzufügen</button>
@@ -2828,8 +2910,8 @@
     </div>
 
     <div id="depot-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="depot-modal-title" aria-describedby="depot-modal-description">
-        <div class="bg-gray-800 w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
-            <button type="button" onclick="closeModal('depot-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Depotfenster schließen">&times;</button>
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+            <button type="button" onclick="closeModal('depot-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Depotfenster schließen">&times;</button>
             <h3 id="depot-modal-title" class="text-xl font-bold mb-4">Depot-Aufteilung</h3>
             <p id="depot-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Lege fest, wie neue Investments verteilt werden.</p>
 
@@ -2899,7 +2981,7 @@
         <div class="w-full h-full max-w-7xl max-h-screen relative flex flex-col" role="document" tabindex="-1">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="msci-modal-title" class="text-2xl font-bold text-white">MSCI World Renditedreieck</h3>
-                <button type="button" onclick="closeMsciRenditedreieck()" class="text-gray-400 hover:text-white text-3xl" aria-label="MSCI Renditedreieck schließen">&times;</button>
+                <button type="button" onclick="closeMsciRenditedreieck()" class="text-gray-400 hover:text-gray-900 text-3xl transition-colors" aria-label="MSCI Renditedreieck schließen">&times;</button>
             </div>
 
             <div class="flex-1 bg-white rounded-lg overflow-hidden relative cursor-zoom-in" id="msci-container" onclick="toggleMsciZoom(event)">
@@ -2912,7 +2994,7 @@
     <!-- v1.6.2: Cost-Average-Effekt Erklärer Modal -->
     <div id="cost-average-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="cost-average-title">
         <div class="bg-white w-full max-w-5xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
-            <button type="button" onclick="closeCostAverageModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl" aria-label="Cost-Average Erklärer schließen">&times;</button>
+            <button type="button" onclick="closeCostAverageModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors" aria-label="Cost-Average Erklärer schließen">&times;</button>
 
             <!-- Phase 1: Vergleichsansicht -->
             <div id="ca-phase-1">
@@ -3085,7 +3167,7 @@
     <!-- v1.6.3: Kriegskasse Erklärer Modal -->
     <div id="kriegskasse-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="kriegskasse-title">
         <div class="bg-white w-full max-w-7xl rounded-xl shadow-2xl p-8 relative" role="document" tabindex="-1" style="max-height: 90vh; overflow-y: auto;">
-            <button type="button" onclick="closeKriegskasseModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl" aria-label="Kriegskasse Erklärer schließen">&times;</button>
+            <button type="button" onclick="closeKriegskasseModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors" aria-label="Kriegskasse Erklärer schließen">&times;</button>
 
             <!-- Phase 1: Intro -->
             <div id="kriegskasse-phase-1">
@@ -3247,7 +3329,7 @@
     <!-- v1.7.2: Sequence of Returns Risk (SoRR) Simulator Modal -->
     <div id="sorr-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sorr-title">
         <div class="bg-white w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
-            <button type="button" onclick="closeSoRRModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl z-10" aria-label="SoRR Simulator schließen">&times;</button>
+            <button type="button" onclick="closeSoRRModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors z-10" aria-label="SoRR Simulator schließen">&times;</button>
 
             <h2 id="sorr-title" class="text-3xl font-bold mb-2" style="color: var(--mlp-corporate-blue);">
                 ⚠️ Sequence of Returns Risk
@@ -3276,7 +3358,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Startkapital</label>
                                 <div class="relative">
                                     <input type="number" id="sorr-initial-capital" value="500000" oninput="updateSoRRWithdrawalRate()"
-                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900">
+                                           class="mlp-input-field-v2">
                                     <span class="absolute right-3 top-2 text-gray-400">€</span>
                                 </div>
                             </div>
@@ -3285,7 +3367,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Jährliche Entnahme (Start)</label>
                                 <div class="relative">
                                     <input type="number" id="sorr-annual-withdrawal" value="20000" oninput="updateSoRRWithdrawalRate()"
-                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900">
+                                           class="mlp-input-field-v2">
                                     <span class="absolute right-3 top-2 text-gray-400">€</span>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">
@@ -3297,7 +3379,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Dynamik der Entnahme</label>
                                 <div class="relative">
                                     <input type="number" id="sorr-inflation" value="2.0" step="0.1"
-                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900">
+                                           class="mlp-input-field-v2">
                                     <span class="absolute right-3 top-2 text-gray-400">% p.a.</span>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">Inflationsanpassung der Entnahmen</p>
@@ -3417,6 +3499,14 @@
 
     <!-- v1.7.8: Slider-Styling für Anleihen-Modal -->
     <style>
+        /* v2.0: Smooth tab transitions */
+        #anleihen-modal [id^="anleihen-tab-"] {
+            transition: opacity 0.25s ease;
+        }
+        #anleihen-modal [id^="anleihen-tab-btn-"] {
+            transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+        }
+
         #anleihen-modal input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
@@ -3455,7 +3545,7 @@
     <!-- v1.7.8: Aktien & Anleihen Erklärer Modal -->
     <div id="anleihen-modal" class="modal fixed inset-0 bg-black bg-opacity-90 items-center justify-center p-8 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="anleihen-title">
         <div class="bg-white w-full max-w-7xl rounded-xl shadow-2xl p-8 relative overflow-y-auto" role="document" tabindex="-1" style="max-height: 95vh;">
-            <button type="button" onclick="closeAnleihenModal()" class="absolute top-6 right-6 text-gray-600 hover:text-gray-900 text-3xl z-10" aria-label="Aktien & Anleihen Modal schließen">&times;</button>
+            <button type="button" onclick="closeAnleihenModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 text-3xl transition-colors z-10" aria-label="Aktien & Anleihen Modal schließen">&times;</button>
 
             <h2 id="anleihen-title" class="text-3xl font-bold mb-2" style="color: var(--mlp-corporate-blue);">
                 📊 Aktien & Anleihen
@@ -3467,15 +3557,15 @@
             <!-- Tab-Navigation -->
             <div class="flex gap-2 mb-6">
                 <button id="anleihen-tab-btn-duration" onclick="switchAnleihenTab('duration')"
-                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: #033D5D; color: white;">
+                    class="px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--mlp-primary); color: white;">
                     Zinssensitivität
                 </button>
                 <button id="anleihen-tab-btn-seesaw" onclick="switchAnleihenTab('seesaw')"
-                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: #F8F8F8; color: #2B2B2B; border: 1px solid #BEB6AA;">
+                    class="px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--mlp-bg-gray); color: var(--mlp-text-dark); border: 1px solid var(--mlp-secondary);">
                     Inverse Beziehung
                 </button>
                 <button id="anleihen-tab-btn-spread" onclick="switchAnleihenTab('spread')"
-                    class="px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: #F8F8F8; color: #2B2B2B; border: 1px solid #BEB6AA;">
+                    class="px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--mlp-bg-gray); color: var(--mlp-text-dark); border: 1px solid var(--mlp-secondary);">
                     Equity Premium
                 </button>
             </div>
@@ -3485,7 +3575,7 @@
                 <div class="grid grid-cols-12 gap-6">
                     <!-- Left: Inputs (4 cols) -->
                     <div class="col-span-4 space-y-4">
-                        <div class="p-4 rounded-lg" style="background: #F8F8F8; border: 1px solid #BEB6AA;">
+                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Anleihe-Parameter</h3>
 
                             <div class="mb-3">
@@ -3519,7 +3609,7 @@
                             </div>
                         </div>
 
-                        <div class="p-4 rounded-lg" style="background: #F8F8F8; border: 1px solid #BEB6AA;">
+                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Zinsänderung</h3>
                             <label class="block text-sm font-medium mb-1" style="color: #2B2B2B;">
                                 Marktzins ändert sich um: <span id="anleihen-zinsdelta-display" class="font-bold" style="color: #033D5D;">+1.0%</span>
@@ -3559,7 +3649,7 @@
                 <div class="grid grid-cols-12 gap-6">
                     <!-- Left: Controls (4 cols) -->
                     <div class="col-span-4 space-y-4">
-                        <div class="p-4 rounded-lg" style="background: #F8F8F8; border: 1px solid #BEB6AA;">
+                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Marktzins</h3>
                             <label class="block text-sm font-medium mb-1" style="color: #2B2B2B;">
                                 Aktueller Marktzins: <span id="anleihen-marktzins-display" class="font-bold" style="color: #033D5D;">3.0%</span>
@@ -3573,7 +3663,7 @@
                             </div>
                         </div>
 
-                        <div class="p-4 rounded-lg" style="background: #F8F8F8; border: 1px solid #BEB6AA;">
+                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Anleihe-Daten</h3>
                             <p class="text-sm mb-1" style="color: #2B2B2B;">Kupon: <span id="seesaw-kupon" class="font-semibold">3.0%</span></p>
                             <p class="text-sm mb-1" style="color: #2B2B2B;">Laufzeit: <span id="seesaw-laufzeit" class="font-semibold">10 Jahre</span></p>
@@ -3649,7 +3739,7 @@
                             </div>
 
                             <!-- Dynamischer Erklärtext -->
-                            <div id="seesaw-explain" class="mt-6 p-4 rounded-lg text-center" style="background: #F8F8F8; border: 1px solid #BEB6AA;">
+                            <div id="seesaw-explain" class="mt-6 p-4 rounded-lg text-center" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                                 <p class="text-sm" style="color: #2B2B2B;" id="seesaw-explain-text">
                                     Bei gleichem Marktzins wie Kupon steht die Anleihe <strong>genau bei Par</strong> (100%). Bewegen Sie den Regler, um die inverse Beziehung zu erleben.
                                 </p>
@@ -3666,7 +3756,7 @@
                 <div class="grid grid-cols-12 gap-6">
                     <!-- Left: Slider + Ergebnis (4 cols) -->
                     <div class="col-span-4 space-y-4">
-                        <div class="p-4 rounded-lg" style="background: #F8F8F8; border: 1px solid #BEB6AA;">
+                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Unternehmens-Rendite</h3>
                             <label class="block text-sm font-medium mb-1" style="color: #2B2B2B;">
                                 Das Unternehmen erwirtschaftet: <span id="equity-rendite-display" class="font-bold" style="color: #033D5D;">8%</span>
@@ -3680,7 +3770,7 @@
                             </div>
                         </div>
 
-                        <div class="p-4 rounded-lg" style="background: #F8F8F8; border: 1px solid #BEB6AA;">
+                        <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                             <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #033D5D;">Anleihe-Kosten</h3>
                             <label class="block text-sm font-medium mb-1" style="color: #2B2B2B;">
                                 Zinsen an Anleihegläubiger: <span id="equity-zins-display" class="font-bold" style="color: #BEB6AA;">3%</span>
@@ -3702,7 +3792,7 @@
                         </div>
 
                         <!-- Fazit-Box -->
-                        <div id="equity-fazit" class="p-3 rounded-lg" style="background: #F8F8F8; border: 1px solid #BEB6AA;">
+                        <div id="equity-fazit" class="p-3 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                             <p class="text-xs" style="color: #2B2B2B;" id="equity-fazit-text">
                                 <strong>Ergebnis:</strong> Das Unternehmen verdient 5% mehr als es für das geliehene Geld zahlt. Dieser Überschuss steigert den Unternehmenswert und gehört den Aktionären.
                             </p>
@@ -3820,8 +3910,8 @@
 
     <!-- Immobilien Modal -->
     <div id="immobilien-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="immobilien-modal-title" aria-describedby="immobilien-modal-description">
-        <div class="bg-gray-800 w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
-            <button type="button" onclick="closeModal('immobilien-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Immobilienfenster schließen">&times;</button>
+        <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+            <button type="button" onclick="closeModal('immobilien-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Immobilienfenster schließen">&times;</button>
             <h3 id="immobilien-modal-title" class="text-xl font-bold mb-4">Immobilien-Verwaltung</h3>
             <p id="immobilien-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Verwalte deine Immobilien, Einnahmen und Ausgaben.</p>
 
@@ -3957,8 +4047,8 @@
 
     <!-- Vermieterkonto Modal -->
     <div id="vermieterkonto-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="vermieterkonto-modal-title">
-        <div class="bg-gray-800 w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
-            <button type="button" onclick="closeModal('vermieterkonto-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl" aria-label="Vermieterkonto schließen">&times;</button>
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
+            <button type="button" onclick="closeModal('vermieterkonto-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Vermieterkonto schließen">&times;</button>
             <h3 id="vermieterkonto-modal-title" class="text-xl font-bold mb-4">Vermieterkonto</h3>
             <p class="text-sm text-gray-400 -mt-3 mb-4">Alle Einnahmen und Ausgaben deiner Immobilien laufen über dieses kostenlose Konto.</p>
 
@@ -9811,16 +9901,24 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         tabs.forEach(function(t) {
             var panel = document.getElementById('anleihen-tab-' + t);
             var btn = document.getElementById('anleihen-tab-btn-' + t);
-            if (panel) panel.style.display = (t === tab) ? '' : 'none';
+            if (panel) {
+                if (t === tab) {
+                    panel.style.display = '';
+                    panel.style.opacity = '0';
+                    requestAnimationFrame(function() { panel.style.opacity = '1'; });
+                } else {
+                    panel.style.display = 'none';
+                }
+            }
             if (btn) {
                 if (t === tab) {
-                    btn.style.background = '#033D5D';
+                    btn.style.background = 'var(--mlp-primary, #033D5D)';
                     btn.style.color = 'white';
                     btn.style.border = 'none';
                 } else {
-                    btn.style.background = '#F8F8F8';
-                    btn.style.color = '#2B2B2B';
-                    btn.style.border = '1px solid #BEB6AA';
+                    btn.style.background = 'var(--mlp-bg-gray, #F8F8F8)';
+                    btn.style.color = 'var(--mlp-text-dark, #2B2B2B)';
+                    btn.style.border = '1px solid var(--mlp-secondary, #BEB6AA)';
                 }
             }
         });
