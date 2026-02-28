@@ -1693,10 +1693,7 @@
           color: #111827 !important;
           border-color: var(--border) !important;
         }
-        .theme-light .bg-gray-700 { background-color: #ffffff !important; }
         .theme-light .text-gray-300 { color: #374151 !important; }
-        .theme-light .bg-gray-700 .text-gray-400,
-        .theme-light .text-gray-400 { color: var(--muted) !important; }
 
         /* v1.7.3: App heading - Design Guide compliant */
         .app-heading {
@@ -1719,8 +1716,6 @@
           box-shadow: 0 8px 18px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05) !important;
         }
         .theme-light .modal .bg-gray-800 { background-color: #ffffff !important; }
-        .theme-light .modal .bg-gray-900 { background-color: #ffffff !important; }
-        .theme-light .border-gray-600 { border-color: var(--border) !important; }
 
         /* Badges / helper boxes */
         .theme-light .limit-line span { background: #ffffff !important; color: #111827 !important; }
@@ -2886,7 +2881,7 @@
         <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('prognose-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Prognose schließen">&times;</button>
             <h3 id="prognose-modal-title" class="text-xl font-bold mb-4">Prognose: Vermögensentwicklung</h3>
-            <div class="bg-gray-900 p-4 rounded-lg">
+            <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                 <canvas id="prognose-chart"></canvas>
             </div>
             <div id="prognose-summary" class="mt-4 text-center"></div>
@@ -2900,10 +2895,10 @@
             <h3 id="fixkosten-modal-title" class="text-xl font-bold mb-4">Fixkosten &amp; Sparpläne</h3>
             <div id="fixkosten-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
             <button type="button" onclick="addFixkostenItem()" class="mlp-btn mlp-btn-tertiary mt-4 text-sm px-3 py-1">+ Posten hinzufügen</button>
-            <hr class="border-gray-600 my-4">
+            <hr class="my-4" style="border-color: var(--mlp-secondary);">
             <div class="flex justify-between items-center">
                 <p class="text-lg">Monatliche Gesamtkosten:</p>
-                <p id="modal-total" class="text-2xl font-bold text-red-400">? 0</p>
+                <p id="modal-total" class="text-2xl font-bold" style="color: var(--mlp-error);">? 0</p>
             </div>
             <button type="button" onclick="saveFixkosten()" class="mlp-btn mlp-btn-primary mt-6 w-full py-2 px-4">Speichern &amp; Schließen</button>
         </div>
@@ -2913,7 +2908,7 @@
         <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('depot-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Depotfenster schließen">&times;</button>
             <h3 id="depot-modal-title" class="text-xl font-bold mb-4">Depot-Aufteilung</h3>
-            <p id="depot-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Lege fest, wie neue Investments verteilt werden.</p>
+            <p id="depot-modal-description" class="text-sm -mt-3 mb-4" style="color: var(--mlp-text-medium);">Lege fest, wie neue Investments verteilt werden.</p>
 
             <!-- v1.9.2: Erklärer-Buttons — edel, gleichmäßig verteilt -->
             <div class="depot-erklaerer-row">
@@ -2931,10 +2926,10 @@
                 <span style="font-size:13px; color:#9ca3af;">Gesamt-Verteilung</span>
                 <p id="depot-total" class="text-2xl font-bold">100 %</p>
             </div>
-            <p id="depot-warning" class="text-center text-yellow-400 mt-1" style="font-size:12px; min-height:18px;"></p>
+            <p id="depot-warning" class="text-center mt-1" style="font-size:12px; min-height:18px; color: var(--mlp-warning);"></p>
 
             <!-- Prognose Section (v1.9.2 redesign) -->
-            <hr class="border-gray-600 my-4" style="border-color: rgba(156,163,175,0.15);">
+            <hr class="my-4" style="border-color: var(--mlp-secondary);">
             <h4 style="font-size:14px; font-weight:700; margin-bottom:12px; color:#b0b8c4; letter-spacing:0.5px; text-transform:uppercase;">Prognose</h4>
 
             <div class="prognose-grid">
@@ -3913,69 +3908,69 @@
         <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('immobilien-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Immobilienfenster schließen">&times;</button>
             <h3 id="immobilien-modal-title" class="text-xl font-bold mb-4">Immobilien-Verwaltung</h3>
-            <p id="immobilien-modal-description" class="text-sm text-gray-400 -mt-3 mb-4">Verwalte deine Immobilien, Einnahmen und Ausgaben.</p>
+            <p id="immobilien-modal-description" class="text-sm text-gray-600 -mt-3 mb-4">Verwalte deine Immobilien, Einnahmen und Ausgaben.</p>
 
             <!-- Anzahl Immobilien -->
-            <div class="mb-4 bg-gray-900 p-4 rounded-lg flex items-center gap-4">
-                <label class="text-sm text-gray-400 whitespace-nowrap">Anzahl Immobilien</label>
-                <input type="number" id="immo-anzahl" value="1" min="0" max="99" class="w-20 bg-gray-700 p-2 rounded-lg text-white text-center" inputmode="numeric">
+            <div class="mb-4 p-4 rounded-lg flex items-center gap-4" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                <label class="text-sm whitespace-nowrap" style="color: var(--mlp-text-medium);">Anzahl Immobilien</label>
+                <input type="number" id="immo-anzahl" value="1" min="0" max="99" class="w-20 mlp-input-field-v2 text-center" inputmode="numeric">
             </div>
 
             <!-- Grid für 2 Kategorien -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- Vermögen (Immobilienwert) -->
-                <div class="bg-gray-900 p-4 rounded-lg">
-                    <h4 class="text-lg font-bold mb-3 text-green-400">Vermögen</h4>
+                <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                    <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-success);">Vermögen</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Immobilienwert</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Immobilienwert</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-wert" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Wert der Immobilie">
-                                <span class="text-gray-400">€</span>
+                                <input type="number" id="immo-wert" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Wert der Immobilie">
+                                <span style="color: var(--mlp-text-medium);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Wertsteigerung (optional)</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Wertsteigerung (optional)</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-wertsteigerung" value="0" step="0.1" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. 2.0">
-                                <span class="text-gray-400">% p.a.</span>
+                                <input type="number" id="immo-wertsteigerung" value="0" step="0.1" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="z.B. 2.0">
+                                <span style="color: var(--mlp-text-medium);">% p.a.</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Verbindlichkeiten -->
-                <div class="bg-gray-900 p-4 rounded-lg">
-                    <h4 class="text-lg font-bold mb-3 text-red-400">Verbindlichkeiten</h4>
+                <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                    <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-error);">Verbindlichkeiten</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Restdarlehen (aktuell)</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Restdarlehen (aktuell)</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-darlehen" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Aktuelle Restschuld">
-                                <span class="text-gray-400">€</span>
+                                <input type="number" id="immo-darlehen" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Aktuelle Restschuld">
+                                <span style="color: var(--mlp-text-medium);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Ursprüngliches Darlehen</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Ursprüngliches Darlehen</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-darlehen-original" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Darlehensbetrag bei Aufnahme">
-                                <span class="text-gray-400">€</span>
+                                <input type="number" id="immo-darlehen-original" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Darlehensbetrag bei Aufnahme">
+                                <span style="color: var(--mlp-text-medium);">€</span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Für korrekte Ratenberechnung (Annuität bleibt konstant)</p>
+                            <p class="text-xs mt-1" style="color: var(--mlp-text-medium);">Für korrekte Ratenberechnung (Annuität bleibt konstant)</p>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Zinssatz (optional)</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Zinssatz (optional)</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-zinssatz" value="0" step="0.1" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. 3.5">
-                                <span class="text-gray-400">%</span>
+                                <input type="number" id="immo-zinssatz" value="0" step="0.1" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="z.B. 3.5">
+                                <span style="color: var(--mlp-text-medium);">%</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Tilgungssatz (optional)</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Tilgungssatz (optional)</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="immo-tilgungssatz" value="0" step="0.1" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. 2.0">
-                                <span class="text-gray-400">%</span>
+                                <input type="number" id="immo-tilgungssatz" value="0" step="0.1" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="z.B. 2.0">
+                                <span style="color: var(--mlp-text-medium);">%</span>
                             </div>
                         </div>
                     </div>
@@ -3984,33 +3979,33 @@
             </div>
 
             <!-- Zusammenfassung -->
-            <div class="mt-6 bg-gray-900 p-4 rounded-lg">
+            <div class="mt-6 p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                 <div class="text-center">
-                    <p class="text-sm text-gray-400 mb-2">Nettovermögen (Wert - Darlehen)</p>
-                    <p id="immo-nettovermoegen" class="text-3xl font-bold text-green-400">0 €</p>
+                    <p class="text-sm mb-2" style="color: var(--mlp-text-medium);">Nettovermögen (Wert - Darlehen)</p>
+                    <p id="immo-nettovermoegen" class="text-3xl font-bold" style="color: var(--mlp-success);">0 €</p>
                 </div>
             </div>
 
             <!-- Berechnete Darlehensrate anzeigen -->
-            <div id="immo-rate-berechnet-display" class="mt-6 p-4 bg-blue-900 bg-opacity-30 rounded-lg border border-blue-500 hidden">
-                <h4 class="text-sm font-semibold text-blue-300 mb-2">📊 Berechnete monatliche Darlehensrate</h4>
-                <p class="text-2xl font-bold text-white"><span id="immo-rate-berechnet-wert">0 €</span></p>
-                <p class="text-xs text-gray-400 mt-1">
+            <div id="immo-rate-berechnet-display" class="mt-6 p-4 rounded-lg hidden" style="background: rgba(3,61,93,0.06); border: 1px solid var(--mlp-primary);">
+                <h4 class="text-sm font-semibold mb-2" style="color: var(--mlp-primary);">📊 Berechnete monatliche Darlehensrate</h4>
+                <p class="text-2xl font-bold" style="color: var(--mlp-text-dark);"><span id="immo-rate-berechnet-wert">0 €</span></p>
+                <p class="text-xs mt-1" style="color: var(--mlp-text-medium);">
                     Zinsen: <span id="immo-rate-zinsen">0 €</span> | Tilgung: <span id="immo-rate-tilgung">0 €</span>
                 </p>
-                <p class="text-xs text-blue-300 mt-2">💡 Diese Rate wird automatisch ins Vermieterkonto übertragen.</p>
+                <p class="text-xs mt-2" style="color: var(--mlp-primary);">💡 Diese Rate wird automatisch ins Vermieterkonto übertragen.</p>
             </div>
 
             <!-- Tilgungsplan Slider -->
-            <div id="immo-tilgungsplan-section" class="mt-6 bg-gray-900 p-4 rounded-lg hidden">
-                <h4 class="text-lg font-bold mb-3 text-blue-400">📈 Tilgungsplan & Vermögensaufbau</h4>
+            <div id="immo-tilgungsplan-section" class="mt-6 p-4 rounded-lg hidden" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-primary);">📈 Tilgungsplan & Vermögensaufbau</h4>
 
                 <div class="mb-4">
-                    <label class="text-sm text-gray-400 block mb-2">
-                        Zeitraum: <span id="immo-tilgungsplan-jahre" class="font-bold text-white">10</span> Jahre
+                    <label class="text-sm block mb-2" style="color: var(--mlp-text-medium);">
+                        Zeitraum: <span id="immo-tilgungsplan-jahre" class="font-bold" style="color: var(--mlp-text-dark);">10</span> Jahre
                     </label>
-                    <input type="range" id="immo-tilgungsplan-slider" min="0" max="20" value="10" step="1" class="w-full">
-                    <div class="flex justify-between text-xs text-gray-500">
+                    <input type="range" id="immo-tilgungsplan-slider" min="0" max="20" value="10" step="1" class="w-full mlp-slider">
+                    <div class="flex justify-between text-xs" style="color: var(--mlp-text-medium);">
                         <span>0 Jahre</span>
                         <span>20 Jahre</span>
                     </div>
@@ -4018,27 +4013,27 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <div class="text-center">
-                        <p class="text-xs text-gray-400">Restschuld</p>
-                        <p id="immo-tilgungsplan-restschuld" class="text-lg font-bold text-red-400">0 €</p>
+                        <p class="text-xs" style="color: var(--mlp-text-medium);">Restschuld</p>
+                        <p id="immo-tilgungsplan-restschuld" class="text-lg font-bold" style="color: var(--mlp-error);">0 €</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-xs text-gray-400">Gezahlte Zinsen</p>
-                        <p id="immo-tilgungsplan-zinsen" class="text-lg font-bold text-yellow-400">0 €</p>
+                        <p class="text-xs" style="color: var(--mlp-text-medium);">Gezahlte Zinsen</p>
+                        <p id="immo-tilgungsplan-zinsen" class="text-lg font-bold" style="color: var(--mlp-warning);">0 €</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-xs text-gray-400">Eigenkapital</p>
-                        <p id="immo-tilgungsplan-eigenkapital" class="text-lg font-bold text-green-400">0 €</p>
+                        <p class="text-xs" style="color: var(--mlp-text-medium);">Eigenkapital</p>
+                        <p id="immo-tilgungsplan-eigenkapital" class="text-lg font-bold" style="color: var(--mlp-success);">0 €</p>
                     </div>
                 </div>
 
                 <div class="mt-4 text-center">
-                    <p class="text-xs text-gray-400">Immobilienwert (mit Wertsteigerung)</p>
-                    <p id="immo-tilgungsplan-wert" class="text-xl font-bold text-blue-400">0 €</p>
+                    <p class="text-xs" style="color: var(--mlp-text-medium);">Immobilienwert (mit Wertsteigerung)</p>
+                    <p id="immo-tilgungsplan-wert" class="text-xl font-bold" style="color: var(--mlp-primary);">0 €</p>
                 </div>
             </div>
 
-            <div class="mt-4 p-3 bg-blue-900 bg-opacity-30 rounded-lg border border-blue-500">
-                <p class="text-sm text-blue-300">💡 <strong>Tipp:</strong> Einnahmen und Ausgaben werden im <strong>Vermieterkonto</strong> verwaltet.</p>
+            <div class="mt-4 p-3 rounded-lg" style="background: rgba(3,61,93,0.04); border-left: 4px solid var(--mlp-secondary);">
+                <p class="text-sm" style="color: var(--mlp-text-dark);">💡 <strong style="color: var(--mlp-primary);">Tipp:</strong> Einnahmen und Ausgaben werden im <strong>Vermieterkonto</strong> verwaltet.</p>
             </div>
 
             <button type="button" onclick="saveImmobilien()" class="mlp-btn mlp-btn-primary mt-6 w-full py-2 px-4">Speichern &amp; Schließen</button>
@@ -4050,55 +4045,55 @@
         <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('vermieterkonto-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Vermieterkonto schließen">&times;</button>
             <h3 id="vermieterkonto-modal-title" class="text-xl font-bold mb-4">Vermieterkonto</h3>
-            <p class="text-sm text-gray-400 -mt-3 mb-4">Alle Einnahmen und Ausgaben deiner Immobilien laufen über dieses kostenlose Konto.</p>
+            <p class="text-sm -mt-3 mb-4" style="color: var(--mlp-text-medium);">Alle Einnahmen und Ausgaben deiner Immobilien laufen über dieses kostenlose Konto.</p>
 
             <!-- Grid für 2 Kategorien -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- Monatliche Einnahmen -->
-                <div class="bg-gray-900 p-4 rounded-lg">
-                    <h4 class="text-lg font-bold mb-3 text-green-400">Monatliche Einnahmen</h4>
+                <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                    <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-success);">Monatliche Einnahmen</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Mieteinnahmen</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Mieteinnahmen</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="vk-miete" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Monatliche Miete">
-                                <span class="text-gray-400">€</span>
+                                <input type="number" id="vk-miete" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Monatliche Miete">
+                                <span style="color: var(--mlp-text-medium);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Sonstige Einnahmen</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Sonstige Einnahmen</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="vk-sonstige-einnahmen" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="z.B. Stellplatz, Garage">
-                                <span class="text-gray-400">€</span>
+                                <input type="number" id="vk-sonstige-einnahmen" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="z.B. Stellplatz, Garage">
+                                <span style="color: var(--mlp-text-medium);">€</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Monatliche Ausgaben -->
-                <div class="bg-gray-900 p-4 rounded-lg">
-                    <h4 class="text-lg font-bold mb-3 text-red-400">Monatliche Ausgaben</h4>
+                <div class="p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
+                    <h4 class="text-lg font-bold mb-3" style="color: var(--mlp-error);">Monatliche Ausgaben</h4>
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Darlehensrate</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Darlehensrate</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="vk-rate" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Monatliche Rate">
-                                <span class="text-gray-400">€</span>
+                                <input type="number" id="vk-rate" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Monatliche Rate">
+                                <span style="color: var(--mlp-text-medium);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Instandhaltung</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Instandhaltung</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="vk-instandhaltung" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Rücklagen">
-                                <span class="text-gray-400">€</span>
+                                <input type="number" id="vk-instandhaltung" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Rücklagen">
+                                <span style="color: var(--mlp-text-medium);">€</span>
                             </div>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-400 block mb-1">Steuern & Nebenkosten</label>
+                            <label class="text-sm block mb-1" style="color: var(--mlp-text-medium);">Steuern & Nebenkosten</label>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="vk-steuern" value="0" class="flex-1 bg-gray-700 p-2 rounded-lg text-white" inputmode="decimal" placeholder="Grundsteuer, Versicherung">
-                                <span class="text-gray-400">€</span>
+                                <input type="number" id="vk-steuern" value="0" class="flex-1 mlp-input-field-v2" inputmode="decimal" placeholder="Grundsteuer, Versicherung">
+                                <span style="color: var(--mlp-text-medium);">€</span>
                             </div>
                         </div>
                     </div>
@@ -4107,19 +4102,19 @@
             </div>
 
             <!-- Zusammenfassung -->
-            <div class="mt-6 bg-gray-900 p-4 rounded-lg">
+            <div class="mt-6 p-4 rounded-lg" style="background: var(--mlp-bg-gray); border: 1px solid var(--mlp-secondary);">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <p class="text-sm text-gray-400">Einnahmen</p>
-                        <p id="vk-einnahmen-total" class="text-xl font-bold text-green-400">0 €</p>
+                        <p class="text-sm" style="color: var(--mlp-text-medium);">Einnahmen</p>
+                        <p id="vk-einnahmen-total" class="text-xl font-bold" style="color: var(--mlp-success);">0 €</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-400">Ausgaben</p>
-                        <p id="vk-ausgaben-total" class="text-xl font-bold text-red-400">0 €</p>
+                        <p class="text-sm" style="color: var(--mlp-text-medium);">Ausgaben</p>
+                        <p id="vk-ausgaben-total" class="text-xl font-bold" style="color: var(--mlp-error);">0 €</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-400">Monatlicher Saldo</p>
-                        <p id="vk-saldo" class="text-2xl font-bold text-blue-400">0 €</p>
+                        <p class="text-sm" style="color: var(--mlp-text-medium);">Monatlicher Saldo</p>
+                        <p id="vk-saldo" class="text-2xl font-bold" style="color: var(--mlp-primary);">0 €</p>
                     </div>
                 </div>
             </div>
@@ -6064,7 +6059,7 @@ const bookingTypeLookup = {};
             container.innerHTML = `
                 <div class="booking-timeline-empty">
                     <span class="text-gray-500 text-sm">Keine Buchungen geplant - </span>
-                    <button onclick="openBookingModal()" class="text-blue-400 hover:text-blue-300 text-sm ml-1 underline">
+                    <button onclick="openBookingModal()" class="text-sm ml-1 underline" style="color: var(--mlp-primary); cursor: pointer;">
                         Jetzt planen
                     </button>
                 </div>
@@ -8123,10 +8118,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         });
         const summaryEl = getEl('prognose-summary');
         if (summaryEl) {
-            summaryEl.innerHTML = `
-            <p>Nach <span class="font-bold">${years} Jahren</span> könnte dein Vermögen zwischen <span class="font-bold text-red-400">${formatCurrency(dataMin.totalCapital)}</span> und <span class="font-bold text-green-400">${formatCurrency(dataMax.totalCapital)}</span> liegen.</p>
-            <p>Deine erwartete Prognose liegt bei <span class="font-bold text-blue-400 text-lg">${formatCurrency(dataAvg.totalCapital)}</span>, basierend auf ${formatCurrency(dataAvg.totalContributions)} Einzahlungen.</p>
-        `;
+            summaryEl.innerHTML = '<p>Nach <span class="font-bold">' + years + ' Jahren</span> könnte dein Vermögen zwischen <span class="font-bold" style="color: var(--mlp-error);">' + formatCurrency(dataMin.totalCapital) + '</span> und <span class="font-bold" style="color: var(--mlp-success);">' + formatCurrency(dataMax.totalCapital) + '</span> liegen.</p>' +
+            '<p>Deine erwartete Prognose liegt bei <span class="font-bold text-lg" style="color: var(--mlp-primary);">' + formatCurrency(dataAvg.totalCapital) + '</span>, basierend auf ' + formatCurrency(dataAvg.totalContributions) + ' Einzahlungen.</p>';
         }
         // NICHT automatisch Modal öffnen (v1.4.0) - nur bei explizitem Button-Klick
     }
@@ -8240,13 +8233,13 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         // User must manually copy suggestion if they want it
         // Old behavior: inputs.rendite.value = mostLikely.toFixed(1); // ❌ REMOVED
 
-        const colorClass = (v) => (v < 0 ? 'text-red-400' : (v < 3 ? 'text-yellow-400' : 'text-green-400'));
-        const minSpan = `<span class="font-bold ${colorClass(stats.min)}">${stats.min}%</span>`;
-        const maxSpan = `<span class="font-bold ${colorClass(stats.max)}">${stats.max}%</span>`;
+        var colorStyle = function(v) { return v < 0 ? 'var(--mlp-error)' : (v < 3 ? 'var(--mlp-warning)' : 'var(--mlp-success)'); };
+        var minSpan = '<span class="font-bold" style="color: ' + colorStyle(stats.min) + ';">' + stats.min + '%</span>';
+        var maxSpan = '<span class="font-bold" style="color: ' + colorStyle(stats.max) + ';">' + stats.max + '%</span>';
 
         if (infoEl) {
             // Show suggestion with "empfohlen" hint, but don't auto-fill
-            infoEl.innerHTML = `Historische Spanne p.a.: ${minSpan} bis ${maxSpan}<br><span class="font-bold text-blue-400">Empfohlen (Normal): ${mostLikely.toFixed(1)}%</span>`;
+            infoEl.innerHTML = 'Historische Spanne p.a.: ' + minSpan + ' bis ' + maxSpan + '<br><span class="font-bold" style="color: var(--mlp-primary);">Empfohlen (Normal): ' + mostLikely.toFixed(1) + '%</span>';
         }
     }
 
@@ -10379,32 +10372,30 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             const autoItemEl = document.createElement('div');
 
             if (vermieterData.saldo < 0) {
-                // Negativ: Zusätzliche Ausgabe (gelb/warnung)
-                autoItemEl.className = 'grid grid-cols-12 gap-2 items-center bg-gray-750 p-2 rounded border border-yellow-600';
-                autoItemEl.innerHTML = `
-                    <div class="col-span-4 text-yellow-400 text-sm flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Vermieterkonto-Deckung
-                    </div>
-                    <div class="col-span-2 text-yellow-400 font-bold">${formatCurrency(Math.abs(vermieterData.saldo))}</div>
-                    <div class="col-span-2 text-gray-500 text-sm">mtl.</div>
-                    <div class="col-span-3 text-gray-500 text-sm">automatisch</div>
-                    <div class="col-span-1"></div>
-                `;
+                // Negativ: Zusätzliche Ausgabe (warnung)
+                autoItemEl.className = 'grid grid-cols-12 gap-2 items-center p-2 rounded';
+                autoItemEl.style.cssText = 'background: rgba(227,105,30,0.06); border: 1px solid var(--mlp-warning);';
+                autoItemEl.innerHTML = '<div class="col-span-4 text-sm flex items-center gap-1" style="color: var(--mlp-warning);">' +
+                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>' +
+                        'Vermieterkonto-Deckung' +
+                    '</div>' +
+                    '<div class="col-span-2 font-bold" style="color: var(--mlp-warning);">' + formatCurrency(Math.abs(vermieterData.saldo)) + '</div>' +
+                    '<div class="col-span-2 text-sm" style="color: var(--mlp-text-medium);">mtl.</div>' +
+                    '<div class="col-span-3 text-sm" style="color: var(--mlp-text-medium);">automatisch</div>' +
+                    '<div class="col-span-1"></div>';
                 total += Math.abs(vermieterData.saldo);
             } else {
                 // Positiv: Einsparung (grün)
-                autoItemEl.className = 'grid grid-cols-12 gap-2 items-center bg-gray-750 p-2 rounded border border-green-600';
-                autoItemEl.innerHTML = `
-                    <div class="col-span-4 text-green-400 text-sm flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Mieteinnahmen
-                    </div>
-                    <div class="col-span-2 text-green-400 font-bold">-${formatCurrency(vermieterData.saldo)}</div>
-                    <div class="col-span-2 text-gray-500 text-sm">mtl.</div>
-                    <div class="col-span-3 text-gray-500 text-sm">automatisch</div>
-                    <div class="col-span-1"></div>
-                `;
+                autoItemEl.className = 'grid grid-cols-12 gap-2 items-center p-2 rounded';
+                autoItemEl.style.cssText = 'background: rgba(19,133,62,0.06); border: 1px solid var(--mlp-success);';
+                autoItemEl.innerHTML = '<div class="col-span-4 text-sm flex items-center gap-1" style="color: var(--mlp-success);">' +
+                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' +
+                        'Mieteinnahmen' +
+                    '</div>' +
+                    '<div class="col-span-2 font-bold" style="color: var(--mlp-success);">-' + formatCurrency(vermieterData.saldo) + '</div>' +
+                    '<div class="col-span-2 text-sm" style="color: var(--mlp-text-medium);">mtl.</div>' +
+                    '<div class="col-span-3 text-sm" style="color: var(--mlp-text-medium);">automatisch</div>' +
+                    '<div class="col-span-1"></div>';
                 total -= vermieterData.saldo; // Reduziert die Fixkosten
             }
 
@@ -10415,7 +10406,14 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         fixkostenItems.forEach((item, index) => {
             const itemEl = document.createElement('div');
             itemEl.className = 'grid grid-cols-12 gap-2 items-center';
-            itemEl.innerHTML = `<input type="text" value="${item.name}" onchange="updateFixkostenItem(${index}, 'name', this.value)" placeholder="Posten" class="col-span-4 bg-gray-700 p-1 rounded"><input type="number" value="${item.amount}" onchange="updateFixkostenItem(${index}, 'amount', this.value)" placeholder="Betrag" class="col-span-2 bg-gray-700 p-1 rounded"><select onchange="updateFixkostenItem(${index}, 'interval', this.value)" class="col-span-2 bg-gray-700 p-1 rounded">${['monthly','quarterly','annually'].map(i => `<option value="${i}" ${item.interval === i ? 'selected' : ''}>${i==='monthly'?'mtl.':i==='quarterly'?'viertelj.':'jährl.'}</option>`).join('')}</select><select onchange="updateFixkostenItem(${index}, 'target', this.value)" class="col-span-3 bg-gray-700 p-1 rounded"><option value="fixkosten" ${item.target==='fixkosten'?'selected':''}>-> Fixkosten</option><option value="depot" ${item.target==='depot'?'selected':''}>-> Sparplan</option></select><button onclick="removeFixkostenItem(${index})" class="col-span-1 text-red-400 hover:text-red-300 text-xl">&times;</button>`;
+            var intervalOptions = ['monthly','quarterly','annually'].map(function(i) {
+                return '<option value="' + i + '" ' + (item.interval === i ? 'selected' : '') + '>' + (i==='monthly'?'mtl.':i==='quarterly'?'viertelj.':'jährl.') + '</option>';
+            }).join('');
+            itemEl.innerHTML = '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" onchange="updateFixkostenItem(' + index + ', \'name\', this.value)" placeholder="Posten" class="col-span-4 mlp-input-field-v2 p-1">' +
+                '<input type="number" value="' + item.amount + '" onchange="updateFixkostenItem(' + index + ', \'amount\', this.value)" placeholder="Betrag" class="col-span-2 mlp-input-field-v2 p-1">' +
+                '<select onchange="updateFixkostenItem(' + index + ', \'interval\', this.value)" class="col-span-2 mlp-input-field-v2 p-1">' + intervalOptions + '</select>' +
+                '<select onchange="updateFixkostenItem(' + index + ', \'target\', this.value)" class="col-span-3 mlp-input-field-v2 p-1"><option value="fixkosten" ' + (item.target==='fixkosten'?'selected':'') + '>-> Fixkosten</option><option value="depot" ' + (item.target==='depot'?'selected':'') + '>-> Sparplan</option></select>' +
+                '<button onclick="removeFixkostenItem(' + index + ')" class="col-span-1 text-xl" style="color: var(--mlp-error); cursor: pointer;" onmouseover="this.style.opacity=\'0.7\'" onmouseout="this.style.opacity=\'1\'">&times;</button>';
             fixkostenModal.list.appendChild(itemEl);
             total += getMonthlyAmount(item);
         });
@@ -10516,20 +10514,20 @@ function updateFixkostenItem(index, key, value) {
                         'oninput="onFondsInput(this, ' + index + ')" ' +
                         'onfocus="onFondsInput(this, ' + index + ')" ' +
                         'onblur="setTimeout(function(){closeFondsDropdown()}, 200)" ' +
-                        'placeholder="Fonds / ETF / WKN tippen..." class="flex-1 bg-gray-700 p-1 rounded text-sm" autocomplete="off">' +
+                        'placeholder="Fonds / ETF / WKN tippen..." class="flex-1 mlp-input-field-v2 p-1 text-sm" autocomplete="off">' +
                     '</div>' +
                 '</div>' +
                 '<div class="relative col-span-2">' +
                     '<input type="number" value="' + item.allocation + '" onchange="updateDepotItem(' + index + ', \'allocation\', this.value)" ' +
-                    'class="w-full text-right pr-6 bg-gray-700 p-1 rounded text-sm">' +
-                    '<span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>' +
+                    'class="w-full text-right pr-6 mlp-input-field-v2 p-1 text-sm">' +
+                    '<span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs" style="color: var(--mlp-text-medium);">%</span>' +
                 '</div>' +
                 '<div class="col-span-3 risk-toggle ' + item.risk + '" onclick="updateDepotItem(' + index + ', \'risk\', \'' + (item.risk === 'conservative' ? 'aggressive' : 'conservative') + '\')" title="' + (item.risk === 'conservative' ? 'Konservativ' : 'Chancenreich') + '">' +
                     '<span class="risk-dot conservative"></span>' +
                     '<span class="risk-dot aggressive"></span>' +
                 '</div>' +
                 '<button type="button" onclick="removeDepotItem(' + index + ')" ' +
-                'class="col-span-1 text-red-400 hover:text-red-300 text-xl" title="Entfernen">&times;</button>';
+                'class="col-span-1 text-xl" style="color: var(--mlp-error); cursor: pointer;" title="Entfernen" onmouseover="this.style.opacity=\'0.7\'" onmouseout="this.style.opacity=\'1\'">&times;</button>';
 
             depotModal.list.appendChild(itemEl);
         });
@@ -10905,7 +10903,8 @@ function updateFixkostenItem(index, key, value) {
 
         if (nettoEl) {
             nettoEl.textContent = formatCurrency(nettovermoegen);
-            nettoEl.className = `text-2xl font-bold ${nettovermoegen >= 0 ? 'text-green-400' : 'text-red-400'}`;
+            nettoEl.className = 'text-3xl font-bold';
+            nettoEl.style.color = nettovermoegen >= 0 ? 'var(--mlp-success)' : 'var(--mlp-error)';
         }
 
         // Cashflow-Element ausblenden (jetzt im Vermieterkonto)
@@ -11128,9 +11127,8 @@ function updateFixkostenItem(index, key, value) {
         if (saldoEl) {
             saldoEl.textContent = formatCurrency(saldo);
             // Farbe je nach Saldo
-            saldoEl.className = saldo >= 0
-                ? 'text-2xl font-bold text-green-400'
-                : 'text-2xl font-bold text-red-400';
+            saldoEl.className = 'text-2xl font-bold';
+            saldoEl.style.color = saldo >= 0 ? 'var(--mlp-success)' : 'var(--mlp-error)';
         }
     }
 
