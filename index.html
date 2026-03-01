@@ -12155,9 +12155,11 @@ function updateFixkostenItem(index, key, value) {
           // no-print Elemente entfernen (Mobile Warning etc.)
           clone.querySelectorAll('.no-print').forEach(n => n.remove());
 
-          // --- v2.0 Print-Klon: saubere SVG-Flows auf weißem Grund ---
+          // --- v2.0 Print-Klon: SVG-Flows als PNG-Bild ersetzen ---
+          // DOM-Klon-SVG hat Duplikat-IDs → url(#flow-gradient) bricht.
+          // Lösung: SVG via svgToPngDataUrl() als Bild rendern (löst alle Referenz-Probleme).
 
-          // v2.0-Dekorationen entfernen (existieren nicht in v1)
+          // v2.0-Dekorationen entfernen
           clone.querySelectorAll('.gradient-zone, .ambient-glow').forEach(n => n.remove());
           // Basins: Glasmorphism → solide (backdrop-filter druckt nicht)
           clone.querySelectorAll('.account-basin').forEach(n => {
@@ -12166,35 +12168,21 @@ function updateFixkostenItem(index, key, value) {
             n.style.background = '#ffffff';
             n.style.border = '1px solid #BEB6AA';
           });
-          // SVG Print-Fix: Duplikat-IDs verhindern korrekte url()-Referenzen im Klon.
-          // Lösung: Mask + Erase entfernen, computed Stroke-Farben inline setzen.
-          // (Gleicher Ansatz wie svgToPngDataUrl())
-          var cloneVisuals = clone.querySelector('#flow-visuals');
-          if (cloneVisuals) cloneVisuals.removeAttribute('mask');
-          clone.querySelectorAll('.flow-erase').forEach(function(n) { n.remove(); });
-          // Animationen + Dots entfernen (sinnlos im Print, verdecken Flows)
-          clone.querySelectorAll('.flow-path-animation').forEach(function(n) { n.remove(); });
-          clone.querySelectorAll('[id$="-dot"]').forEach(function(n) { n.remove(); });
-          // Computed Stroke-Farben vom Live-SVG auf Klon-Pfade übertragen
-          // (url(#flow-gradient) löst im Klon zum falschen Element auf → Duplikat-ID)
-          var liveSvg = live.querySelector('.flow-svg');
-          var cloneSvg = clone.querySelector('.flow-svg');
+
+          // SVG → PNG ersetzen (svgToPngDataUrl löst Mask, Gradient-Refs, etc.)
+          var liveSvg = live.querySelector('#flow-svg');
+          var cloneSvg = clone.querySelector('#flow-svg');
           if (liveSvg && cloneSvg) {
-            var livePaths = liveSvg.querySelectorAll('.flow-path');
-            var clonePaths = cloneSvg.querySelectorAll('.flow-path');
-            clonePaths.forEach(function(cp, i) {
-              var lp = livePaths[i];
-              if (!lp) return;
-              var cs = getComputedStyle(lp);
-              if (cs.stroke && cs.stroke !== 'none') {
-                cp.setAttribute('stroke', cs.stroke);
-                cp.style.stroke = cs.stroke;
-              }
-              if (cs.strokeWidth) cp.setAttribute('stroke-width', cs.strokeWidth);
-              // Sichtbarkeit sicherstellen
-              cp.style.opacity = '1';
-              cp.classList.add('active');
-            });
+            try {
+              var flowPng = await svgToPngDataUrl(liveSvg, 1.5, '#ffffff');
+              var img = document.createElement('img');
+              img.src = flowPng;
+              // z-index:1 = unter Basins (z-index:10), wie das originale SVG
+              img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;';
+              cloneSvg.parentNode.replaceChild(img, cloneSvg);
+            } catch(e) {
+              console.error('Flow-PNG für Print fehlgeschlagen:', e);
+            }
           }
 
           // v1.7.8-Methode: Deterministische Größe, CSS macht die Skalierung
