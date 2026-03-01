@@ -309,19 +309,19 @@
         <div class="dashboard-header">
             <h1>v2.0 Design-Overhaul</h1>
             <div class="subtitle">MultiAccountMLP — Projekt-Dashboard</div>
-            <div class="version-badge">BRANCH: v2.0-design</div>
-            <div class="last-updated">Letzte Aktualisierung: 1. März 2026</div>
+            <div class="version-badge">MAIN (gemerged)</div>
+            <div class="last-updated">Letzte Aktualisierung: 1. März 2026 — v2.0-design → main gemerged</div>
         </div>
 
         <!-- Overall Progress -->
         <div class="overall-progress">
             <h2>Gesamtfortschritt</h2>
             <div class="progress-bar-outer">
-                <div class="progress-bar-inner" style="width: 65%;"></div>
+                <div class="progress-bar-inner" style="width: 85%;"></div>
             </div>
             <div class="progress-label">
-                <span>7 Phasen</span>
-                <strong>~65%</strong>
+                <span>Phase 1-6 fertig, nur Phase 7 (Architektur) offen</span>
+                <strong>~85%</strong>
             </div>
         </div>
 
@@ -458,20 +458,22 @@
             <!-- Phase 6 -->
             <div class="phase-card">
                 <div class="phase-header">
-                    <div class="phase-number pending">6</div>
+                    <div class="phase-number done">6</div>
                     <div>
                         <div class="phase-title">Export & Print</div>
                         <div class="phase-meta">
-                            <span class="phase-status status-pending">Nicht begonnen</span>
-                            <span class="priority-badge prio-low">Niedrige Prio</span>
+                            <span class="phase-status status-done">Fertig</span>
+                            <span class="priority-badge prio-low">Erledigt</span>
                         </div>
                     </div>
                 </div>
-                <div class="phase-progress"><div class="phase-progress-fill fill-pending" style="width: 0%;"></div></div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-done" style="width: 100%;"></div></div>
                 <ul class="task-list">
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">PDF-Export: MLP-Branding (Logo/Textmarke, Blau-Überschriften)</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Print-Stylesheet: @media print mit MLP-Farben</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Titanium Trennlinien, professionelle Tabellen</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">PDF-Header: MLP Finanzberatung SE Textmarke + Titanium-Linie</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Print-CSS: MLP-Blau Überschriften, Titanium Borders, #2B2B2B Text</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Tabellen: MLP-Blau Headers, #F0EDE8 Sum-Rows, 9pt kompakt</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Anleihen-Erklärer im PDF ergänzt (fehlte vorher)</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Erklärer-Summary: Titanium left-border, konsistent mit App</span></li>
                 </ul>
             </div>
 
@@ -537,7 +539,11 @@
 
         <!-- Recent Commits -->
         <div class="commit-log">
-            <h2>Letzte Commits (v2.0-design)</h2>
+            <h2>Letzte Commits (main — nach Merge)</h2>
+            <div class="commit-entry">
+                <span class="commit-hash">b9a9e7c</span>
+                <span class="commit-msg">fix: Equity Premium Balken-Breite dynamisch + Fazit Dark-Mode</span>
+            </div>
             <div class="commit-entry">
                 <span class="commit-hash">2d28358</span>
                 <span class="commit-msg">feat: Equity Premium Retained Earnings + MSCI Mobile Gesten</span>

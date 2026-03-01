@@ -415,11 +415,38 @@
           /* Report container */
           #printable-report {
             display: block;
-            color: #000;
+            color: #2B2B2B;
             background: #fff;
+            font-family: Arial, sans-serif;
             padding: 8mm 10mm;
             max-width: 100%;
             overflow: hidden;
+          }
+
+          /* MLP Branding Header */
+          .print-mlp-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #BEB6AA;
+            padding-bottom: 12pt;
+            margin-bottom: 16pt;
+          }
+          .print-mlp-header .mlp-brand {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #033D5D;
+            letter-spacing: 0.5px;
+          }
+          .print-mlp-header .mlp-brand-sub {
+            font-size: 8pt;
+            color: #717171;
+            margin-top: 2pt;
+          }
+          .print-mlp-header .mlp-date {
+            font-size: 9pt;
+            color: #717171;
+            text-align: right;
           }
 
           /* Images: use transform scale for guaranteed sizing */
@@ -434,65 +461,68 @@
             page-break-inside: avoid !important;
           }
 
-          /* Headers */
+          /* Headers — MLP Blau Dark */
           #printable-report h1 {
-            font-size: 24pt;
-            margin-bottom: 12pt;
-            color: var(--mlp-blue-dark);
+            font-size: 22pt;
+            margin-bottom: 8pt;
+            color: #033D5D;
           }
 
           #printable-report h2 {
-            font-size: 16pt;
-            margin-top: 20pt;
-            margin-bottom: 10pt;
-            color: var(--mlp-blue-dark);
+            font-size: 14pt;
+            margin-top: 18pt;
+            margin-bottom: 8pt;
+            color: #033D5D;
+            border-bottom: 1px solid #BEB6AA;
+            padding-bottom: 4pt;
             break-after: avoid;
             page-break-after: avoid;
           }
 
           #printable-report p.muted {
-            font-size: 10pt;
-            color: #666;
-            margin-bottom: 8pt;
+            font-size: 9pt;
+            color: #717171;
+            margin-bottom: 6pt;
           }
 
-          /* Tables */
+          /* Tables — MLP-styled */
           .print-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
-            margin-bottom: 2rem;
+            margin-top: 8pt;
+            margin-bottom: 16pt;
             break-inside: avoid;
             page-break-inside: avoid;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            font-size: 9pt;
           }
 
           .print-table th, .print-table td {
-            border: 1px solid #ccc;
-            padding: 8px;
+            border: 1px solid #BEB6AA;
+            padding: 6px 8px;
             text-align: left;
-            font-size: 10pt;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
 
           .print-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
+            background-color: #F8F8F8;
+            font-weight: 700;
+            color: #033D5D;
           }
 
           /* Sum rows in tables */
           .print-table tr.sum-row th,
           .print-table tr.sum-row td {
             font-weight: bold;
-            background-color: #e8e8e8;
-            border-top: 2px solid #999;
+            background-color: #F0EDE8;
+            border-top: 2px solid #BEB6AA;
           }
 
           /* Positive/Negative values */
-          .text-positive { color: #059669; font-weight: 600; }
-          .text-negative { color: #dc2626; font-weight: 600; }
+          .text-positive { color: #13853E; font-weight: 600; }
+          .text-negative { color: #C1293D; font-weight: 600; }
 
           /* Prevent orphaned table headers */
           .print-table thead {
@@ -529,21 +559,23 @@
           .print-erklaerer h2 {
             color: #033D5D;
             margin-bottom: 10px;
+            border-bottom: 1px solid #BEB6AA;
+            padding-bottom: 4pt;
             break-after: avoid;
             page-break-after: avoid;
           }
 
           .print-erklaerer h3 {
             color: #033D5D;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            margin-top: 16px;
+            margin-bottom: 8px;
             font-size: 1.1em;
           }
 
           .erklaerer-summary {
-            background: #f8f9fa;
-            padding: 20px;
-            border-left: 4px solid #033D5D;
+            background: #F8F8F8;
+            padding: 16px 20px;
+            border-left: 4px solid #BEB6AA;
             border-radius: 4px;
           }
 
@@ -11961,7 +11993,7 @@ function updateFixkostenItem(index, key, value) {
 
         const depRows = depotItems.map(i => {
             const riskLabel = i.risk === 'conservative' ? 'Konservativ' : 'Chancenreich';
-            const riskColor = i.risk === 'conservative' ? '#3b82f6' : '#ef4444';
+            const riskColor = i.risk === 'conservative' ? '#033D5D' : '#C1293D';
             return `<tr>
                 <td><span style="display: inline-block; width: 12px; height: 12px; background: ${i.color}; border-radius: 3px; margin-right: 6px; vertical-align: middle;"></span>${i.name}</td>
                 <td>${i.allocation}%</td>
@@ -11975,10 +12007,17 @@ function updateFixkostenItem(index, key, value) {
         const berater = session?.berater || 'N/A';
 
         // 5) Compose report HTML (theme-neutral for print)
+        const printDate = new Date().toLocaleDateString('de-DE');
         let html = `
+          <div class="print-mlp-header">
+            <div>
+              <div class="mlp-brand">MLP Finanzberatung SE</div>
+              <div class="mlp-brand-sub">Beratungsdokumentation</div>
+            </div>
+            <div class="mlp-date">${printDate}</div>
+          </div>
           <h1>Zusammenfassung: Das intelligente Vermögensmanagement</h1>
-          <p class="muted">Planung für: <strong>${kundenKuerzel}</strong> • von: <strong>${berater}</strong></p>
-          <p class="muted">Variante: <strong>${currentVariant}</strong> • Theme: <strong>${themeNote}</strong> • Datum: ${new Date().toLocaleDateString('de-DE')}</p>
+          <p class="muted">Planung für: <strong>${kundenKuerzel}</strong> &bull; Berater: <strong>${berater}</strong> &bull; Variante: <strong>${currentVariant}</strong></p>
 
           <h2>Ihre Planung</h2>
           <table class="print-table">
@@ -12067,7 +12106,7 @@ function updateFixkostenItem(index, key, value) {
 
             const saldoClass = vermieterData.saldo >= 0 ? 'text-positive' : 'text-negative';
             const saldoSign = vermieterData.saldo >= 0 ? '+' : '-';
-            const cashflowRow = `<tr class="sum-row" style="background-color: #f9fafb;"><th>Netto-Cashflow (monatlich)</th><th class="${saldoClass}">${saldoSign}${formatCurrency(Math.abs(vermieterData.saldo))}</th></tr>`;
+            const cashflowRow = `<tr class="sum-row" style="background-color: #F0EDE8;"><th>Netto-Cashflow (monatlich)</th><th class="${saldoClass}">${saldoSign}${formatCurrency(Math.abs(vermieterData.saldo))}</th></tr>`;
 
             html += `
               <h2>Vermieterkonto (Cashflow-Analyse)</h2>
@@ -12195,6 +12234,37 @@ function updateFixkostenItem(index, key, value) {
                     </div>
                 `;
                 report.appendChild(sorrSection);
+            }
+
+            // Aktien & Anleihen Erklärer
+            if (currentSession.erklaererBesucht.anleihen) {
+                const anleihenSection = document.createElement('section');
+                anleihenSection.className = 'print-erklaerer';
+                anleihenSection.style.breakBefore = 'page';
+                anleihenSection.style.pageBreakBefore = 'always';
+                anleihenSection.innerHTML = `
+                    <h2>✅ Besprochenes Thema: Aktien &amp; Anleihen</h2>
+                    <p class="muted">Dieses Thema wurde in der Beratung erklärt und demonstriert.</p>
+                    <div class="erklaerer-summary">
+                        <h3>Kernaussage</h3>
+                        <p>Die Aufteilung zwischen Aktien und Anleihen bestimmt maßgeblich das Risiko-Rendite-Profil
+                        Ihres Portfolios. Anleihen dämpfen Schwankungen, Aktien liefern langfristig höhere Renditen.</p>
+
+                        <h3>Wichtige Konzepte</h3>
+                        <ul>
+                            <li><strong>Inverse Beziehung:</strong> Wenn Zinsen steigen, fallen Anleihe-Kurse (und umgekehrt)</li>
+                            <li><strong>Equity Premium:</strong> Die Mehrrendite von Aktien gegenüber risikolosen Anlagen</li>
+                            <li><strong>Diversifikation:</strong> Aktien und Anleihen reagieren oft unterschiedlich auf Marktphasen</li>
+                        </ul>
+
+                        <h3>Praktische Anwendung</h3>
+                        <p>✓ Anleihen-Anteil = Alter als Faustregel (z.B. 40 Jahre → 40% Anleihen)<br>
+                        ✓ Bei steigenden Zinsen: Kurzlaufende Anleihen bevorzugen<br>
+                        ✓ Rebalancing: Regelmäßig auf Ziel-Allokation zurücksetzen<br>
+                        ✓ Langfristig: Aktien-Übergewichtung für Vermögensaufbau</p>
+                    </div>
+                `;
+                report.appendChild(anleihenSection);
             }
         }
 

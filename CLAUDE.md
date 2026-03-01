@@ -6,7 +6,8 @@ Ein **Beratungs-Werkzeug für MLP-Finanzberater** — optimiert für Live-Gespr�
 Kein Self-Service-Tool. Kein Backend. Kein Login.
 
 **Live-URL:** https://montolio.de
-**Aktuell:** v1.9.3 | **Nächstes Ziel:** v2.0 (Design-Overhaul)
+**Altes Design:** https://montolio.de/v1/ (v1.7.8, für Berater die sich eingerichtet haben)
+**Aktuell:** v2.0 (Design-Overhaul) | **Nächstes Ziel:** Phase 6 (Export & Print)
 
 ---
 
@@ -281,8 +282,9 @@ Berater sollen im Session-Menü zwischen Farbthemen wählen können. Jedes freig
 
 | Version | Thema | Status |
 |---------|-------|--------|
-| v1.7.8 | Aktien & Anleihen Erklärer-Modal | ✅ Released |
-| **v2.0** | **Design-Overhaul + CSS Design System** | Nächstes Ziel |
+| v1.7.8 | Aktien & Anleihen Erklärer-Modal | ✅ Archiviert unter /v1/ |
+| **v2.0** | **Design-Overhaul + CSS Design System** | ✅ Gemerged (Phase 1-5 fertig) |
+| v2.0+ | Phase 6: Export & Print, Phase 7: Architektur | In Arbeit |
 | v3.0 | Vermögensverzehr-Modus (Ruhestand) | Langfristig |
 
 Details: `ROADMAP.md`

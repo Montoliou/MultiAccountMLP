@@ -1,10 +1,10 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 1.7.8 ✅
-**Nächste Version:** 2.0.0 (Design-Overhaul & Architektur) - HIGH PRIORITY ⭐⭐⭐
+**Aktuelle Version:** 2.0.0 (Design-Overhaul Phase 1-5 gemerged)
+**Nächste Schritte:** Phase 6 (Export & Print) + Phase 7 (Architektur-Entschuldung)
 **Ziel-Version:** 3.0.0 (Vermögensverzehr-Modus)
-**Datum:** Februar 2026
-**Status:** Roadmap konsolidiert basierend auf [ROADMAP_ANALYSIS.md](ROADMAP_ANALYSIS.md)
+**Datum:** März 2026
+**Status:** v2.0-design → main gemerged (Fast-Forward). Altes Design archiviert unter /v1/ (Tag: v1.7.8-final)
 
 
 ---
@@ -1869,17 +1869,19 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
 
 ---
 
-#### Phase 6: Export & Print (Session 4)
+#### Phase 6: Export & Print (Session 4) ✅
 
 **PDF-Export:**
-- [ ] MLP-Logo oder Textmarke im Header
-- [ ] MLP Blau Dark Überschriften
-- [ ] Titanium Trennlinien
-- [ ] Professionelle Tabellen-Formatierung
+- [x] MLP-Textmarke "MLP Finanzberatung SE" im Header (mit Titanium-Trennlinie)
+- [x] MLP Blau Dark (`#033D5D`) Überschriften mit Titanium border-bottom
+- [x] Titanium (`#BEB6AA`) Trennlinien und Tabellen-Borders
+- [x] Professionelle Tabellen: MLP-Blau Headers, Titanium Borders, `#F0EDE8` Sum-Rows
+- [x] Anleihen-Erklärer im PDF (fehlte vorher, nur Cost-Average + SoRR waren enthalten)
 
 **Print-Stylesheet:**
-- [ ] `@media print` optimiert für MLP-Branding
-- [ ] Korrekte Farben für Druck (CMYK-safe Varianten beachten)
+- [x] `@media print` komplett auf MLP-Branding umgestellt
+- [x] Textfarbe `#2B2B2B` statt `#000`, Positive `#13853E`, Negative `#C1293D`
+- [x] Erklärer-Summary: Titanium left-border statt MLP-Blau (konsistent mit App)
 
 ---
 
