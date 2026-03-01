@@ -1670,9 +1670,12 @@
         .theme-dark .modal [style*="border-left: 4px solid #BEB6AA"] { border-left-color: var(--border) !important; }
         .theme-dark .modal [style*="border-color: var(--mlp-titanium)"] { border-color: var(--border) !important; }
         /* Anleihen-Modal: SVG elements */
-        .theme-dark #anleihen-modal rect[fill="#F8F8F8"] { fill: var(--card); }
-        .theme-dark #anleihen-modal rect[fill="white"],
-        .theme-dark #anleihen-modal rect[stroke="#BEB6AA"] { fill: var(--card); stroke: var(--border); }
+        .theme-dark #anleihen-modal rect[fill="#F8F8F8"] { fill: var(--bg); }
+        .theme-dark #anleihen-modal rect[fill="white"] { fill: var(--card); }
+        .theme-dark #anleihen-modal rect[stroke="#BEB6AA"] { stroke: var(--border); }
+        .theme-dark #anleihen-modal text[fill="#2B2B2B"] { fill: var(--fg); }
+        .theme-dark #anleihen-modal text[fill="#5a5349"] { fill: var(--muted); }
+        .theme-dark #anleihen-modal text[fill="#8a8179"] { fill: var(--muted); }
         .theme-dark #anleihen-modal [style*="background: var(--card)"][style*="color: var(--fg)"] {
             border-color: var(--border) !important;
         }
@@ -3810,22 +3813,22 @@
 
                     <!-- Right: Füllstands-Visualisierung (8 cols) -->
                     <div class="col-span-8">
-                        <div class="p-8 rounded-lg" style="background: #FFFFFF; border: 1px solid #BEB6AA; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
+                        <div class="p-8 rounded-lg" style="background: var(--card); border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
 
                             <!-- Zwei Tanks nebeneinander -->
                             <div class="flex items-end justify-center gap-16">
 
                                 <!-- Tank Links: Marktzins -->
                                 <div class="flex flex-col items-center">
-                                    <div class="text-sm font-semibold mb-2 uppercase tracking-wide" style="color: #BEB6AA;">Marktzins</div>
-                                    <div class="relative" style="width: 120px; height: 280px; border: 2px solid #BEB6AA; border-radius: 8px; background: #F8F8F8; overflow: hidden;">
+                                    <div class="text-sm font-semibold mb-2 uppercase tracking-wide" style="color: var(--muted);">Marktzins</div>
+                                    <div class="relative" style="width: 120px; height: 280px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); overflow: hidden;">
                                         <!-- Füllstand -->
                                         <div id="seesaw-tank-zins" style="position: absolute; bottom: 0; left: 0; right: 0; height: 60%; background: linear-gradient(to top, #BEB6AA, #d4cfc7); border-radius: 0 0 6px 6px; transition: height 0.5s ease-out;"></div>
                                         <!-- Wert-Label -->
                                         <div id="seesaw-tank-zins-label" class="absolute inset-0 flex items-center justify-center text-xl font-bold" style="color: #033D5D; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">3.0%</div>
                                     </div>
                                     <!-- Skala-Markierungen -->
-                                    <div class="flex justify-between w-full mt-1 text-xs" style="color: #717171;">
+                                    <div class="flex justify-between w-full mt-1 text-xs" style="color: var(--muted);">
                                         <span>0%</span>
                                         <span>5%</span>
                                     </div>
@@ -3850,8 +3853,8 @@
 
                                 <!-- Tank Rechts: Anleihekurs -->
                                 <div class="flex flex-col items-center">
-                                    <div class="text-sm font-semibold mb-2 uppercase tracking-wide" style="color: #033D5D;">Anleihekurs</div>
-                                    <div class="relative" style="width: 120px; height: 280px; border: 2px solid #033D5D; border-radius: 8px; background: #F8F8F8; overflow: hidden;">
+                                    <div class="text-sm font-semibold mb-2 uppercase tracking-wide" style="color: var(--accent1);">Anleihekurs</div>
+                                    <div class="relative" style="width: 120px; height: 280px; border: 2px solid var(--accent1); border-radius: 8px; background: var(--bg); overflow: hidden;">
                                         <!-- Füllstand -->
                                         <div id="seesaw-tank-kurs" style="position: absolute; bottom: 0; left: 0; right: 0; height: 50%; background: linear-gradient(to top, #033D5D, #0a5a8a); border-radius: 0 0 6px 6px; transition: height 0.5s ease-out;"></div>
                                         <!-- Wert-Label -->
@@ -3861,7 +3864,7 @@
                                         <div id="seesaw-par-line" style="position: absolute; bottom: 50%; right: -36px; font-size: 10px; color: #717171; font-weight: 600;">100%</div>
                                     </div>
                                     <!-- Skala -->
-                                    <div class="flex justify-between w-full mt-1 text-xs" style="color: #717171;">
+                                    <div class="flex justify-between w-full mt-1 text-xs" style="color: var(--muted);">
                                         <span>80%</span>
                                         <span>120%</span>
                                     </div>
