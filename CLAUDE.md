@@ -223,6 +223,34 @@ powershell -ExecutionPolicy Bypass -File deploy-curl-sftp.ps1 -Force
 Ein Crash beim letzten Basin → ALLE Flows fehlen (Render-Reihenfolge!).
 **Immer lokal testen bevor deployed wird.**
 
+### PDF-Print Flow-Darstellung (v1.7.8 → v2.0 Lektion)
+
+Der Finanzfluss wird im PDF als **DOM-Klon** gedruckt (nicht als Bild).
+Die bewährte Methode aus v1.7.8 funktioniert — NICHT durch eigene JS-Skalierung ersetzen!
+
+**CSS-Regel (bewährt, nicht ändern!):**
+```css
+#flow-container-print {
+    transform: scale(0.75) !important;
+    transform-origin: top center !important;
+    width: 1100px !important;
+    margin: 0 auto -380px auto !important;
+    position: relative !important;
+    left: 50% !important;
+    margin-left: -720px !important;
+}
+```
+
+**v2.0-Ergänzungen zum Klon:**
+- `.no-print` Elemente entfernen (Mobile Warning)
+- `.gradient-zone`, `.ambient-glow` entfernen (Screen-Dekoration)
+- Basins: `backdrop-filter: none`, `background: #ffffff`, `border: 1px solid #BEB6AA`
+- SVG-Strokes inline setzen (CSS-Vars greifen nicht im Print-Klon)
+- `.flow-erase` explizit auf `stroke: #ffffff`
+- `.flow-value`: weiß + `#2B2B2B` Text + Titanium Border
+- `.flow-label`: `#717171`
+- Animationen stoppen, Flow-Dots entfernen
+
 ---
 
 ## Dev Tools
