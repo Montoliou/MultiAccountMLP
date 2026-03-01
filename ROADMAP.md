@@ -1,7 +1,7 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 2.0.0 (Design-Overhaul Phase 1-5 gemerged)
-**Nächste Schritte:** Phase 6 (Export & Print) + Phase 7 (Architektur-Entschuldung)
+**Aktuelle Version:** 2.0.0 (Design-Overhaul Phase 1-6 gemerged, 1 Bug offen)
+**Nächste Schritte:** PDF-Flow-Bug fixen + Phase 7 (Architektur-Entschuldung)
 **Ziel-Version:** 3.0.0 (Vermögensverzehr-Modus)
 **Datum:** März 2026
 **Status:** v2.0-design → main gemerged (Fast-Forward). Altes Design archiviert unter /v1/ (Tag: v1.7.8-final)
@@ -1869,7 +1869,7 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
 
 ---
 
-#### Phase 6: Export & Print (Session 4) ✅
+#### Phase 6: Export & Print (Session 4) ⚠️ 1 Bug offen
 
 **PDF-Export:**
 - [x] MLP-Textmarke "MLP Finanzberatung SE" im Header (mit Titanium-Trennlinie)
@@ -1882,6 +1882,12 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
 - [x] `@media print` komplett auf MLP-Branding umgestellt
 - [x] Textfarbe `#2B2B2B` statt `#000`, Positive `#13853E`, Negative `#C1293D`
 - [x] Erklärer-Summary: Titanium left-border statt MLP-Blau (konsistent mit App)
+
+**🐛 Known Bug: PDF-Flow zeigt dunkle Erase-Pfade**
+- Die `.flow-erase` SVG-Pfade (40px breit, normalerweise Hintergrundfarbe) werden im Print als dunkle Striche sichtbar
+- v1-Ansatz (einfach cloneNode) funktionierte, weil v1 kein Mask/Erase-System hatte
+- Gescheiterte Ansätze: Mask entfernen, Erase entfernen, Inline-Strokes, SVG→PNG, Defs entfernen
+- **Nächster Schritt:** Im Browser Print-Preview mit DevTools die exakten Elemente identifizieren
 
 ---
 
