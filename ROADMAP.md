@@ -1850,23 +1850,22 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
    - J1=10€, J2=11€, Crash bei J3=2€. Crash-Text "Jahr 3", "89 Anteile"
    - Schriftgröße geprüft: text-2xl/text-xl passend für Präsentationsmodus
 
-3. **Anleihen Equity Premium — Erklärtext verbessern**
-   - Modell ist finanzwissenschaftlich korrekt (ROA = FK-Zinsen + EK-Rendite)
-   - ABER: Klarstellen, dass "Unternehmensrendite" = Rendite NACH Betriebskosten & Steuern
-   - **Modell ist zu vereinfacht**: Aktuell geht 100% der Rendite an FK+EK, nichts bleibt beim Unternehmen
-   - Realistisch: Unternehmen behält Retained Earnings (Reinvestition, Rücklagen, Wachstum)
-   - Lösung: Dritten Topf "Unternehmen (Retained Earnings)" im Rendite-Split einführen
-   - Z.B.: 8% Rendite → 3% Zinsen + 2% Einbehaltener Gewinn + 3% Aktionärsrendite
-   - Oder: Slider für "Ausschüttungsquote" (Payout Ratio) → zeigt wie viel ans EK fließt vs. reinvestiert wird
+3. ~~**Anleihen Equity Premium — Retained Earnings**~~ ✅
+   - Dritter Topf "Einbehaltener Gewinn" (Retained Earnings) implementiert
+   - Neuer Slider: Ausschüttungsquote (Payout Ratio, 0-100%, Default 60%)
+   - SVG: Dritte Box "Einbehaltener Gewinn" (Orange) + animierter Pfeil nach unten
+   - Balken: 3 Segmente (Zinsen/Titanium + Rücklagen/Orange + Aktionäre/Türkis)
+   - Erklärsäulen angepasst: "Unternehmen behält Anteil" als 2. Säule
+   - Fazit-Texte für alle Kombinationen (100% reinvestiert, knapp, gesund, Verlust)
 
-4. **MSCI Renditedreieck — UX-Upgrade** ⭐⭐
+4. **MSCI Renditedreieck — UX-Upgrade** ✅
    - [x] **Close on Outside Click**: Klick auf Overlay schließt Modal
    - [x] **ESC-Taste**: Schließt Modal
    - [x] **Mousewheel Zoom**: Stufenloses Zoomen mit Mausrad (1x-5x)
    - [x] **Drag-to-Pan**: Bild verschieben im gezoomten Zustand
    - [x] **Click-Zoom**: Klick = 2.5x Zoom, nochmal Klick = zurück
-   - [ ] **Obere linke Ecke abdecken**: Dreieck-Overlay (Kaufjahr > Verkaufsjahr)
-   - [ ] **Mobil-Gesten**: Pinch-to-Zoom, Touch-Drag
+   - [x] **Mobil-Gesten**: Pinch-to-Zoom (2 Finger) + Touch-Drag (1 Finger, nur gezoomt)
+   - [ ] **Obere linke Ecke abdecken**: Dreieck-Overlay — aufgeschoben (object-contain + Bild-Scaling = fragile Positionierung)
 
 ---
 

@@ -3961,10 +3961,24 @@
                             </div>
                         </div>
 
+                        <div class="p-4 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
+                            <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide" style="color: #E3691E;">Ausschüttungsquote</h3>
+                            <label class="block text-sm font-medium mb-1" style="color: #2B2B2B;">
+                                An Aktionäre: <span id="equity-payout-display" class="font-bold" style="color: #47A190;">60%</span>
+                            </label>
+                            <input type="range" id="equity-payout-slider" min="0" max="100" step="5" value="60"
+                                class="w-full" style="accent-color: #47A190;"
+                                oninput="updateEquityFlow();">
+                            <div class="flex justify-between text-xs mt-1" style="color: #717171;">
+                                <span>0% (alles reinvestiert)</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+
                         <!-- Ergebnis -->
                         <div id="equity-result-card" class="p-4 rounded-lg" style="background: rgba(71,161,144,0.08); border: 1px solid rgba(71,161,144,0.3);">
                             <div class="text-sm font-semibold mb-1" id="equity-result-label" style="color: #47A190;">Gewinn der Aktionäre</div>
-                            <div id="equity-result-value" class="text-2xl font-bold" style="color: #033D5D;">+5,0%</div>
+                            <div id="equity-result-value" class="text-2xl font-bold" style="color: #033D5D;">+3,0%</div>
                             <div id="equity-result-text" class="text-sm" style="color: #47A190;">Equity Risk Premium</div>
                         </div>
 
@@ -3978,7 +3992,7 @@
 
                     <!-- Right: Visualisierung (8 cols) -->
                     <div class="col-span-8 flex items-center justify-center">
-                        <svg id="equity-flow-svg" viewBox="0 0 560 400" class="w-full" style="max-width: 560px;">
+                        <svg id="equity-flow-svg" viewBox="0 0 560 480" class="w-full" style="max-width: 560px;">
                             <!-- Unternehmen (Zentrum) -->
                             <rect x="190" y="130" width="180" height="80" rx="12" fill="#033D5D" stroke="#022a40" stroke-width="2"/>
                             <text x="280" y="162" text-anchor="middle" fill="white" font-size="13" font-weight="bold">Unternehmen</text>
@@ -4017,6 +4031,24 @@
                             <text x="110" y="117" text-anchor="middle" fill="#8a8179" font-size="12" font-weight="bold" id="equity-zins-flow">3% Zinsen</text>
                             <text x="110" y="90" text-anchor="middle" fill="#8a8179" font-size="9">„Miete" für Geld</text>
 
+                            <!-- Rücklagen (Mitte-unten) — Orange/Warm -->
+                            <rect x="205" y="280" width="150" height="50" rx="10" fill="#E3691E" stroke="#c55a18" stroke-width="2" id="equity-retained-box"/>
+                            <text x="280" y="302" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Einbehaltener Gewinn</text>
+                            <text x="280" y="318" text-anchor="middle" fill="#fde0c8" font-size="10" id="equity-retained-sub">(Reinvestition)</text>
+
+                            <!-- Pfeil: Unternehmen → Rücklagen -->
+                            <path d="M 280,210 L 280,278" fill="none" stroke="#E3691E" stroke-width="3" id="equity-retained-arrow">
+                                <animate attributeName="stroke-dasharray" values="0 100;100 0" dur="2s" repeatCount="indefinite"/>
+                            </path>
+                            <defs>
+                                <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#E3691E"/>
+                                </marker>
+                            </defs>
+                            <rect x="245" y="237" width="70" height="22" rx="4" fill="white" stroke="#E3691E" stroke-width="1" id="equity-retained-bg"/>
+                            <text x="280" y="252" text-anchor="middle" fill="#c55a18" font-size="11" font-weight="bold" id="equity-retained-flow">2,0%</text>
+                            <text x="280" y="228" text-anchor="middle" fill="#c55a18" font-size="9" id="equity-retained-label">Reinvestiert</text>
+
                             <!-- Aktionäre (Rechts) — Türkis -->
                             <rect x="400" y="10" width="150" height="60" rx="10" fill="#47A190" stroke="#3a8474" stroke-width="2" id="equity-aktionaer-box"/>
                             <text x="475" y="35" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Aktionäre</text>
@@ -4027,32 +4059,37 @@
                                 <animate attributeName="stroke-dasharray" values="0 200;200 0" dur="2s" repeatCount="indefinite"/>
                             </path>
                             <rect x="385" y="102" width="85" height="22" rx="4" fill="white" stroke="#47A190" stroke-width="1" id="equity-profit-bg"/>
-                            <text x="428" y="117" text-anchor="middle" fill="#3a8474" font-size="12" font-weight="bold" id="equity-profit-flow">+5% Gewinn</text>
+                            <text x="428" y="117" text-anchor="middle" fill="#3a8474" font-size="12" font-weight="bold" id="equity-profit-flow">+3% Gewinn</text>
                             <text x="428" y="90" text-anchor="middle" fill="#3a8474" font-size="9" id="equity-profit-label">Wertsteigerung</text>
 
                             <!-- Balken-Vergleich unten -->
-                            <text x="280" y="250" text-anchor="middle" fill="#2B2B2B" font-size="12" font-weight="bold">Aufteilung der Unternehmensrendite</text>
+                            <text x="280" y="360" text-anchor="middle" fill="#2B2B2B" font-size="12" font-weight="bold">Aufteilung der Unternehmensrendite</text>
 
                             <!-- Balken: Gesamt-Rendite -->
-                            <rect x="80" y="268" width="400" height="30" rx="6" fill="#F8F8F8" stroke="#BEB6AA" stroke-width="1"/>
+                            <rect x="80" y="378" width="400" height="30" rx="6" fill="#F8F8F8" stroke="#BEB6AA" stroke-width="1"/>
 
                             <!-- Balken: Zinskosten (Titanium) -->
-                            <rect x="80" y="268" rx="6" height="30" fill="#BEB6AA" id="equity-bar-zins" width="150"/>
-                            <text y="288" fill="white" font-size="11" font-weight="bold" id="equity-bar-zins-text" x="155" text-anchor="middle">3%</text>
+                            <rect x="80" y="378" rx="6" height="30" fill="#BEB6AA" id="equity-bar-zins" width="100"/>
+                            <text y="398" fill="white" font-size="11" font-weight="bold" id="equity-bar-zins-text" x="130" text-anchor="middle">3%</text>
 
-                            <!-- Balken: Gewinn (Türkis) -->
-                            <rect y="268" height="30" fill="#47A190" id="equity-bar-gewinn" x="230" width="250" rx="0"/>
-                            <text y="288" fill="white" font-size="11" font-weight="bold" id="equity-bar-gewinn-text" x="355" text-anchor="middle">5%</text>
+                            <!-- Balken: Einbehaltener Gewinn (Orange) -->
+                            <rect y="378" height="30" fill="#E3691E" id="equity-bar-retained" x="180" width="67" rx="0"/>
+                            <text y="398" fill="white" font-size="11" font-weight="bold" id="equity-bar-retained-text" x="213" text-anchor="middle">2%</text>
+
+                            <!-- Balken: Aktionärsgewinn (Türkis) -->
+                            <rect y="378" height="30" fill="#47A190" id="equity-bar-gewinn" x="247" width="233" rx="0"/>
+                            <text y="398" fill="white" font-size="11" font-weight="bold" id="equity-bar-gewinn-text" x="363" text-anchor="middle">3%</text>
 
                             <!-- Labels unter Balken -->
-                            <text x="155" y="315" text-anchor="middle" fill="#8a8179" font-size="10" id="equity-bar-label-zins">Zinsen (Anleihe)</text>
-                            <text x="355" y="315" text-anchor="middle" fill="#3a8474" font-size="10" id="equity-bar-label-gewinn">Aktionärsgewinn</text>
+                            <text x="130" y="425" text-anchor="middle" fill="#8a8179" font-size="10" id="equity-bar-label-zins">Zinsen</text>
+                            <text x="213" y="425" text-anchor="middle" fill="#c55a18" font-size="10" id="equity-bar-label-retained">Rücklagen</text>
+                            <text x="363" y="425" text-anchor="middle" fill="#3a8474" font-size="10" id="equity-bar-label-gewinn">Aktionäre</text>
 
                             <!-- Warnung bei Verlust -->
                             <g id="equity-warning" style="display: none;">
-                                <rect x="130" y="335" width="300" height="36" rx="8" fill="#fef2f2" stroke="#C1293D" stroke-width="1.5"/>
-                                <text x="280" y="350" text-anchor="middle" fill="#C1293D" font-size="11" font-weight="bold" id="equity-warning-text">Unternehmen kann Zinsen nicht bedienen!</text>
-                                <text x="280" y="365" text-anchor="middle" fill="#C1293D" font-size="10">Insolvenzgefahr</text>
+                                <rect x="130" y="438" width="300" height="36" rx="8" fill="#fef2f2" stroke="#C1293D" stroke-width="1.5"/>
+                                <text x="280" y="453" text-anchor="middle" fill="#C1293D" font-size="11" font-weight="bold" id="equity-warning-text">Unternehmen kann Zinsen nicht bedienen!</text>
+                                <text x="280" y="468" text-anchor="middle" fill="#C1293D" font-size="10">Insolvenzgefahr</text>
                             </g>
                         </svg>
                     </div>
@@ -4064,13 +4101,13 @@
                         <p class="font-semibold mb-1 text-sm" style="color: #033D5D;">1. Anleihe = „Miete" für Geld</p>
                         <p class="text-xs" style="color: #2B2B2B;">Das Unternehmen gibt eine Anleihe heraus und verspricht, regelmäßig Zinsen zu zahlen. Wie ein Mieter, der Miete für eine Wohnung zahlt — nur hier ist es Miete für geliehenes Kapital.</p>
                     </div>
-                    <div class="p-4 rounded-lg" style="background: rgba(71,161,144,0.06); border: 1px solid rgba(71,161,144,0.3);">
-                        <p class="font-semibold mb-1 text-sm" style="color: #033D5D;">2. Gewinne > Miete = Wachstum</p>
-                        <p class="text-xs" style="color: #2B2B2B;">Das Unternehmen investiert das Geld in Projekte und Produkte. Die Gewinne daraus müssen höher sein als die Zinszahlungen — sonst lohnt sich das Geschäft nicht. Der Überschuss steigert den Unternehmenswert.</p>
+                    <div class="p-4 rounded-lg" style="background: rgba(227,105,30,0.06); border: 1px solid rgba(227,105,30,0.3);">
+                        <p class="font-semibold mb-1 text-sm" style="color: #033D5D;">2. Unternehmen behält Anteil</p>
+                        <p class="text-xs" style="color: #2B2B2B;">Nicht alles wird ausgeschüttet! Das Unternehmen braucht Gewinn für Reinvestitionen, neue Maschinen und Wachstum. Je niedriger die Ausschüttungsquote, desto mehr wird einbehalten.</p>
                     </div>
-                    <div class="p-4 rounded-lg" style="background: rgba(3,61,93,0.04); border: 1px solid rgba(3,61,93,0.15);">
+                    <div class="p-4 rounded-lg" style="background: rgba(71,161,144,0.06); border: 1px solid rgba(71,161,144,0.3);">
                         <p class="font-semibold mb-1 text-sm" style="color: #033D5D;">3. Aktionäre profitieren vom Rest</p>
-                        <p class="text-xs" style="color: #2B2B2B;">Erst werden die Anleihegläubiger bezahlt (Priorität!). Was übrig bleibt, gehört den Aktionären. Dafür tragen sie das volle Risiko — und verlangen deshalb langfristig eine höhere Rendite als Anleihen bieten.</p>
+                        <p class="text-xs" style="color: #2B2B2B;">Erst werden Gläubiger bezahlt (Priorität!), dann behält das Unternehmen seinen Anteil. Was übrig bleibt, fließt als Dividende oder Wertsteigerung an die Aktionäre — das Equity Risk Premium.</p>
                     </div>
                 </div>
             </div>
@@ -10355,83 +10392,132 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         }
     }
 
-    // Tab 3: Equity Risk Premium — Kapitalfluss-Visualisierung
+    // Tab 3: Equity Risk Premium — Kapitalfluss-Visualisierung (mit Retained Earnings)
     function updateEquityFlow() {
         var rendite = parseFloat(document.getElementById('equity-rendite-slider').value) || 0;
         var zins = parseFloat(document.getElementById('equity-zins-slider').value) || 0;
-        var spread = rendite - zins;
+        var payoutRatio = parseFloat(document.getElementById('equity-payout-slider').value) / 100;
+        var totalSpread = rendite - zins;
+        var retained = totalSpread > 0 ? totalSpread * (1 - payoutRatio) : 0;
+        var aktionaerSpread = totalSpread > 0 ? totalSpread * payoutRatio : totalSpread;
 
         // Update display labels
         document.getElementById('equity-rendite-display').textContent = rendite.toFixed(1) + '%';
         document.getElementById('equity-zins-display').textContent = zins.toFixed(1) + '%';
+        document.getElementById('equity-payout-display').textContent = Math.round(payoutRatio * 100) + '%';
 
         // SVG texts
         document.getElementById('equity-company-text').textContent = 'erwirtschaftet ' + rendite.toFixed(1) + '%';
         document.getElementById('equity-zins-flow').textContent = zins.toFixed(1) + '% Zinsen';
 
+        // Retained Earnings arrow & text
+        var retainedArrow = document.getElementById('equity-retained-arrow');
+        var retainedFlow = document.getElementById('equity-retained-flow');
+        var retainedLabel = document.getElementById('equity-retained-label');
+        var retainedBox = document.getElementById('equity-retained-box');
+
+        if (retained > 0.05) {
+            retainedArrow.style.display = '';
+            retainedFlow.textContent = retained.toFixed(1) + '%';
+            retainedLabel.textContent = 'Reinvestiert';
+            document.getElementById('equity-retained-bg').style.display = '';
+            retainedBox.style.display = '';
+            document.getElementById('equity-retained-sub').textContent = '(Reinvestition)';
+        } else {
+            retainedArrow.style.display = 'none';
+            retainedFlow.textContent = '';
+            retainedLabel.textContent = '';
+            document.getElementById('equity-retained-bg').style.display = 'none';
+            retainedBox.style.display = totalSpread <= 0 ? 'none' : '';
+            if (totalSpread > 0) {
+                document.getElementById('equity-retained-sub').textContent = '(nichts einbehalten)';
+                retainedBox.style.display = '';
+            }
+        }
+
         // Bars — total width = 400px for max 15%
         var barTotal = 400;
         var maxRate = 15;
         var zinsWidth = Math.max(0, (zins / maxRate) * barTotal);
-        var gewinnWidth = Math.max(0, (spread / maxRate) * barTotal);
+        var retainedWidth = Math.max(0, (retained / maxRate) * barTotal);
+        var gewinnWidth = Math.max(0, (aktionaerSpread / maxRate) * barTotal);
 
         var zinsBar = document.getElementById('equity-bar-zins');
+        var retainedBar = document.getElementById('equity-bar-retained');
         var gewinnBar = document.getElementById('equity-bar-gewinn');
         var zinsText = document.getElementById('equity-bar-zins-text');
+        var retainedBarText = document.getElementById('equity-bar-retained-text');
         var gewinnText = document.getElementById('equity-bar-gewinn-text');
 
         zinsBar.setAttribute('width', zinsWidth);
         zinsText.setAttribute('x', 80 + zinsWidth / 2);
-        zinsText.textContent = zins.toFixed(1) + '%';
-
+        zinsText.textContent = zins > 0 ? zins.toFixed(1) + '%' : '';
         document.getElementById('equity-bar-label-zins').setAttribute('x', 80 + zinsWidth / 2);
 
-        if (spread > 0) {
-            gewinnBar.setAttribute('x', 80 + zinsWidth);
+        // Retained bar
+        if (retained > 0.05) {
+            retainedBar.setAttribute('x', 80 + zinsWidth);
+            retainedBar.setAttribute('width', retainedWidth);
+            retainedBar.style.display = '';
+            retainedBarText.setAttribute('x', 80 + zinsWidth + retainedWidth / 2);
+            retainedBarText.textContent = retained.toFixed(1) + '%';
+            document.getElementById('equity-bar-label-retained').setAttribute('x', 80 + zinsWidth + retainedWidth / 2);
+            document.getElementById('equity-bar-label-retained').textContent = 'Rücklagen';
+        } else {
+            retainedBar.style.display = 'none';
+            retainedBarText.textContent = '';
+            document.getElementById('equity-bar-label-retained').textContent = '';
+        }
+
+        // Gewinn bar
+        if (aktionaerSpread > 0) {
+            gewinnBar.setAttribute('x', 80 + zinsWidth + retainedWidth);
             gewinnBar.setAttribute('width', gewinnWidth);
             gewinnBar.setAttribute('fill', '#47A190');
-            gewinnText.setAttribute('x', 80 + zinsWidth + gewinnWidth / 2);
-            gewinnText.textContent = '+' + spread.toFixed(1) + '%';
-            document.getElementById('equity-bar-label-gewinn').setAttribute('x', 80 + zinsWidth + gewinnWidth / 2);
-            document.getElementById('equity-bar-label-gewinn').textContent = 'Aktionärsgewinn';
+            gewinnBar.style.display = '';
+            gewinnText.setAttribute('x', 80 + zinsWidth + retainedWidth + gewinnWidth / 2);
+            gewinnText.textContent = '+' + aktionaerSpread.toFixed(1) + '%';
+            document.getElementById('equity-bar-label-gewinn').setAttribute('x', 80 + zinsWidth + retainedWidth + gewinnWidth / 2);
+            document.getElementById('equity-bar-label-gewinn').textContent = 'Aktionäre';
             document.getElementById('equity-bar-label-gewinn').setAttribute('fill', '#3a8474');
-        } else if (spread < 0) {
-            var lossWidth = Math.max(0, (Math.abs(spread) / maxRate) * barTotal);
+        } else if (totalSpread < 0) {
+            var lossWidth = Math.max(0, (Math.abs(totalSpread) / maxRate) * barTotal);
             gewinnBar.setAttribute('x', 80 + zinsWidth - lossWidth);
             gewinnBar.setAttribute('width', lossWidth);
             gewinnBar.setAttribute('fill', '#C1293D');
+            gewinnBar.style.display = '';
             gewinnText.setAttribute('x', 80 + zinsWidth - lossWidth / 2);
-            gewinnText.textContent = spread.toFixed(1) + '%';
+            gewinnText.textContent = totalSpread.toFixed(1) + '%';
             document.getElementById('equity-bar-label-gewinn').setAttribute('x', 80 + zinsWidth - lossWidth / 2);
             document.getElementById('equity-bar-label-gewinn').textContent = 'Verlust!';
             document.getElementById('equity-bar-label-gewinn').setAttribute('fill', '#C1293D');
         } else {
-            gewinnBar.setAttribute('width', 0);
+            gewinnBar.style.display = 'none';
             gewinnText.textContent = '';
             document.getElementById('equity-bar-label-gewinn').textContent = '';
         }
 
-        // Profit arrow & text
+        // Profit arrow & text (Aktionäre)
         var profitArrow = document.getElementById('equity-profit-arrow');
         var profitFlow = document.getElementById('equity-profit-flow');
         var profitLabel = document.getElementById('equity-profit-label');
         var profitBg = document.getElementById('equity-profit-bg');
         var aktionaerBox = document.getElementById('equity-aktionaer-box');
 
-        if (spread > 0) {
+        if (aktionaerSpread > 0) {
             profitArrow.setAttribute('stroke', '#47A190');
             profitArrow.setAttribute('marker-end', 'url(#arrow-tuerkis)');
-            profitFlow.textContent = '+' + spread.toFixed(1) + '% Gewinn';
+            profitFlow.textContent = '+' + aktionaerSpread.toFixed(1) + '% Gewinn';
             profitFlow.setAttribute('fill', '#3a8474');
             profitLabel.textContent = 'Wertsteigerung';
             profitLabel.setAttribute('fill', '#3a8474');
             profitBg.setAttribute('stroke', '#47A190');
             aktionaerBox.setAttribute('fill', '#47A190');
             aktionaerBox.setAttribute('stroke', '#3a8474');
-        } else if (spread < 0) {
+        } else if (totalSpread < 0) {
             profitArrow.setAttribute('stroke', '#C1293D');
             profitArrow.setAttribute('marker-end', 'url(#arrow-warn)');
-            profitFlow.textContent = spread.toFixed(1) + '% Verlust';
+            profitFlow.textContent = totalSpread.toFixed(1) + '% Verlust';
             profitFlow.setAttribute('fill', '#C1293D');
             profitLabel.textContent = 'Substanzverlust';
             profitLabel.setAttribute('fill', '#C1293D');
@@ -10440,9 +10526,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             aktionaerBox.setAttribute('stroke', '#9e1f2f');
         } else {
             profitArrow.setAttribute('stroke', '#BEB6AA');
-            profitFlow.textContent = '0% — Break Even';
+            profitFlow.textContent = aktionaerSpread === 0 && totalSpread > 0 ? '0% — alles reinvestiert' : '0% — Break Even';
             profitFlow.setAttribute('fill', '#717171');
-            profitLabel.textContent = 'Kein Gewinn';
+            profitLabel.textContent = aktionaerSpread === 0 && totalSpread > 0 ? 'Kein Payout' : 'Kein Gewinn';
             profitLabel.setAttribute('fill', '#717171');
             profitBg.setAttribute('stroke', '#BEB6AA');
             aktionaerBox.setAttribute('fill', '#BEB6AA');
@@ -10455,25 +10541,25 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         var resultValue = document.getElementById('equity-result-value');
         var resultText = document.getElementById('equity-result-text');
 
-        if (spread > 0) {
+        if (aktionaerSpread > 0) {
             resultCard.style.background = 'rgba(71,161,144,0.08)';
             resultCard.style.border = '1px solid rgba(71,161,144,0.3)';
             resultLabel.textContent = 'Gewinn der Aktionäre';
             resultLabel.style.color = '#47A190';
-            resultValue.textContent = '+' + spread.toFixed(1) + '%';
+            resultValue.textContent = '+' + aktionaerSpread.toFixed(1) + '%';
             resultValue.style.color = '#033D5D';
-            resultText.textContent = 'Equity Risk Premium';
+            resultText.textContent = 'Equity Risk Premium (nach Rücklagen)';
             resultText.style.color = '#47A190';
-        } else if (spread < 0) {
+        } else if (totalSpread < 0) {
             resultCard.style.background = 'rgba(193,41,61,0.06)';
             resultCard.style.border = '1px solid rgba(193,41,61,0.3)';
             resultLabel.textContent = 'Verlust der Aktionäre';
             resultLabel.style.color = '#C1293D';
-            resultValue.textContent = spread.toFixed(1) + '%';
+            resultValue.textContent = totalSpread.toFixed(1) + '%';
             resultValue.style.color = '#C1293D';
             resultText.textContent = 'Unternehmen verbrennt Kapital';
             resultText.style.color = '#C1293D';
-        } else {
+        } else if (totalSpread === 0) {
             resultCard.style.background = '#F8F8F8';
             resultCard.style.border = '1px solid #BEB6AA';
             resultLabel.textContent = 'Break Even';
@@ -10482,26 +10568,41 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             resultValue.style.color = '#2B2B2B';
             resultText.textContent = 'Kein Mehrwert für Aktionäre';
             resultText.style.color = '#717171';
+        } else {
+            // totalSpread > 0 but aktionaerSpread = 0 (100% retained)
+            resultCard.style.background = 'rgba(227,105,30,0.08)';
+            resultCard.style.border = '1px solid rgba(227,105,30,0.3)';
+            resultLabel.textContent = 'Alles reinvestiert';
+            resultLabel.style.color = '#E3691E';
+            resultValue.textContent = '0%';
+            resultValue.style.color = '#E3691E';
+            resultText.textContent = retained.toFixed(1) + '% fließen ins Wachstum';
+            resultText.style.color = '#E3691E';
         }
 
         // Warning
         var warning = document.getElementById('equity-warning');
-        warning.style.display = spread < 0 ? '' : 'none';
+        warning.style.display = totalSpread < 0 ? '' : 'none';
 
         // Fazit text
         var fazit = document.getElementById('equity-fazit');
         var fazitText = document.getElementById('equity-fazit-text');
-        if (spread > 2) {
+        if (totalSpread > 0 && aktionaerSpread > 1) {
             fazit.style.background = '#F8F8F8';
             fazit.style.border = '1px solid #BEB6AA';
-            fazitText.innerHTML = '<strong>Ergebnis:</strong> Das Unternehmen verdient ' + spread.toFixed(1) + '% mehr als es für das geliehene Geld zahlt. Dieser Überschuss steigert den Unternehmenswert und gehört den Aktionären.';
+            fazitText.innerHTML = '<strong>Ergebnis:</strong> Von ' + totalSpread.toFixed(1) + '% Überschuss behält das Unternehmen ' + retained.toFixed(1) + '% für Wachstum. Die Aktionäre erhalten ' + aktionaerSpread.toFixed(1) + '% als Rendite — ihr Equity Risk Premium.';
             fazitText.style.color = '#2B2B2B';
-        } else if (spread > 0) {
+        } else if (totalSpread > 0 && aktionaerSpread > 0) {
             fazit.style.background = 'rgba(227,105,30,0.06)';
             fazit.style.border = '1px solid rgba(227,105,30,0.3)';
-            fazitText.innerHTML = '<strong>Knapp:</strong> Der Spread von nur ' + spread.toFixed(1) + '% reicht kaum, um das höhere Risiko der Aktionäre zu kompensieren. Aktien wären hier wenig attraktiv.';
+            fazitText.innerHTML = '<strong>Knapp:</strong> Nur ' + aktionaerSpread.toFixed(1) + '% erreichen die Aktionäre — der Großteil (' + retained.toFixed(1) + '%) wird reinvestiert. Das EK-Risiko wird kaum kompensiert.';
             fazitText.style.color = '#2B2B2B';
-        } else if (spread === 0) {
+        } else if (totalSpread > 0 && aktionaerSpread === 0) {
+            fazit.style.background = 'rgba(227,105,30,0.08)';
+            fazit.style.border = '1px solid rgba(227,105,30,0.3)';
+            fazitText.innerHTML = '<strong>100% reinvestiert:</strong> Das Unternehmen behält den gesamten Gewinn für Wachstum. Aktionäre profitieren nur indirekt über steigende Substanz — keine Dividende, kein direkter Cashflow.';
+            fazitText.style.color = '#2B2B2B';
+        } else if (totalSpread === 0) {
             fazit.style.background = '#F8F8F8';
             fazit.style.border = '1px solid #BEB6AA';
             fazitText.innerHTML = '<strong>Break Even:</strong> Das Unternehmen verdient exakt so viel wie es an Zinsen zahlt. Für Aktionäre gibt es keinen Mehrwert — warum sollte jemand das Risiko tragen?';
@@ -10509,7 +10610,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         } else {
             fazit.style.background = 'rgba(193,41,61,0.06)';
             fazit.style.border = '1px solid rgba(193,41,61,0.3)';
-            fazitText.innerHTML = '<strong>Achtung:</strong> Das Unternehmen verdient weniger als es an Zinsen zahlt. Es verliert ' + Math.abs(spread).toFixed(1) + '% pro Jahr an Substanz. Langfristig führt das zur Insolvenz — die Anleihe wird wertlos, die Aktie auch.';
+            fazitText.innerHTML = '<strong>Achtung:</strong> Das Unternehmen verdient weniger als es an Zinsen zahlt. Es verliert ' + Math.abs(totalSpread).toFixed(1) + '% pro Jahr an Substanz. Langfristig führt das zur Insolvenz — die Anleihe wird wertlos, die Aktie auch.';
             fazitText.style.color = '#C1293D';
         }
     }
@@ -11153,6 +11254,73 @@ function updateFixkostenItem(index, key, value) {
                     container.style.cursor = 'grab';
                 }
             }
+        });
+
+        // Touch: Pinch-to-Zoom + Drag-to-Pan
+        var touchStartDist = 0;
+        var touchStartScale = 1;
+        var touchLastX = 0, touchLastY = 0;
+        var isTouchDragging = false;
+
+        container.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                // Pinch start
+                e.preventDefault();
+                var dx = e.touches[0].clientX - e.touches[1].clientX;
+                var dy = e.touches[0].clientY - e.touches[1].clientY;
+                touchStartDist = Math.sqrt(dx * dx + dy * dy);
+                touchStartScale = msciZoomState.scale;
+            } else if (e.touches.length === 1 && msciZoomState.scale > 1) {
+                // Single-finger drag when zoomed
+                isTouchDragging = true;
+                touchLastX = e.touches[0].clientX;
+                touchLastY = e.touches[0].clientY;
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchmove', function(e) {
+            var img = document.getElementById('msci-image');
+            if (!img) return;
+
+            if (e.touches.length === 2) {
+                // Pinch zoom
+                e.preventDefault();
+                var dx = e.touches[0].clientX - e.touches[1].clientX;
+                var dy = e.touches[0].clientY - e.touches[1].clientY;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                var newScale = Math.max(1, Math.min(5, touchStartScale * (dist / touchStartDist)));
+
+                if (newScale <= 1.05) {
+                    resetMsciZoom();
+                    return;
+                }
+
+                var rect = container.getBoundingClientRect();
+                var cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) / rect.width;
+                var cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top) / rect.height;
+                var translateX = (0.5 - cx) * 100 * (newScale - 1);
+                var translateY = (0.5 - cy) * 100 * (newScale - 1);
+
+                msciZoomState = { zoomed: true, scale: newScale, translateX: translateX, translateY: translateY };
+                img.style.transform = 'scale(' + newScale + ') translate(' + translateX + '%, ' + translateY + '%)';
+            } else if (e.touches.length === 1 && isTouchDragging) {
+                // Single-finger pan
+                e.preventDefault();
+                var tdx = (e.touches[0].clientX - touchLastX) / msciZoomState.scale;
+                var tdy = (e.touches[0].clientY - touchLastY) / msciZoomState.scale;
+                touchLastX = e.touches[0].clientX;
+                touchLastY = e.touches[0].clientY;
+
+                msciZoomState.translateX += tdx * 0.5;
+                msciZoomState.translateY += tdy * 0.5;
+                img.style.transform = 'scale(' + msciZoomState.scale + ') translate(' + msciZoomState.translateX + '%, ' + msciZoomState.translateY + '%)';
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchend', function() {
+            isTouchDragging = false;
+            touchStartDist = 0;
         });
     }
 
