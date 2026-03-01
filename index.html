@@ -12166,11 +12166,36 @@ function updateFixkostenItem(index, key, value) {
             n.style.background = '#ffffff';
             n.style.border = '1px solid #BEB6AA';
           });
-          // SVG: Mask entfernen (url(#flow-mask) Referenz ist im Klon nicht eindeutig)
+          // SVG Print-Fix: Duplikat-IDs verhindern korrekte url()-Referenzen im Klon.
+          // Lösung: Mask + Erase entfernen, computed Stroke-Farben inline setzen.
+          // (Gleicher Ansatz wie svgToPngDataUrl())
           var cloneVisuals = clone.querySelector('#flow-visuals');
           if (cloneVisuals) cloneVisuals.removeAttribute('mask');
-          // SVG: Erase-Pfade entfernen (breit + dunkel sichtbar, auf weißem Print unnötig)
           clone.querySelectorAll('.flow-erase').forEach(function(n) { n.remove(); });
+          // Animationen + Dots entfernen (sinnlos im Print, verdecken Flows)
+          clone.querySelectorAll('.flow-path-animation').forEach(function(n) { n.remove(); });
+          clone.querySelectorAll('[id$="-dot"]').forEach(function(n) { n.remove(); });
+          // Computed Stroke-Farben vom Live-SVG auf Klon-Pfade übertragen
+          // (url(#flow-gradient) löst im Klon zum falschen Element auf → Duplikat-ID)
+          var liveSvg = live.querySelector('.flow-svg');
+          var cloneSvg = clone.querySelector('.flow-svg');
+          if (liveSvg && cloneSvg) {
+            var livePaths = liveSvg.querySelectorAll('.flow-path');
+            var clonePaths = cloneSvg.querySelectorAll('.flow-path');
+            clonePaths.forEach(function(cp, i) {
+              var lp = livePaths[i];
+              if (!lp) return;
+              var cs = getComputedStyle(lp);
+              if (cs.stroke && cs.stroke !== 'none') {
+                cp.setAttribute('stroke', cs.stroke);
+                cp.style.stroke = cs.stroke;
+              }
+              if (cs.strokeWidth) cp.setAttribute('stroke-width', cs.strokeWidth);
+              // Sichtbarkeit sicherstellen
+              cp.style.opacity = '1';
+              cp.classList.add('active');
+            });
+          }
 
           // v1.7.8-Methode: Deterministische Größe, CSS macht die Skalierung
           const cs = getComputedStyle(live);
