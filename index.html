@@ -12155,48 +12155,16 @@ function updateFixkostenItem(index, key, value) {
           // no-print Elemente entfernen (Mobile Warning etc.)
           clone.querySelectorAll('.no-print').forEach(n => n.remove());
 
-          // --- v2.0 Print-Optimierungen für den DOM-Klon ---
+          // --- v2.0: Nur minimale Print-Anpassungen, CSS regelt den Rest ---
 
-          // SVG-Mask entfernen: url(#flow-mask) löst im Print-Klon nicht auf
-          // → macht ALLE Flows unsichtbar! (Gleicher Fix wie in svgToPngDataUrl)
-          var flowVisuals = clone.querySelector('#flow-visuals');
-          if (flowVisuals) flowVisuals.removeAttribute('mask');
-
-          // Gradient-Zonen und Ambient-Glows entfernen (Screen-only Dekoration)
+          // v2.0-Dekorationen entfernen (existieren nicht in v1)
           clone.querySelectorAll('.gradient-zone, .ambient-glow').forEach(n => n.remove());
-
-          // Basins: Glasmorphism durch solide Hintergründe ersetzen
+          // Basins: Glasmorphism → solide (backdrop-filter druckt nicht)
           clone.querySelectorAll('.account-basin').forEach(n => {
             n.style.backdropFilter = 'none';
             n.style.webkitBackdropFilter = 'none';
             n.style.background = '#ffffff';
             n.style.border = '1px solid #BEB6AA';
-          });
-
-          // Flow-Animationen + Dots komplett entfernen (nicht druckbar)
-          clone.querySelectorAll('.flow-path-animation').forEach(n => n.remove());
-          clone.querySelectorAll('animateMotion').forEach(n => n.parentNode.remove());
-
-          // Erase-Pfade ENTFERNEN: Im Print kein Gradient-BG → Eraser nicht nötig
-          // und sie verdecken sonst die Flow-Pfade darunter!
-          clone.querySelectorAll('.flow-erase').forEach(function(n) {
-            n.remove();
-          });
-
-          // Flow-Pfade: Feste Farbe statt url(#flow-gradient) das im Klon nicht auflöst
-          clone.querySelectorAll('.flow-path').forEach(function(n) {
-            n.setAttribute('stroke', '#1a6a8a');  // Light-Mode Flow-Blau
-            n.style.opacity = n.classList.contains('active') ? '1' : '0';
-          });
-
-          // Flow-Labels + Values: Inline-Styles (CSS-Vars greifen nicht im Klon)
-          clone.querySelectorAll('.flow-value').forEach(function(n) {
-            n.style.background = '#ffffff';
-            n.style.color = '#2B2B2B';
-            n.style.border = '1px solid #BEB6AA';
-          });
-          clone.querySelectorAll('.flow-label').forEach(function(n) {
-            n.style.color = '#717171';
           });
 
           // v1.7.8-Methode: Deterministische Größe, CSS macht die Skalierung
