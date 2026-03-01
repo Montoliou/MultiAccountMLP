@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MLP v2.0 Design Token Preview</title>
+    <title>MLP v2.0 Design-Overhaul — Projekt-Dashboard</title>
     <style>
         :root {
             --mlp-primary: #033D5D;
@@ -11,612 +11,570 @@
             --mlp-accent: #47A190;
             --mlp-text-dark: #2B2B2B;
             --mlp-text-medium: #717171;
-            --mlp-text-light: #FFFFFF;
-            --mlp-bg-white: #FFFFFF;
-            --mlp-bg-gray: #F8F8F8;
-            --mlp-info: #047584;
             --mlp-success: #13853E;
             --mlp-warning: #E3691E;
             --mlp-error: #C1293D;
-            --shadow-subtle: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-            --shadow-elevated: 0 4px 12px rgba(0,0,0,0.15);
-            --radius-sm: 4px;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-            --font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: var(--font-family);
-            background: var(--mlp-bg-gray);
+            font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(180deg, #eaf2fa 0%, #f0f2f6 30%, #f4f2ee 65%, #e3dbd0 100%);
+            min-height: 100vh;
             color: var(--mlp-text-dark);
-            padding: 48px;
-            line-height: 1.6;
+            padding: 40px 20px;
         }
 
-        h1 { font-size: 32px; color: var(--mlp-primary); margin-bottom: 8px; }
-        h2 { font-size: 24px; color: var(--mlp-primary); margin-bottom: 16px; margin-top: 48px; }
-        h3 { font-size: 20px; color: var(--mlp-text-dark); margin-bottom: 16px; }
-        p.subtitle { font-size: 16px; color: var(--mlp-text-medium); margin-bottom: 32px; }
+        .container { max-width: 1200px; margin: 0 auto; }
 
-        .section { margin-bottom: 48px; }
-
-        /* === Color Swatches === */
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 16px;
+        /* Header */
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 48px;
         }
-        .swatch {
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            box-shadow: var(--shadow-subtle);
-            background: white;
+        .dashboard-header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--mlp-primary);
+            letter-spacing: -0.02em;
         }
-        .swatch-color {
-            height: 80px;
-            display: flex;
-            align-items: flex-end;
-            padding: 8px 12px;
+        .dashboard-header .subtitle {
+            font-size: 16px;
+            color: var(--mlp-text-medium);
+            margin-top: 8px;
         }
-        .swatch-color span {
-            font-size: 12px;
+        .dashboard-header .version-badge {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: 700;
+            background: rgba(3,61,93,0.08);
+            color: var(--mlp-primary);
             letter-spacing: 0.5px;
+        }
+        .last-updated {
+            font-size: 12px;
+            color: var(--mlp-text-medium);
+            margin-top: 8px;
+        }
+
+        /* Overall Progress */
+        .overall-progress {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.6);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(3,61,93,0.08);
+        }
+        .overall-progress h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--mlp-text-medium);
+            margin-bottom: 12px;
+        }
+        .progress-bar-outer {
+            height: 12px;
+            background: rgba(190,182,170,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--mlp-primary), var(--mlp-accent));
+            transition: width 0.6s ease;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--mlp-text-medium);
+        }
+        .progress-label strong { color: var(--mlp-primary); font-size: 18px; }
+
+        /* Phase Cards */
+        .phases { display: flex; flex-direction: column; gap: 20px; }
+
+        .phase-card {
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.6);
+            border-radius: 16px;
+            padding: 24px 28px;
+            box-shadow: 0 8px 32px rgba(3,61,93,0.06);
+            transition: all 0.3s ease;
+        }
+        .phase-card:hover {
+            box-shadow: 0 12px 40px rgba(3,61,93,0.1);
+            transform: translateY(-2px);
+        }
+
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .phase-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .phase-number.done { background: rgba(19,133,62,0.12); color: var(--mlp-success); }
+        .phase-number.active { background: rgba(3,61,93,0.12); color: var(--mlp-primary); }
+        .phase-number.pending { background: rgba(190,182,170,0.15); color: var(--mlp-secondary); }
+
+        .phase-title { font-size: 18px; font-weight: 700; color: var(--mlp-primary); }
+        .phase-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 2px;
+        }
+        .phase-status {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .status-done { background: rgba(19,133,62,0.1); color: var(--mlp-success); }
+        .status-active { background: rgba(3,61,93,0.1); color: var(--mlp-primary); }
+        .status-pending { background: rgba(190,182,170,0.15); color: var(--mlp-text-medium); }
+        .status-blocked { background: rgba(193,41,61,0.1); color: var(--mlp-error); }
+
+        .priority-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .prio-high { background: rgba(227,105,30,0.1); color: var(--mlp-warning); }
+        .prio-medium { background: rgba(71,161,144,0.1); color: var(--mlp-accent); }
+        .prio-low { background: rgba(190,182,170,0.15); color: var(--mlp-text-medium); }
+
+        /* Phase Progress */
+        .phase-progress {
+            height: 6px;
+            background: rgba(190,182,170,0.15);
+            border-radius: 3px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .phase-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+        .fill-done { background: var(--mlp-success); }
+        .fill-active { background: linear-gradient(90deg, var(--mlp-primary), var(--mlp-accent)); }
+        .fill-pending { background: var(--mlp-secondary); }
+
+        /* Task List */
+        .task-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 4px 0;
+        }
+        .task-icon {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            margin-top: 1px;
+        }
+        .task-done .task-icon { background: rgba(19,133,62,0.12); color: var(--mlp-success); }
+        .task-open .task-icon { background: rgba(190,182,170,0.15); color: var(--mlp-secondary); }
+        .task-active .task-icon { background: rgba(3,61,93,0.12); color: var(--mlp-primary); }
+        .task-done .task-text { color: var(--mlp-text-medium); }
+        .task-open .task-text { color: var(--mlp-text-dark); }
+        .task-active .task-text { color: var(--mlp-primary); font-weight: 600; }
+
+        /* Theme Catalog */
+        .theme-catalog {
+            margin-top: 40px;
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.6);
+            border-radius: 16px;
+            padding: 24px 28px;
+            box-shadow: 0 8px 32px rgba(3,61,93,0.06);
+        }
+        .theme-catalog h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--mlp-primary);
+            margin-bottom: 16px;
+        }
+        .theme-swatches { display: flex; gap: 16px; flex-wrap: wrap; }
+        .theme-swatch {
+            flex: 1;
+            min-width: 240px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(190,182,170,0.3);
+        }
+        .swatch-gradient {
+            height: 80px;
+            position: relative;
+        }
+        .swatch-gradient .swatch-name {
+            position: absolute;
+            bottom: 8px;
+            left: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
         .swatch-info {
             padding: 12px;
-        }
-        .swatch-info .name { font-size: 14px; font-weight: 600; color: var(--mlp-text-dark); }
-        .swatch-info .hex { font-size: 13px; color: var(--mlp-text-medium); font-family: ui-monospace, monospace; }
-        .swatch-info .usage { font-size: 12px; color: var(--mlp-text-medium); margin-top: 4px; }
-
-        /* === Buttons === */
-        .btn-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-
-        .mlp-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-family: var(--font-family);
-            font-weight: 600;
-            font-size: 16px;
-            min-height: 44px;
-            padding: 12px 24px;
-            border-radius: var(--radius-sm);
-            border: none;
-            cursor: pointer;
-            transition: all 0.25s ease;
-        }
-        .mlp-btn:focus-visible { outline: 2px solid var(--mlp-primary); outline-offset: 2px; }
-
-        .mlp-btn-primary { background: var(--mlp-primary); color: var(--mlp-text-light); }
-        .mlp-btn-primary:hover { filter: brightness(1.15); box-shadow: var(--shadow-subtle); }
-
-        .mlp-btn-secondary { background: var(--mlp-secondary); color: var(--mlp-text-dark); }
-        .mlp-btn-secondary:hover { filter: brightness(0.9); }
-
-        .mlp-btn-tertiary { background: var(--mlp-bg-white); color: var(--mlp-primary); border: 1px solid var(--mlp-primary); }
-        .mlp-btn-tertiary:hover { background: var(--mlp-primary); color: var(--mlp-text-light); }
-
-        .mlp-btn-danger { background: var(--mlp-error); color: var(--mlp-text-light); }
-        .mlp-btn-danger:hover { filter: brightness(1.1); }
-
-        .mlp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* === Cards === */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
-
-        .mlp-card {
-            background: var(--mlp-bg-white);
-            border: 1px solid var(--mlp-secondary);
-            border-radius: var(--radius-md);
-            padding: 24px;
-        }
-        .mlp-card--elevated {
-            background: var(--mlp-bg-white);
-            border: none;
-            border-radius: var(--radius-md);
-            padding: 24px;
-            box-shadow: var(--shadow-elevated);
-        }
-        .mlp-card h3 { margin-bottom: 8px; }
-        .mlp-card p { font-size: 14px; color: var(--mlp-text-medium); }
-        .card-value { font-size: 28px; font-weight: 700; color: var(--mlp-primary); margin: 16px 0 8px; }
-        .card-label { font-size: 14px; color: var(--mlp-text-medium); }
-
-        /* === Inputs === */
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        .input-group label { font-size: 14px; font-weight: 600; color: var(--mlp-text-dark); }
-
-        .mlp-input {
-            font-family: var(--font-family);
-            font-size: 16px;
-            min-height: 44px;
-            padding: 8px 16px;
-            border: 1px solid var(--mlp-secondary);
-            border-radius: var(--radius-sm);
-            background: var(--mlp-bg-white);
-            color: var(--mlp-text-dark);
-            outline: none;
-            transition: border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .mlp-input:hover { border-color: var(--mlp-primary); }
-        .mlp-input:focus { border-color: var(--mlp-primary); box-shadow: 0 0 0 2px rgba(3, 61, 93, 0.15); }
-        .mlp-input::placeholder { color: var(--mlp-text-medium); }
-
-        /* === Slider === */
-        .mlp-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: var(--mlp-secondary);
-            outline: none;
-        }
-        .mlp-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--mlp-primary);
-            cursor: pointer;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-        .mlp-slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--mlp-primary);
-            cursor: pointer;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-
-        /* === Lesson Box === */
-        .lesson-box {
-            border-left: 4px solid var(--mlp-secondary);
-            background: var(--mlp-bg-white);
-            padding: 16px 24px;
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-            margin-top: 24px;
-        }
-        .lesson-box strong { color: var(--mlp-primary); }
-
-        /* === Tab Navigation === */
-        .tab-nav { display: flex; gap: 8px; margin-bottom: 24px; }
-        .tab-btn {
-            font-family: var(--font-family);
-            font-size: 14px;
-            font-weight: 600;
-            padding: 8px 20px;
-            border: 2px solid var(--mlp-secondary);
-            border-radius: var(--radius-sm);
-            background: var(--mlp-bg-white);
-            color: var(--mlp-text-medium);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .tab-btn:hover { border-color: var(--mlp-primary); color: var(--mlp-primary); }
-        .tab-btn.active {
-            background: var(--mlp-primary);
-            border-color: var(--mlp-primary);
-            color: var(--mlp-text-light);
-        }
-
-        /* === Status Badges === */
-        .badge-row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-        .badge-success { background: rgba(19, 133, 62, 0.1); color: var(--mlp-success); }
-        .badge-warning { background: rgba(227, 105, 30, 0.1); color: var(--mlp-warning); }
-        .badge-error { background: rgba(193, 41, 61, 0.1); color: var(--mlp-error); }
-        .badge-info { background: rgba(4, 117, 132, 0.1); color: var(--mlp-info); }
-        .badge-accent { background: rgba(71, 161, 144, 0.1); color: var(--mlp-accent); }
-
-        /* === Basin Preview === */
-        .basin-preview {
-            display: flex;
-            gap: 24px;
-            flex-wrap: wrap;
-            align-items: flex-start;
-        }
-        .basin {
-            width: 220px;
-            height: 140px;
-            background: var(--mlp-bg-white);
-            border: 1px solid var(--mlp-secondary);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: var(--shadow-subtle);
-            text-align: center;
-            padding: 16px;
-        }
-        .basin-title { font-size: 11px; font-weight: 700; color: var(--mlp-primary); text-transform: uppercase; letter-spacing: 0.5px; }
-        .basin-value { font-size: 22px; font-weight: 700; color: var(--mlp-primary); margin-top: 8px; }
-        .basin-sub { font-size: 12px; color: var(--mlp-text-medium); margin-top: 4px; }
-
-        .flow-arrow {
-            display: flex;
-            align-items: center;
-            color: var(--mlp-primary);
-            font-size: 24px;
-            padding-top: 40px;
-        }
-
-        /* === Typography Preview === */
-        .typo-row { margin-bottom: 16px; }
-        .typo-row .meta { font-size: 12px; color: var(--mlp-text-medium); font-family: ui-monospace, monospace; margin-top: 4px; }
-
-        /* === Gradient Preview === */
-        .gradient-preview {
-            height: 200px;
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            position: relative;
-            box-shadow: var(--shadow-elevated);
-        }
-        .gradient-sky {
-            position: absolute; inset: 0;
-            background: linear-gradient(to bottom,
-                rgba(3, 61, 93, 0.08) 0%,
-                rgba(71, 161, 144, 0.06) 30%,
-                rgba(190, 182, 170, 0.04) 60%,
-                rgba(248, 248, 248, 0.02) 100%
-            );
-        }
-        .gradient-label {
-            position: absolute;
-            right: 16px;
+            background: rgba(255,255,255,0.9);
             font-size: 12px;
             color: var(--mlp-text-medium);
-            font-style: italic;
         }
+        .swatch-info .swatch-status {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .swatch-approved { background: rgba(19,133,62,0.1); color: var(--mlp-success); }
+        .swatch-rejected { background: rgba(193,41,61,0.1); color: var(--mlp-error); }
 
-        hr { border: none; border-top: 1px solid var(--mlp-secondary); margin: 48px 0; }
+        /* Commit Log */
+        .commit-log {
+            margin-top: 40px;
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.6);
+            border-radius: 16px;
+            padding: 24px 28px;
+            box-shadow: 0 8px 32px rgba(3,61,93,0.06);
+        }
+        .commit-log h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--mlp-primary);
+            margin-bottom: 16px;
+        }
+        .commit-entry {
+            display: flex;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(190,182,170,0.1);
+            font-size: 13px;
+        }
+        .commit-entry:last-child { border-bottom: none; }
+        .commit-hash {
+            font-family: "Courier New", monospace;
+            font-size: 12px;
+            color: var(--mlp-accent);
+            flex-shrink: 0;
+        }
+        .commit-msg { color: var(--mlp-text-dark); }
 
-        /* Dark Mode Preview */
-        .dark-preview {
-            background: #111827;
-            border-radius: var(--radius-lg);
-            padding: 32px;
-            color: #FFFFFF;
+        @media (max-width: 768px) {
+            body { padding: 20px 12px; }
+            .phase-card { padding: 16px; }
+            .theme-swatches { flex-direction: column; }
         }
-        .dark-preview h3 { color: #FFFFFF; }
-        .dark-preview .basin {
-            background: #1f2937;
-            border-color: #374151;
-            color: #FFFFFF;
-        }
-        .dark-preview .basin-title { color: var(--mlp-accent); }
-        .dark-preview .basin-value { color: #FFFFFF; }
-        .dark-preview .basin-sub { color: #9ca3af; }
     </style>
 </head>
 <body>
+    <div class="container">
 
-    <h1>MLP v2.0 Design System Preview</h1>
-    <p class="subtitle">CSS Design Tokens nach MLP Corporate Design Guide — Arial, 8px Grid, Light-First</p>
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1>v2.0 Design-Overhaul</h1>
+            <div class="subtitle">MultiAccountMLP — Projekt-Dashboard</div>
+            <div class="version-badge">BRANCH: v2.0-design</div>
+            <div class="last-updated">Letzte Aktualisierung: 1. März 2026</div>
+        </div>
 
-    <!-- COLORS -->
-    <div class="section">
-        <h2>Farbpalette</h2>
-
-        <h3>Brand-Farben</h3>
-        <div class="color-grid">
-            <div class="swatch">
-                <div class="swatch-color" style="background: #033D5D;"><span style="color: white;">PRIMARY</span></div>
-                <div class="swatch-info">
-                    <div class="name">MLP Blau Dark</div>
-                    <div class="hex">#033D5D</div>
-                    <div class="usage">Headings, Buttons, Links</div>
-                </div>
+        <!-- Overall Progress -->
+        <div class="overall-progress">
+            <h2>Gesamtfortschritt</h2>
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" style="width: 52%;"></div>
             </div>
-            <div class="swatch">
-                <div class="swatch-color" style="background: #BEB6AA;"><span style="color: #2B2B2B;">SECONDARY</span></div>
-                <div class="swatch-info">
-                    <div class="name">Titanium</div>
-                    <div class="hex">#BEB6AA</div>
-                    <div class="usage">Borders, Dividers, Slider-Track</div>
-                </div>
+            <div class="progress-label">
+                <span>7 Phasen</span>
+                <strong>~52%</strong>
             </div>
-            <div class="swatch">
-                <div class="swatch-color" style="background: #47A190;"><span style="color: white;">ACCENT</span></div>
-                <div class="swatch-info">
-                    <div class="name">Turkis</div>
-                    <div class="hex">#47A190</div>
-                    <div class="usage">Highlights, Erfolg, Badges</div>
+        </div>
+
+        <!-- Phases -->
+        <div class="phases">
+
+            <!-- Phase 1 -->
+            <div class="phase-card">
+                <div class="phase-header">
+                    <div class="phase-number done">1</div>
+                    <div>
+                        <div class="phase-title">Design-System Foundation</div>
+                        <div class="phase-meta">
+                            <span class="phase-status status-done">Erledigt</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-done" style="width: 95%;"></div></div>
+                <ul class="task-list">
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Google Fonts entfernt (Inter → Arial Systemfont)</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">2 konfligierende :root → 1 autoritativer Block mit MLP Design Tokens</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Theme-Klassen: .theme-light / .theme-dark mit semantischen Tokens</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Light-Theme als Default (war Dark)</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Backwards-Aliases (100+ var()-Referenzen kompatibel)</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Dark-Mode: MLP-Navy statt Slate-Grau</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">--accent1 im Dark = #7db8d4 (MLP-Blau lesbar auf dunklem Grund)</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">~28 inline style="color: #033D5D" in JS-generiertem HTML → Phase 7</span></li>
+                </ul>
+            </div>
+
+            <!-- Phase 2 -->
+            <div class="phase-card">
+                <div class="phase-header">
+                    <div class="phase-number done">2</div>
+                    <div>
+                        <div class="phase-title">Globale Komponenten-Styles</div>
+                        <div class="phase-meta">
+                            <span class="phase-status status-done">Komponenten fertig</span>
+                            <span class="priority-badge prio-low">Migration → Phase 7</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-done" style="width: 80%;"></div></div>
+                <ul class="task-list">
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">.mlp-btn-primary / secondary / tertiary / danger definiert</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">.mlp-input-field-v2 definiert & in Fixkosten/Depot genutzt</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">.mlp-range Slider definiert</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">.mlp-card / .mlp-glass Klassen definiert</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Dark-Mode Varianten für alle Komponenten</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Alte Buttons/Inputs auf neue Klassen migrieren (niedrige Prio)</span></li>
+                </ul>
+            </div>
+
+            <!-- Phase 3 -->
+            <div class="phase-card">
+                <div class="phase-header">
+                    <div class="phase-number active">3</div>
+                    <div>
+                        <div class="phase-title">App-Chrome Redesign</div>
+                        <div class="phase-meta">
+                            <span class="phase-status status-active">In Arbeit</span>
+                            <span class="priority-badge prio-high">Hohe Prio</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-active" style="width: 40%;"></div></div>
+                <ul class="task-list">
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Session-Start/End Modals: Glasmorphism + Theme-Tokens</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Session-Modals: Headings mit var(--accent1) statt statischem MLP-Blau</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Header / Control Bar: Varianten-Toggle A|B Premium-styled</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Beratungsmodus-Stepper: MLP-Farben für Steps</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Session-Menü: Glasmorphism beibehalten, MLP-Farben</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Sidebar / Einstellungs-Panel: MLP-styled Toggles</span></li>
+                </ul>
+            </div>
+
+            <!-- Phase 4 -->
+            <div class="phase-card">
+                <div class="phase-header">
+                    <div class="phase-number active">4</div>
+                    <div>
+                        <div class="phase-title">Basin & Flow Redesign</div>
+                        <div class="phase-meta">
+                            <span class="phase-status status-active">Teilweise erledigt</span>
+                            <span class="priority-badge prio-medium">Mittlere Prio</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-active" style="width: 65%;"></div></div>
+                <ul class="task-list">
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Basins: Glasmorphism (backdrop-filter blur, halbtransparent)</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Basins: Hover-Elevation (translateY, stärkere Shadow)</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Flows: Weicheres MLP-Blau (#1a6a8a → #2a7a9a) auf Light</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Flow-Labels: Glasmorphischer Hintergrund</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Gradient-Zonen: "Warm Sky" (Light) + "MLP Navy" (Dark)</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Keine Horizontlinie, alle Zonen fade to transparent</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Ambient Glows: Subtile Lichtpunkte für Tiefe</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Basin-Labels: Konsistente Farben für Werte/Überschriften</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Flow-Labels: Positionierung & Lesbarkeit optimieren</span></li>
+                </ul>
+            </div>
+
+            <!-- Phase 5 -->
+            <div class="phase-card">
+                <div class="phase-header">
+                    <div class="phase-number active">5</div>
+                    <div>
+                        <div class="phase-title">Erklärer-Modals vereinheitlichen</div>
+                        <div class="phase-meta">
+                            <span class="phase-status status-active">Teilweise erledigt</span>
+                            <span class="priority-badge prio-medium">Mittlere Prio</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-active" style="width: 50%;"></div></div>
+                <ul class="task-list">
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Anleihen-Modal: Dark-Mode-tauglich, SVG-Text theme-aware</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">SoRR-Modal: Chart theme-aware (Achsen, Grid, Labels)</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Cost-Average: Charts + Karten theme-aware</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Fixkosten-Modal: Depot-Style Grid, FK/SP Badges, € Suffix</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">"Warum Tagesgeld?" → depot-erklaerer-btn Style</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Einheitlicher Tab-Style über alle Erklärer-Modals</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Lesson-Boxes: Konsistenter MLP-Style (BEB6AA border)</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">MSCI-Renditedreieck: Farbgebung prüfen</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Immobilien-Modal: MLP-styled Formulare</span></li>
+                </ul>
+            </div>
+
+            <!-- Phase 6 -->
+            <div class="phase-card">
+                <div class="phase-header">
+                    <div class="phase-number pending">6</div>
+                    <div>
+                        <div class="phase-title">Export & Print</div>
+                        <div class="phase-meta">
+                            <span class="phase-status status-pending">Nicht begonnen</span>
+                            <span class="priority-badge prio-low">Niedrige Prio</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-pending" style="width: 0%;"></div></div>
+                <ul class="task-list">
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">PDF-Export: MLP-Branding (Logo/Textmarke, Blau-Überschriften)</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Print-Stylesheet: @media print mit MLP-Farben</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Titanium Trennlinien, professionelle Tabellen</span></li>
+                </ul>
+            </div>
+
+            <!-- Phase 7 -->
+            <div class="phase-card">
+                <div class="phase-header">
+                    <div class="phase-number pending">7</div>
+                    <div>
+                        <div class="phase-title">Architektur-Entschuldung</div>
+                        <div class="phase-meta">
+                            <span class="phase-status status-pending">Optional</span>
+                            <span class="priority-badge prio-low">Niedrige Prio</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-pending" style="width: 0%;"></div></div>
+                <ul class="task-list">
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">CSS in separate styles.css extrahieren</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Inline-Styles durch CSS-Klassen ersetzen (~28 JS-Stellen)</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Alte Buttons/Inputs auf .mlp-btn-* migrieren</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Tailwind-Dependencies evaluieren (behalten vs. entfernen)</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Console.log Cleanup, Namenskonventionen</span></li>
+                </ul>
+            </div>
+
+        </div>
+
+        <!-- Theme Catalog -->
+        <div class="theme-catalog">
+            <h2>Farbthemen-Katalog</h2>
+            <div class="theme-swatches">
+                <div class="theme-swatch">
+                    <div class="swatch-gradient" style="background: linear-gradient(180deg, #eaf2fa 0%, #f0f2f6 40%, #e3dbd0 100%);">
+                        <span class="swatch-name" style="color: var(--mlp-primary);">Warm Sky</span>
+                    </div>
+                    <div class="swatch-info">
+                        <span class="swatch-status swatch-approved">Aktiv</span>
+                        &nbsp; Light-Theme — Himmelblau → Platin/Titanium
+                        <br><code style="font-size:11px;">#eaf2fa → #f0f2f6 → #e3dbd0</code>
+                    </div>
+                </div>
+                <div class="theme-swatch">
+                    <div class="swatch-gradient" style="background: linear-gradient(180deg, #0e1c2b 0%, #18293a 50%, #0e1c2b 100%);">
+                        <span class="swatch-name" style="color: #ede9e3;">MLP Navy</span>
+                    </div>
+                    <div class="swatch-info">
+                        <span class="swatch-status swatch-approved">Aktiv</span>
+                        &nbsp; Dark-Theme — MLP-Navy, kein Slate-Grau
+                        <br><code style="font-size:11px;">#0e1c2b → #18293a → #2d4256</code>
+                    </div>
+                </div>
+                <div class="theme-swatch">
+                    <div class="swatch-gradient" style="background: linear-gradient(180deg, #e8f4fd 0%, #f8f8f6 40%, #d6ebe7 100%); opacity: 0.5;">
+                        <span class="swatch-name" style="color: #999;">Türkis/Aqua</span>
+                    </div>
+                    <div class="swatch-info">
+                        <span class="swatch-status swatch-rejected">Abgelehnt</span>
+                        &nbsp; Zu MLP-Med, Türkis großflächig = klinisch
+                    </div>
                 </div>
             </div>
         </div>
 
-        <h3 style="margin-top: 32px;">Text & Hintergrund</h3>
-        <div class="color-grid">
-            <div class="swatch">
-                <div class="swatch-color" style="background: #2B2B2B;"><span style="color: white;">TEXT DARK</span></div>
-                <div class="swatch-info">
-                    <div class="name">Text Dark</div>
-                    <div class="hex">#2B2B2B</div>
-                    <div class="usage">Body Text (NIE #000!)</div>
-                </div>
+        <!-- Recent Commits -->
+        <div class="commit-log">
+            <h2>Letzte Commits (v2.0-design)</h2>
+            <div class="commit-entry">
+                <span class="commit-hash">41a0f4d</span>
+                <span class="commit-msg">fix: MLP Navy Dark-Zonen — blauen Balken entfernt, Tagesgeld-Button dezent</span>
             </div>
-            <div class="swatch">
-                <div class="swatch-color" style="background: #717171;"><span style="color: white;">TEXT MEDIUM</span></div>
-                <div class="swatch-info">
-                    <div class="name">Text Medium</div>
-                    <div class="hex">#717171</div>
-                    <div class="usage">Labels, Metadata</div>
-                </div>
+            <div class="commit-entry">
+                <span class="commit-hash">0d94ad9</span>
+                <span class="commit-msg">fix: Gradient-Zone 1 Unterkante — fade to transparent statt harte Linie</span>
             </div>
-            <div class="swatch">
-                <div class="swatch-color" style="background: #F8F8F8; border: 1px solid #BEB6AA;"><span style="color: #717171;">BG GRAY</span></div>
-                <div class="swatch-info">
-                    <div class="name">Background Gray</div>
-                    <div class="hex">#F8F8F8</div>
-                    <div class="usage">Sections, Cards</div>
-                </div>
+            <div class="commit-entry">
+                <span class="commit-hash">691a13d</span>
+                <span class="commit-msg">fix: "Warm Sky" Theme — Horizont entfernt, Erde kräftiger, Flows weicher</span>
+            </div>
+            <div class="commit-entry">
+                <span class="commit-hash">9ac11a0</span>
+                <span class="commit-msg">feat: Light-Theme Glasmorphism + Sky-to-Water Background + Fixkosten Depot-Style</span>
+            </div>
+            <div class="commit-entry">
+                <span class="commit-hash">c3d6747</span>
+                <span class="commit-msg">fix: Anleihen Inverse/Equity — weiße Flächen + SVG-Text Dark-aware</span>
+            </div>
+            <div class="commit-entry">
+                <span class="commit-hash">d51a45a</span>
+                <span class="commit-msg">fix: --accent1 im Dark = #7db8d4 — Headings endlich lesbar</span>
+            </div>
+            <div class="commit-entry">
+                <span class="commit-hash">5002e17</span>
+                <span class="commit-msg">fix: Glasmorphism + alle Charts/Buttons Dark-Mode-tauglich</span>
+            </div>
+            <div class="commit-entry">
+                <span class="commit-hash">a90025d</span>
+                <span class="commit-msg">refactor: Design-System Konsolidierung — einheitliche Theme-Bridge</span>
+            </div>
+            <div class="commit-entry">
+                <span class="commit-hash">aa3b795</span>
+                <span class="commit-msg">refactor: Design-Foundations — MLP-Navy Dark-Tokens, Modal-Cleanup</span>
+            </div>
+            <div class="commit-entry">
+                <span class="commit-hash">32f51d2</span>
+                <span class="commit-msg">fix: Cost-Average Karten — subtilere Borders, theme-aware Innenflächen</span>
             </div>
         </div>
 
-        <h3 style="margin-top: 32px;">Funktionale Farben (nur semantisch!)</h3>
-        <div class="color-grid">
-            <div class="swatch">
-                <div class="swatch-color" style="background: #047584;"><span style="color: white;">INFO</span></div>
-                <div class="swatch-info">
-                    <div class="name">Information</div>
-                    <div class="hex">#047584</div>
-                </div>
-            </div>
-            <div class="swatch">
-                <div class="swatch-color" style="background: #13853E;"><span style="color: white;">SUCCESS</span></div>
-                <div class="swatch-info">
-                    <div class="name">Erfolg</div>
-                    <div class="hex">#13853E</div>
-                </div>
-            </div>
-            <div class="swatch">
-                <div class="swatch-color" style="background: #E3691E;"><span style="color: white;">WARNING</span></div>
-                <div class="swatch-info">
-                    <div class="name">Warnung</div>
-                    <div class="hex">#E3691E</div>
-                </div>
-            </div>
-            <div class="swatch">
-                <div class="swatch-color" style="background: #C1293D;"><span style="color: white;">ERROR</span></div>
-                <div class="swatch-info">
-                    <div class="name">Fehler</div>
-                    <div class="hex">#C1293D</div>
-                </div>
-            </div>
-        </div>
     </div>
-
-    <hr>
-
-    <!-- TYPOGRAPHY -->
-    <div class="section">
-        <h2>Typografie</h2>
-        <div class="typo-row">
-            <div style="font-size: 32px; font-weight: 700; color: #033D5D;">Vermogensaufbau-Kaskade</div>
-            <div class="meta">H1 — 32px / Bold / MLP Blau Dark</div>
-        </div>
-        <div class="typo-row">
-            <div style="font-size: 24px; font-weight: 700; color: #033D5D;">Depot-Aufteilung</div>
-            <div class="meta">H2 — 24px / Bold / MLP Blau Dark</div>
-        </div>
-        <div class="typo-row">
-            <div style="font-size: 20px; font-weight: 600; color: #2B2B2B;">Monatliche Fixkosten</div>
-            <div class="meta">H3 — 20px / Semibold / Text Dark</div>
-        </div>
-        <div class="typo-row">
-            <div style="font-size: 16px; color: #2B2B2B;">Ihr aktuelles Netto-Einkommen betragt 4.500 EUR. Davon fliessen 1.200 EUR in Fixkosten und 800 EUR in den Konsum.</div>
-            <div class="meta">Body — 16px / Regular / Text Dark</div>
-        </div>
-        <div class="typo-row">
-            <div style="font-size: 14px; color: #717171;">Letzte Aktualisierung: 24.02.2026 | Session #MLP-2026-0042</div>
-            <div class="meta">Small — 14px / Regular / Text Medium</div>
-        </div>
-    </div>
-
-    <hr>
-
-    <!-- BUTTONS -->
-    <div class="section">
-        <h2>Buttons</h2>
-        <div class="btn-row">
-            <button class="mlp-btn mlp-btn-primary">Primary Button</button>
-            <button class="mlp-btn mlp-btn-secondary">Secondary</button>
-            <button class="mlp-btn mlp-btn-tertiary">Tertiary</button>
-            <button class="mlp-btn mlp-btn-danger">Danger</button>
-        </div>
-        <div class="btn-row">
-            <button class="mlp-btn mlp-btn-primary" disabled>Disabled</button>
-            <button class="mlp-btn mlp-btn-primary" style="font-size: 14px; padding: 8px 16px; min-height: 36px;">Small</button>
-        </div>
-    </div>
-
-    <hr>
-
-    <!-- BADGES -->
-    <div class="section">
-        <h2>Status-Badges</h2>
-        <div class="badge-row">
-            <span class="badge badge-success">&#10003; Besucht</span>
-            <span class="badge badge-warning">&#9888; Warnung</span>
-            <span class="badge badge-error">&#10007; Defizit</span>
-            <span class="badge badge-info">&#8505; Info</span>
-            <span class="badge badge-accent">&#9733; Aktiv</span>
-        </div>
-    </div>
-
-    <hr>
-
-    <!-- TABS -->
-    <div class="section">
-        <h2>Tab-Navigation</h2>
-        <div class="tab-nav">
-            <button class="tab-btn active">Zinssensitivitat</button>
-            <button class="tab-btn">Zins-Wippe</button>
-            <button class="tab-btn">Equity Premium</button>
-        </div>
-    </div>
-
-    <hr>
-
-    <!-- FORM INPUTS -->
-    <div class="section">
-        <h2>Form Inputs</h2>
-        <div class="input-grid">
-            <div class="input-group">
-                <label>Netto-Einkommen</label>
-                <input class="mlp-input" type="text" placeholder="z.B. 4.500" value="4.500 EUR">
-            </div>
-            <div class="input-group">
-                <label>Kundenkurzel</label>
-                <input class="mlp-input" type="text" placeholder="z.B. Mueller-2026">
-            </div>
-            <div class="input-group">
-                <label>Aktienrendite (% p.a.)</label>
-                <input class="mlp-slider" type="range" min="0" max="15" value="8">
-                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #717171;">
-                    <span>0%</span>
-                    <span style="font-weight: 700; color: #033D5D;">8%</span>
-                    <span>15%</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <hr>
-
-    <!-- CARDS -->
-    <div class="section">
-        <h2>Cards</h2>
-        <div class="card-grid">
-            <div class="mlp-card">
-                <h3>Depot-Wert</h3>
-                <div class="card-value">187.450 EUR</div>
-                <div class="card-label">+12,4% seit Jahresbeginn</div>
-            </div>
-            <div class="mlp-card--elevated">
-                <h3>Monatliche Sparrate</h3>
-                <div class="card-value" style="color: #47A190;">1.200 EUR</div>
-                <div class="card-label">davon 800 EUR in ETF, 400 EUR Tagesgeld</div>
-            </div>
-            <div class="mlp-card" style="border-left: 4px solid #C1293D;">
-                <h3>Fixkosten-Defizit</h3>
-                <div class="card-value" style="color: #C1293D;">-340 EUR</div>
-                <div class="card-label">Monatliche Unterdeckung</div>
-            </div>
-        </div>
-    </div>
-
-    <hr>
-
-    <!-- LESSON BOX -->
-    <div class="section">
-        <h2>Lesson Box</h2>
-        <div class="lesson-box">
-            <strong>Kernaussage:</strong> Eine Anleihe ist nur dann sicher, wenn der Emittent zahlungsfahig bleibt
-            und man die Laufzeit aussitzt. Die Schwankungen dazwischen sind lediglich
-            Opportunitatskosten des Marktes.
-        </div>
-    </div>
-
-    <hr>
-
-    <!-- BASIN PREVIEW -->
-    <div class="section">
-        <h2>Basin-Vorschau (Light Theme)</h2>
-        <div class="basin-preview">
-            <div class="basin">
-                <div class="basin-title">Einkommen</div>
-                <div class="basin-value">4.500 EUR</div>
-                <div class="basin-sub">Netto / Monat</div>
-            </div>
-            <div class="flow-arrow">&#8594;</div>
-            <div class="basin">
-                <div class="basin-title">Fixkosten</div>
-                <div class="basin-value">1.800 EUR</div>
-                <div class="basin-sub">8 Posten</div>
-            </div>
-            <div class="flow-arrow">&#8594;</div>
-            <div class="basin">
-                <div class="basin-title">Konsum</div>
-                <div class="basin-value">700 EUR</div>
-                <div class="basin-sub">Budget / Monat</div>
-            </div>
-            <div class="flow-arrow">&#8594;</div>
-            <div class="basin" style="border-color: #47A190;">
-                <div class="basin-title" style="color: #47A190;">Depot</div>
-                <div class="basin-value" style="color: #47A190;">2.000 EUR</div>
-                <div class="basin-sub">Sparrate</div>
-            </div>
-        </div>
-    </div>
-
-    <hr>
-
-    <!-- GRADIENT PREVIEW -->
-    <div class="section">
-        <h2>Gradient-Zonen (Konzept)</h2>
-        <p style="font-size: 14px; color: #717171; margin-bottom: 16px;">Ganzseitig in Phase 3/4 — hier als Farbvorschau mit MLP-Palette</p>
-        <div class="gradient-preview" style="background: #FFFFFF;">
-            <div class="gradient-sky"></div>
-            <span class="gradient-label" style="top: 12px;">Wolken (MLP Blau, subtil)</span>
-            <span class="gradient-label" style="top: 70px;">Luft (Turkis-Hauch)</span>
-            <span class="gradient-label" style="top: 130px;">Erde (Titanium-Nebel)</span>
-            <span class="gradient-label" style="bottom: 12px;">Boden (Neutral)</span>
-        </div>
-    </div>
-
-    <hr>
-
-    <!-- DARK THEME PREVIEW -->
-    <div class="section">
-        <h2>Dark Theme (Alternative)</h2>
-        <div class="dark-preview">
-            <h3 style="margin-bottom: 16px;">Gleiche Tokens, dunkler Hintergrund</h3>
-            <div class="basin-preview">
-                <div class="basin">
-                    <div class="basin-title">Einkommen</div>
-                    <div class="basin-value">4.500 EUR</div>
-                    <div class="basin-sub">Netto / Monat</div>
-                </div>
-                <div class="flow-arrow" style="color: #47A190;">&#8594;</div>
-                <div class="basin">
-                    <div class="basin-title">Depot</div>
-                    <div class="basin-value">2.000 EUR</div>
-                    <div class="basin-sub">Sparrate</div>
-                </div>
-            </div>
-            <div style="margin-top: 24px; display: flex; gap: 16px;">
-                <button class="mlp-btn mlp-btn-primary">Primary</button>
-                <button class="mlp-btn" style="background: #47A190; color: white;">Accent</button>
-            </div>
-        </div>
-    </div>
-
-    <hr>
-    <p style="font-size: 12px; color: #717171; text-align: center; margin-top: 24px;">
-        MLP v2.0 Design Token Preview | Basierend auf MLP Corporate Design Guide | Arial, 8px Grid, Light-First
-    </p>
-
 </body>
 </html>
