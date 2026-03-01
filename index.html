@@ -12155,9 +12155,7 @@ function updateFixkostenItem(index, key, value) {
           // no-print Elemente entfernen (Mobile Warning etc.)
           clone.querySelectorAll('.no-print').forEach(n => n.remove());
 
-          // --- v2.0 Print-Klon: SVG-Flows als PNG-Bild ersetzen ---
-          // DOM-Klon-SVG hat Duplikat-IDs → url(#flow-gradient) bricht.
-          // Lösung: SVG via svgToPngDataUrl() als Bild rendern (löst alle Referenz-Probleme).
+          // --- v2.0 Print-Klon: SVG sauber machen ---
 
           // v2.0-Dekorationen entfernen
           clone.querySelectorAll('.gradient-zone, .ambient-glow').forEach(n => n.remove());
@@ -12169,21 +12167,55 @@ function updateFixkostenItem(index, key, value) {
             n.style.border = '1px solid #BEB6AA';
           });
 
-          // SVG → PNG ersetzen (svgToPngDataUrl löst Mask, Gradient-Refs, etc.)
-          var liveSvg = live.querySelector('#flow-svg');
-          var cloneSvg = clone.querySelector('#flow-svg');
-          if (liveSvg && cloneSvg) {
-            try {
-              var flowPng = await svgToPngDataUrl(liveSvg, 1.5, '#ffffff');
-              var img = document.createElement('img');
-              img.src = flowPng;
-              // z-index:1 = unter Basins (z-index:10), wie das originale SVG
-              img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;';
-              cloneSvg.parentNode.replaceChild(img, cloneSvg);
-            } catch(e) {
-              console.error('Flow-PNG für Print fehlgeschlagen:', e);
+          // SVG Fix: Duplikat-ID-Problem lösen.
+          // Problem: Klon + Original haben beide id="flow-gradient", id="flow-mask" etc.
+          // Browser löst url(#flow-gradient) zum ERSTEN Element auf (= verstecktes Original).
+          // Lösung: Computed stroke-Farben vom Live-SVG als inline-Wert auf Klon-Pfade setzen,
+          // dann url()-Referenzen durch die inline-Werte ersetzen + unnötige Elemente entfernen.
+
+          // 1) Computed stroke-Farben ZUERST lesen (Original hat noch korrekte Gradienten)
+          var origSvg = live.querySelector('#flow-svg');
+          var origPaths = origSvg ? origSvg.querySelectorAll('.flow-path') : [];
+          var strokeData = [];
+          origPaths.forEach(function(p) {
+            var cs = getComputedStyle(p);
+            strokeData.push({
+              stroke: cs.stroke || '',
+              strokeWidth: cs.strokeWidth || '',
+              opacity: cs.opacity || '1'
+            });
+          });
+
+          // 2) Mask entfernen (maskUnits bricht im Klon)
+          var cloneVisuals = clone.querySelector('#flow-visuals');
+          if (cloneVisuals) cloneVisuals.removeAttribute('mask');
+
+          // 3) Unnötige Elemente entfernen
+          clone.querySelectorAll('.flow-erase').forEach(function(n) { n.remove(); });
+          clone.querySelectorAll('.flow-path-animation').forEach(function(n) { n.remove(); });
+          clone.querySelectorAll('[id$="-dot"]').forEach(function(n) { n.remove(); });
+
+          // 4) Inline stroke auf Klon-Pfade setzen (ersetzt url(#flow-gradient))
+          var clonePaths = clone.querySelectorAll('.flow-path');
+          clonePaths.forEach(function(cp, i) {
+            var sd = strokeData[i];
+            if (!sd) return;
+            // Direktes stroke-Attribut hat Vorrang vor CSS url()
+            if (sd.stroke && sd.stroke !== 'none') {
+              cp.setAttribute('stroke', sd.stroke);
             }
-          }
+            if (sd.strokeWidth) {
+              cp.setAttribute('stroke-width', sd.strokeWidth);
+            }
+            cp.setAttribute('opacity', '1');
+            cp.classList.add('active');
+            // CSS-Regel überschreiben die stroke: url() Deklaration
+            cp.style.setProperty('stroke', sd.stroke, 'important');
+          });
+
+          // 5) Klon-SVG defs entfernen (gradient/mask/filter nicht mehr nötig)
+          var cloneDefs = clone.querySelector('#flow-svg defs');
+          if (cloneDefs) cloneDefs.remove();
 
           // v1.7.8-Methode: Deterministische Größe, CSS macht die Skalierung
           const cs = getComputedStyle(live);
