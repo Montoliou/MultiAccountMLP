@@ -630,40 +630,35 @@
             transition: opacity 0.6s ease;
         }
 
-        /* Ebene 1: WOLKEN - Einkommen (Himmelblau, luftig) */
+        /* === "MLP Navy" Dark Theme Zonen — alle fade to transparent! === */
         .gradient-zone-1 {
             background: linear-gradient(
                 to bottom,
-                rgba(100, 180, 255, 0.15) 0%,
-                rgba(60, 120, 200, 0.20) 100%
+                rgba(3,61,93,0.12) 0%,
+                rgba(3,61,93,0.08) 50%,
+                transparent 100%
             );
         }
 
-        /* Ebene 2: HORIZONT - Girokonten (Grau-Blau, geerdet) */
         .gradient-zone-2 {
-            background: linear-gradient(
-                to bottom,
-                rgba(60, 120, 200, 0.20) 0%,
-                rgba(70, 90, 120, 0.25) 100%
-            );
+            /* Kein Horizont — transparent */
+            background: transparent;
         }
 
-        /* Ebene 3: SCHUPPEN - Liquidität (Dunkel-Teal, geschützt) */
         .gradient-zone-3 {
             background: linear-gradient(
                 to bottom,
-                rgba(70, 90, 120, 0.25) 0%,
-                rgba(40, 80, 100, 0.30) 100%
+                transparent 0%,
+                rgba(190,182,170,0.04) 100%
             );
         }
 
-        /* Ebene 4: FELDER - Vermögensaufbau (MLP Platin, fruchtbar) */
         .gradient-zone-4 {
             background: linear-gradient(
                 to bottom,
-                rgba(40, 80, 100, 0.30) 0%,
-                rgba(189, 161, 119, 0.25) 50%,
-                rgba(189, 161, 119, 0.35) 100%
+                rgba(190,182,170,0.04) 0%,
+                rgba(190,182,170,0.08) 50%,
+                transparent 100%
             );
         }
 
@@ -7717,10 +7712,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                             </div>
                         </div>
 
-                        <!-- v1.6.3: Kriegskasse Info-Button -->
-                        <button onclick="closeInlineEditor('${basinType}'); openKriegskasseModal();" class="mt-3 w-full px-3 py-2 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-md shadow-md transition-colors flex items-center justify-center gap-2" title="Warum ist eine Investitionsreserve wichtig?">
-                            <span>Warum Tagesgeld?</span>
-                        </button>
+                        <!-- v1.6.3: Kriegskasse Erklärer-Button (dezent wie Depot-Erklärer) -->
+                        <button onclick="closeInlineEditor('${basinType}'); openKriegskasseModal();" class="mt-3 depot-erklaerer-btn" style="width: 100%; padding: 8px 12px;" title="Warum ist eine Investitionsreserve wichtig?">Warum Tagesgeld?</button>
 
                         <div class="basin-inline-hint">Enter zum Speichern • Esc zum Abbrechen</div>
                         <div class="basin-inline-buttons">

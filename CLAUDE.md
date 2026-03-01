@@ -259,7 +259,7 @@ Berater sollen im Session-Menü zwischen Farbthemen wählen können. Jedes freig
 | Name | Typ | Body-Gradient | Zonen | Status |
 |------|-----|---------------|-------|--------|
 | **Warm Sky** | Light | `#eaf2fa` → `#f0f2f6` → `#e3dbd0` | Wolken (MLP-Blau), kein Horizont, Erde (Titanium) | Aktiv |
-| **MLP Navy** | Dark | `#0e1c2b` → `#18293a` | MLP-Navy Töne, kein Slate-Grau | Aktiv |
+| **MLP Navy** | Dark | `#0e1c2b` → `#18293a` | Dezent MLP-Blau oben, Titanium-Hauch unten, kein Horizont | Aktiv |
 
 ### Abgelehnte Versuche (als Referenz)
 
