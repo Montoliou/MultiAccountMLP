@@ -12155,15 +12155,11 @@ function updateFixkostenItem(index, key, value) {
           // no-print Elemente entfernen (Mobile Warning etc.)
           clone.querySelectorAll('.no-print').forEach(n => n.remove());
 
-          // Animationen stoppen und Flows sichtbar machen
-          clone.querySelectorAll('.flow-path-animation').forEach(n => {
-            n.style.animation = 'none';
-          });
-          // Flow-Dots (animateMotion) entfernen — nicht druckbar
-          clone.querySelectorAll('animateMotion').forEach(n => n.parentNode.remove());
-          // Erase-Pfade beibehalten (verdecken Überlappungen)
+          // --- v2.0 Print-Optimierungen für den DOM-Klon ---
+
           // Gradient-Zonen und Ambient-Glows entfernen (Screen-only Dekoration)
           clone.querySelectorAll('.gradient-zone, .ambient-glow').forEach(n => n.remove());
+
           // Basins: Glasmorphism durch solide Hintergründe ersetzen
           clone.querySelectorAll('.account-basin').forEach(n => {
             n.style.backdropFilter = 'none';
@@ -12171,21 +12167,23 @@ function updateFixkostenItem(index, key, value) {
             n.style.background = '#ffffff';
             n.style.border = '1px solid #BEB6AA';
           });
-          // SVG-Strokes: Inline-Farben setzen (CSS-Vars + Theme-Klassen greifen nicht im Print-Klon)
-          var livePaths = live.querySelectorAll('.flow-path, .flow-path-animation, .flow-erase');
-          var clonePaths = clone.querySelectorAll('.flow-path, .flow-path-animation, .flow-erase');
-          clonePaths.forEach(function(node, i) {
-            var src = livePaths[i];
-            if (!src) return;
-            var cs = getComputedStyle(src);
-            if (cs.stroke && cs.stroke !== 'none') node.setAttribute('stroke', cs.stroke);
-            if (cs.strokeWidth) node.setAttribute('stroke-width', cs.strokeWidth);
-            node.style.opacity = cs.opacity || '1';
-          });
-          // Erase-Pfade explizit auf weiß (Print-Hintergrund)
+
+          // Flow-Animationen + Dots komplett entfernen (nicht druckbar)
+          clone.querySelectorAll('.flow-path-animation').forEach(n => n.remove());
+          clone.querySelectorAll('animateMotion').forEach(n => n.parentNode.remove());
+
+          // Erase-Pfade: MÜSSEN weiß sein (verdecken Überlappungen auf weißem Print-BG)
           clone.querySelectorAll('.flow-erase').forEach(function(n) {
             n.setAttribute('stroke', '#ffffff');
+            n.style.opacity = '1';
           });
+
+          // Flow-Pfade: Feste Farbe statt url(#flow-gradient) das im Klon nicht auflöst
+          clone.querySelectorAll('.flow-path').forEach(function(n) {
+            n.setAttribute('stroke', '#1a6a8a');  // Light-Mode Flow-Blau
+            n.style.opacity = n.classList.contains('active') ? '1' : '0';
+          });
+
           // Flow-Labels + Values: Inline-Styles (CSS-Vars greifen nicht im Klon)
           clone.querySelectorAll('.flow-value').forEach(function(n) {
             n.style.background = '#ffffff';
