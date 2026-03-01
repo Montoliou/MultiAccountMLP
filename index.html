@@ -12155,7 +12155,7 @@ function updateFixkostenItem(index, key, value) {
           // no-print Elemente entfernen (Mobile Warning etc.)
           clone.querySelectorAll('.no-print').forEach(n => n.remove());
 
-          // --- v2.0: Nur minimale Print-Anpassungen, CSS regelt den Rest ---
+          // --- v2.0 Print-Klon: saubere SVG-Flows auf weißem Grund ---
 
           // v2.0-Dekorationen entfernen (existieren nicht in v1)
           clone.querySelectorAll('.gradient-zone, .ambient-glow').forEach(n => n.remove());
@@ -12166,6 +12166,11 @@ function updateFixkostenItem(index, key, value) {
             n.style.background = '#ffffff';
             n.style.border = '1px solid #BEB6AA';
           });
+          // SVG: Mask entfernen (url(#flow-mask) Referenz ist im Klon nicht eindeutig)
+          var cloneVisuals = clone.querySelector('#flow-visuals');
+          if (cloneVisuals) cloneVisuals.removeAttribute('mask');
+          // SVG: Erase-Pfade entfernen (breit + dunkel sichtbar, auf weißem Print unnötig)
+          clone.querySelectorAll('.flow-erase').forEach(function(n) { n.remove(); });
 
           // v1.7.8-Methode: Deterministische Größe, CSS macht die Skalierung
           const cs = getComputedStyle(live);
