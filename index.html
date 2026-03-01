@@ -12157,6 +12157,11 @@ function updateFixkostenItem(index, key, value) {
 
           // --- v2.0 Print-Optimierungen für den DOM-Klon ---
 
+          // SVG-Mask entfernen: url(#flow-mask) löst im Print-Klon nicht auf
+          // → macht ALLE Flows unsichtbar! (Gleicher Fix wie in svgToPngDataUrl)
+          var flowVisuals = clone.querySelector('#flow-visuals');
+          if (flowVisuals) flowVisuals.removeAttribute('mask');
+
           // Gradient-Zonen und Ambient-Glows entfernen (Screen-only Dekoration)
           clone.querySelectorAll('.gradient-zone, .ambient-glow').forEach(n => n.remove());
 
