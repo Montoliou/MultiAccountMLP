@@ -12172,10 +12172,10 @@ function updateFixkostenItem(index, key, value) {
           clone.querySelectorAll('.flow-path-animation').forEach(n => n.remove());
           clone.querySelectorAll('animateMotion').forEach(n => n.parentNode.remove());
 
-          // Erase-Pfade: MÜSSEN weiß sein (verdecken Überlappungen auf weißem Print-BG)
+          // Erase-Pfade ENTFERNEN: Im Print kein Gradient-BG → Eraser nicht nötig
+          // und sie verdecken sonst die Flow-Pfade darunter!
           clone.querySelectorAll('.flow-erase').forEach(function(n) {
-            n.setAttribute('stroke', '#ffffff');
-            n.style.opacity = '1';
+            n.remove();
           });
 
           // Flow-Pfade: Feste Farbe statt url(#flow-gradient) das im Klon nicht auflöst
