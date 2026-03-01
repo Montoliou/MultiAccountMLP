@@ -317,11 +317,11 @@
         <div class="overall-progress">
             <h2>Gesamtfortschritt</h2>
             <div class="progress-bar-outer">
-                <div class="progress-bar-inner" style="width: 52%;"></div>
+                <div class="progress-bar-inner" style="width: 58%;"></div>
             </div>
             <div class="progress-label">
                 <span>7 Phasen</span>
-                <strong>~52%</strong>
+                <strong>~58%</strong>
             </div>
         </div>
 
@@ -431,22 +431,25 @@
                     <div>
                         <div class="phase-title">Erklärer-Modals vereinheitlichen</div>
                         <div class="phase-meta">
-                            <span class="phase-status status-active">Teilweise erledigt</span>
-                            <span class="priority-badge prio-medium">Mittlere Prio</span>
+                            <span class="phase-status status-active">Theme-Tokens fertig, UX-Fixes offen</span>
+                            <span class="priority-badge prio-high">Hohe Prio</span>
                         </div>
                     </div>
                 </div>
-                <div class="phase-progress"><div class="phase-progress-fill fill-active" style="width: 50%;"></div></div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-active" style="width: 75%;"></div></div>
                 <ul class="task-list">
-                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Anleihen-Modal: Dark-Mode-tauglich, SVG-Text theme-aware</span></li>
-                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">SoRR-Modal: Chart theme-aware (Achsen, Grid, Labels)</span></li>
-                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Cost-Average: Charts + Karten theme-aware</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Anleihen-Modal: Dark-Mode + Close-Button theme-aware</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">SoRR-Modal: Result-Cards, Lesson-Box, Subtitle → Theme-Tokens</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Cost-Average: Alle Tailwind-Farben → Theme-Tokens</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Kriegskasse: Timeline, Counter, Results → Theme-Tokens</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">MSCI: z-[60], Close-Button theme-aware</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Alle 10 Modal Close-Buttons vereinheitlicht</span></li>
                     <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Fixkosten-Modal: Depot-Style Grid, FK/SP Badges, € Suffix</span></li>
                     <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">"Warum Tagesgeld?" → depot-erklaerer-btn Style</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Einheitlicher Tab-Style über alle Erklärer-Modals</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Lesson-Boxes: Konsistenter MLP-Style (BEB6AA border)</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">MSCI-Renditedreieck: Farbgebung prüfen</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Immobilien-Modal: MLP-styled Formulare</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Kriegskasse Timeline-Einträge: Kompakter formatieren</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Cost-Average: Kurs B J1→11, Crash-Text + Schriftgröße prüfen</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Equity Premium: Dritten Topf "Retained Earnings" einführen (Unternehmen behält Gewinn)</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">MSCI: Close-on-Outside-Click, Pan&amp;Zoom, Dreieck-Overlay</span></li>
                 </ul>
             </div>
 
@@ -533,6 +536,14 @@
         <!-- Recent Commits -->
         <div class="commit-log">
             <h2>Letzte Commits (v2.0-design)</h2>
+            <div class="commit-entry">
+                <span class="commit-hash">129eb16</span>
+                <span class="commit-msg">feat: Phase 5 — Erklärer-Modals auf Theme-Tokens umgestellt</span>
+            </div>
+            <div class="commit-entry">
+                <span class="commit-hash">bf8fdab</span>
+                <span class="commit-msg">feat: Tagesgeld-Button dezent + Design-Dashboard erstellt</span>
+            </div>
             <div class="commit-entry">
                 <span class="commit-hash">41a0f4d</span>
                 <span class="commit-msg">fix: MLP Navy Dark-Zonen — blauen Balken entfernt, Tagesgeld-Button dezent</span>

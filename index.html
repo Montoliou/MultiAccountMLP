@@ -3308,10 +3308,10 @@
                 <!-- Crash Insight Box -->
                 <div class="p-8 rounded-lg mb-6" style="background: linear-gradient(135deg, #C1293D 0%, #E3691E 100%); color: white;">
                     <h3 class="text-2xl font-bold mb-4">💥 Der Crash-Vorteil:</h3>
-                    <p class="text-xl leading-relaxed mb-4">Haben Sie gesehen? <strong>Jahr 2: Crash auf 2,00 €</strong> - und das war <strong>die beste Kaufgelegenheit</strong>!</p>
+                    <p class="text-xl leading-relaxed mb-4">Haben Sie gesehen? <strong>Jahr 3: Crash auf 2,00 €</strong> - und das war <strong>die beste Kaufgelegenheit</strong>!</p>
                     <div class="bg-white bg-opacity-20 p-4 rounded-lg mb-4">
-                        <p class="text-lg">🛒 <strong>600 Anteile</strong> für 1.200 € beim Crash (Jahr 2)</p>
-                        <p class="text-lg">🛒 Nur <strong>92 Anteile</strong> für 1.200 € bei Kurs A</p>
+                        <p class="text-lg">🛒 <strong>600 Anteile</strong> für 1.200 € beim Crash (Jahr 3)</p>
+                        <p class="text-lg">🛒 Nur <strong>89 Anteile</strong> für 1.200 € bei Kurs A</p>
                     </div>
                     <p class="text-xl leading-relaxed"><strong>Bei Sparraten WOLLEN Sie Crashes</strong> - Sie kaufen dann im Ausverkauf! 🎉</p>
                 </div>
@@ -8559,16 +8559,16 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
     // ===== v1.6.2: COST-AVERAGE-EFFEKT ERKLÄRER (REDESIGNED) =====
 
-    // Kursdaten (aus Excel-Tool)
+    // Kursdaten (aus Excel-Tool) — Chart-Labels: J1-J10, Array-Index 0-9
     const courseData = {
         A: [10.0, 13.0, 13.5, 16.0, 17.0, 16.0, 17.0, 16.5, 18.0, 18.9], // Stabil steigend
-        B: [9.0, 10.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]  // Volatil schwankend mit CRASH (10 Jahre: J0-J9)
+        B: [10.0, 11.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]  // Volatil: J1=10, J2=11, J3=CRASH auf 2€
     };
 
     // v1.7.1: Default course data for reset functionality
     const defaultCourseData = {
         A: [10.0, 13.0, 13.5, 16.0, 17.0, 16.0, 17.0, 16.5, 18.0, 18.9],
-        B: [9.0, 10.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]
+        B: [10.0, 11.0, 2.0, 5.0, 4.0, 6.0, 8.0, 4.0, 7.0, 11.0]
     };
 
     let caChartA = null;
