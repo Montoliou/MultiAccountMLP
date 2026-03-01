@@ -669,11 +669,11 @@
 
         /* Light Theme — "Warm Sky": MLP-Blau oben, Titanium/Platin unten */
         .theme-light .gradient-zone-1 {
-            /* WOLKEN: Sanfter MLP-Blau Himmel mit Wolken-Radials */
+            /* WOLKEN: Sanfter MLP-Blau Himmel — läuft nach unten in transparent aus! */
             background:
                 radial-gradient(ellipse 120% 80% at 25% 35%, rgba(255,255,255,0.55) 0%, transparent 65%),
                 radial-gradient(ellipse 90% 60% at 70% 25%, rgba(255,255,255,0.45) 0%, transparent 60%),
-                linear-gradient(to bottom, rgba(3,61,93,0.06) 0%, rgba(3,61,93,0.09) 100%);
+                linear-gradient(to bottom, rgba(3,61,93,0.07) 0%, rgba(3,61,93,0.06) 50%, transparent 100%);
         }
 
         .theme-light .gradient-zone-2 {
@@ -3012,8 +3012,8 @@
                 </svg>
 
                 <!-- Horizontal Gradient Zones für visuelle Ebenen-Trennung -->
-                <div id="gradient-zone-1" class="gradient-zone gradient-zone-1" style="top: -200px; height: 440px;"></div>
-                <div id="gradient-zone-2" class="gradient-zone gradient-zone-2" style="top: 240px; height: 480px;"></div>
+                <div id="gradient-zone-1" class="gradient-zone gradient-zone-1" style="top: -200px; height: 600px;"></div>
+                <div id="gradient-zone-2" class="gradient-zone gradient-zone-2" style="top: 300px; height: 420px;"></div>
                 <div id="gradient-zone-3" class="gradient-zone gradient-zone-3" style="top: 720px; height: 240px;"></div>
                 <div id="gradient-zone-4" class="gradient-zone gradient-zone-4" style="top: 960px; height: 300px;"></div>
 
