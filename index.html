@@ -579,15 +579,16 @@
         /* v2.0: Zweiter :root-Block entfernt — alle Tokens jetzt im einzigen :root oben */
         /* v2.0: Theme-Klassen mit korrekten MLP-Farben */
         .theme-dark {
-          --bg: #111827;
-          --fg: #FFFFFF;
-          --card: #1f2937;
-          --border: #374151;
-          --muted: #9ca3af;
+          /* v2.0: MLP-Navy statt generischem Slate — "MLP bei Nacht" */
+          --bg: #0e1c2b;                     /* Deep MLP Navy (Page BG) */
+          --fg: #ede9e3;                     /* Warm White (Titanium-Hauch) */
+          --card: #18293a;                   /* Lifted Navy (Modals, Cards) */
+          --border: #2d4256;                 /* MLP-Blue Border */
+          --muted: #8a9aad;                  /* Blue-Gray Muted */
           --accent1: var(--mlp-primary);     /* MLP Blau statt Tailwind Blau */
           --accent2: var(--mlp-accent);      /* Türkis statt Indigo */
-          --input-bg: rgba(17, 24, 39, 0.92);
-          --input-border: #374151;
+          --input-bg: #0e1c2b;              /* Same as --bg */
+          --input-border: #2d4256;           /* Same as --border */
         }
         .theme-light {
           --bg: var(--mlp-bg-white);
@@ -706,8 +707,8 @@
         }
 
         .modal-content {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 1px solid rgba(148, 163, 184, 0.2);
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: 2rem;
             box-shadow: var(--shadow-modal);
@@ -1686,13 +1687,13 @@
 
         /* ── Session Dialog Inputs ── */
         .mlp-session-input {
-            width: 100%; padding: 8px 16px; font-size: 14px;
-            background: var(--gray-800); color: white;
-            border: 1px solid var(--gray-700); border-radius: var(--radius-md);
+            width: 100%; padding: 10px 16px; font-size: 14px;
+            background: var(--bg); color: var(--fg);
+            border: 1px solid var(--border); border-radius: var(--radius-md);
             outline: none; transition: border-color 0.2s;
         }
-        .mlp-session-input:focus { border-color: var(--mlp-accent); }
-        .mlp-session-input::placeholder { color: var(--gray-500); }
+        .mlp-session-input:focus { border-color: var(--mlp-primary); box-shadow: 0 0 0 3px rgba(3,61,93,0.1); }
+        .mlp-session-input::placeholder { color: var(--muted); }
 
         /* ═══════════════════════════════════════════════════════
            v2.0 Global Smooth Transitions
@@ -2972,15 +2973,32 @@
     <div id="fixkosten-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="fixkosten-modal-title">
         <div class="w-full max-w-2xl rounded-xl shadow-2xl p-6 relative" role="document" tabindex="-1">
             <button type="button" onclick="closeModal('fixkosten-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 text-2xl transition-colors" aria-label="Fixkostenfenster schließen">&times;</button>
-            <h3 id="fixkosten-modal-title" class="text-xl font-bold mb-4">Fixkosten &amp; Sparpläne</h3>
-            <div id="fixkosten-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
-            <button type="button" onclick="addFixkostenItem()" class="mlp-btn mlp-btn-tertiary mt-4 text-sm px-3 py-1">+ Posten hinzufügen</button>
-            <hr class="my-4" style="border-color: var(--mlp-secondary);">
-            <div class="flex justify-between items-center">
-                <p class="text-lg">Monatliche Gesamtkosten:</p>
-                <p id="modal-total" class="text-2xl font-bold" style="color: var(--mlp-error);">? 0</p>
+            <h3 id="fixkosten-modal-title" class="text-xl font-bold" style="margin-bottom: 2px;">Fixkosten &amp; Sparpläne</h3>
+            <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">Verwalte monatliche Ausgaben und Sparplan-Zuweisungen.</p>
+
+            <!-- Column Headers -->
+            <div style="display: grid; grid-template-columns: 4fr 2fr 2fr 3fr 1fr; gap: 8px; padding: 0 8px 6px 8px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                <span>Posten</span>
+                <span>Betrag</span>
+                <span>Intervall</span>
+                <span>Zuordnung</span>
+                <span></span>
             </div>
-            <button type="button" onclick="saveFixkosten()" class="mlp-btn mlp-btn-primary mt-6 w-full py-2 px-4">Speichern &amp; Schließen</button>
+
+            <div id="fixkosten-list" class="space-y-1 max-h-72 overflow-y-auto pr-1" style="scrollbar-width: thin;"></div>
+
+            <button type="button" onclick="addFixkostenItem()" style="display: flex; align-items: center; gap: 6px; margin-top: 12px; padding: 8px 14px; font-size: 13px; font-weight: 500; color: var(--mlp-primary); background: transparent; border: 1px dashed var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; width: 100%; justify-content: center;" onmouseover="this.style.background='rgba(3,61,93,0.04)'; this.style.borderColor='var(--mlp-primary)'" onmouseout="this.style.background='transparent'; this.style.borderColor='var(--border)'">
+                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Posten hinzufügen
+            </button>
+
+            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <span style="font-size: 13px; color: var(--muted);">Monatliche Gesamtkosten</span>
+                    <p id="modal-total" class="text-2xl font-bold" style="color: var(--mlp-error);">? 0</p>
+                </div>
+            </div>
+            <button type="button" onclick="saveFixkosten()" class="mlp-btn mlp-btn-primary mt-4 w-full py-2 px-4">Speichern &amp; Schließen</button>
         </div>
     </div>
 
@@ -3509,7 +3527,7 @@
                 <div class="lg:col-span-8 space-y-6">
 
                     <!-- Chart Container -->
-                    <div class="bg-white p-6 rounded-lg border border-gray-200">
+                    <div class="p-6 rounded-lg" style="background: var(--card); border: 1px solid var(--border);">
                         <div class="flex items-center justify-between mb-2">
                             <h3 id="sorr-chart-title" class="text-lg font-semibold">Vermögensentwicklung</h3>
                             <button id="sorr-compare-btn" onclick="toggleSoRRCompare()" class="mlp-btn mlp-btn-tertiary text-xs py-2 px-4">
@@ -9904,6 +9922,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             sorrChart.destroy();
         }
 
+        // Theme-aware colors for chart
+        var isDark = document.body.classList.contains('theme-dark');
+        var chartTextColor = isDark ? '#94a3b8' : '#717171';
+        var chartGridColor = isDark ? 'rgba(148,163,184,0.12)' : 'rgba(0,0,0,0.06)';
+
         // Create new chart
         sorrChart = new Chart(ctx, {
             type: 'line',
@@ -9918,7 +9941,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                     legend: {
                         display: sorrShowAll,
                         position: 'top',
-                        labels: { padding: 20, font: { size: 12 } }
+                        labels: { padding: 20, font: { size: 12 }, color: chartTextColor }
                     },
                     tooltip: {
                         callbacks: {
@@ -9931,11 +9954,14 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: { display: true, text: 'Verm\u00f6gen (\u20ac)' },
-                        ticks: { callback: function(value) { return formatMoney(value); } }
+                        title: { display: true, text: 'Verm\u00f6gen (\u20ac)', color: chartTextColor },
+                        ticks: { callback: function(value) { return formatMoney(value); }, color: chartTextColor },
+                        grid: { color: chartGridColor }
                     },
                     x: {
-                        title: { display: true, text: 'Jahre' }
+                        title: { display: true, text: 'Jahre', color: chartTextColor },
+                        ticks: { color: chartTextColor },
+                        grid: { color: chartGridColor }
                     }
                 },
                 interaction: { mode: 'index', intersect: false }
@@ -10455,29 +10481,27 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
 
             if (vermieterData.saldo < 0) {
                 // Negativ: Zusätzliche Ausgabe (warnung)
-                autoItemEl.className = 'grid grid-cols-12 gap-2 items-center p-2 rounded';
-                autoItemEl.style.cssText = 'background: rgba(227,105,30,0.06); border: 1px solid var(--mlp-warning);';
-                autoItemEl.innerHTML = '<div class="col-span-4 text-sm flex items-center gap-1" style="color: var(--mlp-warning);">' +
-                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>' +
-                        'Vermieterkonto-Deckung' +
+                autoItemEl.style.cssText = 'display: grid; grid-template-columns: 4fr 2fr 2fr 3fr 1fr; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 8px; background: rgba(227,105,30,0.05); border-left: 3px solid var(--mlp-warning); margin-bottom: 4px;';
+                autoItemEl.innerHTML = '<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--mlp-warning);">' +
+                        '<svg style="width: 14px; height: 14px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>' +
+                        'Vermieterkonto' +
                     '</div>' +
-                    '<div class="col-span-2 font-bold" style="color: var(--mlp-warning);">' + formatCurrency(Math.abs(vermieterData.saldo)) + '</div>' +
-                    '<div class="col-span-2 text-sm" style="color: var(--muted);">mtl.</div>' +
-                    '<div class="col-span-3 text-sm" style="color: var(--muted);">automatisch</div>' +
-                    '<div class="col-span-1"></div>';
+                    '<div style="font-size: 13px; font-weight: 600; color: var(--mlp-warning); text-align: right;">' + formatCurrency(Math.abs(vermieterData.saldo)) + '</div>' +
+                    '<div style="font-size: 12px; color: var(--muted);">Monatlich</div>' +
+                    '<div style="font-size: 11px; color: var(--muted); font-style: italic;">automatisch</div>' +
+                    '<div></div>';
                 total += Math.abs(vermieterData.saldo);
             } else {
                 // Positiv: Einsparung (grün)
-                autoItemEl.className = 'grid grid-cols-12 gap-2 items-center p-2 rounded';
-                autoItemEl.style.cssText = 'background: rgba(19,133,62,0.06); border: 1px solid var(--mlp-success);';
-                autoItemEl.innerHTML = '<div class="col-span-4 text-sm flex items-center gap-1" style="color: var(--mlp-success);">' +
-                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' +
+                autoItemEl.style.cssText = 'display: grid; grid-template-columns: 4fr 2fr 2fr 3fr 1fr; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 8px; background: rgba(19,133,62,0.04); border-left: 3px solid var(--mlp-success); margin-bottom: 4px;';
+                autoItemEl.innerHTML = '<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--mlp-success);">' +
+                        '<svg style="width: 14px; height: 14px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' +
                         'Mieteinnahmen' +
                     '</div>' +
-                    '<div class="col-span-2 font-bold" style="color: var(--mlp-success);">-' + formatCurrency(vermieterData.saldo) + '</div>' +
-                    '<div class="col-span-2 text-sm" style="color: var(--muted);">mtl.</div>' +
-                    '<div class="col-span-3 text-sm" style="color: var(--muted);">automatisch</div>' +
-                    '<div class="col-span-1"></div>';
+                    '<div style="font-size: 13px; font-weight: 600; color: var(--mlp-success); text-align: right;">-' + formatCurrency(vermieterData.saldo) + '</div>' +
+                    '<div style="font-size: 12px; color: var(--muted);">Monatlich</div>' +
+                    '<div style="font-size: 11px; color: var(--muted); font-style: italic;">automatisch</div>' +
+                    '<div></div>';
                 total -= vermieterData.saldo; // Reduziert die Fixkosten
             }
 
@@ -10487,15 +10511,21 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         // Reguläre Fixkosten-Items
         fixkostenItems.forEach((item, index) => {
             const itemEl = document.createElement('div');
-            itemEl.className = 'grid grid-cols-12 gap-2 items-center';
+            itemEl.style.cssText = 'display: grid; grid-template-columns: 4fr 2fr 2fr 3fr 1fr; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; transition: background 0.15s;';
+            itemEl.onmouseover = function() { this.style.background = 'rgba(3,61,93,0.03)'; };
+            itemEl.onmouseout = function() { this.style.background = 'transparent'; };
             var intervalOptions = ['monthly','quarterly','annually'].map(function(i) {
-                return '<option value="' + i + '" ' + (item.interval === i ? 'selected' : '') + '>' + (i==='monthly'?'mtl.':i==='quarterly'?'viertelj.':'jährl.') + '</option>';
+                return '<option value="' + i + '" ' + (item.interval === i ? 'selected' : '') + '>' + (i==='monthly'?'Monatlich':i==='quarterly'?'Vierteljährl.':'Jährlich') + '</option>';
             }).join('');
-            itemEl.innerHTML = '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" onchange="updateFixkostenItem(' + index + ', \'name\', this.value)" placeholder="Posten" class="col-span-4 mlp-input-field-v2 p-1">' +
-                '<input type="number" value="' + item.amount + '" onchange="updateFixkostenItem(' + index + ', \'amount\', this.value)" placeholder="Betrag" class="col-span-2 mlp-input-field-v2 p-1">' +
-                '<select onchange="updateFixkostenItem(' + index + ', \'interval\', this.value)" class="col-span-2 mlp-input-field-v2 p-1">' + intervalOptions + '</select>' +
-                '<select onchange="updateFixkostenItem(' + index + ', \'target\', this.value)" class="col-span-3 mlp-input-field-v2 p-1"><option value="fixkosten" ' + (item.target==='fixkosten'?'selected':'') + '>-> Fixkosten</option><option value="depot" ' + (item.target==='depot'?'selected':'') + '>-> Sparplan</option></select>' +
-                '<button onclick="removeFixkostenItem(' + index + ')" class="col-span-1 text-xl" style="color: var(--mlp-error); cursor: pointer;" onmouseover="this.style.opacity=\'0.7\'" onmouseout="this.style.opacity=\'1\'">&times;</button>';
+            var targetIsDepot = item.target === 'depot';
+            itemEl.innerHTML = '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" onchange="updateFixkostenItem(' + index + ', \'name\', this.value)" placeholder="z.B. Miete, Strom..." class="mlp-input-field-v2" style="padding: 6px 10px; font-size: 13px;">' +
+                '<input type="number" value="' + item.amount + '" onchange="updateFixkostenItem(' + index + ', \'amount\', this.value)" placeholder="0" class="mlp-input-field-v2" style="padding: 6px 10px; font-size: 13px; text-align: right;">' +
+                '<select onchange="updateFixkostenItem(' + index + ', \'interval\', this.value)" class="mlp-input-field-v2" style="padding: 6px 8px; font-size: 12px;">' + intervalOptions + '</select>' +
+                '<select onchange="updateFixkostenItem(' + index + ', \'target\', this.value)" class="mlp-input-field-v2" style="padding: 6px 8px; font-size: 12px; color: ' + (targetIsDepot ? 'var(--mlp-primary)' : 'var(--fg)') + ';">' +
+                    '<option value="fixkosten" ' + (item.target==='fixkosten'?'selected':'') + '>Fixkosten</option>' +
+                    '<option value="depot" ' + (item.target==='depot'?'selected':'') + '>Sparplan</option>' +
+                '</select>' +
+                '<button onclick="removeFixkostenItem(' + index + ')" style="color: var(--muted); cursor: pointer; font-size: 18px; padding: 2px 6px; border-radius: 4px; border: none; background: transparent; transition: all 0.15s;" onmouseover="this.style.color=\'var(--mlp-error)\'; this.style.background=\'rgba(193,41,61,0.06)\'" onmouseout="this.style.color=\'var(--muted)\'; this.style.background=\'transparent\'">&times;</button>';
             fixkostenModal.list.appendChild(itemEl);
             total += getMonthlyAmount(item);
         });
@@ -12554,24 +12584,24 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
     <!-- Session Start Dialog -->
     <div id="session-start-dialog" class="modal-overlay">
         <div class="modal-content max-w-lg">
-            <h2 class="text-2xl font-bold text-white mb-4">Neue Beratung beginnen</h2>
-            <p class="text-gray-300 mb-6">
+            <h2 class="text-2xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">Neue Beratung beginnen</h2>
+            <p style="color: var(--muted); margin-bottom: 1.5rem;">
                 Starten Sie eine neue Beratungssession. Alle Daten werden nur während der Session gespeichert und beim Schließen automatisch gelöscht.
             </p>
 
             <div class="space-y-4 mb-6">
                 <div>
-                    <label for="session-kunden-kuerzel" class="block text-sm font-semibold text-gray-300 mb-2">
+                    <label for="session-kunden-kuerzel" class="block text-sm font-semibold mb-2" style="color: var(--fg);">
                         Kundenkürzel (optional)
                     </label>
                     <input type="text" id="session-kunden-kuerzel"
                            placeholder="z.B. MX-2025-001"
                            class="mlp-session-input">
-                    <p class="text-xs text-gray-500 mt-1">Für interne Zuordnung. Keine persönlichen Daten!</p>
+                    <p class="text-xs mt-1" style="color: var(--muted);">Für interne Zuordnung. Keine persönlichen Daten!</p>
                 </div>
 
                 <div>
-                    <label for="session-berater" class="block text-sm font-semibold text-gray-300 mb-2">
+                    <label for="session-berater" class="block text-sm font-semibold mb-2" style="color: var(--fg);">
                         Berater (optional)
                     </label>
                     <input type="text" id="session-berater"
@@ -12588,7 +12618,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
 
             <div class="mt-4">
                 <div class="text-center">
-                    <span class="text-gray-500 text-sm">oder</span>
+                    <span class="text-sm" style="color: var(--muted);">oder</span>
                 </div>
                 <button onclick="importSessionBackup(); closeModal('session-start-dialog');" class="mlp-btn mlp-btn-tertiary w-full mt-3 py-3 px-6 text-base">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -12598,11 +12628,11 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                 </button>
             </div>
 
-            <div id="privacy-notice-box" class="mt-4 p-4 rounded-lg" style="background: rgba(3,61,93,0.15);">
-                <p class="text-sm text-gray-300 mb-3">
+            <div id="privacy-notice-box" class="mt-4 p-4 rounded-lg" style="background: rgba(3,61,93,0.06); border: 1px solid rgba(3,61,93,0.15);">
+                <p class="text-sm mb-3" style="color: var(--fg);">
                     <strong>ℹ️ Datenschutz & DSGVO-Konformität:</strong>
                 </p>
-                <ul class="text-xs text-gray-300 space-y-1 mb-3 ml-4 list-disc">
+                <ul class="text-xs space-y-1 mb-3 ml-4 list-disc" style="color: var(--muted);">
                     <li>Alle Daten werden <strong>nur in Ihrem Browser</strong> gespeichert (sessionStorage)</li>
                     <li><strong>Keine Cloud</strong>, keine Datenbank, kein Server-Upload</li>
                     <li>Beim Schließen des Tabs werden <strong>alle Daten automatisch gelöscht</strong></li>
@@ -12611,7 +12641,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                 </ul>
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" id="privacy-understood-checkbox" class="w-4 h-4 rounded">
-                    <span class="text-xs text-gray-400">Verstanden, diesen Hinweis nicht mehr anzeigen</span>
+                    <span class="text-xs" style="color: var(--muted);">Verstanden, diesen Hinweis nicht mehr anzeigen</span>
                 </label>
             </div>
         </div>
@@ -12620,12 +12650,12 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
     <!-- Session Recovery Dialog -->
     <div id="session-recovery-dialog" class="modal-overlay">
         <div class="modal-content max-w-lg">
-            <h2 class="text-2xl font-bold text-white mb-4">Vorherige Session gefunden</h2>
-            <p class="text-gray-300 mb-4">
+            <h2 class="text-2xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">Vorherige Session gefunden</h2>
+            <p style="color: var(--muted); margin-bottom: 1rem;">
                 Eine vorherige Beratungssession wurde gefunden. Möchten Sie diese fortsetzen?
             </p>
 
-            <div id="recovery-session-info" class="bg-gray-800 p-4 rounded-lg mb-6 text-sm text-gray-300">
+            <div id="recovery-session-info" class="p-4 rounded-lg mb-6 text-sm" style="background: var(--bg); border: 1px solid var(--border); color: var(--fg);">
                 <!-- Wird dynamisch befüllt -->
             </div>
 
@@ -12643,13 +12673,13 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
     <!-- Session End Dialog -->
     <div id="session-end-dialog" class="modal-overlay">
         <div class="modal-content max-w-lg">
-            <h2 class="text-2xl font-bold text-white mb-4">Beratung beenden?</h2>
-            <p class="text-gray-300 mb-6">
+            <h2 class="text-2xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">Beratung beenden?</h2>
+            <p style="color: var(--muted); margin-bottom: 1.5rem;">
                 Alle Daten werden gelöscht. Möchten Sie vor dem Beenden die Daten exportieren?
             </p>
 
-            <div class="bg-yellow-900 bg-opacity-50 border border-yellow-600 rounded-lg p-4 mb-6">
-                <p class="text-sm text-yellow-200">
+            <div class="rounded-lg p-4 mb-6" style="background: rgba(227,105,30,0.08); border: 1px solid rgba(227,105,30,0.3);">
+                <p class="text-sm" style="color: var(--mlp-warning);">
                     <strong>Warnung:</strong> Diese Aktion kann nicht rückgängig gemacht werden!
                 </p>
             </div>
