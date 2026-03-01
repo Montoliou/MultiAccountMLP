@@ -1841,16 +1841,14 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
 
 **Offene UX-Verbesserungen (User-Feedback):**
 
-1. **Kriegskasse Timeline-Einträge** — Format verbessern
-   - Aktuell: `📈 Jahr 5: Depot: 50467 € | TG: 30000 € | Σ: 80467 €` (zu lang, unübersichtlich)
-   - Ziel: Kompakter, ohne "Jahr" Prefix, evtl. Tabellen-Layout oder 2-Zeilen pro Eintrag
-   - Betrifft JS-generiertes HTML in `animateKriegskasse*()`
+1. ~~**Kriegskasse Timeline-Einträge**~~ ✅
+   - Kompakte Zeilen: `J0 📊 Start - Alles investiert: 40.000 €`
+   - `parseTimelineEntry()` + `updateKriegskasseTimeline()` redesigned
+   - Nur letzte 4 Einträge, neuester fett, ältere 70% Opacity
 
-2. **Cost-Average Kurs B Default-Daten anpassen**
-   - J1 (Index 1): 10.0 → 11.0 (statt sofort fallend)
-   - J2 bleibt 2.0 (Crash)
-   - Crash-Text prüfen: "Jahr 2: Crash auf 2,00 €" — Zählung J0/J1/J2 klären
-   - Schriftgröße in Insight-Boxes prüfen (text-xl/text-2xl evtl. zu groß vs. normale Modals)
+2. ~~**Cost-Average Kurs B Default-Daten**~~ ✅
+   - J1=10€, J2=11€, Crash bei J3=2€. Crash-Text "Jahr 3", "89 Anteile"
+   - Schriftgröße geprüft: text-2xl/text-xl passend für Präsentationsmodus
 
 3. **Anleihen Equity Premium — Erklärtext verbessern**
    - Modell ist finanzwissenschaftlich korrekt (ROA = FK-Zinsen + EK-Rendite)
@@ -1862,9 +1860,12 @@ v2.0 macht aus dem funktionalen Prototyp ein **markenkonformes Beratungs-Tool**.
    - Oder: Slider für "Ausschüttungsquote" (Payout Ratio) → zeigt wie viel ans EK fließt vs. reinvestiert wird
 
 4. **MSCI Renditedreieck — UX-Upgrade** ⭐⭐
-   - [ ] **Close on Outside Click**: Klick außerhalb des Bildes schließt Modal
-   - [ ] **Pan & Zoom**: Mausrad-Zoom + Drag-to-Pan statt einfacher Toggle-Zoom
-   - [ ] **Obere linke Ecke abdecken**: Renditedreieck hat eine leere Dreiecksfläche oben-links (Kaufjahr > Verkaufsjahr = unmöglich). Diese mit halbtransparentem Overlay + Erklärtext abdecken (45°-Diagonale)
+   - [x] **Close on Outside Click**: Klick auf Overlay schließt Modal
+   - [x] **ESC-Taste**: Schließt Modal
+   - [x] **Mousewheel Zoom**: Stufenloses Zoomen mit Mausrad (1x-5x)
+   - [x] **Drag-to-Pan**: Bild verschieben im gezoomten Zustand
+   - [x] **Click-Zoom**: Klick = 2.5x Zoom, nochmal Klick = zurück
+   - [ ] **Obere linke Ecke abdecken**: Dreieck-Overlay (Kaufjahr > Verkaufsjahr)
    - [ ] **Mobil-Gesten**: Pinch-to-Zoom, Touch-Drag
 
 ---

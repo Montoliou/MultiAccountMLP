@@ -317,11 +317,11 @@
         <div class="overall-progress">
             <h2>Gesamtfortschritt</h2>
             <div class="progress-bar-outer">
-                <div class="progress-bar-inner" style="width: 58%;"></div>
+                <div class="progress-bar-inner" style="width: 62%;"></div>
             </div>
             <div class="progress-label">
                 <span>7 Phasen</span>
-                <strong>~58%</strong>
+                <strong>~62%</strong>
             </div>
         </div>
 
@@ -436,7 +436,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="phase-progress"><div class="phase-progress-fill fill-active" style="width: 75%;"></div></div>
+                <div class="phase-progress"><div class="phase-progress-fill fill-active" style="width: 79%;"></div></div>
                 <ul class="task-list">
                     <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Anleihen-Modal: Dark-Mode + Close-Button theme-aware</span></li>
                     <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">SoRR-Modal: Result-Cards, Lesson-Box, Subtitle → Theme-Tokens</span></li>
@@ -446,10 +446,12 @@
                     <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Alle 10 Modal Close-Buttons vereinheitlicht</span></li>
                     <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Fixkosten-Modal: Depot-Style Grid, FK/SP Badges, € Suffix</span></li>
                     <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">"Warum Tagesgeld?" → depot-erklaerer-btn Style</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Kriegskasse Timeline-Einträge: Kompakter formatieren</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Cost-Average: Kurs B J1→11, Crash-Text + Schriftgröße prüfen</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Equity Premium: Dritten Topf "Retained Earnings" einführen (Unternehmen behält Gewinn)</span></li>
-                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">MSCI: Close-on-Outside-Click, Pan&amp;Zoom, Dreieck-Overlay</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Kriegskasse Timeline: Kompaktes Format (parseTimelineEntry)</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">Cost-Average: Kurs B J1=10/J2=11, Crash-Text "Jahr 3"</span></li>
+                    <li class="task-item task-done"><span class="task-icon">&#10003;</span><span class="task-text">MSCI: Outside-Click, ESC, Mousewheel-Zoom, Drag-to-Pan</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">Equity Premium: Dritten Topf "Retained Earnings" einführen</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">MSCI: Dreieck-Overlay (Kaufjahr &gt; Verkaufsjahr)</span></li>
+                    <li class="task-item task-open"><span class="task-icon">&middot;</span><span class="task-text">MSCI: Mobile Gesten (Pinch-to-Zoom, Touch-Drag)</span></li>
                 </ul>
             </div>
 
@@ -536,6 +538,14 @@
         <!-- Recent Commits -->
         <div class="commit-log">
             <h2>Letzte Commits (v2.0-design)</h2>
+            <div class="commit-entry">
+                <span class="commit-hash">NEW</span>
+                <span class="commit-msg">fix: Kriegskasse Timeline kompakt + MSCI Zoom/Pan/ESC/Outside-Click</span>
+            </div>
+            <div class="commit-entry">
+                <span class="commit-hash">eb8977a</span>
+                <span class="commit-msg">fix: Cost-Average Kurs B Defaults + Crash-Text korrigiert</span>
+            </div>
             <div class="commit-entry">
                 <span class="commit-hash">129eb16</span>
                 <span class="commit-msg">feat: Phase 5 — Erklärer-Modals auf Theme-Tokens umgestellt</span>

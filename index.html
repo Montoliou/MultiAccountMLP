@@ -3154,17 +3154,17 @@
     </div>
 
     <!-- MSCI Renditedreieck Modal -->
-    <div id="msci-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="msci-modal-title">
+    <div id="msci-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center p-4 z-[60]" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="msci-modal-title" onclick="if(event.target===this) closeMsciRenditedreieck();">
         <div class="w-full h-full max-w-7xl max-h-screen relative flex flex-col" role="document" tabindex="-1">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="msci-modal-title" class="text-2xl font-bold text-white">MSCI World Renditedreieck</h3>
                 <button type="button" onclick="closeMsciRenditedreieck()" class="text-3xl transition-colors" style="color: rgba(255,255,255,0.6);" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.6)'" aria-label="MSCI Renditedreieck schließen">&times;</button>
             </div>
 
-            <div class="flex-1 bg-white rounded-lg overflow-hidden relative cursor-zoom-in" id="msci-container" onclick="toggleMsciZoom(event)">
+            <div class="flex-1 bg-white rounded-lg overflow-hidden relative cursor-zoom-in" id="msci-container" onmousedown="msciMouseDownTrack(event)" onclick="toggleMsciZoom(event)">
                 <img id="msci-image" src="assets/msci_renditedreieck.png" alt="MSCI World Renditedreieck" class="w-full h-full object-contain transition-transform duration-300">
             </div>
-            <p class="text-sm text-center mt-3" style="color: rgba(255,255,255,0.5);">Klicke auf das Bild zum Zoomen</p>
+            <p class="text-sm text-center mt-3" style="color: rgba(255,255,255,0.5);">Klick = Zoom · Mausrad = stufenlos · Ziehen = verschieben · ESC = schließen</p>
         </div>
     </div>
 
@@ -3375,7 +3375,7 @@
                         <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-error);">❌ Ohne Reserve</h3>
 
                         <!-- Timeline A -->
-                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-a" style="min-height: 140px;">
+                        <div class="space-y-0 mb-4" id="kriegskasse-timeline-a" style="min-height: 100px;">
                             <div class="text-sm" style="color: var(--muted);">Klick zum Start...</div>
                         </div>
 
@@ -3391,7 +3391,7 @@
                         <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-corporate-blue);">✅ Mit Reserve (Halten)</h3>
 
                         <!-- Timeline B -->
-                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-b" style="min-height: 140px;">
+                        <div class="space-y-0 mb-4" id="kriegskasse-timeline-b" style="min-height: 100px;">
                             <div class="text-sm" style="color: var(--muted);">Klick zum Start...</div>
                         </div>
 
@@ -3407,7 +3407,7 @@
                         <h3 class="text-xl font-bold mb-4" style="color: var(--mlp-titanium);">🚀 Mit Reserve + Nachkauf</h3>
 
                         <!-- Timeline C -->
-                        <div class="space-y-2 mb-4" id="kriegskasse-timeline-c" style="min-height: 140px;">
+                        <div class="space-y-0 mb-4" id="kriegskasse-timeline-c" style="min-height: 100px;">
                             <div class="text-sm" style="color: var(--muted);">Klick zum Start...</div>
                         </div>
 
@@ -9409,9 +9409,9 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     }
 
     function animateKriegskasseYear(year) {
-        const marketPrices = courseData.B; // [9, 10, 2, 5, 4, 6, 8, 4, 7, 9]
+        const marketPrices = courseData.B; // [10, 11, 2, 5, 4, 6, 8, 4, 7, 11]
         const currentPrice = marketPrices[year];
-        const initialPrice = marketPrices[0]; // 9
+        const initialPrice = marketPrices[0]; // 10
 
         // === SCENARIO A: WITHOUT Tagesgeld (All 40k in market, panic sell) ===
         let portfolioValueA = 0;
@@ -9607,16 +9607,58 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     }
 
     function updateKriegskasseTimeline(scenario, timeline) {
-        const container = document.getElementById(`kriegskasse-timeline-${scenario}`);
+        var container = document.getElementById('kriegskasse-timeline-' + scenario);
         if (!container) return;
 
         container.innerHTML = '';
-        timeline.slice(-5).forEach(event => { // Show last 5 events
-            const eventDiv = document.createElement('div');
-            eventDiv.className = 'text-sm text-gray-700 py-1';
-            eventDiv.textContent = event;
-            container.appendChild(eventDiv);
-        });
+        var entries = timeline.slice(-4); // Show last 4 events
+        for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i];
+            var isLatest = (i === entries.length - 1);
+            var parsed = parseTimelineEntry(entry);
+
+            var div = document.createElement('div');
+            div.style.cssText = 'display: flex; align-items: baseline; gap: 6px; padding: 2px 0; font-size: 12px; color: var(--fg);' + (isLatest ? ' font-weight: 600;' : ' opacity: 0.7;');
+
+            var yearSpan = '<span style="color: var(--muted); min-width: 22px; flex-shrink: 0;">J' + parsed.year + '</span>';
+            var iconSpan = '<span style="flex-shrink: 0;">' + parsed.icon + '</span>';
+            var textSpan = '<span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + parsed.text + '</span>';
+
+            div.innerHTML = yearSpan + iconSpan + textSpan;
+            container.appendChild(div);
+        }
+    }
+
+    function parseTimelineEntry(entry) {
+        // Extract emoji, year number, and meaningful text
+        var icon = '';
+        var year = '0';
+        var text = entry;
+
+        // Extract leading emoji
+        var emojiMatch = entry.match(/^([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}][\uFE0F]?\s*)/u);
+        if (emojiMatch) {
+            icon = emojiMatch[1].trim();
+            text = entry.substring(emojiMatch[0].length);
+        }
+
+        // Extract "Jahr X:" and remove it
+        var jahrMatch = text.match(/^Jahr\s+(\d+):\s*/);
+        if (jahrMatch) {
+            year = jahrMatch[1];
+            text = text.substring(jahrMatch[0].length);
+        }
+
+        // Clean up pipe separators → compact with middot
+        text = text.replace(/\s*\|\s*/g, ' · ');
+        // Remove "Σ:" prefix (redundant with context)
+        text = text.replace(/\s*·\s*Σ:\s*/g, ' = ');
+        // Shorten common labels
+        text = text.replace(/Depot:\s*/g, 'D: ');
+        text = text.replace(/TG:\s*/g, 'TG: ');
+        text = text.replace(/Cash/g, '💵');
+
+        return { icon: icon, year: year, text: text };
     }
 
     function showKriegskasseResults() {
@@ -10969,11 +11011,17 @@ function updateFixkostenItem(index, key, value) {
     function openMsciRenditedreieck() {
         resetMsciZoom();
         openModal('msci-modal');
+        document.addEventListener('keydown', msciEscHandler);
     }
 
     function closeMsciRenditedreieck() {
         closeModal('msci-modal');
         resetMsciZoom();
+        document.removeEventListener('keydown', msciEscHandler);
+    }
+
+    function msciEscHandler(e) {
+        if (e.key === 'Escape') closeMsciRenditedreieck();
     }
 
     function resetMsciZoom() {
@@ -10989,27 +11037,35 @@ function updateFixkostenItem(index, key, value) {
         }
     }
 
+    var msciClickStart = { x: 0, y: 0 };
+
+    function msciMouseDownTrack(e) {
+        msciClickStart.x = e.clientX;
+        msciClickStart.y = e.clientY;
+    }
+
     function toggleMsciZoom(event) {
-        const img = getEl('msci-image');
-        const container = getEl('msci-container');
+        // Ignore if this was a drag (moved > 5px)
+        var dx = Math.abs(event.clientX - msciClickStart.x);
+        var dy = Math.abs(event.clientY - msciClickStart.y);
+        if (dx > 5 || dy > 5) return;
+
+        var img = getEl('msci-image');
+        var container = getEl('msci-container');
         if (!img || !container) return;
 
         if (!msciZoomState.zoomed) {
             // Zoom in: Berechne Position relativ zum Klick
-            const rect = container.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
+            var rect = container.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var y = event.clientY - rect.top;
 
-            // Prozentuale Position (0-1)
-            const xPercent = x / rect.width;
-            const yPercent = y / rect.height;
+            var xPercent = x / rect.width;
+            var yPercent = y / rect.height;
 
-            // Zoom-Level
-            const zoomScale = 2.5;
-
-            // Berechne Translation um den Klickpunkt zu zentrieren
-            const translateX = (0.5 - xPercent) * 100 * (zoomScale - 1);
-            const translateY = (0.5 - yPercent) * 100 * (zoomScale - 1);
+            var zoomScale = 2.5;
+            var translateX = (0.5 - xPercent) * 100 * (zoomScale - 1);
+            var translateY = (0.5 - yPercent) * 100 * (zoomScale - 1);
 
             msciZoomState = {
                 zoomed: true,
@@ -11018,16 +11074,94 @@ function updateFixkostenItem(index, key, value) {
                 translateY: translateY
             };
 
-            img.style.transform = `scale(${zoomScale}) translate(${translateX}%, ${translateY}%)`;
-            img.style.cursor = 'zoom-out';
-            container.style.cursor = 'zoom-out';
+            img.style.transform = 'scale(' + zoomScale + ') translate(' + translateX + '%, ' + translateY + '%)';
+            img.style.cursor = 'grab';
+            container.style.cursor = 'grab';
         } else {
             // Zoom out
             resetMsciZoom();
         }
     }
 
-    // Filter-Funktionen entfernt - nur Zoom bleibt aktiv
+    // Mousewheel zoom for MSCI image
+    function initMsciWheelZoom() {
+        var container = document.getElementById('msci-container');
+        if (!container) return;
+
+        container.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            var img = document.getElementById('msci-image');
+            if (!img) return;
+
+            var rect = container.getBoundingClientRect();
+            var xPercent = (e.clientX - rect.left) / rect.width;
+            var yPercent = (e.clientY - rect.top) / rect.height;
+
+            // Zoom in/out
+            var delta = e.deltaY > 0 ? -0.3 : 0.3;
+            var newScale = Math.max(1, Math.min(5, msciZoomState.scale + delta));
+
+            if (newScale === 1) {
+                resetMsciZoom();
+                return;
+            }
+
+            var translateX = (0.5 - xPercent) * 100 * (newScale - 1);
+            var translateY = (0.5 - yPercent) * 100 * (newScale - 1);
+
+            msciZoomState = { zoomed: true, scale: newScale, translateX: translateX, translateY: translateY };
+            img.style.transform = 'scale(' + newScale + ') translate(' + translateX + '%, ' + translateY + '%)';
+            img.style.cursor = newScale > 1 ? 'grab' : 'zoom-in';
+            container.style.cursor = img.style.cursor;
+        }, { passive: false });
+
+        // Drag to pan when zoomed
+        var isDragging = false;
+        var lastX = 0, lastY = 0;
+
+        container.addEventListener('mousedown', function(e) {
+            if (msciZoomState.scale > 1) {
+                isDragging = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                container.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            var img = document.getElementById('msci-image');
+            if (!img) return;
+
+            var dx = (e.clientX - lastX) / msciZoomState.scale;
+            var dy = (e.clientY - lastY) / msciZoomState.scale;
+            lastX = e.clientX;
+            lastY = e.clientY;
+
+            msciZoomState.translateX += dx * 0.5;
+            msciZoomState.translateY += dy * 0.5;
+
+            img.style.transform = 'scale(' + msciZoomState.scale + ') translate(' + msciZoomState.translateX + '%, ' + msciZoomState.translateY + '%)';
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                var container = document.getElementById('msci-container');
+                if (container && msciZoomState.scale > 1) {
+                    container.style.cursor = 'grab';
+                }
+            }
+        });
+    }
+
+    // Initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMsciWheelZoom);
+    } else {
+        initMsciWheelZoom();
+    }
 
     // === IMMOBILIEN FUNCTIONS ===
     // Immobilien-Daten Objekt (wird in localStorage gespeichert)
