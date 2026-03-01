@@ -605,6 +605,21 @@
         /* Base background/text via CSS vars (keine Änderung an Tailwind nötig) */
         body { background: var(--bg); color: var(--fg); }
 
+        /* Light Theme: Sky-to-Water ambient background */
+        .theme-light body,
+        body.theme-light {
+            background: linear-gradient(
+                180deg,
+                #e8f4fd 0%,       /* Himmel — zart blau */
+                #f0f7fc 20%,      /* Übergang */
+                #f8f8f6 45%,      /* Neutral — Horizont */
+                #f0f8f6 65%,      /* Übergang zu Wasser */
+                #e4f0ee 80%,      /* Aqua Hauch */
+                #d6ebe7 100%      /* Pool/Meer — MLP Türkis-Hauch */
+            );
+            background-attachment: fixed;
+        }
+
         /* === HORIZONTAL GRADIENT ZONES === */
         .gradient-zone {
             position: absolute;
@@ -653,38 +668,73 @@
             );
         }
 
-        /* Light Theme - Metapher bleibt, nur heller */
+        /* Light Theme — Himmel-zu-Wasser Zonen (kräftiger, sichtbar!) */
         .theme-light .gradient-zone-1 {
-            background: linear-gradient(
-                to bottom,
-                rgba(100, 180, 255, 0.10) 0%,
-                rgba(60, 120, 200, 0.12) 100%
-            );
+            /* WOLKEN: Weicher Himmel mit Radial-Glow für Wolken-Effekt */
+            background:
+                radial-gradient(ellipse 120% 80% at 30% 40%, rgba(255,255,255,0.6) 0%, transparent 70%),
+                radial-gradient(ellipse 100% 60% at 70% 30%, rgba(255,255,255,0.5) 0%, transparent 65%),
+                linear-gradient(to bottom, rgba(135,195,255,0.18) 0%, rgba(100,170,240,0.22) 100%);
         }
 
         .theme-light .gradient-zone-2 {
+            /* HORIZONT: Wo Himmel auf Erde trifft — warm-neutral */
             background: linear-gradient(
                 to bottom,
-                rgba(60, 120, 200, 0.12) 0%,
-                rgba(70, 90, 120, 0.15) 100%
+                rgba(100,170,240,0.15) 0%,
+                rgba(180,195,210,0.12) 40%,
+                rgba(190,182,170,0.10) 100%
             );
         }
 
         .theme-light .gradient-zone-3 {
+            /* SCHUPPEN/LIQUIDITÄT: Übergang zu Wasser — Teal-Hauch */
             background: linear-gradient(
                 to bottom,
-                rgba(70, 90, 120, 0.15) 0%,
-                rgba(40, 80, 100, 0.18) 100%
+                rgba(190,182,170,0.08) 0%,
+                rgba(71,161,144,0.08) 50%,
+                rgba(71,161,144,0.14) 100%
             );
         }
 
         .theme-light .gradient-zone-4 {
-            background: linear-gradient(
-                to bottom,
-                rgba(40, 80, 100, 0.18) 0%,
-                rgba(189, 161, 119, 0.15) 50%,
-                rgba(189, 161, 119, 0.22) 100%
-            );
+            /* POOL/MEER: Vermögensaufbau — Aqua-Tiefe mit Wasser-Reflexion */
+            background:
+                radial-gradient(ellipse 140% 60% at 50% 80%, rgba(71,161,144,0.12) 0%, transparent 70%),
+                linear-gradient(
+                    to bottom,
+                    rgba(71,161,144,0.14) 0%,
+                    rgba(3,61,93,0.10) 50%,
+                    rgba(3,61,93,0.16) 100%
+                );
+        }
+
+        /* Ambient Glows — weiche Lichtpunkte für Tiefe */
+        .ambient-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        .theme-light .ambient-glow { opacity: 1; }
+        .ambient-glow-sky {
+            background: radial-gradient(circle, rgba(135,195,255,0.20) 0%, rgba(135,195,255,0.05) 50%, transparent 70%);
+        }
+        .ambient-glow-water {
+            background: radial-gradient(circle, rgba(71,161,144,0.15) 0%, rgba(71,161,144,0.04) 50%, transparent 70%);
+        }
+
+        /* Light-Theme Flow-Labels: leichter Glas-Hintergrund */
+        .theme-light .flow-value {
+            background: rgba(255,255,255,0.7) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.5) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
         }
 
         /* === SESSION MODAL OVERLAY (v2.0) === */
@@ -1833,9 +1883,23 @@
 
         /* Panels / cards / modals */
         .theme-light .account-basin {
-          background-color: var(--card) !important;
-          border-color: var(--border) !important;
-          box-shadow: 0 8px 18px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05) !important;
+          background: rgba(255,255,255,0.72) !important;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255,255,255,0.6) !important;
+          box-shadow:
+            0 8px 32px rgba(3,61,93,0.08),
+            0 2px 8px rgba(0,0,0,0.04),
+            0 0 0 1px rgba(255,255,255,0.3) inset !important;
+        }
+        .theme-light button.account-basin:hover {
+          background: rgba(255,255,255,0.85) !important;
+          border-color: rgba(3,61,93,0.25) !important;
+          box-shadow:
+            0 12px 40px rgba(3,61,93,0.12),
+            0 4px 12px rgba(0,0,0,0.06),
+            0 0 0 1px rgba(255,255,255,0.4) inset !important;
+          transform: translateY(-2px);
         }
         .theme-light .modal .bg-gray-800 { background-color: #ffffff !important; }
 
@@ -2963,6 +3027,12 @@
                 <div id="gradient-zone-3" class="gradient-zone gradient-zone-3" style="top: 720px; height: 240px;"></div>
                 <div id="gradient-zone-4" class="gradient-zone gradient-zone-4" style="top: 960px; height: 300px;"></div>
 
+                <!-- Ambient Glows: Subtile Lichtpunkte für Tiefe (nur Light-Theme sichtbar) -->
+                <div class="ambient-glow ambient-glow-sky" style="top: -50px; left: 20%;"></div>
+                <div class="ambient-glow ambient-glow-sky" style="top: 50px; left: 65%;"></div>
+                <div class="ambient-glow ambient-glow-water" style="top: 850px; left: 40%;"></div>
+                <div class="ambient-glow ambient-glow-water" style="top: 1000px; left: 70%;"></div>
+
                 <div id="einkommen-basin" class="account-basin account-basin--editable"></div>
                 <button id="fixkosten-basin" class="account-basin cursor-pointer" type="button" aria-controls="fixkosten-modal" aria-haspopup="dialog" onclick="openFixkostenModal()"></button>
                 <div id="konsum-basin" class="account-basin account-basin--editable"></div>
@@ -3017,29 +3087,18 @@
             <h3 id="fixkosten-modal-title" class="text-xl font-bold" style="margin-bottom: 2px;">Fixkosten &amp; Sparpläne</h3>
             <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">Verwalte monatliche Ausgaben und Sparplan-Zuweisungen.</p>
 
-            <!-- Column Headers -->
-            <div style="display: grid; grid-template-columns: 4fr 2fr 2fr 3fr 1fr; gap: 8px; padding: 0 8px 6px 8px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                <span>Posten</span>
-                <span>Betrag</span>
-                <span>Intervall</span>
-                <span>Zuordnung</span>
-                <span></span>
+            <div id="fixkosten-list" class="space-y-2 max-h-72 overflow-y-auto pr-2" style="scrollbar-width: thin;"></div>
+
+            <button type="button" onclick="addFixkostenItem()" style="margin-top:10px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:5px; border:1px dashed rgba(156,163,175,0.3); background:transparent; color:#9ca3af; cursor:pointer; transition:all 0.15s;">+ Posten hinzufügen</button>
+
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:12px; border-top:1px solid rgba(156,163,175,0.12);">
+                <span style="font-size:13px; color:#9ca3af;">Monatliche Gesamtkosten</span>
+                <p id="modal-total" class="text-2xl font-bold" style="color: var(--mlp-error);">0 &euro;</p>
             </div>
 
-            <div id="fixkosten-list" class="space-y-1 max-h-72 overflow-y-auto pr-1" style="scrollbar-width: thin;"></div>
-
-            <button type="button" onclick="addFixkostenItem()" style="display: flex; align-items: center; gap: 6px; margin-top: 12px; padding: 8px 14px; font-size: 13px; font-weight: 500; color: var(--mlp-primary); background: transparent; border: 1px dashed var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; width: 100%; justify-content: center;" onmouseover="this.style.background='rgba(3,61,93,0.04)'; this.style.borderColor='var(--mlp-primary)'" onmouseout="this.style.background='transparent'; this.style.borderColor='var(--border)'">
-                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Posten hinzufügen
-            </button>
-
-            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);">
-                <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                    <span style="font-size: 13px; color: var(--muted);">Monatliche Gesamtkosten</span>
-                    <p id="modal-total" class="text-2xl font-bold" style="color: var(--mlp-error);">? 0</p>
-                </div>
+            <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(156,163,175,0.12);">
+                <button id="fixkosten-save-button" type="button" onclick="saveFixkosten()" style="width:100%; padding:8px 16px; border-radius:6px; border:1px solid #47A190; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; background:rgba(71,161,144,0.1); color:#47A190;">Speichern &amp; Schließen</button>
             </div>
-            <button type="button" onclick="saveFixkosten()" class="mlp-btn mlp-btn-primary mt-4 w-full py-2 px-4">Speichern &amp; Schließen</button>
         </div>
     </div>
 
@@ -10529,67 +10588,100 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     function saveFixkosten() { calculateAndUpdate(); closeModal('fixkosten-modal'); }
     function renderFixkostenList() {
         fixkostenModal.list.innerHTML = '';
-        let total = 0;
+        var total = 0;
 
         // Vermieterkonto-Daten holen
-        const vermieterData = getVermieterkontoData();
+        var vermieterData = getVermieterkontoData();
 
         // Automatische Zeile für Vermieterkonto (nur in Variante A)
         if (currentVariant === 'A' && vermieterData.saldo !== 0) {
-            const autoItemEl = document.createElement('div');
+            var autoItemEl = document.createElement('div');
+            autoItemEl.className = 'grid grid-cols-12 gap-2 items-center mb-2';
 
             if (vermieterData.saldo < 0) {
                 // Negativ: Zusätzliche Ausgabe (warnung)
-                autoItemEl.style.cssText = 'display: grid; grid-template-columns: 4fr 2fr 2fr 3fr 1fr; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 8px; background: rgba(227,105,30,0.05); border-left: 3px solid var(--mlp-warning); margin-bottom: 4px;';
-                autoItemEl.innerHTML = '<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--mlp-warning);">' +
-                        '<svg style="width: 14px; height: 14px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>' +
-                        'Vermieterkonto' +
+                autoItemEl.style.cssText = 'padding: 6px 8px; border-radius: 8px; background: rgba(227,105,30,0.05); border-left: 3px solid var(--mlp-warning);';
+                autoItemEl.innerHTML =
+                    '<div class="col-span-6">' +
+                        '<div class="flex items-center gap-2">' +
+                            '<span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:20px; border-radius:4px; font-size:9px; font-weight:700; letter-spacing:0.5px; background:rgba(227,105,30,0.15); color:var(--mlp-warning);">AUTO</span>' +
+                            '<span style="font-size:13px; font-weight:500; color:var(--mlp-warning);">Vermieterkonto</span>' +
+                        '</div>' +
                     '</div>' +
-                    '<div style="font-size: 13px; font-weight: 600; color: var(--mlp-warning); text-align: right;">' + formatCurrency(Math.abs(vermieterData.saldo)) + '</div>' +
-                    '<div style="font-size: 12px; color: var(--muted);">Monatlich</div>' +
-                    '<div style="font-size: 11px; color: var(--muted); font-style: italic;">automatisch</div>' +
-                    '<div></div>';
+                    '<div class="relative col-span-2">' +
+                        '<span style="font-size:13px; font-weight:600; color:var(--mlp-warning); display:block; text-align:right;">' + formatCurrency(Math.abs(vermieterData.saldo)) + '</span>' +
+                    '</div>' +
+                    '<div class="col-span-3" style="font-size:12px; color:var(--muted);">Monatlich</div>' +
+                    '<div class="col-span-1"></div>';
                 total += Math.abs(vermieterData.saldo);
             } else {
                 // Positiv: Einsparung (grün)
-                autoItemEl.style.cssText = 'display: grid; grid-template-columns: 4fr 2fr 2fr 3fr 1fr; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 8px; background: rgba(19,133,62,0.04); border-left: 3px solid var(--mlp-success); margin-bottom: 4px;';
-                autoItemEl.innerHTML = '<div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--mlp-success);">' +
-                        '<svg style="width: 14px; height: 14px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' +
-                        'Mieteinnahmen' +
+                autoItemEl.style.cssText = 'padding: 6px 8px; border-radius: 8px; background: rgba(19,133,62,0.04); border-left: 3px solid var(--mlp-success);';
+                autoItemEl.innerHTML =
+                    '<div class="col-span-6">' +
+                        '<div class="flex items-center gap-2">' +
+                            '<span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:20px; border-radius:4px; font-size:9px; font-weight:700; letter-spacing:0.5px; background:rgba(19,133,62,0.1); color:var(--mlp-success);">AUTO</span>' +
+                            '<span style="font-size:13px; font-weight:500; color:var(--mlp-success);">Mieteinnahmen</span>' +
+                        '</div>' +
                     '</div>' +
-                    '<div style="font-size: 13px; font-weight: 600; color: var(--mlp-success); text-align: right;">-' + formatCurrency(vermieterData.saldo) + '</div>' +
-                    '<div style="font-size: 12px; color: var(--muted);">Monatlich</div>' +
-                    '<div style="font-size: 11px; color: var(--muted); font-style: italic;">automatisch</div>' +
-                    '<div></div>';
-                total -= vermieterData.saldo; // Reduziert die Fixkosten
+                    '<div class="relative col-span-2">' +
+                        '<span style="font-size:13px; font-weight:600; color:var(--mlp-success); display:block; text-align:right;">-' + formatCurrency(vermieterData.saldo) + '</span>' +
+                    '</div>' +
+                    '<div class="col-span-3" style="font-size:12px; color:var(--muted);">Monatlich</div>' +
+                    '<div class="col-span-1"></div>';
+                total -= vermieterData.saldo;
             }
 
             fixkostenModal.list.appendChild(autoItemEl);
         }
 
         // Reguläre Fixkosten-Items
-        fixkostenItems.forEach((item, index) => {
-            const itemEl = document.createElement('div');
-            itemEl.style.cssText = 'display: grid; grid-template-columns: 4fr 2fr 2fr 3fr 1fr; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; transition: background 0.15s;';
-            itemEl.onmouseover = function() { this.style.background = 'rgba(3,61,93,0.03)'; };
-            itemEl.onmouseout = function() { this.style.background = 'transparent'; };
-            var intervalOptions = ['monthly','quarterly','annually'].map(function(i) {
-                return '<option value="' + i + '" ' + (item.interval === i ? 'selected' : '') + '>' + (i==='monthly'?'Monatlich':i==='quarterly'?'Vierteljährl.':'Jährlich') + '</option>';
-            }).join('');
+        fixkostenItems.forEach(function(item, index) {
+            var itemEl = document.createElement('div');
+            itemEl.className = 'grid grid-cols-12 gap-2 items-center mb-2';
+
             var targetIsDepot = item.target === 'depot';
-            itemEl.innerHTML = '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" onchange="updateFixkostenItem(' + index + ', \'name\', this.value)" placeholder="z.B. Miete, Strom..." class="mlp-input-field-v2" style="padding: 6px 10px; font-size: 13px;">' +
-                '<input type="number" value="' + item.amount + '" onchange="updateFixkostenItem(' + index + ', \'amount\', this.value)" placeholder="0" class="mlp-input-field-v2" style="padding: 6px 10px; font-size: 13px; text-align: right;">' +
-                '<select onchange="updateFixkostenItem(' + index + ', \'interval\', this.value)" class="mlp-input-field-v2" style="padding: 6px 8px; font-size: 12px;">' + intervalOptions + '</select>' +
-                '<select onchange="updateFixkostenItem(' + index + ', \'target\', this.value)" class="mlp-input-field-v2" style="padding: 6px 8px; font-size: 12px; color: ' + (targetIsDepot ? 'var(--mlp-primary)' : 'var(--fg)') + ';">' +
-                    '<option value="fixkosten" ' + (item.target==='fixkosten'?'selected':'') + '>Fixkosten</option>' +
-                    '<option value="depot" ' + (item.target==='depot'?'selected':'') + '>Sparplan</option>' +
-                '</select>' +
-                '<button onclick="removeFixkostenItem(' + index + ')" style="color: var(--muted); cursor: pointer; font-size: 18px; padding: 2px 6px; border-radius: 4px; border: none; background: transparent; transition: all 0.15s;" onmouseover="this.style.color=\'var(--mlp-error)\'; this.style.background=\'rgba(193,41,61,0.06)\'" onmouseout="this.style.color=\'var(--muted)\'; this.style.background=\'transparent\'">&times;</button>';
+
+            // Badge: FK (Titanium) oder SP (Türkis) — wie BLAU/ROT bei Fonds
+            var badgeBg = targetIsDepot ? 'rgba(71,161,144,0.15)' : 'rgba(190,182,170,0.2)';
+            var badgeColor = targetIsDepot ? 'var(--mlp-accent)' : 'var(--mlp-secondary)';
+            var badgeText = targetIsDepot ? 'SP' : 'FK';
+            var badgeHtml = '<span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:20px; border-radius:4px; font-size:10px; font-weight:700; letter-spacing:0.5px; background:' + badgeBg + '; color:' + badgeColor + '; cursor:pointer; transition:all 0.15s;" onclick="toggleFixkostenTarget(' + index + ')" title="Klick: ' + (targetIsDepot ? 'Fixkosten' : 'Sparplan') + '">' + badgeText + '</span>';
+
+            var intervalOptions = ['monthly','quarterly','annually'].map(function(i) {
+                return '<option value="' + i + '" ' + (item.interval === i ? 'selected' : '') + '>' + (i==='monthly'?'Mtl.':i==='quarterly'?'Qtl.':'Jährl.') + '</option>';
+            }).join('');
+
+            itemEl.innerHTML =
+                '<div class="col-span-5">' +
+                    '<div class="flex items-center gap-2">' +
+                        badgeHtml +
+                        '<input type="text" value="' + (item.name || '').replace(/"/g, '&quot;') + '" onchange="updateFixkostenItem(' + index + ', \'name\', this.value)" placeholder="z.B. Miete, Strom..." class="flex-1 mlp-input-field-v2 p-1 text-sm" autocomplete="off">' +
+                    '</div>' +
+                '</div>' +
+                '<div class="relative col-span-3">' +
+                    '<input type="number" value="' + item.amount + '" onchange="updateFixkostenItem(' + index + ', \'amount\', this.value)" placeholder="0" class="w-full text-right pr-6 mlp-input-field-v2 p-1 text-sm">' +
+                    '<span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs" style="color: var(--muted);">&euro;</span>' +
+                '</div>' +
+                '<div class="col-span-3">' +
+                    '<select onchange="updateFixkostenItem(' + index + ', \'interval\', this.value)" class="w-full mlp-input-field-v2 p-1 text-sm" style="font-size:12px;">' + intervalOptions + '</select>' +
+                '</div>' +
+                '<button type="button" onclick="removeFixkostenItem(' + index + ')" ' +
+                'class="col-span-1 text-xl" style="color: var(--mlp-error); cursor: pointer;" title="Entfernen" onmouseover="this.style.opacity=\'0.7\'" onmouseout="this.style.opacity=\'1\'">&times;</button>';
+
             fixkostenModal.list.appendChild(itemEl);
             total += getMonthlyAmount(item);
         });
 
         fixkostenModal.total.textContent = formatCurrency(total);
+    }
+
+    // Badge-Klick: Target zwischen fixkosten/depot umschalten
+    function toggleFixkostenTarget(index) {
+        if (fixkostenItems[index]) {
+            fixkostenItems[index].target = fixkostenItems[index].target === 'depot' ? 'fixkosten' : 'depot';
+            renderFixkostenList();
+        }
     }
 function updateFixkostenItem(index, key, value) {
   // Normalize types per field
