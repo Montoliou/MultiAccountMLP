@@ -602,11 +602,11 @@
             page-break-inside: avoid;
             transform: scale(0.75) !important;
             transform-origin: top center !important;
-            width: 1100px !important;
+            width: 1150px !important;
             margin: 0 auto -380px auto !important;
             position: relative !important;
             left: 50% !important;
-            margin-left: -720px !important;
+            margin-left: -728px !important;
           }
         }
 
@@ -12155,9 +12155,7 @@ function updateFixkostenItem(index, key, value) {
           // no-print Elemente entfernen (Mobile Warning etc.)
           clone.querySelectorAll('.no-print').forEach(n => n.remove());
 
-          // --- v2.0 Print-Klon: SVG sauber machen ---
-
-          // v2.0-Dekorationen entfernen
+          // v2.0-Dekorationen entfernen (existieren nicht in v1)
           clone.querySelectorAll('.gradient-zone, .ambient-glow').forEach(n => n.remove());
           // Basins: Glasmorphism → solide (backdrop-filter druckt nicht)
           clone.querySelectorAll('.account-basin').forEach(n => {
@@ -12166,56 +12164,7 @@ function updateFixkostenItem(index, key, value) {
             n.style.background = '#ffffff';
             n.style.border = '1px solid #BEB6AA';
           });
-
-          // SVG Fix: Duplikat-ID-Problem lösen.
-          // Problem: Klon + Original haben beide id="flow-gradient", id="flow-mask" etc.
-          // Browser löst url(#flow-gradient) zum ERSTEN Element auf (= verstecktes Original).
-          // Lösung: Computed stroke-Farben vom Live-SVG als inline-Wert auf Klon-Pfade setzen,
-          // dann url()-Referenzen durch die inline-Werte ersetzen + unnötige Elemente entfernen.
-
-          // 1) Computed stroke-Farben ZUERST lesen (Original hat noch korrekte Gradienten)
-          var origSvg = live.querySelector('#flow-svg');
-          var origPaths = origSvg ? origSvg.querySelectorAll('.flow-path') : [];
-          var strokeData = [];
-          origPaths.forEach(function(p) {
-            var cs = getComputedStyle(p);
-            strokeData.push({
-              stroke: cs.stroke || '',
-              strokeWidth: cs.strokeWidth || '',
-              opacity: cs.opacity || '1'
-            });
-          });
-
-          // 2) Mask entfernen (maskUnits bricht im Klon)
-          var cloneVisuals = clone.querySelector('#flow-visuals');
-          if (cloneVisuals) cloneVisuals.removeAttribute('mask');
-
-          // 3) Unnötige Elemente entfernen
-          clone.querySelectorAll('.flow-erase').forEach(function(n) { n.remove(); });
-          clone.querySelectorAll('.flow-path-animation').forEach(function(n) { n.remove(); });
-          clone.querySelectorAll('[id$="-dot"]').forEach(function(n) { n.remove(); });
-
-          // 4) Inline stroke auf Klon-Pfade setzen (ersetzt url(#flow-gradient))
-          var clonePaths = clone.querySelectorAll('.flow-path');
-          clonePaths.forEach(function(cp, i) {
-            var sd = strokeData[i];
-            if (!sd) return;
-            // Direktes stroke-Attribut hat Vorrang vor CSS url()
-            if (sd.stroke && sd.stroke !== 'none') {
-              cp.setAttribute('stroke', sd.stroke);
-            }
-            if (sd.strokeWidth) {
-              cp.setAttribute('stroke-width', sd.strokeWidth);
-            }
-            cp.setAttribute('opacity', '1');
-            cp.classList.add('active');
-            // CSS-Regel überschreiben die stroke: url() Deklaration
-            cp.style.setProperty('stroke', sd.stroke, 'important');
-          });
-
-          // 5) Klon-SVG defs entfernen (gradient/mask/filter nicht mehr nötig)
-          var cloneDefs = clone.querySelector('#flow-svg defs');
-          if (cloneDefs) cloneDefs.remove();
+          // SVG: NICHT anfassen! v1-Ansatz = DOM-Klon unverändert, CSS macht Skalierung.
 
           // v1.7.8-Methode: Deterministische Größe, CSS macht die Skalierung
           const cs = getComputedStyle(live);
