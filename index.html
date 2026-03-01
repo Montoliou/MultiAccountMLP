@@ -707,20 +707,29 @@
         }
 
         .modal-content {
-            background: var(--card);
-            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(190,182,170,0.3);
             border-radius: var(--radius-lg);
             padding: 2rem;
-            box-shadow: var(--shadow-modal);
+            box-shadow: 0 25px 60px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.1) inset;
             max-width: 90%;
             max-height: 90vh;
             overflow-y: auto;
             transform: translateY(12px) scale(0.98);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+        }
+        .theme-dark .modal-content {
+            background: rgba(24,41,58,0.88);
+            border: 1px solid rgba(45,66,86,0.5);
+            box-shadow: 0 25px 60px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
         }
 
         .modal-overlay.modal-active .modal-content {
             transform: translateY(0) scale(1);
+            opacity: 1;
         }
 
         @keyframes fadeIn {
@@ -1470,8 +1479,11 @@
         .mlp-btn-tertiary {
             background: transparent; color: var(--mlp-primary);
             border: 1px solid var(--border);
+            transition: all 0.2s ease;
         }
         .mlp-btn-tertiary:hover:not(:disabled) { background: rgba(3,61,93,0.06); border-color: var(--mlp-primary); }
+        .theme-dark .mlp-btn-tertiary { color: #7db8d4; border-color: rgba(125,184,212,0.3); }
+        .theme-dark .mlp-btn-tertiary:hover:not(:disabled) { background: rgba(125,184,212,0.1); border-color: #7db8d4; }
         .mlp-btn-danger {
             background: var(--mlp-error); color: var(--mlp-text-light);
         }
@@ -1556,10 +1568,19 @@
             background: var(--gray-800);
             border: 1px solid var(--gray-700);
         }
-        /* Modal document panels: theme-aware background */
+        /* Modal document panels: Glassmorphism */
         .modal [role="document"] {
-            background: var(--card);
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(190,182,170,0.25);
             color: var(--fg);
+            box-shadow: 0 20px 50px -12px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1) inset;
+        }
+        .theme-dark .modal [role="document"] {
+            background: rgba(24,41,58,0.92);
+            border: 1px solid rgba(45,66,86,0.5);
+            box-shadow: 0 20px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
         }
         /* Modal close buttons: theme-aware hover */
         .modal [role="document"] > button[aria-label]:first-of-type {
@@ -1628,18 +1649,27 @@
         .theme-dark .modal .border-red-200 { border-color: rgba(193,41,61,0.3) !important; }
         .theme-dark .modal .border-yellow-400 { border-color: rgba(227,105,30,0.5) !important; }
 
-        /* ── Anleihen-Modal: Inline-Style Attribute Selectors ── */
-        .theme-dark #anleihen-modal [style*="color: #2B2B2B"] { color: var(--fg) !important; }
-        .theme-dark #anleihen-modal [style*="color: #717171"] { color: var(--muted) !important; }
-        .theme-dark #anleihen-modal [style*="color: #033D5D"] { color: #7db8d4 !important; }
-        .theme-dark #anleihen-modal [style*="background: #F8F8F8"] { background: var(--card) !important; }
-        .theme-dark #anleihen-modal [style*="background: rgba(190,182,170,0.12)"] { background: rgba(190,182,170,0.06) !important; }
-        .theme-dark #anleihen-modal [style*="background: rgba(71,161,144,0.06)"] { background: rgba(71,161,144,0.12) !important; }
-        .theme-dark #anleihen-modal [style*="background: rgba(3,61,93,0.04)"] { background: rgba(3,61,93,0.15) !important; }
-        .theme-dark #anleihen-modal [style*="background: rgba(3,61,93,0.06)"] { background: rgba(3,61,93,0.18) !important; }
-        .theme-dark #anleihen-modal [style*="border: 1px solid #BEB6AA"] { border-color: var(--border) !important; }
-        .theme-dark #anleihen-modal [style*="border-left: 4px solid #BEB6AA"] { border-left-color: var(--border) !important; }
-        .theme-dark #anleihen-modal [style*="background: white"] { background: var(--card) !important; }
+        /* ── Global Modal: Inline-Style Attribute Selectors für Dark ── */
+        /* Hardcoded MLP-Farben in inline styles → Dark-aware */
+        .theme-dark .modal [style*="color: #2B2B2B"] { color: var(--fg) !important; }
+        .theme-dark .modal [style*="color: #717171"] { color: var(--muted) !important; }
+        .theme-dark .modal [style*="color: #033D5D"] { color: #7db8d4 !important; }
+        .theme-dark .modal [style*="background: #F8F8F8"] { background: var(--card) !important; }
+        .theme-dark .modal [style*="background: white"] { background: var(--card) !important; }
+        /* Low-opacity MLP-Blau BGs → etwas kräftiger im Dark */
+        .theme-dark .modal [style*="background: rgba(3, 61, 93, 0.06)"],
+        .theme-dark .modal [style*="background: rgba(3,61,93,0.06)"] { background: rgba(125,184,212,0.1) !important; }
+        .theme-dark .modal [style*="background: rgba(3, 61, 93, 0.08)"],
+        .theme-dark .modal [style*="background: rgba(3,61,93,0.08)"] { background: rgba(125,184,212,0.12) !important; }
+        .theme-dark .modal [style*="background: rgba(3,61,93,0.04)"] { background: rgba(125,184,212,0.08) !important; }
+        /* Titanium BGs */
+        .theme-dark .modal [style*="background: rgba(190,182,170,0.12)"] { background: rgba(190,182,170,0.06) !important; }
+        .theme-dark .modal [style*="background: rgba(71,161,144,0.06)"] { background: rgba(71,161,144,0.12) !important; }
+        /* Borders */
+        .theme-dark .modal [style*="border: 1px solid #BEB6AA"] { border-color: var(--border) !important; }
+        .theme-dark .modal [style*="border-left: 4px solid #BEB6AA"] { border-left-color: var(--border) !important; }
+        .theme-dark .modal [style*="border-color: var(--mlp-titanium)"] { border-color: var(--border) !important; }
+        /* Anleihen-Modal: SVG elements */
         .theme-dark #anleihen-modal rect[fill="#F8F8F8"] { fill: var(--card); }
         .theme-dark #anleihen-modal rect[fill="white"],
         .theme-dark #anleihen-modal rect[stroke="#BEB6AA"] { fill: var(--card); stroke: var(--border); }
@@ -3734,10 +3764,10 @@
 
                     <!-- Right: Chart (8 cols) -->
                     <div class="col-span-8">
-                        <div class="bg-white rounded-lg p-4" style="height: 420px; border: 1px solid #BEB6AA; box-shadow: 0 1px 3px rgba(0,0,0,0.12);">
+                        <div class="rounded-lg p-4" style="height: 420px; background: var(--card); border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
                             <canvas id="anleihen-duration-chart"></canvas>
                         </div>
-                        <p class="text-xs mt-2 text-center" style="color: #717171;">
+                        <p class="text-xs mt-2 text-center" style="color: var(--muted);">
                             Kursänderung der Anleihe bei Zinsänderung — je kürzer die Restlaufzeit, desto geringer die Schwankung (Pull-to-Par)
                         </p>
                     </div>
@@ -8560,6 +8590,13 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
     }
 
     function initSideBySideCharts() {
+        // Chart theme colors
+        var _caDark = document.body.classList.contains('theme-dark');
+        var _caTextColor = _caDark ? '#8a9aad' : '#717171';
+        var _caGridColor = _caDark ? 'rgba(138,154,173,0.12)' : 'rgba(0,0,0,0.06)';
+        var _caBlue = _caDark ? '#7db8d4' : '#033D5D';
+        var _caBlueBg = _caDark ? 'rgba(125,184,212,0.15)' : 'rgba(3, 61, 93, 0.1)';
+
         // Chart A (Stable)
         const ctxA = document.getElementById('ca-chart-a');
         if (ctxA) {
@@ -8572,8 +8609,8 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                     datasets: [{
                         label: 'Kurs A',
                         data: courseData.A,
-                        borderColor: '#033D5D',
-                        backgroundColor: 'rgba(3, 61, 93, 0.1)',
+                        borderColor: _caBlue,
+                        backgroundColor: _caBlueBg,
                         borderWidth: 3,
                         tension: 0.3,
                         fill: true,
@@ -8619,13 +8656,15 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                     },
                     scales: {
                         y: {
-                            beginAtZero: false,
-                            min: 0,
-                            max: 20,
-                            title: { display: true, text: 'Kurs in €' }
+                            beginAtZero: false, min: 0, max: 20,
+                            title: { display: true, text: 'Kurs in €', color: _caTextColor },
+                            ticks: { color: _caTextColor },
+                            grid: { color: _caGridColor }
                         },
                         x: {
-                            title: { display: true, text: 'Jahr' }
+                            title: { display: true, text: 'Jahr', color: _caTextColor },
+                            ticks: { color: _caTextColor },
+                            grid: { color: _caGridColor }
                         }
                     },
                     // v1.7.1: Change cursor when in edit mode
@@ -8649,7 +8688,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         label: 'Kurs B',
                         data: courseData.B,
                         borderColor: '#C1293D',
-                        backgroundColor: 'rgba(193, 41, 61, 0.1)',
+                        backgroundColor: _caDark ? 'rgba(232,112,126,0.15)' : 'rgba(193, 41, 61, 0.1)',
                         borderWidth: 3,
                         tension: 0.3,
                         fill: true,
@@ -8695,13 +8734,15 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                     },
                     scales: {
                         y: {
-                            beginAtZero: false,
-                            min: 0,
-                            max: 20,
-                            title: { display: true, text: 'Kurs in €' }
+                            beginAtZero: false, min: 0, max: 20,
+                            title: { display: true, text: 'Kurs in €', color: _caTextColor },
+                            ticks: { color: _caTextColor },
+                            grid: { color: _caGridColor }
                         },
                         x: {
-                            title: { display: true, text: 'Jahr' }
+                            title: { display: true, text: 'Jahr', color: _caTextColor },
+                            ticks: { color: _caTextColor },
+                            grid: { color: _caGridColor }
                         }
                     },
                     // v1.7.1: Change cursor when in edit mode
@@ -10107,6 +10148,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             zinsDelta > 0 ? 'Kursänderung bei +' + zinsDelta.toFixed(1) + '% Zinsanstieg' :
             'Kursänderung bei ' + zinsDelta.toFixed(1) + '% Zinssenkung';
 
+        var isDark = document.body.classList.contains('theme-dark');
+        var chartText = isDark ? '#8a9aad' : '#717171';
+        var chartTitle = isDark ? '#7db8d4' : '#033D5D';
+        var chartGrid = isDark ? 'rgba(138,154,173,0.15)' : 'rgba(190,182,170,0.3)';
+
         anleihenDurationChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -10115,10 +10161,10 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                     label: 'Kursänderung (%)',
                     data: data.changes,
                     backgroundColor: data.changes.map(function(v) {
-                        return v < 0 ? 'rgba(3, 61, 93, 0.7)' : 'rgba(71, 161, 144, 0.7)';
+                        return v < 0 ? (isDark ? 'rgba(125,184,212,0.6)' : 'rgba(3,61,93,0.7)') : 'rgba(71,161,144,0.7)';
                     }),
                     borderColor: data.changes.map(function(v) {
-                        return v < 0 ? '#033D5D' : '#47A190';
+                        return v < 0 ? (isDark ? '#7db8d4' : '#033D5D') : '#47A190';
                     }),
                     borderWidth: 1,
                     borderRadius: 4
@@ -10132,7 +10178,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                         display: true,
                         text: titleText,
                         font: { size: 14, weight: 'bold' },
-                        color: '#033D5D'
+                        color: chartTitle
                     },
                     legend: { display: false },
                     tooltip: {
@@ -10145,12 +10191,14 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
                 },
                 scales: {
                     x: {
-                        title: { display: true, text: 'Restlaufzeit', color: '#717171' },
+                        title: { display: true, text: 'Restlaufzeit', color: chartText },
+                        ticks: { color: chartText },
                         grid: { display: false }
                     },
                     y: {
-                        title: { display: true, text: 'Kursänderung (%)', color: '#717171' },
-                        grid: { color: 'rgba(190,182,170,0.3)' },
+                        title: { display: true, text: 'Kursänderung (%)', color: chartText },
+                        ticks: { color: chartText },
+                        grid: { color: chartGrid },
                         min: -25,
                         max: 25
                     }

@@ -129,26 +129,50 @@ try {
 
 Vollständiger Guide: `.claude/skills/design-guide/SKILL.md`
 
+### Design-Philosophie (v2.0)
+
+**Glasmorphism + MLP = Premium-Feel:**
+- Modals/Cards: `backdrop-filter: blur(12px)`, halbtransparente Backgrounds, subtile Borders
+- Smooth Animations: `transition: all 0.2s ease` auf interaktiven Elementen
+- Keine harten Zustandswechsel — alles animiert
+
+**Farb-Regeln:**
+- **NIEMALS** `#033D5D` als Textfarbe auf dunklen Hintergründen — unsichtbar!
+- Im Dark-Mode: `#7db8d4` (helles MLP-Blau) für Überschriften verwenden
+- Charts/Diagramme: Hintergrund MUSS `var(--card)` sein, Achsen theme-aware
+- Jede Farbkombination auf BEIDEN Themes prüfen (Light + Dark)
+
+**Theme-Tokens verwenden (NICHT hardcoded):**
+```
+var(--fg)     statt color: white / color: #2B2B2B
+var(--card)   statt background: #F8F8F8 / background: #1f2937
+var(--border) statt border-color: #BEB6AA / border-color: #374151
+var(--muted)  statt color: #717171 / color: #9ca3af
+```
+
 ### Kern-Farben
 
 | Token | Hex | Verwendung |
 |-------|-----|------------|
-| MLP Blau Dark | `#033D5D` | Primary, Überschriften, Buttons |
+| MLP Blau Dark | `#033D5D` | Primary, Buttons (NUR auf hellem Grund!) |
+| MLP Blau Light | `#7db8d4` | Überschriften im Dark Mode |
 | Titanium | `#BEB6AA` | Borders, neutrale Elemente, Marktzins |
 | Türkis | `#47A190` | Accent, Erfolg, positive Werte |
-| Text Dark | `#2B2B2B` | Fließtext |
-| Text Medium | `#717171` | Labels, sekundärer Text |
-| Background | `#F8F8F8` | Hintergrund-Flächen |
+| Text Dark | `#2B2B2B` | Fließtext (nur Light Mode) |
+| Text Medium | `#717171` | Labels, sekundärer Text (nur Light Mode) |
+| Background | `#F8F8F8` | Hintergrund-Flächen (Light Mode) |
 | Error Red | `#C1293D` | NUR für echte Fehler/Defizite |
 | Warning Orange | `#E3691E` | Warnungen |
 
-### Design-Referenz
+### Dark Mode Palette (MLP Navy)
 
-Das **Anleihen-Modal (v1.7.8)** ist die Referenz für Premium-MLP-Design:
-- Tab-Navigation mit inline MLP-Styles
-- Vertical Fill-Tanks, MLP-Farben
-- Slider mit custom CSS (kein browser-default blau/grau)
-- Lesson-Boxes: BEB6AA left-border, 033D5D bold text
+| Token | Hex | Verwendung |
+|-------|-----|------------|
+| `--bg` | `#0e1c2b` | Deep MLP Navy (Page BG) |
+| `--card` | `#18293a` | Modal/Card BG |
+| `--border` | `#2d4256` | Borders |
+| `--fg` | `#ede9e3` | Text (Warm White) |
+| `--muted` | `#8a9aad` | Sekundärer Text |
 
 ### Slider Styling (Vorlage)
 
