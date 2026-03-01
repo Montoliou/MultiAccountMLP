@@ -107,11 +107,11 @@
         }
         .theme-light .flow-erase { stroke: #ffffff !important; }
         .theme-dark  .flow-erase { stroke: var(--gray-900) !important; }
-        /* Light theme: full blue flows, no grey halo */
-        .theme-light .flow-path { stroke: var(--mlp-blue-1); filter: none; }
-        .theme-light .flow-path-animation { stroke: #2f6fb2; stroke-dasharray: 8 14; opacity: .9; }
+        /* Light theme: softer blue flows on light background */
+        .theme-light .flow-path { stroke: url(#flow-gradient); filter: none; }
+        .theme-light .flow-path-animation { stroke: rgba(255,255,255,0.7); stroke-dasharray: 8 14; opacity: .6; }
         .flow-dot { fill: var(--mlp-blue-light); opacity: .95; }
-        .theme-light .flow-dot { fill: var(--mlp-blue-2); }
+        .theme-light .flow-dot { fill: #3a8aaa; }
         @keyframes flow { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -25; } }
         .flow-label { position: absolute; color: var(--gray-400); font-size: 0.75rem; font-weight: 500; z-index: 15; transform: translate(-50%, -130%); white-space: nowrap; transition: top 0.3s, left 0.3s; }
         /* Better readability for labels on blue rivers (light) */
@@ -605,17 +605,16 @@
         /* Base background/text via CSS vars (keine Änderung an Tailwind nötig) */
         body { background: var(--bg); color: var(--fg); }
 
-        /* Light Theme: Sky-to-Water ambient background */
+        /* Light Theme: "Warm Sky" — Himmelblau oben, Platin/Sand unten, KEIN Horizont */
         .theme-light body,
         body.theme-light {
             background: linear-gradient(
                 180deg,
-                #e8f4fd 0%,       /* Himmel — zart blau */
-                #f0f7fc 20%,      /* Übergang */
-                #f8f8f6 45%,      /* Neutral — Horizont */
-                #f0f8f6 65%,      /* Übergang zu Wasser */
-                #e4f0ee 80%,      /* Aqua Hauch */
-                #d6ebe7 100%      /* Pool/Meer — MLP Türkis-Hauch */
+                #eaf2fa 0%,       /* Himmel — zartes MLP-Blau */
+                #f0f2f6 30%,      /* Sanfter Übergang */
+                #f4f2ee 65%,      /* Warm-neutral */
+                #ece6dc 85%,      /* Platin kräftiger */
+                #e3dbd0 100%      /* Erde — warmes Titanium */
             );
             background-attachment: fixed;
         }
@@ -668,44 +667,38 @@
             );
         }
 
-        /* Light Theme — Himmel-zu-Wasser Zonen (kräftiger, sichtbar!) */
+        /* Light Theme — "Warm Sky": MLP-Blau oben, Titanium/Platin unten */
         .theme-light .gradient-zone-1 {
-            /* WOLKEN: Weicher Himmel mit Radial-Glow für Wolken-Effekt */
+            /* WOLKEN: Sanfter MLP-Blau Himmel mit Wolken-Radials */
             background:
-                radial-gradient(ellipse 120% 80% at 30% 40%, rgba(255,255,255,0.6) 0%, transparent 70%),
-                radial-gradient(ellipse 100% 60% at 70% 30%, rgba(255,255,255,0.5) 0%, transparent 65%),
-                linear-gradient(to bottom, rgba(135,195,255,0.18) 0%, rgba(100,170,240,0.22) 100%);
+                radial-gradient(ellipse 120% 80% at 25% 35%, rgba(255,255,255,0.55) 0%, transparent 65%),
+                radial-gradient(ellipse 90% 60% at 70% 25%, rgba(255,255,255,0.45) 0%, transparent 60%),
+                linear-gradient(to bottom, rgba(3,61,93,0.06) 0%, rgba(3,61,93,0.09) 100%);
         }
 
         .theme-light .gradient-zone-2 {
-            /* HORIZONT: Wo Himmel auf Erde trifft — warm-neutral */
-            background: linear-gradient(
-                to bottom,
-                rgba(100,170,240,0.15) 0%,
-                rgba(180,195,210,0.12) 40%,
-                rgba(190,182,170,0.10) 100%
-            );
+            /* KEIN HORIZONT — komplett transparent */
+            background: transparent;
         }
 
         .theme-light .gradient-zone-3 {
-            /* SCHUPPEN/LIQUIDITÄT: Übergang zu Wasser — Teal-Hauch */
+            /* ÜBERGANG: Sanfter Titanium-Hauch beginnt */
             background: linear-gradient(
                 to bottom,
-                rgba(190,182,170,0.08) 0%,
-                rgba(71,161,144,0.08) 50%,
-                rgba(71,161,144,0.14) 100%
+                transparent 0%,
+                rgba(190,182,170,0.06) 100%
             );
         }
 
         .theme-light .gradient-zone-4 {
-            /* POOL/MEER: Vermögensaufbau — Aqua-Tiefe mit Wasser-Reflexion */
+            /* ERDE/VERMÖGEN: Warmes Platin — kräftiger, mit Tiefe */
             background:
-                radial-gradient(ellipse 140% 60% at 50% 80%, rgba(71,161,144,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 130% 50% at 50% 70%, rgba(190,182,170,0.14) 0%, transparent 65%),
                 linear-gradient(
                     to bottom,
-                    rgba(71,161,144,0.14) 0%,
-                    rgba(3,61,93,0.10) 50%,
-                    rgba(3,61,93,0.16) 100%
+                    rgba(190,182,170,0.10) 0%,
+                    rgba(190,182,170,0.18) 50%,
+                    rgba(3,61,93,0.08) 100%
                 );
         }
 
@@ -722,10 +715,10 @@
         }
         .theme-light .ambient-glow { opacity: 1; }
         .ambient-glow-sky {
-            background: radial-gradient(circle, rgba(135,195,255,0.20) 0%, rgba(135,195,255,0.05) 50%, transparent 70%);
+            background: radial-gradient(circle, rgba(3,61,93,0.07) 0%, rgba(3,61,93,0.02) 50%, transparent 70%);
         }
-        .ambient-glow-water {
-            background: radial-gradient(circle, rgba(71,161,144,0.15) 0%, rgba(71,161,144,0.04) 50%, transparent 70%);
+        .ambient-glow-earth {
+            background: radial-gradient(circle, rgba(190,182,170,0.12) 0%, rgba(190,182,170,0.03) 50%, transparent 70%);
         }
 
         /* Light-Theme Flow-Labels: leichter Glas-Hintergrund */
@@ -1906,9 +1899,6 @@
         /* Badges / helper boxes */
         .theme-light .limit-line span { background: #ffffff !important; color: #111827 !important; }
 
-        /* Flow animation color on light */
-        .theme-light .flow-path-animation { stroke: white; opacity: .5; }
-
         /* Mask strokes (define visible river area) */
         .flow-mask-stroke {
           fill: none;
@@ -3030,8 +3020,8 @@
                 <!-- Ambient Glows: Subtile Lichtpunkte für Tiefe (nur Light-Theme sichtbar) -->
                 <div class="ambient-glow ambient-glow-sky" style="top: -50px; left: 20%;"></div>
                 <div class="ambient-glow ambient-glow-sky" style="top: 50px; left: 65%;"></div>
-                <div class="ambient-glow ambient-glow-water" style="top: 850px; left: 40%;"></div>
-                <div class="ambient-glow ambient-glow-water" style="top: 1000px; left: 70%;"></div>
+                <div class="ambient-glow ambient-glow-earth" style="top: 850px; left: 40%;"></div>
+                <div class="ambient-glow ambient-glow-earth" style="top: 1000px; left: 70%;"></div>
 
                 <div id="einkommen-basin" class="account-basin account-basin--editable"></div>
                 <button id="fixkosten-basin" class="account-basin cursor-pointer" type="button" aria-controls="fixkosten-modal" aria-haspopup="dialog" onclick="openFixkostenModal()"></button>
@@ -11937,9 +11927,9 @@ function updateFixkostenItem(index, key, value) {
             const stops = grad.querySelectorAll('stop');
             if (stops.length >= 2) {
                 if (theme === 'light') {
-                    // Pure MLP blue stream
-                    stops[0].setAttribute('style', 'stop-color: var(--mlp-blue-1);');
-                    stops[1].setAttribute('style', 'stop-color: var(--mlp-blue-1);');
+                    // Softer MLP blue stream — not too dark on light bg
+                    stops[0].setAttribute('style', 'stop-color: #1a6a8a;');
+                    stops[1].setAttribute('style', 'stop-color: #2a7a9a;');
                 } else {
                     // v2.0: MLP Blau Dark + Türkis statt Tailwind Blue/Indigo
                     stops[0].setAttribute('style', 'stop-color: #033D5D;');

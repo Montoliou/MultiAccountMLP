@@ -250,6 +250,33 @@ Icons im Session-Menü: ⭕ = nicht besucht, ✅ = besucht (Türkis)
 
 ---
 
+## Farbthemen-Katalog (für spätere Theme-Auswahl im Session-Menü)
+
+Berater sollen im Session-Menü zwischen Farbthemen wählen können. Jedes freigegebene Theme bekommt einen Namen.
+
+### Freigegebene Themes
+
+| Name | Typ | Body-Gradient | Zonen | Status |
+|------|-----|---------------|-------|--------|
+| **Warm Sky** | Light | `#eaf2fa` → `#f0f2f6` → `#e3dbd0` | Wolken (MLP-Blau), kein Horizont, Erde (Titanium) | Aktiv |
+| **MLP Navy** | Dark | `#0e1c2b` → `#18293a` | MLP-Navy Töne, kein Slate-Grau | Aktiv |
+
+### Abgelehnte Versuche (als Referenz)
+
+| Name | Grund der Ablehnung |
+|------|---------------------|
+| Türkis/Aqua | Zu MLP-Med, nicht Core. Türkis großflächig = klinisch |
+
+### Design-Regeln für neue Themes
+
+- **Türkis (#47A190)** nur als Accent, NIEMALS großflächig
+- **Keine sichtbare Horizontlinie** — muss nicht erklärt werden
+- **Flows** müssen zum Hintergrund passen (heller auf hellem Theme)
+- **MLP Core**: Blau (#033D5D) + Titanium (#BEB6AA) = primäre Palette
+- Jedes Theme braucht: Body-Gradient, 4 Zonen, Flow-Farben, Basin-Style
+
+---
+
 ## Roadmap
 
 | Version | Thema | Status |
