@@ -4065,8 +4065,8 @@
                             <!-- Balken-Vergleich unten -->
                             <text x="280" y="360" text-anchor="middle" fill="#2B2B2B" font-size="12" font-weight="bold">Aufteilung der Unternehmensrendite</text>
 
-                            <!-- Balken: Gesamt-Rendite -->
-                            <rect x="80" y="378" width="400" height="30" rx="6" fill="#F8F8F8" stroke="#BEB6AA" stroke-width="1"/>
+                            <!-- Balken: Gesamt-Rendite (Breite wird dynamisch gesetzt) -->
+                            <rect x="80" y="378" width="400" height="30" rx="6" fill="#F8F8F8" stroke="#BEB6AA" stroke-width="1" id="equity-bar-bg"/>
 
                             <!-- Balken: Zinskosten (Titanium) -->
                             <rect x="80" y="378" rx="6" height="30" fill="#BEB6AA" id="equity-bar-zins" width="100"/>
@@ -10449,6 +10449,11 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         var retainedBarText = document.getElementById('equity-bar-retained-text');
         var gewinnText = document.getElementById('equity-bar-gewinn-text');
 
+        // Background bar = full rendite width (not max)
+        var renditeWidth = Math.max(0, (rendite / maxRate) * barTotal);
+        var bgBar = document.getElementById('equity-bar-bg');
+        bgBar.setAttribute('width', renditeWidth);
+
         zinsBar.setAttribute('width', zinsWidth);
         zinsText.setAttribute('x', 80 + zinsWidth / 2);
         zinsText.textContent = zins > 0 ? zins.toFixed(1) + '%' : '';
@@ -10560,7 +10565,7 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
             resultText.textContent = 'Unternehmen verbrennt Kapital';
             resultText.style.color = '#C1293D';
         } else if (totalSpread === 0) {
-            resultCard.style.background = '#F8F8F8';
+            resultCard.style.background = 'var(--card)';
             resultCard.style.border = '1px solid #BEB6AA';
             resultLabel.textContent = 'Break Even';
             resultLabel.style.color = '#717171';
@@ -10588,25 +10593,25 @@ function renderBasin(element, title, value, icon, subtext = '', { current = 0, m
         var fazit = document.getElementById('equity-fazit');
         var fazitText = document.getElementById('equity-fazit-text');
         if (totalSpread > 0 && aktionaerSpread > 1) {
-            fazit.style.background = '#F8F8F8';
-            fazit.style.border = '1px solid #BEB6AA';
+            fazit.style.background = 'var(--card)';
+            fazit.style.border = '1px solid var(--border)';
             fazitText.innerHTML = '<strong>Ergebnis:</strong> Von ' + totalSpread.toFixed(1) + '% Überschuss behält das Unternehmen ' + retained.toFixed(1) + '% für Wachstum. Die Aktionäre erhalten ' + aktionaerSpread.toFixed(1) + '% als Rendite — ihr Equity Risk Premium.';
-            fazitText.style.color = '#2B2B2B';
+            fazitText.style.color = 'var(--fg)';
         } else if (totalSpread > 0 && aktionaerSpread > 0) {
             fazit.style.background = 'rgba(227,105,30,0.06)';
             fazit.style.border = '1px solid rgba(227,105,30,0.3)';
             fazitText.innerHTML = '<strong>Knapp:</strong> Nur ' + aktionaerSpread.toFixed(1) + '% erreichen die Aktionäre — der Großteil (' + retained.toFixed(1) + '%) wird reinvestiert. Das EK-Risiko wird kaum kompensiert.';
-            fazitText.style.color = '#2B2B2B';
+            fazitText.style.color = 'var(--fg)';
         } else if (totalSpread > 0 && aktionaerSpread === 0) {
             fazit.style.background = 'rgba(227,105,30,0.08)';
             fazit.style.border = '1px solid rgba(227,105,30,0.3)';
             fazitText.innerHTML = '<strong>100% reinvestiert:</strong> Das Unternehmen behält den gesamten Gewinn für Wachstum. Aktionäre profitieren nur indirekt über steigende Substanz — keine Dividende, kein direkter Cashflow.';
-            fazitText.style.color = '#2B2B2B';
+            fazitText.style.color = 'var(--fg)';
         } else if (totalSpread === 0) {
-            fazit.style.background = '#F8F8F8';
-            fazit.style.border = '1px solid #BEB6AA';
+            fazit.style.background = 'var(--card)';
+            fazit.style.border = '1px solid var(--border)';
             fazitText.innerHTML = '<strong>Break Even:</strong> Das Unternehmen verdient exakt so viel wie es an Zinsen zahlt. Für Aktionäre gibt es keinen Mehrwert — warum sollte jemand das Risiko tragen?';
-            fazitText.style.color = '#717171';
+            fazitText.style.color = 'var(--muted)';
         } else {
             fazit.style.background = 'rgba(193,41,61,0.06)';
             fazit.style.border = '1px solid rgba(193,41,61,0.3)';
