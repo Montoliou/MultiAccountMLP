@@ -593,14 +593,20 @@
             margin-bottom: 8px;
           }
 
-          /* Optimize flowchart container for print:
-             The live flow-container is ~1500px wide with absolute-positioned
-             basins and SVG paths. We must keep the EXACT live width and scale
-             down uniformly so all coordinates stay consistent. */
+          /* Optimize flowchart container for print (v1.7.8 bewährt):
+             Container auf 1100px fixieren, dann mit scale(0.75) auf A4 skalieren.
+             left:50% + margin-left zentriert den skalierten Container.
+             margin-bottom negativ kompensiert den durch scale entstehenden Leerraum. */
           #flow-container-print {
             break-inside: avoid;
             page-break-inside: avoid;
-            overflow: visible !important;
+            transform: scale(0.75) !important;
+            transform-origin: top center !important;
+            width: 1100px !important;
+            margin: 0 auto -380px auto !important;
+            position: relative !important;
+            left: 50% !important;
+            margin-left: -720px !important;
           }
         }
 
@@ -12190,32 +12196,15 @@ function updateFixkostenItem(index, key, value) {
             n.style.color = '#717171';
           });
 
-          // Exakte Live-Dimensionen übernehmen — SVG-Koordinaten sind absolut
-          const liveWidth = live.offsetWidth || live.clientWidth || 1500;
-          const liveHeight = live.offsetHeight || live.clientHeight || 1150;
+          // v1.7.8-Methode: Deterministische Größe, CSS macht die Skalierung
+          const cs = getComputedStyle(live);
           clone.style.position = 'relative';
-          clone.style.width = liveWidth + 'px';
-          clone.style.height = liveHeight + 'px';
-          clone.style.minHeight = liveHeight + 'px';
+          clone.style.minHeight = cs.minHeight || '1150px';
+          clone.style.height    = cs.height || '1150px';
+          // width wird durch CSS #flow-container-print auf 1100px gesetzt
 
-          // A4 printable width is ~190mm ≈ 718px at 96dpi
-          // Scale the clone to fit A4 while preserving proportions
-          const printWidth = 700;
-          const scaleFactor = printWidth / liveWidth;
-          const scaledHeight = liveHeight * scaleFactor;
-
-          // Holder provides the scaled viewport
           const holder = document.createElement('div');
           holder.style.marginTop = '8px';
-          holder.style.width = printWidth + 'px';
-          holder.style.height = Math.ceil(scaledHeight) + 'px';
-          holder.style.overflow = 'hidden';
-          holder.style.position = 'relative';
-
-          // Scale the clone inside the holder
-          clone.style.transformOrigin = 'top left';
-          clone.style.transform = 'scale(' + scaleFactor.toFixed(4) + ')';
-
           holder.appendChild(clone);
           section.appendChild(holder);
         }
