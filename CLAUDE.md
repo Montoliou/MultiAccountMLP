@@ -223,33 +223,35 @@ powershell -ExecutionPolicy Bypass -File deploy-curl-sftp.ps1 -Force
 Ein Crash beim letzten Basin → ALLE Flows fehlen (Render-Reihenfolge!).
 **Immer lokal testen bevor deployed wird.**
 
-### PDF-Print Flow-Darstellung (v1.7.8 → v2.0 Lektion)
+### PDF-Print Flow-Darstellung (v2.0.1 — gelöst)
 
 Der Finanzfluss wird im PDF als **DOM-Klon** gedruckt (nicht als Bild).
-Die bewährte Methode aus v1.7.8 funktioniert — NICHT durch eigene JS-Skalierung ersetzen!
+
+**KRITISCHE REGEL:** Im Light-Mode CSS **NIEMALS** `stroke: url(#id)` für `.flow-path` verwenden!
+Bei DOM-Klon existieren Duplikat-IDs → Browser löst `url()` zum falschen Element auf.
+**Immer solide Farben nutzen:** `stroke: #1a6a8a` statt `stroke: url(#flow-gradient)`.
 
 **CSS-Regel (bewährt, nicht ändern!):**
 ```css
 #flow-container-print {
     transform: scale(0.75) !important;
     transform-origin: top center !important;
-    width: 1100px !important;
+    width: 1150px !important;
     margin: 0 auto -380px auto !important;
     position: relative !important;
     left: 50% !important;
-    margin-left: -720px !important;
+    margin-left: -728px !important;
 }
+
+/* MUSS solide Farbe sein, NICHT url(#flow-gradient)! */
+.theme-light .flow-path { stroke: #1a6a8a; filter: none; }
 ```
 
 **v2.0-Ergänzungen zum Klon:**
 - `.no-print` Elemente entfernen (Mobile Warning)
 - `.gradient-zone`, `.ambient-glow` entfernen (Screen-Dekoration)
 - Basins: `backdrop-filter: none`, `background: #ffffff`, `border: 1px solid #BEB6AA`
-- SVG-Strokes inline setzen (CSS-Vars greifen nicht im Print-Klon)
-- `.flow-erase` explizit auf `stroke: #ffffff`
-- `.flow-value`: weiß + `#2B2B2B` Text + Titanium Border
-- `.flow-label`: `#717171`
-- Animationen stoppen, Flow-Dots entfernen
+- SVG: NICHT manipulieren! v1-Ansatz = DOM-Klon unverändert, CSS macht alles
 
 ---
 
