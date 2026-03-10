@@ -107,8 +107,9 @@
         }
         .theme-light .flow-erase { stroke: #ffffff !important; }
         .theme-dark  .flow-erase { stroke: var(--gray-900) !important; }
-        /* Light theme: softer blue flows on light background */
-        .theme-light .flow-path { stroke: url(#flow-gradient); filter: none; }
+        /* Light theme: solid color (not url(#flow-gradient)!) to avoid duplicate-ID
+           issues when DOM is cloned for PDF print. v1 used var(--mlp-blue-1). */
+        .theme-light .flow-path { stroke: #1a6a8a; filter: none; }
         .theme-light .flow-path-animation { stroke: rgba(255,255,255,0.7); stroke-dasharray: 8 14; opacity: .6; }
         .flow-dot { fill: var(--mlp-blue-light); opacity: .95; }
         .theme-light .flow-dot { fill: #3a8aaa; }
