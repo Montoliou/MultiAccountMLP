@@ -2975,7 +2975,7 @@
                             <br><br>
                             <strong>Verfügbar auf Mobile:</strong><br>
                             ✓ Eingaben & Berechnungen<br>
-                            ✓ Export-Funktionen (PDF, CSV, JSON, Excel)<br>
+                            ✓ Export-Funktionen (PDF, CSV, Session-Backup, Excel)<br>
                             ✓ Session-Verwaltung
                         </p>
                         <button onclick="document.getElementById('mobile-warning').style.display='none'" class="btn-mobile">
@@ -5484,7 +5484,7 @@
         }
     }
 
-    // Generate auto-export filename: {DATUM}_{KÜRZEL}_{UHRZEIT}_{SESSION-ID}.json
+    // Generate auto-export filename: {DATUM}_{KÜRZEL}_{UHRZEIT}_{SESSION-ID}.flow
     function generateAutoExportFilename() {
         const session = getCurrentSession();
         if (!session) return null;
@@ -5505,7 +5505,7 @@
         // SESSION-ID: first 4 chars
         const sessionId = session.id.substring(0, 8).toUpperCase();
 
-        return `${datum}_${kuerzel}_${uhrzeit}_SES-${sessionId}.json`;
+        return `${datum}_${kuerzel}_${uhrzeit}_SES-${sessionId}.flow`;
     }
 
     // Export all session data as JSON (used for manual and auto-export)
@@ -5631,14 +5631,16 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
             }
         };
 
-        // Create pretty-printed JSON
-        const json = JSON.stringify(exportData, null, 2);
-        const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+        // Create Base64-encoded session file (OneDrive blocks .json)
+        var json = JSON.stringify(exportData);
+        var base64 = btoa(unescape(encodeURIComponent(json)));
+        var fileContent = 'MLPFLOW:1:' + base64;
+        var blob = new Blob([fileContent], { type: 'application/octet-stream' });
 
         // Use auto-export filename format or fallback to old format
         const filename = isAutoExport
             ? generateAutoExportFilename()
-            : `Session-Backup_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.json`;
+            : `Session-Backup_${session.kundenKuerzel || session.id}_${new Date().toISOString().slice(0, 10)}.flow`;
 
         // Try File System API for auto-export, fallback to download
         if (isAutoExport && useFileSystemAPI) {
@@ -5671,8 +5673,8 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
                 updateAutoExportStatus();
                 console.log('🔄 Auto-Export erstellt:', filename);
             } else {
-                console.log('📄 JSON-Backup erstellt:', filename);
-                console.log('💾 Vollständiges Session-Backup - kann für Re-Import verwendet werden');
+                console.log('📄 Session-Backup erstellt:', filename);
+                console.log('💾 Vollständiges Session-Backup (.flow, Base64-kodiert)');
             }
         }
     }
@@ -5793,20 +5795,36 @@ Die Daten findest du in diesem JSON unter den Feldern: session, settings, inputs
         updateAutoExportStatus();
     }, 5000);
 
-    // Import session from JSON backup file
+    // Import session from .flow (Base64) or legacy .json backup file
     function importSessionBackup() {
         // Create file input element
-        const input = document.createElement('input');
+        var input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.json';
+        input.accept = '.flow,.json';
 
         input.onchange = async (e) => {
-            const file = e.target.files[0];
+            var file = e.target.files[0];
             if (!file) return;
 
             try {
-                const text = await file.text();
-                const backup = JSON.parse(text);
+                var text = await file.text();
+                var backup;
+
+                // Detect format: Base64-encoded .flow or legacy JSON
+                if (text.indexOf('MLPFLOW:') === 0) {
+                    // New format: MLPFLOW:1:base64data
+                    var parts = text.split(':');
+                    if (parts.length < 3) {
+                        showToast('Ungültiges .flow-Format!', 'error', 5000);
+                        return;
+                    }
+                    var base64 = parts.slice(2).join(':');
+                    var json = decodeURIComponent(escape(atob(base64)));
+                    backup = JSON.parse(json);
+                } else {
+                    // Legacy format: plain JSON
+                    backup = JSON.parse(text);
+                }
 
                 // Validate backup format
                 if (!backup.version || backup.exportType !== 'FULL_SESSION_BACKUP') {
@@ -12987,7 +13005,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/>
                     </svg>
-                    Als JSON exportieren
+                    Session-Backup exportieren
                 </button>
                 <button onclick="exportAsExcel(); toggleSessionMenu();" class="w-full text-left px-3 py-2 text-sm text-blue-400 hover:bg-blue-900 hover:bg-opacity-30 rounded transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -13164,7 +13182,7 @@ Diese Funktionen funktionieren auch wenn das UI nicht reagiert!
                     <li>Alle Daten werden <strong>nur in Ihrem Browser</strong> gespeichert (sessionStorage)</li>
                     <li><strong>Keine Cloud</strong>, keine Datenbank, kein Server-Upload</li>
                     <li>Beim Schließen des Tabs werden <strong>alle Daten automatisch gelöscht</strong></li>
-                    <li>Export nur manuell durch Sie (PDF, CSV, JSON)</li>
+                    <li>Export nur manuell durch Sie (PDF, CSV, Session-Backup)</li>
                     <li>Session-Daten bleiben bei Ihnen - <strong>100% DSGVO-konform</strong></li>
                 </ul>
                 <label class="flex items-center gap-2 cursor-pointer">

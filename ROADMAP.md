@@ -1,6 +1,6 @@
 # 🗺️ Roadmap: Das strategische Vermögensmanagement
 
-**Aktuelle Version:** 2.0.1 (Design-Overhaul Phase 1-6 komplett)
+**Aktuelle Version:** 2.1.0 (Session-Export: .flow statt .json, OneDrive-kompatibel)
 **Nächste Schritte:** Phase 7 (Architektur-Entschuldung)
 **Ziel-Version:** 3.0.0 (Vermögensverzehr-Modus)
 **Datum:** März 2026
